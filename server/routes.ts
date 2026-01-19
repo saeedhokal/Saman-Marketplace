@@ -33,8 +33,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post(api.products.create.path, isAuthenticated, async (req, res) => {
     try {
-      const input = api.products.create.input.parse(req.body);
-      // @ts-ignore - req.user is typed as any in integration
+      const bodySchema = api.products.create.input.extend({
+        price: z.coerce.number(),
+        isVehicle: z.coerce.boolean().optional(),
+      });
+      const input = bodySchema.parse(req.body);
+      // @ts-ignore
       const sellerId = req.user.claims.sub;
 
       const product = await storage.createProduct({

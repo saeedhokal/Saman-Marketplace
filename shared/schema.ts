@@ -13,6 +13,9 @@ export const products = pgTable("products", {
   category: text("category").notNull(),
   condition: text("condition").notNull(), // New, Used, Refurbished
   sellerId: varchar("seller_id").notNull().references(() => users.id),
+  location: text("location"),
+  phoneNumber: text("phone_number"),
+  isVehicle: boolean("is_vehicle").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

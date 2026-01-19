@@ -36,7 +36,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(product: InsertProduct & { sellerId: string }): Promise<Product> {
-    const [newProduct] = await db.insert(products).values(product).returning();
+    const [newProduct] = await db.insert(products).values({
+      ...product,
+      isVehicle: product.isVehicle ?? false,
+    }).returning();
     return newProduct;
   }
 
