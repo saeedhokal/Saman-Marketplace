@@ -21,6 +21,7 @@ export const users = pgTable("users", {
   password: varchar("password"), // Simple hashed password, no complexity requirements
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  displayName: varchar("display_name"), // Shop name, dealer name, or personal brand
   profileImageUrl: varchar("profile_image_url"),
   credits: integer("credits").default(0).notNull(), // Legacy - kept for compatibility
   sparePartsCredits: integer("spare_parts_credits").default(0).notNull(),

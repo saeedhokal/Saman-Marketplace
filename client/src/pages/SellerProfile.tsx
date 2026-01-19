@@ -2,16 +2,49 @@ import { useRoute } from "wouter";
 import { useSellerProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Store } from "lucide-react";
+import { ArrowLeft, Store, Calendar } from "lucide-react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+
+type SellerInfo = {
+  id: string;
+  displayName: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  createdAt: string;
+};
 
 export default function SellerProfile() {
   const [, params] = useRoute("/seller/:sellerId");
   const sellerId = params?.sellerId || "";
   
   const { data: products, isLoading, error } = useSellerProducts(sellerId);
+  
+  const { data: sellerInfo, isLoading: sellerLoading } = useQuery<SellerInfo>({
+    queryKey: ['/api/sellers', sellerId],
+    enabled: !!sellerId,
+  });
+
+  const getSellerDisplayName = () => {
+    if (sellerInfo?.displayName) return sellerInfo.displayName;
+    if (sellerInfo?.firstName || sellerInfo?.lastName) {
+      return `${sellerInfo.firstName || ''} ${sellerInfo.lastName || ''}`.trim();
+    }
+    return 'Seller';
+  };
+
+  const getMemberSince = () => {
+    if (!sellerInfo?.createdAt) return null;
+    try {
+      return format(new Date(sellerInfo.createdAt), 'MMMM yyyy');
+    } catch {
+      return null;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -60,17 +93,26 @@ export default function SellerProfile() {
 
         <div className="flex items-center gap-4 mb-8 p-6 bg-card rounded-2xl border border-border">
           <Avatar className="h-16 w-16">
+            {sellerInfo?.profileImageUrl ? (
+              <AvatarImage src={sellerInfo.profileImageUrl} alt={getSellerDisplayName()} />
+            ) : null}
             <AvatarFallback className="bg-primary/10 text-primary text-xl">
               <Store className="h-8 w-8" />
             </AvatarFallback>
           </Avatar>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">
-              Seller Profile
+          <div className="flex-1">
+            <h1 className="font-display text-2xl font-bold text-foreground" data-testid="text-seller-name">
+              {getSellerDisplayName()}
             </h1>
             <p className="text-muted-foreground">
               {products.length} {products.length === 1 ? "listing" : "listings"} available
             </p>
+            {getMemberSince() && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                <Calendar className="h-3 w-3" />
+                <span>Member since {getMemberSince()}</span>
+              </div>
+            )}
           </div>
         </div>
 

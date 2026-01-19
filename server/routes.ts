@@ -91,6 +91,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(products);
   });
 
+  // Get seller profile info
+  app.get("/api/sellers/:sellerId", async (req, res) => {
+    const sellerId = req.params.sellerId;
+    
+    if (!sellerId || typeof sellerId !== 'string' || sellerId.length > 100) {
+      return res.status(400).json({ message: "Invalid seller ID" });
+    }
+    
+    const [seller] = await db.select({
+      id: users.id,
+      displayName: users.displayName,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      profileImageUrl: users.profileImageUrl,
+      createdAt: users.createdAt,
+    }).from(users).where(eq(users.id, sellerId));
+    
+    if (!seller) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+    
+    res.json(seller);
+  });
+
   app.post(api.products.create.path, isAuthenticated, async (req, res) => {
     try {
       const bodySchema = api.products.create.input.extend({
@@ -215,6 +239,54 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       isAdmin: user?.isAdmin || false, 
       subscriptionEnabled 
     });
+  });
+
+  // User profile API
+  app.get("/api/user/profile", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const [user] = await db.select({
+      id: users.id,
+      phone: users.phone,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      displayName: users.displayName,
+      profileImageUrl: users.profileImageUrl,
+    }).from(users).where(eq(users.id, userId));
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  });
+
+  // Update user profile
+  app.put("/api/user/profile", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const { displayName, firstName, lastName, profileImageUrl } = req.body;
+    
+    const updateData: Record<string, any> = { updatedAt: new Date() };
+    
+    if (displayName !== undefined) updateData.displayName = displayName || null;
+    if (firstName !== undefined) updateData.firstName = firstName || null;
+    if (lastName !== undefined) updateData.lastName = lastName || null;
+    if (profileImageUrl !== undefined) updateData.profileImageUrl = profileImageUrl || null;
+    
+    await db.update(users)
+      .set(updateData)
+      .where(eq(users.id, userId));
+    
+    const [updated] = await db.select({
+      id: users.id,
+      phone: users.phone,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      displayName: users.displayName,
+      profileImageUrl: users.profileImageUrl,
+    }).from(users).where(eq(users.id, userId));
+    
+    res.json(updated);
   });
 
   // Purchase credits - allows adding credits to existing balance

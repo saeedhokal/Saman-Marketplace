@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone, Heart, MapPin } from "lucide-react";
+import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { type Product } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { ImageGallery } from "@/components/ImageGallery";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -28,6 +29,28 @@ export default function ProductDetail() {
     queryKey: ['/api/sellers', product?.sellerId, 'products'],
     enabled: !!product?.sellerId,
   });
+
+  type SellerInfo = {
+    id: string;
+    displayName: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+    createdAt: string;
+  };
+
+  const { data: sellerInfo } = useQuery<SellerInfo>({
+    queryKey: ['/api/sellers', product?.sellerId],
+    enabled: !!product?.sellerId,
+  });
+
+  const getSellerDisplayName = () => {
+    if (sellerInfo?.displayName) return sellerInfo.displayName;
+    if (sellerInfo?.firstName || sellerInfo?.lastName) {
+      return `${sellerInfo.firstName || ''} ${sellerInfo.lastName || ''}`.trim();
+    }
+    return 'Seller';
+  };
 
   useEffect(() => {
     if (id && product) {
@@ -196,10 +219,48 @@ export default function ProductDetail() {
           </div>
         </div>
 
+        {/* Seller Info Section */}
+        {product?.sellerId && (
+          <div className="mt-12">
+            <Link href={`/seller/${product.sellerId}`}>
+              <Card className="p-4 hover-elevate cursor-pointer" data-testid="link-seller-profile">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      {sellerInfo?.profileImageUrl ? (
+                        <AvatarImage src={sellerInfo.profileImageUrl} alt={getSellerDisplayName()} />
+                      ) : null}
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        <Store className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-foreground" data-testid="text-seller-name">
+                        {getSellerDisplayName()}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {sellerProducts ? `${sellerProducts.length} listing${sellerProducts.length !== 1 ? 's' : ''}` : 'View all listings'}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </Card>
+            </Link>
+          </div>
+        )}
+
         {/* More from this seller */}
         {sellerProducts && sellerProducts.filter(p => p.id !== id).length > 0 && (
-          <div className="mt-12">
-            <h2 className="font-display text-xl font-bold text-foreground mb-4">More from this seller</h2>
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-xl font-bold text-foreground">More from this seller</h2>
+              <Link href={`/seller/${product?.sellerId}`}>
+                <Button variant="ghost" size="sm" data-testid="button-view-all-seller">
+                  View All <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {sellerProducts
                 .filter(p => p.id !== id)
@@ -212,7 +273,7 @@ export default function ProductDetail() {
                   }).format((p.price || 0) / 100);
                   return (
                     <Link key={p.id} href={`/product/${p.id}`}>
-                      <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow rounded-xl">
+                      <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow rounded-xl" data-testid={`card-product-${p.id}`}>
                         <div className="aspect-square overflow-hidden bg-secondary/30">
                           {p.imageUrl ? (
                             <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
