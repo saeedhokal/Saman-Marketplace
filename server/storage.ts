@@ -7,8 +7,12 @@ export interface IStorage {
   getProducts(options?: { search?: string; mainCategory?: string; subCategory?: string }): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   getProductsBySeller(sellerId: string): Promise<Product[]>;
+  getMyProducts(sellerId: string): Promise<Product[]>;
+  getExpiringProducts(sellerId: string, daysLeft?: number): Promise<Product[]>;
   createProduct(product: InsertProduct & { sellerId: string }): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
+  repostProduct(id: number): Promise<Product | undefined>;
+  markAsSold(id: number): Promise<void>;
   
   // Admin - Listings
   getPendingProducts(): Promise<Product[]>;
@@ -22,6 +26,7 @@ export interface IStorage {
   getUserCredits(userId: string): Promise<number>;
   addCredits(userId: string, amount: number): Promise<User | undefined>;
   useCredit(userId: string): Promise<boolean>;
+  isSubscriptionEnabled(): Promise<boolean>;
   
   // App Settings
   getAppSettings(): Promise<AppSettings | undefined>;
@@ -77,6 +82,44 @@ export class DatabaseStorage implements IStorage {
         eq(products.status, "approved")
       ))
       .orderBy(desc(products.createdAt));
+  }
+
+  async getMyProducts(sellerId: string): Promise<Product[]> {
+    return await db.select().from(products)
+      .where(eq(products.sellerId, sellerId))
+      .orderBy(desc(products.createdAt));
+  }
+
+  async getExpiringProducts(sellerId: string, daysLeft: number = 5): Promise<Product[]> {
+    const now = new Date();
+    const warningDate = new Date();
+    warningDate.setDate(warningDate.getDate() + daysLeft);
+    
+    return await db.select().from(products)
+      .where(and(
+        eq(products.sellerId, sellerId),
+        eq(products.status, "approved"),
+        sql`${products.expiresAt} IS NOT NULL`,
+        sql`${products.expiresAt} > ${now}`,
+        sql`${products.expiresAt} <= ${warningDate}`
+      ))
+      .orderBy(products.expiresAt);
+  }
+
+  async repostProduct(id: number): Promise<Product | undefined> {
+    const [product] = await db.update(products)
+      .set({ 
+        status: "pending", 
+        expiresAt: null,
+        rejectionReason: null 
+      })
+      .where(eq(products.id, id))
+      .returning();
+    return product;
+  }
+
+  async markAsSold(id: number): Promise<void> {
+    await db.delete(products).where(eq(products.id, id));
   }
 
   async createProduct(product: InsertProduct & { sellerId: string }): Promise<Product> {
@@ -164,6 +207,11 @@ export class DatabaseStorage implements IStorage {
       .set({ credits: sql`${users.credits} - 1` })
       .where(eq(users.id, userId));
     return true;
+  }
+
+  async isSubscriptionEnabled(): Promise<boolean> {
+    const settings = await this.getAppSettings();
+    return settings?.subscriptionEnabled ?? false;
   }
 
   // App Settings

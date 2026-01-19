@@ -1,15 +1,22 @@
-import bcrypt from "bcryptjs";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "./db";
-import { users } from "@shared/models/auth";
-import { eq } from "drizzle-orm";
+import { users, otpCodes } from "@shared/models/auth";
+import { eq, and, gt, desc } from "drizzle-orm";
 
 declare module "express-session" {
   interface SessionData {
     userId?: string;
   }
+}
+
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function normalizePhone(phone: string): string {
+  return phone.replace(/[^0-9+]/g, "");
 }
 
 export function setupSimpleAuth(app: Express) {
@@ -42,72 +49,115 @@ export function setupSimpleAuth(app: Express) {
     })
   );
 
-  // Register route - simple email + password
-  app.post("/api/auth/register", async (req: Request, res: Response) => {
+  // Request OTP - sends code to phone number
+  app.post("/api/auth/request-otp", async (req: Request, res: Response) => {
     try {
-      const { email, password, firstName, lastName, phone } = req.body;
+      const { phone } = req.body;
 
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
+      if (!phone) {
+        return res.status(400).json({ message: "Phone number is required" });
       }
 
-      // Check if user already exists
-      const existingUser = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
-      if (existingUser.length > 0) {
-        return res.status(400).json({ message: "Email already registered" });
+      const normalizedPhone = normalizePhone(phone);
+      if (normalizedPhone.length < 9) {
+        return res.status(400).json({ message: "Invalid phone number" });
       }
 
-      // Hash password (simple, no complexity requirements)
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const code = generateOTP();
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-      // Create user
-      const [newUser] = await db.insert(users).values({
-        email: email.toLowerCase(),
-        password: hashedPassword,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        phone: phone || null,
-        credits: 0,
-        isAdmin: false,
-      }).returning();
-
-      // Set session
-      req.session.userId = newUser.id;
-
-      res.json({
-        id: newUser.id,
-        email: newUser.email,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        phone: newUser.phone,
-        credits: newUser.credits,
-        isAdmin: newUser.isAdmin,
+      // Store OTP in database
+      await db.insert(otpCodes).values({
+        phone: normalizedPhone,
+        code,
+        expiresAt,
+        verified: false,
       });
+
+      // In development, log the OTP. In production, this would integrate with SMS provider
+      console.log(`[DEV] OTP for ${normalizedPhone}: ${code}`);
+
+      // Return success (in dev mode, also return the code for testing)
+      if (!isProduction) {
+        res.json({ 
+          message: "OTP sent successfully", 
+          phone: normalizedPhone,
+          devCode: code // Only in development
+        });
+      } else {
+        res.json({ message: "OTP sent successfully", phone: normalizedPhone });
+      }
     } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ message: "Registration failed" });
+      console.error("Request OTP error:", error);
+      res.status(500).json({ message: "Failed to send OTP" });
     }
   });
 
-  // Login route
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
+  // Verify OTP and login/register
+  app.post("/api/auth/verify-otp", async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
+      const { phone, code, firstName, lastName } = req.body;
 
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
+      if (!phone || !code) {
+        return res.status(400).json({ message: "Phone and code are required" });
       }
 
-      // Find user
-      const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
-      if (!user || !user.password) {
-        return res.status(401).json({ message: "Invalid email or password" });
+      const normalizedPhone = normalizePhone(phone);
+
+      // Find valid OTP
+      const [validOtp] = await db
+        .select()
+        .from(otpCodes)
+        .where(
+          and(
+            eq(otpCodes.phone, normalizedPhone),
+            eq(otpCodes.code, code),
+            eq(otpCodes.verified, false),
+            gt(otpCodes.expiresAt, new Date())
+          )
+        )
+        .orderBy(desc(otpCodes.createdAt))
+        .limit(1);
+
+      if (!validOtp) {
+        return res.status(401).json({ message: "Invalid or expired OTP" });
       }
 
-      // Check password
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) {
-        return res.status(401).json({ message: "Invalid email or password" });
+      // Mark OTP as verified
+      await db
+        .update(otpCodes)
+        .set({ verified: true })
+        .where(eq(otpCodes.id, validOtp.id));
+
+      // Find or create user
+      let [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.phone, normalizedPhone));
+
+      if (!user) {
+        // Create new user
+        [user] = await db
+          .insert(users)
+          .values({
+            phone: normalizedPhone,
+            firstName: firstName || null,
+            lastName: lastName || null,
+            credits: 0,
+            isAdmin: false,
+          })
+          .returning();
+      } else if (firstName || lastName) {
+        // Update user name if provided and user exists
+        [user] = await db
+          .update(users)
+          .set({
+            firstName: firstName || user.firstName,
+            lastName: lastName || user.lastName,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, user.id))
+          .returning();
       }
 
       // Set session
@@ -115,16 +165,16 @@ export function setupSimpleAuth(app: Express) {
 
       res.json({
         id: user.id,
-        email: user.email,
+        phone: user.phone,
         firstName: user.firstName,
         lastName: user.lastName,
-        phone: user.phone,
         credits: user.credits,
         isAdmin: user.isAdmin,
+        isNewUser: !user.createdAt || (Date.now() - new Date(user.createdAt).getTime() < 5000),
       });
     } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Login failed" });
+      console.error("Verify OTP error:", error);
+      res.status(500).json({ message: "Failed to verify OTP" });
     }
   });
 
@@ -153,10 +203,10 @@ export function setupSimpleAuth(app: Express) {
 
       res.json({
         id: user.id,
+        phone: user.phone,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        phone: user.phone,
         credits: user.credits,
         isAdmin: user.isAdmin,
         profileImageUrl: user.profileImageUrl,

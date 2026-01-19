@@ -1,7 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { users } from "./models/auth";
+import { users, appSettings } from "./models/auth";
 export * from "./models/auth";
 
 // Main categories
@@ -76,3 +76,5 @@ export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Favorite = typeof favorites.$inferSelect;
 export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
 export type AppSettings = typeof appSettings.$inferSelect;
+export type { OtpCode } from "./models/auth";
+export { otpCodes } from "./models/auth";

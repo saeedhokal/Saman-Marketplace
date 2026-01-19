@@ -6,43 +6,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Phone, ArrowLeft } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
-interface LoginFormValues {
-  email: string;
-  password: string;
-}
-
-interface RegisterFormValues {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
+interface PhoneFormValues {
   phone: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export default function Auth() {
   const [, setLocation] = useLocation();
-  const { login, register, isLoggingIn, isRegistering, user } = useAuth();
+  const { requestOtp, verifyOtp, isRequestingOtp, isVerifyingOtp, user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("login");
+  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [phone, setPhone] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [otp, setOtp] = useState("");
+  const [devCode, setDevCode] = useState<string | null>(null);
 
-  const loginForm = useForm<LoginFormValues>({
+  const phoneForm = useForm<PhoneFormValues>({
     defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const registerForm = useForm<RegisterFormValues>({
-    defaultValues: {
-      email: "",
-      password: "",
+      phone: "",
       firstName: "",
       lastName: "",
-      phone: "",
     },
   });
 
@@ -52,39 +41,143 @@ export default function Auth() {
     }
   }, [user, setLocation]);
 
-  const onLogin = async (data: LoginFormValues) => {
+  const onRequestOtp = async (data: PhoneFormValues) => {
     try {
-      await login(data);
+      const result = await requestOtp({ phone: data.phone });
+      setPhone(data.phone);
+      setFirstName(data.firstName || "");
+      setLastName(data.lastName || "");
+      if (result.devCode) {
+        setDevCode(result.devCode);
+      }
+      setStep("otp");
       toast({
-        title: "Welcome back!",
-        description: "You have been logged in successfully.",
+        title: "OTP Sent",
+        description: "Please enter the verification code sent to your phone.",
       });
-      setLocation("/");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Login failed",
+        title: "Failed to send OTP",
         description: error.message,
       });
     }
   };
 
-  const onRegister = async (data: RegisterFormValues) => {
-    try {
-      await register(data);
+  const onVerifyOtp = async () => {
+    if (otp.length !== 6) {
       toast({
-        title: "Account created!",
-        description: "Welcome to SamanMarket.",
+        variant: "destructive",
+        title: "Invalid code",
+        description: "Please enter the 6-digit code.",
+      });
+      return;
+    }
+
+    try {
+      const result = await verifyOtp({ 
+        phone, 
+        code: otp,
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+      });
+      toast({
+        title: result.isNewUser ? "Welcome to SamanMarket!" : "Welcome back!",
+        description: result.isNewUser 
+          ? "Your account has been created." 
+          : "You have been logged in successfully.",
       });
       setLocation("/");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Registration failed",
+        title: "Verification failed",
         description: error.message,
       });
+      setOtp("");
     }
   };
+
+  const goBack = () => {
+    setStep("phone");
+    setOtp("");
+    setDevCode(null);
+  };
+
+  if (step === "otp") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute left-4 top-4"
+              onClick={goBack}
+              data-testid="button-back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <CardTitle className="text-2xl font-bold">Verify Phone</CardTitle>
+            <CardDescription>
+              Enter the 6-digit code sent to {phone}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {devCode && (
+              <div className="p-3 bg-muted rounded-md text-center">
+                <p className="text-sm text-muted-foreground">Development Mode</p>
+                <p className="text-lg font-mono font-bold">{devCode}</p>
+              </div>
+            )}
+            
+            <div className="flex justify-center">
+              <InputOTP
+                maxLength={6}
+                value={otp}
+                onChange={setOtp}
+                data-testid="input-otp"
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={onVerifyOtp}
+              disabled={isVerifyingOtp || otp.length !== 6}
+              data-testid="button-verify"
+            >
+              {isVerifyingOtp ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                "Verify & Continue"
+              )}
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={goBack}
+              disabled={isVerifyingOtp}
+            >
+              Use a different number
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
@@ -94,193 +187,94 @@ export default function Auth() {
           <CardDescription>UAE Spare Parts Marketplace</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login" data-testid="tab-login">Sign In</TabsTrigger>
-              <TabsTrigger value="register" data-testid="tab-register">Sign Up</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login" className="mt-6">
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    rules={{ required: "Email is required" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder="you@example.com" 
-                            data-testid="input-login-email"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    rules={{ required: "Password is required" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="Your password" 
-                            data-testid="input-login-password"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoggingIn}
-                    data-testid="button-login"
-                  >
-                    {isLoggingIn ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-            
-            <TabsContent value="register" className="mt-6">
-              <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={registerForm.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>First Name</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="John" 
-                              data-testid="input-register-firstname"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={registerForm.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Last Name</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Doe" 
-                              data-testid="input-register-lastname"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    rules={{ required: "Email is required" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder="you@example.com" 
-                            data-testid="input-register-email"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone (optional)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="tel" 
-                            placeholder="+971 50 123 4567" 
-                            data-testid="input-register-phone"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="password"
-                    rules={{ required: "Password is required" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="Choose any password" 
-                            data-testid="input-register-password"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isRegistering}
-                    data-testid="button-register"
-                  >
-                    {isRegistering ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-          </Tabs>
+          <Form {...phoneForm}>
+            <form onSubmit={phoneForm.handleSubmit(onRequestOtp)} className="space-y-4">
+              <FormField
+                control={phoneForm.control}
+                name="phone"
+                rules={{ 
+                  required: "Phone number is required",
+                  minLength: { value: 9, message: "Please enter a valid phone number" }
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="tel"
+                          placeholder="+971 50 123 4567"
+                          className="pl-10"
+                          data-testid="input-phone"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={phoneForm.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name (optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="John"
+                          data-testid="input-firstname"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={phoneForm.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name (optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Doe"
+                          data-testid="input-lastname"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isRequestingOtp}
+                data-testid="button-send-otp"
+              >
+                {isRequestingOtp ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending code...
+                  </>
+                ) : (
+                  "Continue with Phone"
+                )}
+              </Button>
+            </form>
+          </Form>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            By continuing, you agree to our Terms of Service and Privacy Policy
+          </p>
         </CardContent>
       </Card>
     </div>

@@ -35,8 +35,20 @@ export const appSettings = pgTable("app_settings", {
   introVideoUrl: text("intro_video_url"),
   bannerTitle: text("banner_title"),
   bannerSubtitle: text("banner_subtitle"),
+  subscriptionEnabled: boolean("subscription_enabled").default(false).notNull(), // Toggle for credit requirement
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// OTP codes table for phone authentication
+export const otpCodes = pgTable("otp_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  phone: varchar("phone").notNull(),
+  code: varchar("code").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type OtpCode = typeof otpCodes.$inferSelect;

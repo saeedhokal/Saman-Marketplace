@@ -92,17 +92,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const sellerId = getCurrentUserId(req)!;
 
-      // Check if user has credits
-      const credits = await storage.getUserCredits(sellerId);
-      if (credits < 1) {
-        return res.status(402).json({
-          message: "You need credits to post a listing. Please purchase credits to continue.",
-          code: "INSUFFICIENT_CREDITS",
-        });
-      }
+      // Check if subscription is enabled (credit system)
+      const subscriptionEnabled = await storage.isSubscriptionEnabled();
+      if (subscriptionEnabled) {
+        // Check if user has credits
+        const credits = await storage.getUserCredits(sellerId);
+        if (credits < 1) {
+          return res.status(402).json({
+            message: "You need credits to post a listing. Please purchase credits to continue.",
+            code: "INSUFFICIENT_CREDITS",
+          });
+        }
 
-      // Use 1 credit
-      await storage.useCredit(sellerId);
+        // Use 1 credit
+        await storage.useCredit(sellerId);
+      }
 
       const product = await storage.createProduct({
         ...input,
@@ -179,8 +183,71 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/user/credits", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
     const credits = await storage.getUserCredits(userId);
+    const subscriptionEnabled = await storage.isSubscriptionEnabled();
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    res.json({ credits, isAdmin: user?.isAdmin || false });
+    res.json({ credits, isAdmin: user?.isAdmin || false, subscriptionEnabled });
+  });
+
+  // User's own listings (all statuses)
+  app.get("/api/user/listings", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const listings = await storage.getMyProducts(userId);
+    res.json(listings);
+  });
+
+  // Get expiring listings for the user (within 5 days of expiration)
+  app.get("/api/user/listings/expiring", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const daysLeft = Number(req.query.days) || 5;
+    const listings = await storage.getExpiringProducts(userId, daysLeft);
+    res.json(listings);
+  });
+
+  // Repost a listing (requires credit if subscription enabled)
+  app.post("/api/user/listings/:id/repost", isAuthenticated, async (req, res) => {
+    const id = Number(req.params.id);
+    const userId = getCurrentUserId(req)!;
+    
+    const product = await storage.getProduct(id);
+    if (!product) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    if (product.sellerId !== userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Check if subscription is enabled
+    const subscriptionEnabled = await storage.isSubscriptionEnabled();
+    if (subscriptionEnabled) {
+      const credits = await storage.getUserCredits(userId);
+      if (credits < 1) {
+        return res.status(402).json({
+          message: "You need credits to repost a listing.",
+          code: "INSUFFICIENT_CREDITS",
+        });
+      }
+      await storage.useCredit(userId);
+    }
+
+    const reposted = await storage.repostProduct(id);
+    res.json(reposted);
+  });
+
+  // Mark listing as sold (removes it)
+  app.post("/api/user/listings/:id/sold", isAuthenticated, async (req, res) => {
+    const id = Number(req.params.id);
+    const userId = getCurrentUserId(req)!;
+    
+    const product = await storage.getProduct(id);
+    if (!product) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    if (product.sellerId !== userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    await storage.markAsSold(id);
+    res.json({ message: "Listing marked as sold and removed" });
   });
 
   // App settings (public)
@@ -239,7 +306,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Add credits to user (admin)
   app.post("/api/admin/users/:userId/credits", isAuthenticated, isAdmin, async (req, res) => {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const { amount } = req.body;
     if (!amount || amount < 1) {
       return res.status(400).json({ message: "Invalid amount" });
