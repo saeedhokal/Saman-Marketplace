@@ -8,21 +8,34 @@ export * from "./models/auth";
 export const MAIN_CATEGORIES = ["Spare Parts", "Automotive"] as const;
 export type MainCategory = typeof MAIN_CATEGORIES[number];
 
-// Sub-categories for Spare Parts (car manufacturers + universal)
+// Sub-categories for Spare Parts (car brands - no Chinese + universal parts)
 export const SPARE_PARTS_SUBCATEGORIES = [
+  // Car brands (no Chinese)
   "Toyota", "Honda", "Nissan", "Ford", "Chevrolet", "BMW", "Mercedes", "Audi",
   "Volkswagen", "Hyundai", "Kia", "Mazda", "Mitsubishi", "Lexus", "Infiniti",
   "Land Rover", "Jeep", "Dodge", "GMC", "Porsche", "Ferrari", "Lamborghini",
-  "Turbos & Superchargers", "Tires", "Brakes", "Suspension", "Exhaust", "Engine Parts",
-  "Transmission", "Electrical", "Body Parts", "Interior", "Lights", "Other"
+  // Universal categories
+  "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other"
 ] as const;
 
-// Sub-categories for Automotive (vehicles for sale)
+// Sub-categories for Automotive (vehicles for sale - includes Chinese brands)
 export const AUTOMOTIVE_SUBCATEGORIES = [
-  "Toyota", "Honda", "Nissan", "Ford", "Chevrolet", "BMW", "Mercedes", "Audi",
-  "Volkswagen", "Hyundai", "Kia", "Mazda", "Mitsubishi", "Lexus", "Infiniti",
-  "Land Rover", "Jeep", "Dodge", "GMC", "Porsche", "Ferrari", "Lamborghini",
-  "Offroad", "Motorcycles", "Other"
+  // Japanese brands
+  "Toyota", "Honda", "Nissan", "Mazda", "Mitsubishi", "Lexus", "Infiniti", "Subaru",
+  // American brands
+  "Ford", "Chevrolet", "Dodge", "Jeep", "GMC", "Cadillac",
+  // German brands
+  "BMW", "Mercedes", "Audi", "Volkswagen", "Porsche",
+  // Korean brands
+  "Hyundai", "Kia", "Genesis",
+  // British brands
+  "Land Rover", "Jaguar", "Bentley", "Rolls Royce",
+  // Italian brands
+  "Ferrari", "Lamborghini", "Maserati", "Alfa Romeo",
+  // Chinese brands
+  "BYD", "Chery", "Geely", "Great Wall", "MG", "NIO", "XPeng", "Li Auto", "Haval",
+  // Other
+  "Motorcycles", "Other"
 ] as const;
 
 // Listing status for moderation
