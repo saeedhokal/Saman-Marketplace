@@ -46,7 +46,12 @@ export default function Sell() {
   const createProduct = useCreateProduct();
   const { uploadFile, isUploading, progress } = useUpload();
 
-  const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
+  const { data: userInfo } = useQuery<{ 
+    sparePartsCredits: number; 
+    automotiveCredits: number; 
+    isAdmin: boolean;
+    subscriptionEnabled: boolean;
+  }>({
     queryKey: ["/api/user/credits"],
     enabled: !!user,
   });
@@ -153,21 +158,40 @@ export default function Sell() {
       </div>
 
       <div className="container mx-auto px-4 pt-4 max-w-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Coins className="h-4 w-4 text-accent" />
-            <span className="text-sm font-medium">{userInfo?.credits || 0} Credits</span>
+        {userInfo?.subscriptionEnabled && (
+          <div className="mb-4 flex flex-col gap-2 p-3 bg-secondary/50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-accent" />
+                <span className="text-sm">Spare Parts Credits</span>
+              </div>
+              <span className="text-sm font-semibold">{userInfo?.sparePartsCredits || 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Car className="h-4 w-4 text-accent" />
+                <span className="text-sm">Automotive Credits</span>
+              </div>
+              <span className="text-sm font-semibold">{userInfo?.automotiveCredits || 0}</span>
+            </div>
           </div>
-        </div>
+        )}
 
-        {(!userInfo || userInfo.credits < 1) && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>No Credits</AlertTitle>
-            <AlertDescription>
-              You need at least 1 credit to post a listing.
-            </AlertDescription>
-          </Alert>
+        {userInfo?.subscriptionEnabled && mainCategory && (
+          (() => {
+            const requiredCredits = mainCategory === "Spare Parts" 
+              ? userInfo?.sparePartsCredits 
+              : userInfo?.automotiveCredits;
+            return requiredCredits < 1 ? (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>No {mainCategory} Credits</AlertTitle>
+                <AlertDescription>
+                  You need at least 1 {mainCategory} credit to post this listing.
+                </AlertDescription>
+              </Alert>
+            ) : null;
+          })()
         )}
 
         <div className="bg-card border border-border shadow-lg rounded-xl p-6 sm:p-8">

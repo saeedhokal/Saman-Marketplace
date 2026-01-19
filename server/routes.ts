@@ -97,17 +97,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Check if subscription is enabled (credit system)
       const subscriptionEnabled = await storage.isSubscriptionEnabled();
       if (subscriptionEnabled) {
-        // Check if user has credits
+        // Check if user has credits for this category
         const credits = await storage.getUserCredits(sellerId);
-        if (credits < 1) {
+        const category = input.mainCategory as "Spare Parts" | "Automotive";
+        const availableCredits = category === "Spare Parts" 
+          ? credits.sparePartsCredits 
+          : credits.automotiveCredits;
+        
+        if (availableCredits < 1) {
           return res.status(402).json({
-            message: "You need credits to post a listing. Please purchase credits to continue.",
+            message: `You need ${category} credits to post this listing. Please purchase credits to continue.`,
             code: "INSUFFICIENT_CREDITS",
+            category,
           });
         }
 
-        // Use 1 credit
-        await storage.useCredit(sellerId);
+        // Use 1 credit for this category
+        await storage.useCredit(sellerId, category);
       }
 
       const product = await storage.createProduct({
@@ -181,13 +187,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ isFavorite: isFav });
   });
 
-  // User credits API
+  // User credits API - returns separate credits for each category
   app.get("/api/user/credits", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
     const credits = await storage.getUserCredits(userId);
     const subscriptionEnabled = await storage.isSubscriptionEnabled();
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    res.json({ credits, isAdmin: user?.isAdmin || false, subscriptionEnabled });
+    res.json({ 
+      sparePartsCredits: credits.sparePartsCredits,
+      automotiveCredits: credits.automotiveCredits,
+      isAdmin: user?.isAdmin || false, 
+      subscriptionEnabled 
+    });
   });
 
   // User's own listings (all statuses)
@@ -222,13 +233,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const subscriptionEnabled = await storage.isSubscriptionEnabled();
     if (subscriptionEnabled) {
       const credits = await storage.getUserCredits(userId);
-      if (credits < 1) {
+      const category = product.mainCategory as "Spare Parts" | "Automotive";
+      const availableCredits = category === "Spare Parts" 
+        ? credits.sparePartsCredits 
+        : credits.automotiveCredits;
+      
+      if (availableCredits < 1) {
         return res.status(402).json({
-          message: "You need credits to repost a listing.",
+          message: `You need ${category} credits to repost this listing.`,
           code: "INSUFFICIENT_CREDITS",
+          category,
         });
       }
-      await storage.useCredit(userId);
+      await storage.useCredit(userId, category);
     }
 
     const reposted = await storage.repostProduct(id);
@@ -282,14 +299,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(product);
   });
 
-  // Reject a listing
+  // Reject a listing and refund credit
   app.post("/api/admin/listings/:id/reject", isAuthenticated, isAdmin, async (req, res) => {
     const id = Number(req.params.id);
     const { reason } = req.body;
-    const product = await storage.rejectProduct(id, reason || "Rejected by admin");
-    if (!product) {
+    
+    // Get the product first to get seller ID and category
+    const existingProduct = await storage.getProduct(id);
+    if (!existingProduct) {
       return res.status(404).json({ message: "Listing not found" });
     }
+    
+    const product = await storage.rejectProduct(id, reason || "Rejected by admin");
+    
+    // Refund credit to seller if subscription is enabled
+    const subscriptionEnabled = await storage.isSubscriptionEnabled();
+    if (subscriptionEnabled && existingProduct.sellerId) {
+      const category = existingProduct.mainCategory as "Spare Parts" | "Automotive";
+      await storage.refundCredit(existingProduct.sellerId, category);
+    }
+    
     res.json(product);
   });
 
@@ -306,14 +335,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(settings);
   });
 
-  // Add credits to user (admin)
+  // Add credits to user (admin) - category-specific
   app.post("/api/admin/users/:userId/credits", isAuthenticated, isAdmin, async (req, res) => {
     const userId = req.params.userId as string;
-    const { amount } = req.body;
+    const { amount, category } = req.body;
     if (!amount || amount < 1) {
       return res.status(400).json({ message: "Invalid amount" });
     }
-    const user = await storage.addCredits(userId, amount);
+    if (!category || (category !== "Spare Parts" && category !== "Automotive")) {
+      return res.status(400).json({ message: "Invalid category. Must be 'Spare Parts' or 'Automotive'" });
+    }
+    const user = await storage.addCredits(userId, category, amount);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

@@ -22,10 +22,11 @@ export interface IStorage {
   updateProduct(id: number, data: Partial<Product>): Promise<Product | undefined>;
   deleteExpiredProducts(): Promise<number>;
   
-  // Credits
-  getUserCredits(userId: string): Promise<number>;
-  addCredits(userId: string, amount: number): Promise<User | undefined>;
-  useCredit(userId: string): Promise<boolean>;
+  // Credits (category-specific)
+  getUserCredits(userId: string): Promise<{ sparePartsCredits: number; automotiveCredits: number }>;
+  addCredits(userId: string, category: "Spare Parts" | "Automotive", amount: number): Promise<User | undefined>;
+  useCredit(userId: string, category: "Spare Parts" | "Automotive"): Promise<boolean>;
+  refundCredit(userId: string, category: "Spare Parts" | "Automotive"): Promise<boolean>;
   isSubscriptionEnabled(): Promise<boolean>;
   
   // App Settings
@@ -195,28 +196,49 @@ export class DatabaseStorage implements IStorage {
     return result.length;
   }
 
-  // Credit methods
-  async getUserCredits(userId: string): Promise<number> {
-    const [user] = await db.select({ credits: users.credits })
+  // Credit methods (category-specific)
+  async getUserCredits(userId: string): Promise<{ sparePartsCredits: number; automotiveCredits: number }> {
+    const [user] = await db.select({ 
+      sparePartsCredits: users.sparePartsCredits,
+      automotiveCredits: users.automotiveCredits 
+    })
       .from(users)
       .where(eq(users.id, userId));
-    return user?.credits ?? 0;
+    return {
+      sparePartsCredits: user?.sparePartsCredits ?? 0,
+      automotiveCredits: user?.automotiveCredits ?? 0
+    };
   }
 
-  async addCredits(userId: string, amount: number): Promise<User | undefined> {
+  async addCredits(userId: string, category: "Spare Parts" | "Automotive", amount: number): Promise<User | undefined> {
+    const field = category === "Spare Parts" ? users.sparePartsCredits : users.automotiveCredits;
     const [user] = await db.update(users)
-      .set({ credits: sql`${users.credits} + ${amount}` })
+      .set(category === "Spare Parts" 
+        ? { sparePartsCredits: sql`${users.sparePartsCredits} + ${amount}` }
+        : { automotiveCredits: sql`${users.automotiveCredits} + ${amount}` })
       .where(eq(users.id, userId))
       .returning();
     return user;
   }
 
-  async useCredit(userId: string): Promise<boolean> {
+  async useCredit(userId: string, category: "Spare Parts" | "Automotive"): Promise<boolean> {
     const credits = await this.getUserCredits(userId);
-    if (credits < 1) return false;
+    const available = category === "Spare Parts" ? credits.sparePartsCredits : credits.automotiveCredits;
+    if (available < 1) return false;
     
     await db.update(users)
-      .set({ credits: sql`${users.credits} - 1` })
+      .set(category === "Spare Parts"
+        ? { sparePartsCredits: sql`${users.sparePartsCredits} - 1` }
+        : { automotiveCredits: sql`${users.automotiveCredits} - 1` })
+      .where(eq(users.id, userId));
+    return true;
+  }
+
+  async refundCredit(userId: string, category: "Spare Parts" | "Automotive"): Promise<boolean> {
+    await db.update(users)
+      .set(category === "Spare Parts"
+        ? { sparePartsCredits: sql`${users.sparePartsCredits} + 1` }
+        : { automotiveCredits: sql`${users.automotiveCredits} + 1` })
       .where(eq(users.id, userId));
     return true;
   }

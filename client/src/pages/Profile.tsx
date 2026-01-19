@@ -10,7 +10,12 @@ import {
 export default function Profile() {
   const { user, logout } = useAuth();
 
-  const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
+  const { data: userInfo } = useQuery<{ 
+    sparePartsCredits: number; 
+    automotiveCredits: number; 
+    isAdmin: boolean;
+    subscriptionEnabled: boolean;
+  }>({
     queryKey: ["/api/user/credits"],
     enabled: !!user,
   });
@@ -115,9 +120,12 @@ export default function Profile() {
           </Button>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6 mb-4">
-          Credits: {userInfo?.credits || 0}
-        </p>
+        {userInfo?.subscriptionEnabled && (
+          <div className="text-center text-xs text-muted-foreground mt-6 mb-4 space-y-1">
+            <p>Spare Parts Credits: {userInfo?.sparePartsCredits || 0}</p>
+            <p>Automotive Credits: {userInfo?.automotiveCredits || 0}</p>
+          </div>
+        )}
       </div>
     </div>
   );

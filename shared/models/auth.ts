@@ -22,7 +22,9 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  credits: integer("credits").default(0).notNull(),
+  credits: integer("credits").default(0).notNull(), // Legacy - kept for compatibility
+  sparePartsCredits: integer("spare_parts_credits").default(0).notNull(),
+  automotiveCredits: integer("automotive_credits").default(0).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
