@@ -1,11 +1,23 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth } from "./replit_integrations/auth";
+import { setupAuth, authStorage } from "./replit_integrations/auth";
 import { registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
+
+// Valid subcategories by main category
+const validSubcategories: Record<string, readonly string[]> = {
+  "Spare Parts": SPARE_PARTS_SUBCATEGORIES,
+  "Automotive": AUTOMOTIVE_SUBCATEGORIES,
+};
+
+function isValidCategoryPair(mainCategory: string, subCategory: string): boolean {
+  const validSubs = validSubcategories[mainCategory];
+  return !!validSubs && (validSubs as readonly string[]).includes(subCategory);
+}
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   await setupAuth(app);
@@ -33,6 +45,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Get products by seller (seller profile)
   app.get("/api/sellers/:sellerId/products", async (req, res) => {
     const sellerId = req.params.sellerId;
+    
+    // Basic validation: sellerId must be a non-empty string and reasonable length
+    if (!sellerId || typeof sellerId !== 'string' || sellerId.length > 100) {
+      return res.status(400).json({ message: "Invalid seller ID" });
+    }
+    
+    // Verify the seller exists before returning their products
+    const seller = await authStorage.getUser(sellerId);
+    if (!seller) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+    
     const products = await storage.getProductsBySeller(sellerId);
     res.json(products);
   });
@@ -43,6 +67,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         price: z.coerce.number(),
       });
       const input = bodySchema.parse(req.body);
+      
+      // Validate category/subcategory pair
+      if (!isValidCategoryPair(input.mainCategory, input.subCategory)) {
+        return res.status(400).json({
+          message: `Invalid subcategory "${input.subCategory}" for main category "${input.mainCategory}"`,
+          field: 'subCategory',
+        });
+      }
+      
       // @ts-ignore
       const sellerId = req.user.claims.sub;
 
