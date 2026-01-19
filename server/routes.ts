@@ -78,7 +78,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post(api.products.create.path, isAuthenticated, async (req, res) => {
     try {
       const bodySchema = api.products.create.input.extend({
-        price: z.coerce.number(),
+        price: z.coerce.number().optional(),
+        mileage: z.coerce.number().optional(),
+        year: z.coerce.number().optional(),
       });
       const input = bodySchema.parse(req.body);
       

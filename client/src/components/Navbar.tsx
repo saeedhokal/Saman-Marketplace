@@ -2,7 +2,6 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -14,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, LogOut, Menu, Heart, Shield, Coins } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import samanLogo from "@/assets/saman-logo.jpg";
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -32,13 +32,12 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg group-hover:bg-accent transition-colors duration-300">
-            S
-          </div>
-          <span className="font-display font-bold text-xl tracking-tight text-foreground">
-            Saman<span className="text-accent">Market</span>
-          </span>
+        <Link href="/" className="flex items-center group" data-testid="link-home-logo">
+          <img 
+            src={samanLogo} 
+            alt="Saman" 
+            className="h-10 sm:h-12 w-auto object-contain"
+          />
         </Link>
 
         {/* Desktop Nav */}

@@ -33,15 +33,18 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  price: integer("price").notNull(), // in cents
+  price: integer("price"), // in cents - optional now
   imageUrl: text("image_url").notNull(),
   mainCategory: text("main_category").notNull(), // "Spare Parts" or "Automotive"
   subCategory: text("sub_category").notNull(), // Toyota, Honda, Turbos, Motorcycles, etc.
-  condition: text("condition").notNull(), // New, Used, Refurbished
+  condition: text("condition"), // New, Used, Refurbished - optional
   sellerId: varchar("seller_id").notNull().references(() => users.id),
   location: text("location"),
   phoneNumber: text("phone_number"),
   whatsappNumber: text("whatsapp_number"),
+  // Automotive-specific fields
+  mileage: integer("mileage"), // in kilometers
+  year: integer("year"), // manufacture year
   status: text("status").default("pending").notNull(), // pending, approved, rejected
   rejectionReason: text("rejection_reason"),
   expiresAt: timestamp("expires_at"), // Set to 1 month after approval
@@ -63,6 +66,9 @@ export const insertProductSchema = createInsertSchema(products).omit({
   status: true, // Set by system
   rejectionReason: true, // Set by admin
   expiresAt: true, // Set when approved
+}).extend({
+  mileage: z.number().optional(),
+  year: z.number().optional(),
 });
 
 export const insertFavoriteSchema = createInsertSchema(favorites).omit({
