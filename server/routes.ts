@@ -47,6 +47,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(products);
   });
 
+  // Public: Get recent products (must come before :id route)
+  app.get("/api/products/recent", async (req, res) => {
+    const limit = Math.min(Number(req.query.limit) || 10, 20);
+    const products = await storage.getRecentProducts(limit);
+    res.json(products);
+  });
+
+  // Public: Get recommended products (must come before :id route)
+  app.get("/api/products/recommended", async (req, res) => {
+    const userId = getCurrentUserId(req);
+    const sessionId = req.sessionID;
+    const limit = Math.min(Number(req.query.limit) || 10, 20);
+    const products = await storage.getRecommendedProducts(userId || undefined, sessionId, limit);
+    res.json(products);
+  });
+
   app.get(api.products.get.path, async (req, res) => {
     const id = Number(req.params.id);
     const product = await storage.getProduct(id);
@@ -364,22 +380,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/banners", async (req, res) => {
     const banners = await storage.getActiveBanners();
     res.json(banners);
-  });
-
-  // Public: Get recent products
-  app.get("/api/products/recent", async (req, res) => {
-    const limit = Math.min(Number(req.query.limit) || 10, 20);
-    const products = await storage.getRecentProducts(limit);
-    res.json(products);
-  });
-
-  // Public: Get recommended products (For You)
-  app.get("/api/products/recommended", async (req, res) => {
-    const userId = getCurrentUserId(req);
-    const sessionId = req.sessionID;
-    const limit = Math.min(Number(req.query.limit) || 10, 20);
-    const products = await storage.getRecommendedProducts(userId || undefined, sessionId, limit);
-    res.json(products);
   });
 
   // Record product view for recommendations
