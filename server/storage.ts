@@ -211,11 +211,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addCredits(userId: string, category: "Spare Parts" | "Automotive", amount: number): Promise<User | undefined> {
-    const field = category === "Spare Parts" ? users.sparePartsCredits : users.automotiveCredits;
     const [user] = await db.update(users)
       .set(category === "Spare Parts" 
-        ? { sparePartsCredits: sql`${users.sparePartsCredits} + ${amount}` }
-        : { automotiveCredits: sql`${users.automotiveCredits} + ${amount}` })
+        ? { sparePartsCredits: sql`COALESCE(${users.sparePartsCredits}, 0) + ${amount}` }
+        : { automotiveCredits: sql`COALESCE(${users.automotiveCredits}, 0) + ${amount}` })
       .where(eq(users.id, userId))
       .returning();
     return user;
@@ -228,8 +227,8 @@ export class DatabaseStorage implements IStorage {
     
     await db.update(users)
       .set(category === "Spare Parts"
-        ? { sparePartsCredits: sql`${users.sparePartsCredits} - 1` }
-        : { automotiveCredits: sql`${users.automotiveCredits} - 1` })
+        ? { sparePartsCredits: sql`COALESCE(${users.sparePartsCredits}, 0) - 1` }
+        : { automotiveCredits: sql`COALESCE(${users.automotiveCredits}, 0) - 1` })
       .where(eq(users.id, userId));
     return true;
   }
@@ -237,8 +236,8 @@ export class DatabaseStorage implements IStorage {
   async refundCredit(userId: string, category: "Spare Parts" | "Automotive"): Promise<boolean> {
     await db.update(users)
       .set(category === "Spare Parts"
-        ? { sparePartsCredits: sql`${users.sparePartsCredits} + 1` }
-        : { automotiveCredits: sql`${users.automotiveCredits} + 1` })
+        ? { sparePartsCredits: sql`COALESCE(${users.sparePartsCredits}, 0) + 1` }
+        : { automotiveCredits: sql`COALESCE(${users.automotiveCredits}, 0) + 1` })
       .where(eq(users.id, userId));
     return true;
   }
