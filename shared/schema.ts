@@ -38,6 +38,49 @@ export const AUTOMOTIVE_SUBCATEGORIES = [
   "Motorcycles", "Other"
 ] as const;
 
+// Car models by brand (for Automotive filtering)
+export const CAR_MODELS: Record<string, string[]> = {
+  "Toyota": ["Camry", "Corolla", "Land Cruiser", "Prado", "RAV4", "Hilux", "Yaris", "Supra", "Fortuner", "Avalon"],
+  "Honda": ["Civic", "Accord", "CR-V", "HR-V", "Pilot", "Odyssey", "City", "Jazz"],
+  "Nissan": ["Altima", "Maxima", "Patrol", "X-Trail", "Sentra", "370Z", "GT-R", "Pathfinder", "Kicks"],
+  "Mazda": ["3", "6", "CX-3", "CX-5", "CX-9", "MX-5", "CX-30"],
+  "Mitsubishi": ["Pajero", "Outlander", "Lancer", "Eclipse Cross", "ASX", "Montero"],
+  "Lexus": ["ES", "GS", "IS", "LS", "LX", "RX", "NX", "GX", "LC", "RC"],
+  "Infiniti": ["Q50", "Q60", "Q70", "QX50", "QX60", "QX80"],
+  "Subaru": ["Impreza", "WRX", "Outback", "Forester", "Legacy", "BRZ", "Crosstrek"],
+  "Ford": ["Mustang", "F-150", "Explorer", "Expedition", "Edge", "Escape", "Ranger", "Bronco"],
+  "Chevrolet": ["Camaro", "Corvette", "Tahoe", "Suburban", "Silverado", "Traverse", "Equinox"],
+  "Dodge": ["Challenger", "Charger", "Durango", "Ram"],
+  "Jeep": ["Wrangler", "Grand Cherokee", "Cherokee", "Compass", "Renegade", "Gladiator"],
+  "GMC": ["Sierra", "Yukon", "Terrain", "Acadia", "Canyon"],
+  "Cadillac": ["Escalade", "CT5", "CT4", "XT5", "XT6"],
+  "BMW": ["1 Series", "2 Series", "3 Series", "4 Series", "5 Series", "6 Series", "7 Series", "8 Series", "X1", "X3", "X5", "X6", "X7", "M3", "M4", "M5"],
+  "Mercedes": ["A-Class", "C-Class", "E-Class", "S-Class", "GLA", "GLC", "GLE", "GLS", "G-Class", "AMG GT"],
+  "Audi": ["A1", "A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "Q8", "RS3", "RS5", "RS6", "RS7", "R8", "e-tron"],
+  "Volkswagen": ["Golf", "Passat", "Jetta", "Tiguan", "Touareg", "Atlas", "Arteon", "ID.4"],
+  "Porsche": ["911", "Cayenne", "Macan", "Panamera", "Taycan", "718 Boxster", "718 Cayman"],
+  "Hyundai": ["Elantra", "Sonata", "Tucson", "Santa Fe", "Palisade", "Kona", "Venue", "Ioniq"],
+  "Kia": ["Forte", "K5", "Sportage", "Sorento", "Telluride", "Soul", "Seltos", "Stinger", "EV6"],
+  "Genesis": ["G70", "G80", "G90", "GV70", "GV80"],
+  "Land Rover": ["Range Rover", "Range Rover Sport", "Range Rover Velar", "Range Rover Evoque", "Discovery", "Defender"],
+  "Jaguar": ["F-Type", "XE", "XF", "F-Pace", "E-Pace", "I-Pace"],
+  "Bentley": ["Continental GT", "Flying Spur", "Bentayga"],
+  "Rolls Royce": ["Phantom", "Ghost", "Wraith", "Dawn", "Cullinan"],
+  "Ferrari": ["488", "F8 Tributo", "Roma", "Portofino", "SF90", "812"],
+  "Lamborghini": ["Huracan", "Aventador", "Urus"],
+  "Maserati": ["Ghibli", "Quattroporte", "Levante", "MC20"],
+  "Alfa Romeo": ["Giulia", "Stelvio", "Tonale"],
+  "BYD": ["Tang", "Han", "Seal", "Dolphin", "Atto 3"],
+  "Chery": ["Tiggo 7", "Tiggo 8", "Arrizo 6"],
+  "Geely": ["Coolray", "Azkarra", "Emgrand"],
+  "Great Wall": ["Haval H6", "Haval H9", "Poer"],
+  "MG": ["ZS", "HS", "MG5", "MG6"],
+  "NIO": ["ES6", "ES8", "ET5", "ET7"],
+  "XPeng": ["P7", "G3", "P5"],
+  "Li Auto": ["L9", "L7", "L8"],
+  "Haval": ["H6", "H9", "Jolion"],
+};
+
 // Listing status for moderation
 export const LISTING_STATUS = ["pending", "approved", "rejected"] as const;
 export type ListingStatus = typeof LISTING_STATUS[number];
