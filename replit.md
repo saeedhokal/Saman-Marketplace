@@ -6,8 +6,11 @@ Saman Marketplace is a full-stack marketplace application for buying and selling
 
 The application allows users to browse parts by category, search for specific items, view detailed product listings, and authenticated users can create their own listings with image uploads. Key features include:
 - **Phone + OTP Authentication**: Users log in with phone number and 6-digit OTP code
-- **Credit-based posting system**: Users need credits to post listings (1 credit per listing) - can be toggled on/off
-- **Subscription toggle**: Admin can enable/disable credit requirement (free posting when disabled)
+- **Category-specific credits**: Spare Parts Credits and Automotive Credits are separate and cannot be used across categories
+- **Subscription packages**: Admin-configurable packages with pricing tiers (e.g., Basic 1 credit AED 30, Premium 10+2 credits AED 250)
+- **Payment processing**: Checkout flow with Apple Pay and Credit Card options via Telr gateway
+- **Revenue tracking**: Admin dashboard shows total revenue, breakdown by category, and transaction count
+- **Credit refund on rejection**: When listings are rejected, users get their category-specific credit back
 - **Admin moderation**: All listings require admin approval before going live
 - **1-month expiration**: Approved listings remain active for 1 month
 - **Expiration notifications**: Users can see listings about to expire and repost them
@@ -70,6 +73,13 @@ Routes are defined in `shared/routes.ts` with Zod schemas for type-safe API cont
 - `GET /api/user/listings/expiring` - Get listings about to expire
 - `POST /api/user/listings/:id/repost` - Repost a listing
 - `POST /api/user/listings/:id/sold` - Mark listing as sold
+- `GET /api/packages` - Get active subscription packages
+- `POST /api/checkout` - Process package purchase
+- `GET /api/admin/packages` - List all packages (admin)
+- `POST /api/admin/packages` - Create package (admin)
+- `PUT /api/admin/packages/:id` - Update package (admin)
+- `DELETE /api/admin/packages/:id` - Delete package (admin)
+- `GET /api/admin/revenue` - Get revenue statistics (admin)
 
 ### Database Schema
 Defined in `shared/schema.ts` using Drizzle ORM:
@@ -79,6 +89,8 @@ Defined in `shared/schema.ts` using Drizzle ORM:
 - `otp_codes` - OTP codes for phone authentication
 - `favorites` - User's saved listings
 - `app_settings` - App settings including subscriptionEnabled toggle
+- `subscription_packages` - Credit packages with name, price, credits, bonusCredits, category
+- `transactions` - Payment transactions for revenue tracking
 
 ### Build System
 - Development: `tsx` for TypeScript execution with Vite dev server
