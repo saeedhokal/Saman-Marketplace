@@ -2,17 +2,26 @@ import { Link } from "wouter";
 import { type Product } from "@shared/schema";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Store } from "lucide-react";
+import { format } from "date-fns";
 
 interface ProductCardProps {
   product: Product;
+  sellerImageUrl?: string | null;
+  showDate?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardProps) {
   const formattedPrice = new Intl.NumberFormat("en-AE", {
     style: "currency",
     currency: "AED",
     maximumFractionDigits: 0,
   }).format((product.price || 0) / 100);
+
+  const formattedDate = product.createdAt 
+    ? format(new Date(product.createdAt), 'MMM d')
+    : null;
 
   return (
     <motion.div
@@ -34,16 +43,33 @@ export function ProductCard({ product }: ProductCardProps) {
                 No Image
               </div>
             )}
+            
+            {sellerImageUrl && (
+              <div className="absolute top-2 left-2 z-10">
+                <Avatar className="h-8 w-8 border-2 border-white shadow-md">
+                  <AvatarImage src={sellerImageUrl} alt="Seller" />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <Store className="h-3 w-3" />
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
+            
+            {showDate && formattedDate && (
+              <div className="absolute bottom-2 right-2 z-10 px-2 py-0.5 bg-black/60 rounded text-white text-xs">
+                {formattedDate}
+              </div>
+            )}
           </div>
 
-          <CardContent className="p-4">
-            <h3 className="font-display text-base font-bold leading-tight text-foreground line-clamp-2 group-hover:text-accent transition-colors">
+          <CardContent className="p-3 sm:p-4">
+            <h3 className="font-display text-sm sm:text-base font-bold leading-tight text-foreground line-clamp-2 group-hover:text-accent transition-colors">
               {product.title}
             </h3>
           </CardContent>
 
-          <CardFooter className="p-4 pt-0 mt-auto">
-            <p className="font-display text-lg font-bold text-primary">
+          <CardFooter className="p-3 sm:p-4 pt-0 mt-auto">
+            <p className="font-display text-base sm:text-lg font-bold text-primary">
               {formattedPrice}
             </p>
           </CardFooter>

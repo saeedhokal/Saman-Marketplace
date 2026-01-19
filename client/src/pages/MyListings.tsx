@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
   Search, ArrowLeft, Loader2, Package, Plus, MoreVertical,
-  Pencil, Trash2, CheckCircle, Clock
+  Pencil, Trash2, CheckCircle, Clock, Timer
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { differenceInDays } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Product } from "@shared/schema";
 
-type ListingWithStatus = Product & { status: string };
+type ListingWithStatus = Product & { status: string; expiresAt?: string | null };
 
 export default function MyListings() {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -90,15 +91,30 @@ export default function MyListings() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">Active</span>;
+        return <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Active</span>;
       case "pending":
-        return <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">Pending</span>;
+        return <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Pending</span>;
       case "rejected":
-        return <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700">Rejected</span>;
+        return <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Rejected</span>;
       case "sold":
-        return <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">Sold</span>;
+        return <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400">Sold</span>;
       default:
         return null;
+    }
+  };
+
+  const getExpirationBadge = (listing: ListingWithStatus) => {
+    if (listing.status !== "approved" || !listing.expiresAt) return null;
+    
+    const expiresAt = new Date(listing.expiresAt);
+    const daysLeft = differenceInDays(expiresAt, new Date());
+    
+    if (daysLeft < 0) {
+      return <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-1"><Timer className="h-3 w-3" />Expired</span>;
+    } else if (daysLeft <= 7) {
+      return <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 flex items-center gap-1"><Timer className="h-3 w-3" />{daysLeft} day{daysLeft !== 1 ? 's' : ''} left</span>;
+    } else {
+      return <span className="text-xs text-muted-foreground flex items-center gap-1"><Timer className="h-3 w-3" />{daysLeft} days left</span>;
     }
   };
 
@@ -174,8 +190,9 @@ export default function MyListings() {
                     </DropdownMenu>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">{listing.subCategory}</p>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center flex-wrap gap-2 mt-2">
                     {getStatusBadge(listing.status)}
+                    {getExpirationBadge(listing)}
                   </div>
                 </div>
               </div>
