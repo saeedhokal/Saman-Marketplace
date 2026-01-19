@@ -82,7 +82,7 @@ export default function Auth() {
         lastName: lastName || undefined,
       });
       toast({
-        title: result.isNewUser ? "Welcome to SamanMarket!" : "Welcome back!",
+        title: result.isNewUser ? "Welcome to Saman Marketplace!" : "Welcome back!",
         description: result.isNewUser 
           ? "Your account has been created." 
           : "You have been logged in successfully.",
@@ -183,7 +183,7 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">SamanMarket</CardTitle>
+          <CardTitle className="text-2xl font-bold">Saman Marketplace</CardTitle>
           <CardDescription>UAE Spare Parts Marketplace</CardDescription>
         </CardHeader>
         <CardContent>

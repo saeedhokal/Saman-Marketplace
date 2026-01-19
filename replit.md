@@ -1,8 +1,8 @@
-# SamanMarket - Spare Parts Marketplace
+# Saman Marketplace - Spare Parts & Automotive Marketplace
 
 ## Overview
 
-SamanMarket is a full-stack marketplace application for buying and selling spare parts in the UAE. It features a React frontend with a modern industrial design aesthetic, an Express.js backend with PostgreSQL database, and object storage for images.
+Saman Marketplace is a full-stack marketplace application for buying and selling spare parts and automotive in the UAE. It features a React frontend with a modern industrial design aesthetic, an Express.js backend with PostgreSQL database, and object storage for images.
 
 The application allows users to browse parts by category, search for specific items, view detailed product listings, and authenticated users can create their own listings with image uploads. Key features include:
 - **Phone + OTP Authentication**: Users log in with phone number and 6-digit OTP code
