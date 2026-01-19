@@ -3,7 +3,7 @@ import connectPg from "connect-pg-simple";
 import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "./db";
 import { users, otpCodes } from "@shared/models/auth";
-import { eq, and, gt, desc } from "drizzle-orm";
+import { eq, and, gt, desc, sql } from "drizzle-orm";
 
 declare module "express-session" {
   interface SessionData {
@@ -17,6 +17,53 @@ function generateOTP(): string {
 
 function normalizePhone(phone: string): string {
   return phone.replace(/[^0-9+]/g, "");
+}
+
+// Simple in-memory rate limiter for OTP endpoints
+const otpAttempts = new Map<string, { count: number; lastAttempt: number }>();
+const OTP_MAX_ATTEMPTS = 5;
+const OTP_LOCKOUT_MINUTES = 15;
+
+function checkRateLimit(key: string): { allowed: boolean; minutesLeft?: number } {
+  const now = Date.now();
+  const record = otpAttempts.get(key);
+  
+  if (!record) {
+    return { allowed: true };
+  }
+  
+  const lockoutMs = OTP_LOCKOUT_MINUTES * 60 * 1000;
+  const timeSinceFirst = now - record.lastAttempt;
+  
+  // Reset if lockout period has passed
+  if (timeSinceFirst > lockoutMs) {
+    otpAttempts.delete(key);
+    return { allowed: true };
+  }
+  
+  if (record.count >= OTP_MAX_ATTEMPTS) {
+    const minutesLeft = Math.ceil((lockoutMs - timeSinceFirst) / 60000);
+    return { allowed: false, minutesLeft };
+  }
+  
+  return { allowed: true };
+}
+
+function recordAttempt(key: string, success: boolean): void {
+  if (success) {
+    otpAttempts.delete(key);
+    return;
+  }
+  
+  const now = Date.now();
+  const record = otpAttempts.get(key);
+  
+  if (record) {
+    record.count++;
+    record.lastAttempt = now;
+  } else {
+    otpAttempts.set(key, { count: 1, lastAttempt: now });
+  }
 }
 
 export function setupSimpleAuth(app: Express) {
@@ -103,6 +150,15 @@ export function setupSimpleAuth(app: Express) {
       }
 
       const normalizedPhone = normalizePhone(phone);
+      
+      // Rate limiting check
+      const rateLimitKey = `verify:${normalizedPhone}`;
+      const rateCheck = checkRateLimit(rateLimitKey);
+      if (!rateCheck.allowed) {
+        return res.status(429).json({ 
+          message: `Too many attempts. Please try again in ${rateCheck.minutesLeft} minutes.` 
+        });
+      }
 
       // Find valid OTP
       const [validOtp] = await db
@@ -120,8 +176,12 @@ export function setupSimpleAuth(app: Express) {
         .limit(1);
 
       if (!validOtp) {
+        recordAttempt(rateLimitKey, false);
         return res.status(401).json({ message: "Invalid or expired OTP" });
       }
+      
+      // Success - clear rate limit
+      recordAttempt(rateLimitKey, true);
 
       // Mark OTP as verified
       await db
