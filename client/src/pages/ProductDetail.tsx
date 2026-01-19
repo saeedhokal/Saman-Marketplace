@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useProduct } from "@/hooks/use-products";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
@@ -8,6 +9,7 @@ import { ArrowLeft, Phone, Heart, MapPin, Store, MessageCircle } from "lucide-re
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -18,6 +20,12 @@ export default function ProductDetail() {
   const addFavorite = useAddFavorite();
   const removeFavorite = useRemoveFavorite();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (id && product) {
+      apiRequest("POST", `/api/products/${id}/view`).catch(() => {});
+    }
+  }, [id, product]);
 
   const handleToggleFavorite = async () => {
     if (!user) {
@@ -72,11 +80,13 @@ export default function ProductDetail() {
     );
   }
 
-  const formattedPrice = new Intl.NumberFormat("en-AE", {
-    style: "currency",
-    currency: "AED",
-    maximumFractionDigits: 0,
-  }).format(product.price / 100);
+  const formattedPrice = product.price 
+    ? new Intl.NumberFormat("en-AE", {
+        style: "currency",
+        currency: "AED",
+        maximumFractionDigits: 0,
+      }).format(product.price / 100)
+    : null;
 
   return (
     <div className="min-h-screen bg-background pb-20">

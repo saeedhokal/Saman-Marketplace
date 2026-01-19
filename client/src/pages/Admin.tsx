@@ -5,16 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, List, Image } from "lucide-react";
-import type { Product, AppSettings } from "@shared/schema";
+import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, List, Image, Plus, GripVertical, ArrowLeft } from "lucide-react";
+import type { Product, AppSettings, Banner } from "@shared/schema";
 import { Link } from "wouter";
 
 export default function Admin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [newBanner, setNewBanner] = useState({
+    title: "",
+    subtitle: "",
+    imageUrl: "",
+    linkUrl: "",
+    buttonText: "",
+    isActive: true,
+    sortOrder: 0,
+  });
 
   const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
     queryKey: ["/api/user/credits"],
@@ -32,6 +42,11 @@ export default function Admin() {
 
   const { data: settings } = useQuery<AppSettings>({
     queryKey: ["/api/settings"],
+    enabled: !!userInfo?.isAdmin,
+  });
+
+  const { data: banners = [] } = useQuery<Banner[]>({
+    queryKey: ["/api/admin/banners"],
     enabled: !!userInfo?.isAdmin,
   });
 
@@ -71,11 +86,33 @@ export default function Admin() {
     },
   });
 
-  const [settingsForm, setSettingsForm] = useState({
-    bannerTitle: "",
-    bannerSubtitle: "",
-    bannerImageUrl: "",
-    introVideoUrl: "",
+  const createBannerMutation = useMutation({
+    mutationFn: (data: typeof newBanner) => apiRequest("POST", "/api/admin/banners", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/banners"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/banners"] });
+      setNewBanner({ title: "", subtitle: "", imageUrl: "", linkUrl: "", buttonText: "", isActive: true, sortOrder: 0 });
+      toast({ title: "Banner created" });
+    },
+  });
+
+  const updateBannerMutation = useMutation({
+    mutationFn: ({ id, ...data }: Partial<Banner> & { id: number }) => 
+      apiRequest("PUT", `/api/admin/banners/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/banners"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/banners"] });
+      toast({ title: "Banner updated" });
+    },
+  });
+
+  const deleteBannerMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/admin/banners/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/banners"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/banners"] });
+      toast({ title: "Banner deleted" });
+    },
   });
 
   if (!userInfo?.isAdmin) {
@@ -109,27 +146,33 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="container mx-auto max-w-6xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-display text-3xl font-bold">Admin Panel</h1>
-          <Link href="/">
-            <Button variant="outline">Back to App</Button>
-          </Link>
+    <div className="min-h-screen bg-background pb-20">
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center h-14">
+            <Link href="/">
+              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            </Link>
+            <h1 className="flex-1 text-center font-semibold text-lg pr-8">Admin Panel</h1>
+          </div>
         </div>
+      </div>
 
+      <div className="container mx-auto px-4 pt-4 max-w-6xl">
         <Tabs defaultValue="pending" className="space-y-6">
-          <TabsList className="grid grid-cols-3 w-full max-w-md">
-            <TabsTrigger value="pending" className="gap-2">
-              <Clock className="h-4 w-4" />
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="pending" className="text-xs sm:text-sm">
               Pending ({pendingListings?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="all" className="gap-2">
-              <List className="h-4 w-4" />
-              All Listings
+            <TabsTrigger value="all" className="text-xs sm:text-sm">
+              All
             </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2">
-              <Settings className="h-4 w-4" />
+            <TabsTrigger value="banners" className="text-xs sm:text-sm">
+              Banners
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs sm:text-sm">
               Settings
             </TabsTrigger>
           </TabsList>
@@ -183,58 +226,181 @@ export default function Admin() {
             )}
           </TabsContent>
 
+          <TabsContent value="banners" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Add New Banner
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Title *</label>
+                    <Input
+                      placeholder="e.g. Sell your Spare Parts"
+                      value={newBanner.title}
+                      onChange={(e) => setNewBanner({ ...newBanner, title: e.target.value })}
+                      data-testid="input-new-banner-title"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Subtitle</label>
+                    <Input
+                      placeholder="e.g. Easy and quick today!"
+                      value={newBanner.subtitle}
+                      onChange={(e) => setNewBanner({ ...newBanner, subtitle: e.target.value })}
+                      data-testid="input-new-banner-subtitle"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Image URL *</label>
+                  <Input
+                    placeholder="https://..."
+                    value={newBanner.imageUrl}
+                    onChange={(e) => setNewBanner({ ...newBanner, imageUrl: e.target.value })}
+                    data-testid="input-new-banner-image"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Button Text</label>
+                    <Input
+                      placeholder="e.g. View Offers"
+                      value={newBanner.buttonText}
+                      onChange={(e) => setNewBanner({ ...newBanner, buttonText: e.target.value })}
+                      data-testid="input-new-banner-button"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Link URL</label>
+                    <Input
+                      placeholder="/categories or https://..."
+                      value={newBanner.linkUrl}
+                      onChange={(e) => setNewBanner({ ...newBanner, linkUrl: e.target.value })}
+                      data-testid="input-new-banner-link"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Sort Order</label>
+                    <Input
+                      type="number"
+                      value={newBanner.sortOrder}
+                      onChange={(e) => setNewBanner({ ...newBanner, sortOrder: parseInt(e.target.value) || 0 })}
+                      className="w-24"
+                      data-testid="input-new-banner-order"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 mt-6">
+                    <Switch
+                      checked={newBanner.isActive}
+                      onCheckedChange={(checked) => setNewBanner({ ...newBanner, isActive: checked })}
+                      data-testid="switch-new-banner-active"
+                    />
+                    <span className="text-sm">Active</span>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => createBannerMutation.mutate(newBanner)}
+                  disabled={!newBanner.title || !newBanner.imageUrl || createBannerMutation.isPending}
+                  data-testid="button-create-banner"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Banner
+                </Button>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Existing Banners ({banners.length})</h3>
+              {banners.length === 0 ? (
+                <Card>
+                  <CardContent className="py-10 text-center text-muted-foreground">
+                    <Image className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No banners yet. Create your first banner above.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                banners.map((banner) => (
+                  <Card key={banner.id}>
+                    <CardContent className="pt-4">
+                      <div className="flex gap-4">
+                        <div className="w-32 h-20 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
+                          {banner.imageUrl && (
+                            <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h4 className="font-semibold">{banner.title}</h4>
+                              {banner.subtitle && <p className="text-sm text-muted-foreground">{banner.subtitle}</p>}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={banner.isActive ? "default" : "secondary"}>
+                                {banner.isActive ? "Active" : "Inactive"}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">Order: {banner.sortOrder}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateBannerMutation.mutate({ id: banner.id, isActive: !banner.isActive })}
+                              data-testid={`toggle-banner-${banner.id}`}
+                            >
+                              {banner.isActive ? "Disable" : "Enable"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteBannerMutation.mutate(banner.id)}
+                              data-testid={`delete-banner-${banner.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </TabsContent>
+
           <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Image className="h-5 w-5" />
-                  Banner & Intro Settings
+                  <Settings className="h-5 w-5" />
+                  Subscription Settings
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Banner Title</label>
-                  <Input
-                    placeholder="e.g. UAE's Marketplace for Parts & Vehicles"
-                    value={settingsForm.bannerTitle || settings?.bannerTitle || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, bannerTitle: e.target.value })}
-                    data-testid="input-banner-title"
+                <div className="flex items-center justify-between py-4 border-b">
+                  <div>
+                    <p className="font-medium">Credit System</p>
+                    <p className="text-sm text-muted-foreground">
+                      When enabled, users need credits to post listings
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings?.subscriptionEnabled || false}
+                    onCheckedChange={(checked) => updateSettingsMutation.mutate({ subscriptionEnabled: checked })}
+                    data-testid="switch-subscription"
                   />
                 </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Banner Subtitle</label>
-                  <Input
-                    placeholder="e.g. Find spare parts and vehicles from trusted sellers"
-                    value={settingsForm.bannerSubtitle || settings?.bannerSubtitle || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, bannerSubtitle: e.target.value })}
-                    data-testid="input-banner-subtitle"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Banner Image URL</label>
-                  <Input
-                    placeholder="https://..."
-                    value={settingsForm.bannerImageUrl || settings?.bannerImageUrl || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, bannerImageUrl: e.target.value })}
-                    data-testid="input-banner-image"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Intro Video URL</label>
-                  <Input
-                    placeholder="https://youtube.com/..."
-                    value={settingsForm.introVideoUrl || settings?.introVideoUrl || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, introVideoUrl: e.target.value })}
-                    data-testid="input-intro-video"
-                  />
-                </div>
-                <Button
-                  onClick={() => updateSettingsMutation.mutate(settingsForm)}
-                  disabled={updateSettingsMutation.isPending}
-                  data-testid="button-save-settings"
-                >
-                  Save Settings
-                </Button>
+                <p className="text-sm text-muted-foreground">
+                  {settings?.subscriptionEnabled 
+                    ? "Users need to purchase credits to post listings (1 credit per listing)"
+                    : "Posting is free for all users"}
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -278,9 +444,11 @@ function ListingCard({
                 <p className="text-sm text-muted-foreground">
                   {listing.mainCategory} / {listing.subCategory}
                 </p>
-                <p className="text-lg font-bold text-accent mt-1">
-                  AED {(listing.price / 100).toLocaleString()}
-                </p>
+                {listing.price && (
+                  <p className="text-lg font-bold text-accent mt-1">
+                    AED {(listing.price / 100).toLocaleString()}
+                  </p>
+                )}
               </div>
               {getStatusBadge(listing.status)}
             </div>
