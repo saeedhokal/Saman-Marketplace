@@ -326,5 +326,77 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ deletedCount: count });
   });
 
+  // ========== BANNER ROUTES ==========
+  
+  // Public: Get active banners
+  app.get("/api/banners", async (req, res) => {
+    const banners = await storage.getActiveBanners();
+    res.json(banners);
+  });
+
+  // Public: Get recent products
+  app.get("/api/products/recent", async (req, res) => {
+    const limit = Math.min(Number(req.query.limit) || 10, 20);
+    const products = await storage.getRecentProducts(limit);
+    res.json(products);
+  });
+
+  // Public: Get recommended products (For You)
+  app.get("/api/products/recommended", async (req, res) => {
+    const userId = getCurrentUserId(req);
+    const sessionId = req.sessionID;
+    const limit = Math.min(Number(req.query.limit) || 10, 20);
+    const products = await storage.getRecommendedProducts(userId || undefined, sessionId, limit);
+    res.json(products);
+  });
+
+  // Record product view for recommendations
+  app.post("/api/products/:id/view", async (req, res) => {
+    const productId = Number(req.params.id);
+    const product = await storage.getProduct(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const userId = getCurrentUserId(req);
+    await storage.recordView({
+      userId: userId || null,
+      sessionId: req.sessionID,
+      productId,
+      mainCategory: product.mainCategory,
+      subCategory: product.subCategory,
+    });
+    res.json({ recorded: true });
+  });
+
+  // Admin: Get all banners
+  app.get("/api/admin/banners", isAuthenticated, isAdmin, async (req, res) => {
+    const banners = await storage.getAllBanners();
+    res.json(banners);
+  });
+
+  // Admin: Create banner
+  app.post("/api/admin/banners", isAuthenticated, isAdmin, async (req, res) => {
+    const banner = await storage.createBanner(req.body);
+    res.status(201).json(banner);
+  });
+
+  // Admin: Update banner
+  app.put("/api/admin/banners/:id", isAuthenticated, isAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    const banner = await storage.updateBanner(id, req.body);
+    if (!banner) {
+      return res.status(404).json({ message: "Banner not found" });
+    }
+    res.json(banner);
+  });
+
+  // Admin: Delete banner
+  app.delete("/api/admin/banners/:id", isAuthenticated, isAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    await storage.deleteBanner(id);
+    res.sendStatus(204);
+  });
+
   return httpServer;
 }

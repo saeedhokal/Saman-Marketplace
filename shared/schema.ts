@@ -72,6 +72,30 @@ export const favorites = pgTable("favorites", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Banners for homepage carousel (admin-controlled)
+export const banners = pgTable("banners", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  imageUrl: text("image_url").notNull(),
+  linkUrl: text("link_url"), // Optional link when clicked
+  buttonText: text("button_text"), // e.g. "View Offers"
+  isActive: boolean("is_active").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Track user views for "For You" recommendations
+export const userViews = pgTable("user_views", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id), // Can be null for anonymous
+  sessionId: text("session_id"), // For anonymous users
+  productId: integer("product_id").notNull().references(() => products.id),
+  mainCategory: text("main_category"),
+  subCategory: text("sub_category"),
+  viewedAt: timestamp("viewed_at").defaultNow(),
+});
+
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
   createdAt: true,
@@ -90,10 +114,24 @@ export const insertFavoriteSchema = createInsertSchema(favorites).omit({
   userId: true, // Derived from auth
 });
 
+export const insertBannerSchema = createInsertSchema(banners).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserViewSchema = createInsertSchema(userViews).omit({
+  id: true,
+  viewedAt: true,
+});
+
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Favorite = typeof favorites.$inferSelect;
 export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
+export type Banner = typeof banners.$inferSelect;
+export type InsertBanner = z.infer<typeof insertBannerSchema>;
+export type UserView = typeof userViews.$inferSelect;
+export type InsertUserView = z.infer<typeof insertUserViewSchema>;
 export type AppSettings = typeof appSettings.$inferSelect;
 export type { OtpCode } from "./models/auth";
 export { otpCodes } from "./models/auth";

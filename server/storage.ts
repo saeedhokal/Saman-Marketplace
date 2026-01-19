@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { products, favorites, users, appSettings, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings } from "@shared/schema";
-import { eq, ilike, desc, and, or, lt, sql } from "drizzle-orm";
+import { products, favorites, users, appSettings, banners, userViews, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings, type Banner, type InsertBanner, type UserView, type InsertUserView } from "@shared/schema";
+import { eq, ilike, desc, and, or, lt, sql, asc } from "drizzle-orm";
 
 export interface IStorage {
   // Products
@@ -37,6 +37,18 @@ export interface IStorage {
   addFavorite(userId: string, productId: number): Promise<Favorite>;
   removeFavorite(userId: string, productId: number): Promise<void>;
   isFavorite(userId: string, productId: number): Promise<boolean>;
+  
+  // Banners
+  getActiveBanners(): Promise<Banner[]>;
+  getAllBanners(): Promise<Banner[]>;
+  createBanner(banner: InsertBanner): Promise<Banner>;
+  updateBanner(id: number, data: Partial<Banner>): Promise<Banner | undefined>;
+  deleteBanner(id: number): Promise<void>;
+  
+  // User Views & Recommendations
+  recordView(view: InsertUserView): Promise<void>;
+  getRecentProducts(limit?: number): Promise<Product[]>;
+  getRecommendedProducts(userId?: string, sessionId?: string, limit?: number): Promise<Product[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -263,6 +275,97 @@ export class DatabaseStorage implements IStorage {
       and(eq(favorites.userId, userId), eq(favorites.productId, productId))
     );
     return !!fav;
+  }
+
+  // Banner methods
+  async getActiveBanners(): Promise<Banner[]> {
+    return await db.select().from(banners)
+      .where(eq(banners.isActive, true))
+      .orderBy(asc(banners.sortOrder));
+  }
+
+  async getAllBanners(): Promise<Banner[]> {
+    return await db.select().from(banners)
+      .orderBy(asc(banners.sortOrder));
+  }
+
+  async createBanner(banner: InsertBanner): Promise<Banner> {
+    const [newBanner] = await db.insert(banners).values(banner).returning();
+    return newBanner;
+  }
+
+  async updateBanner(id: number, data: Partial<Banner>): Promise<Banner | undefined> {
+    const [updated] = await db.update(banners)
+      .set(data)
+      .where(eq(banners.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBanner(id: number): Promise<void> {
+    await db.delete(banners).where(eq(banners.id, id));
+  }
+
+  // User Views & Recommendations
+  async recordView(view: InsertUserView): Promise<void> {
+    await db.insert(userViews).values(view);
+  }
+
+  async getRecentProducts(limit: number = 10): Promise<Product[]> {
+    return await db.select().from(products)
+      .where(and(
+        eq(products.status, "approved"),
+        or(
+          sql`${products.expiresAt} IS NULL`,
+          sql`${products.expiresAt} > NOW()`
+        )
+      ))
+      .orderBy(desc(products.createdAt))
+      .limit(limit);
+  }
+
+  async getRecommendedProducts(userId?: string, sessionId?: string, limit: number = 10): Promise<Product[]> {
+    // Get categories the user has viewed
+    const viewConditions = userId 
+      ? eq(userViews.userId, userId)
+      : sessionId 
+        ? eq(userViews.sessionId, sessionId)
+        : sql`1=0`;
+
+    const viewedCategories = await db.select({
+      mainCategory: userViews.mainCategory,
+      subCategory: userViews.subCategory,
+    })
+      .from(userViews)
+      .where(viewConditions)
+      .orderBy(desc(userViews.viewedAt))
+      .limit(20);
+
+    if (viewedCategories.length === 0) {
+      // No view history, return recent products
+      return this.getRecentProducts(limit);
+    }
+
+    // Get products from viewed categories
+    const categoryConditions = viewedCategories
+      .filter(v => v.subCategory)
+      .map(v => eq(products.subCategory, v.subCategory!));
+
+    if (categoryConditions.length === 0) {
+      return this.getRecentProducts(limit);
+    }
+
+    return await db.select().from(products)
+      .where(and(
+        eq(products.status, "approved"),
+        or(
+          sql`${products.expiresAt} IS NULL`,
+          sql`${products.expiresAt} > NOW()`
+        ),
+        or(...categoryConditions)
+      ))
+      .orderBy(desc(products.createdAt))
+      .limit(limit);
   }
 }
 
