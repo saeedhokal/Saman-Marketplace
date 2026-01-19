@@ -14,6 +14,8 @@ export const SPARE_PARTS_SUBCATEGORIES = [
   "Toyota", "Honda", "Nissan", "Ford", "Chevrolet", "BMW", "Mercedes", "Audi",
   "Volkswagen", "Hyundai", "Kia", "Mazda", "Mitsubishi", "Lexus", "Infiniti",
   "Land Rover", "Jeep", "Dodge", "GMC", "Porsche", "Ferrari", "Lamborghini",
+  // Off-road / ATV brands
+  "CAN-AM", "Polaris", "OFFROAD",
   // Universal categories
   "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other"
 ] as const;
@@ -34,6 +36,8 @@ export const AUTOMOTIVE_SUBCATEGORIES = [
   "Ferrari", "Lamborghini", "Maserati", "Alfa Romeo",
   // Chinese brands
   "BYD", "Chery", "Geely", "Great Wall", "MG", "NIO", "XPeng", "Li Auto", "Haval",
+  // Off-road / ATV brands
+  "CAN-AM", "Polaris", "OFFROAD",
   // Other
   "Motorcycles", "Other"
 ] as const;
@@ -90,7 +94,8 @@ export const products = pgTable("products", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   price: integer("price"), // in cents - optional now
-  imageUrl: text("image_url").notNull(),
+  imageUrl: text("image_url").notNull(), // Primary image (first image)
+  imageUrls: text("image_urls").array(), // Additional images (up to 20 total)
   mainCategory: text("main_category").notNull(), // "Spare Parts" or "Automotive"
   subCategory: text("sub_category").notNull(), // Toyota, Honda, Turbos, Motorcycles, etc.
   condition: text("condition"), // New, Used, Refurbished - optional

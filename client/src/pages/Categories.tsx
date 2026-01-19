@@ -17,7 +17,7 @@ import {
 import { Link } from "wouter";
 
 type MainCategory = "automotive" | "spare-parts";
-type SortOption = "newest" | "price-low" | "price-high";
+type SortOption = "newest" | "oldest" | "price-low" | "price-high";
 
 export default function Categories() {
   const [location] = useLocation();
@@ -90,7 +90,9 @@ export default function Categories() {
       );
     }
     
-    if (sortBy === "price-low") {
+    if (sortBy === "oldest") {
+      filtered.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+    } else if (sortBy === "price-low") {
       filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sortBy === "price-high") {
       filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
@@ -201,19 +203,18 @@ export default function Categories() {
             </Select>
           )}
 
-          {activeCategory === "automotive" && (
-            <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
-              <SelectTrigger className="w-full" data-testid="select-sort">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
+          <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
+            <SelectTrigger className="w-full" data-testid="select-sort">
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest to Oldest</SelectItem>
+              <SelectItem value="oldest">Oldest to Newest</SelectItem>
+              <SelectItem value="price-low">Price: Low to High</SelectItem>
+              <SelectItem value="price-high">Price: High to Low</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {isLoading ? (
