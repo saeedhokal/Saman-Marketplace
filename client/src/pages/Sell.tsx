@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCreateProduct } from "@/hooks/use-products";
 import { useUpload } from "@/hooks/use-upload";
 import { useAuth } from "@/hooks/use-auth";
-import { insertProductSchema, MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
+import { insertProductSchema } from "@shared/schema";
 import { 
   Form, 
   FormControl, 
@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Select, 
@@ -28,9 +28,10 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
 import { Loader2, UploadCloud, AlertCircle, Coins, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CategoryCombobox } from "@/components/CategoryCombobox";
 
 const formSchema = insertProductSchema.extend({
   price: z.coerce.number().min(1, "Price is required"),
@@ -51,8 +52,6 @@ export default function Sell() {
   const { toast } = useToast();
   const createProduct = useCreateProduct();
   const { uploadFile, isUploading, progress } = useUpload();
-  const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
-
   const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
     queryKey: ["/api/user/credits"],
     enabled: !!user,
@@ -74,20 +73,14 @@ export default function Sell() {
     },
   });
 
+  const mainCategory = form.watch("mainCategory");
+  const subCategory = form.watch("subCategory");
+
   useEffect(() => {
     if (!isAuthLoading && !user) {
       setLocation("/auth");
     }
   }, [user, isAuthLoading, setLocation]);
-
-  const getSubcategories = () => {
-    if (selectedMainCategory === "Spare Parts") {
-      return SPARE_PARTS_SUBCATEGORIES;
-    } else if (selectedMainCategory === "Automotive") {
-      return AUTOMOTIVE_SUBCATEGORIES;
-    }
-    return [];
-  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -205,67 +198,19 @@ export default function Sell() {
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold border-b pb-2">Category</h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="mainCategory"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Main Category</FormLabel>
-                        <Select 
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            setSelectedMainCategory(value);
-                            form.setValue("subCategory", "");
-                          }} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-12" data-testid="select-main-category">
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {MAIN_CATEGORIES.map((cat) => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Spare Parts for car parts, Automotive for vehicles
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="subCategory"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sub-Category</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                          disabled={!selectedMainCategory}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-12" data-testid="select-sub-category">
-                              <SelectValue placeholder={selectedMainCategory ? "Select sub-category" : "Select main category first"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {getSubcategories().map((cat) => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <CategoryCombobox
+                  mainCategory={mainCategory}
+                  subCategory={subCategory}
+                  onMainCategoryChange={(value) => form.setValue("mainCategory", value, { shouldValidate: true })}
+                  onSubCategoryChange={(value) => form.setValue("subCategory", value, { shouldValidate: true })}
+                />
+                
+                {form.formState.errors.mainCategory && (
+                  <p className="text-sm text-destructive">{form.formState.errors.mainCategory.message}</p>
+                )}
+                {form.formState.errors.subCategory && (
+                  <p className="text-sm text-destructive">{form.formState.errors.subCategory.message}</p>
+                )}
               </div>
 
               <div className="space-y-6">
