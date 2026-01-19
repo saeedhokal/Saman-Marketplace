@@ -1,6 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -10,13 +12,17 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, User, LogOut, ShoppingBag, Menu, Heart } from "lucide-react";
-import { useState } from "react";
+import { Plus, LogOut, Menu, Heart, Shield, Coins } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function Navbar() {
   const { user, logout } = useAuth();
   const [location] = useLocation();
+  
+  const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
+    queryKey: ["/api/user/credits"],
+    enabled: !!user,
+  });
 
   const navLinks = [
     { href: "/", label: "Browse Parts" },
@@ -85,6 +91,24 @@ export function Navbar() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Coins className="h-4 w-4 text-accent" />
+                      <span>{userInfo?.credits || 0} Credits</span>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  {userInfo?.isAdmin && (
+                    <>
+                      <Link href="/admin">
+                        <DropdownMenuItem className="cursor-pointer">
+                          <Shield className="mr-2 h-4 w-4" />
+                          <span>Admin Panel</span>
+                        </DropdownMenuItem>
+                      </Link>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
@@ -145,6 +169,17 @@ export function Navbar() {
                           <Heart className="mr-2 h-4 w-4" /> Saved Items
                         </Button>
                       </Link>
+                      {userInfo?.isAdmin && (
+                        <Link href="/admin">
+                          <Button variant="outline" className="w-full">
+                            <Shield className="mr-2 h-4 w-4" /> Admin Panel
+                          </Button>
+                        </Link>
+                      )}
+                      <div className="flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground">
+                        <Coins className="h-4 w-4 text-accent" />
+                        <span>{userInfo?.credits || 0} Credits</span>
+                      </div>
                       <Button variant="outline" onClick={() => logout()} className="w-full">
                         <LogOut className="mr-2 h-4 w-4" /> Log out
                       </Button>

@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { useCreateProduct } from "@/hooks/use-products";
 import { useUpload } from "@/hooks/use-upload";
 import { useAuth } from "@/hooks/use-auth";
@@ -17,6 +18,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Select, 
   SelectContent, 
@@ -25,8 +28,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
-import { Loader2, UploadCloud } from "lucide-react";
+import { useLocation, Link } from "wouter";
+import { Loader2, UploadCloud, AlertCircle, Coins, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const formSchema = insertProductSchema.extend({
@@ -49,6 +52,11 @@ export default function Sell() {
   const createProduct = useCreateProduct();
   const { uploadFile, isUploading, progress } = useUpload();
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
+
+  const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
+    queryKey: ["/api/user/credits"],
+    enabled: !!user,
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -104,6 +112,15 @@ export default function Sell() {
   };
 
   const onSubmit = (data: FormValues) => {
+    if (!userInfo || userInfo.credits < 1) {
+      toast({
+        variant: "destructive",
+        title: "No Credits",
+        description: "You need at least 1 credit to post a listing. Please purchase credits.",
+      });
+      return;
+    }
+
     const payload = {
       ...data,
       price: Math.round(data.price * 100),
@@ -112,17 +129,25 @@ export default function Sell() {
     createProduct.mutate(payload, {
       onSuccess: () => {
         toast({
-          title: "Product Listed!",
-          description: "Your listing is now live on the marketplace.",
+          title: "Listing Submitted!",
+          description: "Your listing is pending review. Once approved, it will be visible for 1 month.",
         });
         setLocation("/");
       },
-      onError: (err) => {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: err.message,
-        });
+      onError: (err: any) => {
+        if (err.code === "INSUFFICIENT_CREDITS") {
+          toast({
+            variant: "destructive",
+            title: "No Credits",
+            description: "You need credits to post a listing. Please purchase credits.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: err.message,
+          });
+        }
       },
     });
   };
@@ -146,6 +171,32 @@ export default function Sell() {
             Fill in the details below to reach potential buyers in the UAE.
           </p>
         </div>
+
+        {/* Credits Info */}
+        <div className="mb-6 flex items-center justify-center gap-4">
+          <Card className="inline-flex items-center gap-2 px-4 py-2">
+            <Coins className="h-5 w-5 text-accent" />
+            <span className="font-medium">{userInfo?.credits || 0} Credits Available</span>
+          </Card>
+        </div>
+
+        {(!userInfo || userInfo.credits < 1) && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No Credits</AlertTitle>
+            <AlertDescription>
+              You need at least 1 credit to post a listing. Each listing costs 1 credit and remains active for 1 month after approval.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Alert className="mb-6 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+          <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertTitle className="text-blue-800 dark:text-blue-200">Review Process</AlertTitle>
+          <AlertDescription className="text-blue-700 dark:text-blue-300">
+            All listings are reviewed before going live. Once approved, your listing will be visible for 1 month. Each listing uses 1 credit.
+          </AlertDescription>
+        </Alert>
 
         <div className="bg-card border border-border shadow-xl shadow-black/5 rounded-2xl p-8">
           <Form {...form}>

@@ -19,6 +19,18 @@ function isValidCategoryPair(mainCategory: string, subCategory: string): boolean
   return !!validSubs && (validSubs as readonly string[]).includes(subCategory);
 }
 
+// Middleware to check if user is admin
+const isAdmin = async (req: any, res: any, next: any) => {
+  if (!req.user?.claims?.sub) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const user = await authStorage.getUser(req.user.claims.sub);
+  if (!user?.isAdmin) {
+    return res.status(403).json({ message: "Admin access required" });
+  }
+  next();
+};
+
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   await setupAuth(app);
   registerAuthRoutes(app);
@@ -78,6 +90,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       // @ts-ignore
       const sellerId = req.user.claims.sub;
+
+      // Check if user has credits
+      const credits = await storage.getUserCredits(sellerId);
+      if (credits < 1) {
+        return res.status(402).json({
+          message: "You need credits to post a listing. Please purchase credits to continue.",
+          code: "INSUFFICIENT_CREDITS",
+        });
+      }
+
+      // Use 1 credit
+      await storage.useCredit(sellerId);
 
       const product = await storage.createProduct({
         ...input,
@@ -153,6 +177,89 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const userId = req.user.claims.sub;
     const isFav = await storage.isFavorite(userId, productId);
     res.json({ isFavorite: isFav });
+  });
+
+  // User credits API
+  app.get("/api/user/credits", isAuthenticated, async (req, res) => {
+    // @ts-ignore
+    const userId = req.user.claims.sub;
+    const credits = await storage.getUserCredits(userId);
+    const user = await authStorage.getUser(userId);
+    res.json({ credits, isAdmin: user?.isAdmin || false });
+  });
+
+  // App settings (public)
+  app.get("/api/settings", async (req, res) => {
+    const settings = await storage.getAppSettings();
+    res.json(settings || {});
+  });
+
+  // ========== ADMIN ROUTES ==========
+  
+  // Get all pending listings
+  app.get("/api/admin/listings/pending", isAuthenticated, isAdmin, async (req, res) => {
+    const listings = await storage.getPendingProducts();
+    res.json(listings);
+  });
+
+  // Get all listings
+  app.get("/api/admin/listings", isAuthenticated, isAdmin, async (req, res) => {
+    const listings = await storage.getAllProducts();
+    res.json(listings);
+  });
+
+  // Approve a listing
+  app.post("/api/admin/listings/:id/approve", isAuthenticated, isAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    const product = await storage.approveProduct(id);
+    if (!product) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    res.json(product);
+  });
+
+  // Reject a listing
+  app.post("/api/admin/listings/:id/reject", isAuthenticated, isAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    const { reason } = req.body;
+    const product = await storage.rejectProduct(id, reason || "Rejected by admin");
+    if (!product) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    res.json(product);
+  });
+
+  // Delete a listing (admin)
+  app.delete("/api/admin/listings/:id", isAuthenticated, isAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    await storage.deleteProduct(id);
+    res.sendStatus(204);
+  });
+
+  // Update app settings
+  app.put("/api/admin/settings", isAuthenticated, isAdmin, async (req, res) => {
+    const settings = await storage.updateAppSettings(req.body);
+    res.json(settings);
+  });
+
+  // Add credits to user (admin)
+  app.post("/api/admin/users/:userId/credits", isAuthenticated, isAdmin, async (req, res) => {
+    const { userId } = req.params;
+    const { amount } = req.body;
+    if (!amount || amount < 1) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
+    const user = await storage.addCredits(userId, amount);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  });
+
+  // Cleanup expired listings (can be called periodically)
+  app.post("/api/admin/cleanup-expired", isAuthenticated, isAdmin, async (req, res) => {
+    const count = await storage.deleteExpiredProducts();
+    res.json({ deletedCount: count });
   });
 
   return httpServer;

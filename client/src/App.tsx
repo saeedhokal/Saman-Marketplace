@@ -10,6 +10,7 @@ import ProductDetail from "@/pages/ProductDetail";
 import Sell from "@/pages/Sell";
 import SellerProfile from "@/pages/SellerProfile";
 import Favorites from "@/pages/Favorites";
+import Admin from "@/pages/Admin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
         <Route path="/sell" component={Sell} />
         <Route path="/seller/:sellerId" component={SellerProfile} />
         <Route path="/favorites" component={Favorites} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </div>

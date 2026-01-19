@@ -25,6 +25,10 @@ export const AUTOMOTIVE_SUBCATEGORIES = [
   "Offroad", "Motorcycles", "Other"
 ] as const;
 
+// Listing status for moderation
+export const LISTING_STATUS = ["pending", "approved", "rejected"] as const;
+export type ListingStatus = typeof LISTING_STATUS[number];
+
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -38,6 +42,9 @@ export const products = pgTable("products", {
   location: text("location"),
   phoneNumber: text("phone_number"),
   whatsappNumber: text("whatsapp_number"),
+  status: text("status").default("pending").notNull(), // pending, approved, rejected
+  rejectionReason: text("rejection_reason"),
+  expiresAt: timestamp("expires_at"), // Set to 1 month after approval
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -53,6 +60,9 @@ export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
   createdAt: true,
   sellerId: true, // Derived from auth
+  status: true, // Set by system
+  rejectionReason: true, // Set by admin
+  expiresAt: true, // Set when approved
 });
 
 export const insertFavoriteSchema = createInsertSchema(favorites).omit({
@@ -65,3 +75,4 @@ export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Favorite = typeof favorites.$inferSelect;
 export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
+export type AppSettings = typeof appSettings.$inferSelect;

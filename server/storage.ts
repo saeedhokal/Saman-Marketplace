@@ -1,14 +1,33 @@
 import { db } from "./db";
-import { products, favorites, type Product, type InsertProduct, type Favorite, type InsertFavorite } from "@shared/schema";
-import { eq, ilike, desc, and, or } from "drizzle-orm";
+import { products, favorites, users, appSettings, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings } from "@shared/schema";
+import { eq, ilike, desc, and, or, lt, sql } from "drizzle-orm";
 
 export interface IStorage {
+  // Products
   getProducts(options?: { search?: string; mainCategory?: string; subCategory?: string }): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   getProductsBySeller(sellerId: string): Promise<Product[]>;
   createProduct(product: InsertProduct & { sellerId: string }): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
   
+  // Admin - Listings
+  getPendingProducts(): Promise<Product[]>;
+  getAllProducts(): Promise<Product[]>;
+  approveProduct(id: number): Promise<Product | undefined>;
+  rejectProduct(id: number, reason: string): Promise<Product | undefined>;
+  updateProduct(id: number, data: Partial<Product>): Promise<Product | undefined>;
+  deleteExpiredProducts(): Promise<number>;
+  
+  // Credits
+  getUserCredits(userId: string): Promise<number>;
+  addCredits(userId: string, amount: number): Promise<User | undefined>;
+  useCredit(userId: string): Promise<boolean>;
+  
+  // App Settings
+  getAppSettings(): Promise<AppSettings | undefined>;
+  updateAppSettings(settings: Partial<AppSettings>): Promise<AppSettings>;
+  
+  // Favorites
   getFavorites(userId: string): Promise<Product[]>;
   addFavorite(userId: string, productId: number): Promise<Favorite>;
   removeFavorite(userId: string, productId: number): Promise<void>;
@@ -16,8 +35,15 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Only show approved, non-expired products to public
   async getProducts(options?: { search?: string; mainCategory?: string; subCategory?: string }): Promise<Product[]> {
-    const conditions = [];
+    const conditions = [
+      eq(products.status, "approved"),
+      or(
+        eq(products.expiresAt, sql`NULL`),
+        sql`${products.expiresAt} > NOW()`
+      )
+    ];
 
     if (options?.search) {
       conditions.push(
@@ -34,13 +60,9 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(products.subCategory, options.subCategory));
     }
 
-    if (conditions.length > 0) {
-      return await db.select().from(products)
-        .where(and(...conditions))
-        .orderBy(desc(products.createdAt));
-    }
-
-    return await db.select().from(products).orderBy(desc(products.createdAt));
+    return await db.select().from(products)
+      .where(and(...conditions))
+      .orderBy(desc(products.createdAt));
   }
 
   async getProduct(id: number): Promise<Product | undefined> {
@@ -50,12 +72,18 @@ export class DatabaseStorage implements IStorage {
 
   async getProductsBySeller(sellerId: string): Promise<Product[]> {
     return await db.select().from(products)
-      .where(eq(products.sellerId, sellerId))
+      .where(and(
+        eq(products.sellerId, sellerId),
+        eq(products.status, "approved")
+      ))
       .orderBy(desc(products.createdAt));
   }
 
   async createProduct(product: InsertProduct & { sellerId: string }): Promise<Product> {
-    const [newProduct] = await db.insert(products).values(product).returning();
+    const [newProduct] = await db.insert(products).values({
+      ...product,
+      status: "pending",
+    }).returning();
     return newProduct;
   }
 
@@ -63,6 +91,104 @@ export class DatabaseStorage implements IStorage {
     await db.delete(products).where(eq(products.id, id));
   }
 
+  // Admin methods
+  async getPendingProducts(): Promise<Product[]> {
+    return await db.select().from(products)
+      .where(eq(products.status, "pending"))
+      .orderBy(desc(products.createdAt));
+  }
+
+  async getAllProducts(): Promise<Product[]> {
+    return await db.select().from(products)
+      .orderBy(desc(products.createdAt));
+  }
+
+  async approveProduct(id: number): Promise<Product | undefined> {
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + 1); // 1 month from now
+    
+    const [product] = await db.update(products)
+      .set({ status: "approved", expiresAt, rejectionReason: null })
+      .where(eq(products.id, id))
+      .returning();
+    return product;
+  }
+
+  async rejectProduct(id: number, reason: string): Promise<Product | undefined> {
+    const [product] = await db.update(products)
+      .set({ status: "rejected", rejectionReason: reason })
+      .where(eq(products.id, id))
+      .returning();
+    return product;
+  }
+
+  async updateProduct(id: number, data: Partial<Product>): Promise<Product | undefined> {
+    const [product] = await db.update(products)
+      .set(data)
+      .where(eq(products.id, id))
+      .returning();
+    return product;
+  }
+
+  async deleteExpiredProducts(): Promise<number> {
+    const result = await db.delete(products)
+      .where(and(
+        sql`${products.expiresAt} IS NOT NULL`,
+        lt(products.expiresAt, new Date())
+      ))
+      .returning();
+    return result.length;
+  }
+
+  // Credit methods
+  async getUserCredits(userId: string): Promise<number> {
+    const [user] = await db.select({ credits: users.credits })
+      .from(users)
+      .where(eq(users.id, userId));
+    return user?.credits ?? 0;
+  }
+
+  async addCredits(userId: string, amount: number): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ credits: sql`${users.credits} + ${amount}` })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async useCredit(userId: string): Promise<boolean> {
+    const credits = await this.getUserCredits(userId);
+    if (credits < 1) return false;
+    
+    await db.update(users)
+      .set({ credits: sql`${users.credits} - 1` })
+      .where(eq(users.id, userId));
+    return true;
+  }
+
+  // App Settings
+  async getAppSettings(): Promise<AppSettings | undefined> {
+    const [settings] = await db.select().from(appSettings).where(eq(appSettings.id, "main"));
+    return settings;
+  }
+
+  async updateAppSettings(settings: Partial<AppSettings>): Promise<AppSettings> {
+    const existing = await this.getAppSettings();
+    if (existing) {
+      const [updated] = await db.update(appSettings)
+        .set({ ...settings, updatedAt: new Date() })
+        .where(eq(appSettings.id, "main"))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(appSettings)
+        .values({ id: "main", ...settings })
+        .returning();
+      return created;
+    }
+  }
+
+  // Favorites
   async getFavorites(userId: string): Promise<Product[]> {
     const result = await db
       .select({ product: products })
