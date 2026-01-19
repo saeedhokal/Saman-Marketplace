@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useProduct } from "@/hooks/use-products";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { type Product } from "@shared/schema";
 import { Card } from "@/components/ui/card";
+import { ImageGallery } from "@/components/ImageGallery";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -56,6 +57,18 @@ export default function ProductDetail() {
   const formatWhatsAppNumber = (num: string) => {
     return num.replace(/[^0-9]/g, '');
   };
+
+  const allImages = useMemo(() => {
+    if (!product) return [];
+    const images: string[] = [];
+    if (product.imageUrl) images.push(product.imageUrl);
+    if (product.imageUrls && Array.isArray(product.imageUrls)) {
+      product.imageUrls.forEach((url) => {
+        if (url && !images.includes(url)) images.push(url);
+      });
+    }
+    return images;
+  }, [product]);
 
   if (isLoading) {
     return (
@@ -107,29 +120,23 @@ export default function ProductDetail() {
 
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
-          <div className="relative group">
-            <div className="aspect-[4/3] rounded-3xl overflow-hidden bg-secondary border border-border/50 shadow-xl shadow-black/5">
-              {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={product.title}
-                  className="w-full h-full object-cover object-center"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No Image Available
-                </div>
-              )}
-            </div>
+          <div className="relative">
+            {allImages.length > 0 ? (
+              <ImageGallery images={allImages} />
+            ) : (
+              <div className="aspect-square rounded-xl overflow-hidden bg-secondary border border-border/50 flex items-center justify-center text-muted-foreground">
+                No Image Available
+              </div>
+            )}
             
             <Button
               size="icon"
               variant="secondary"
-              className={`absolute top-4 right-4 h-12 w-12 rounded-full shadow-lg ${isFavorite ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-white/90 hover:bg-white'}`}
+              className={`absolute top-4 right-4 h-10 w-10 rounded-full shadow-lg z-10 ${isFavorite ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-white/90 hover:bg-white'}`}
               onClick={handleToggleFavorite}
               data-testid="button-favorite"
             >
-              <Heart className={`h-6 w-6 ${isFavorite ? 'fill-current' : ''}`} />
+              <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
             </Button>
           </div>
 

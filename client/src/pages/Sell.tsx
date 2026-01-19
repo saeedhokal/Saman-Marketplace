@@ -21,15 +21,16 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Loader2, UploadCloud, AlertCircle, Coins, Clock, Car, Wrench, ArrowLeft } from "lucide-react";
+import { Loader2, UploadCloud, AlertCircle, Coins, Clock, Car, Wrench, ArrowLeft, X, Plus } from "lucide-react";
 import { Link } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
 
 const formSchema = insertProductSchema.extend({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  imageUrl: z.string().min(1, "Product image is required"),
+  imageUrl: z.string().min(1, "At least one photo is required"),
+  imageUrls: z.array(z.string()).optional(),
   mainCategory: z.string().min(1, "Category is required"),
   subCategory: z.string().min(1, "Sub-category is required"),
   mileage: z.coerce.number().optional(),
@@ -56,6 +57,8 @@ export default function Sell() {
     enabled: !!user,
   });
 
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -64,6 +67,7 @@ export default function Sell() {
       mainCategory: "",
       subCategory: "",
       imageUrl: "",
+      imageUrls: [],
       mileage: undefined,
       year: undefined,
       price: undefined,
@@ -81,25 +85,59 @@ export default function Sell() {
   }, [user, isAuthLoading, setLocation]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    try {
-      const result = await uploadFile(file);
-      if (result) {
-        form.setValue("imageUrl", result.objectPath, { shouldValidate: true });
-        toast({
-          title: "Image uploaded",
-          description: "Your photo has been uploaded successfully.",
-        });
-      }
-    } catch (error) {
+    const remainingSlots = 20 - uploadedImages.length;
+    if (remainingSlots <= 0) {
       toast({
         variant: "destructive",
-        title: "Upload failed",
-        description: "Failed to upload image. Please try again.",
+        title: "Maximum photos reached",
+        description: "You can upload up to 20 photos.",
       });
+      return;
     }
+
+    const filesToUpload = Array.from(files).slice(0, remainingSlots);
+
+    for (const file of filesToUpload) {
+      try {
+        const result = await uploadFile(file);
+        if (result) {
+          setUploadedImages((prev) => {
+            const newImages = [...prev, result.objectPath];
+            form.setValue("imageUrl", newImages[0], { shouldValidate: true });
+            form.setValue("imageUrls", newImages);
+            return newImages;
+          });
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Upload failed",
+          description: `Failed to upload ${file.name}. Please try again.`,
+        });
+      }
+    }
+
+    toast({
+      title: "Photos uploaded",
+      description: `${filesToUpload.length} photo(s) uploaded successfully.`,
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages((prev) => {
+      const newImages = prev.filter((_, i) => i !== index);
+      if (newImages.length > 0) {
+        form.setValue("imageUrl", newImages[0], { shouldValidate: true });
+        form.setValue("imageUrls", newImages);
+      } else {
+        form.setValue("imageUrl", "", { shouldValidate: true });
+        form.setValue("imageUrls", []);
+      }
+      return newImages;
+    });
   };
 
   const onSubmit = (data: FormValues) => {
@@ -261,28 +299,57 @@ export default function Sell() {
                     name="imageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Photo</FormLabel>
+                        <FormLabel>Photos ({uploadedImages.length}/20)</FormLabel>
                         <FormControl>
                           <div>
                             <Input type="hidden" {...field} />
                             
-                            {field.value ? (
-                              <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-border group">
-                                <img 
-                                  src={field.value} 
-                                  alt="Preview" 
-                                  className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <Button 
-                                    type="button"
-                                    variant="secondary" 
-                                    size="sm" 
-                                    onClick={() => form.setValue("imageUrl", "", { shouldValidate: true })}
-                                    data-testid="button-remove-image"
-                                  >
-                                    Remove
-                                  </Button>
+                            {uploadedImages.length > 0 ? (
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-3 gap-2">
+                                  {uploadedImages.map((img, index) => (
+                                    <div 
+                                      key={index} 
+                                      className="relative aspect-square rounded-lg overflow-hidden border border-border group"
+                                    >
+                                      <img 
+                                        src={img} 
+                                        alt={`Preview ${index + 1}`} 
+                                        className="w-full h-full object-cover"
+                                      />
+                                      {index === 0 && (
+                                        <div className="absolute top-1 left-1 bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded">
+                                          Main
+                                        </div>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => removeImage(index)}
+                                        className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                                        data-testid={`button-remove-image-${index}`}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                  
+                                  {uploadedImages.length < 20 && (
+                                    <div className="aspect-square rounded-lg border-2 border-dashed border-border flex items-center justify-center hover:border-accent/50 hover:bg-secondary/20 transition-colors relative">
+                                      <input
+                                        type="file"
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                        onChange={handleImageUpload}
+                                        accept="image/*"
+                                        multiple
+                                        disabled={isUploading}
+                                      />
+                                      {isUploading ? (
+                                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                      ) : (
+                                        <Plus className="h-6 w-6 text-muted-foreground" />
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ) : (
@@ -306,11 +373,12 @@ export default function Sell() {
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                     onChange={handleImageUpload}
                                     accept="image/*"
+                                    multiple
                                   />
-                                  {isUploading ? "Uploading..." : "Upload Photo"}
+                                  {isUploading ? "Uploading..." : "Upload Photos"}
                                 </Button>
                                 <p className="mt-2 text-xs text-muted-foreground">
-                                  JPG, PNG up to 5MB
+                                  JPG, PNG up to 5MB each (max 20 photos)
                                 </p>
                               </div>
                             )}
