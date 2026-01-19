@@ -32,6 +32,7 @@ import { useEffect } from "react";
 // Frontend form schema - handle string to number conversion for price
 const formSchema = insertProductSchema.extend({
   price: z.coerce.number().min(1, "Price is required"),
+  imageUrl: z.string().min(1, "Product image is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -75,10 +76,8 @@ export default function Sell() {
     try {
       const result = await uploadFile(file);
       if (result) {
-        // Construct public URL from objectPath
-        // Assuming public path based on standard replit object storage route
-        const publicUrl = `/objects${result.objectPath}`;
-        form.setValue("imageUrl", publicUrl);
+        // objectPath is already the full path like /objects/uploads/uuid
+        form.setValue("imageUrl", result.objectPath);
         toast({
           title: "Image uploaded",
           description: "Your product image has been uploaded successfully.",
