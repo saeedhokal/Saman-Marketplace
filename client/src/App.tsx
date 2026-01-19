@@ -11,6 +11,7 @@ import Sell from "@/pages/Sell";
 import SellerProfile from "@/pages/SellerProfile";
 import Favorites from "@/pages/Favorites";
 import Admin from "@/pages/Admin";
+import Auth from "@/pages/Auth";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
         <Route path="/seller/:sellerId" component={SellerProfile} />
         <Route path="/favorites" component={Favorites} />
         <Route path="/admin" component={Admin} />
+        <Route path="/auth" component={Auth} />
         <Route component={NotFound} />
       </Switch>
     </div>

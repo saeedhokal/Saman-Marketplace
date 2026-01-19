@@ -76,9 +76,9 @@ export default function Sell() {
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
-      window.location.href = "/api/login";
+      setLocation("/auth");
     }
-  }, [user, isAuthLoading]);
+  }, [user, isAuthLoading, setLocation]);
 
   const getSubcategories = () => {
     if (selectedMainCategory === "Spare Parts") {

@@ -117,12 +117,14 @@ export function Navbar() {
               </DropdownMenu>
             </>
           ) : (
-            <Button 
-              onClick={() => window.location.href = "/api/login"}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-6"
-            >
-              Sign In
-            </Button>
+            <Link href="/auth">
+              <Button 
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-6"
+                data-testid="button-signin"
+              >
+                Sign In
+              </Button>
+            </Link>
           )}
         </div>
 
@@ -185,9 +187,11 @@ export function Navbar() {
                       </Button>
                     </>
                   ) : (
-                    <Button onClick={() => window.location.href = "/api/login"} className="w-full">
-                      Sign In
-                    </Button>
+                    <Link href="/auth">
+                      <Button className="w-full">
+                        Sign In
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </div>

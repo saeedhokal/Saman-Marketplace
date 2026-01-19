@@ -1,12 +1,14 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth, authStorage } from "./replit_integrations/auth";
-import { registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
+import { setupSimpleAuth, isAuthenticated, getCurrentUserId } from "./simpleAuth";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
+import { db } from "./db";
+import { users } from "@shared/models/auth";
+import { eq } from "drizzle-orm";
 
 // Valid subcategories by main category
 const validSubcategories: Record<string, readonly string[]> = {
@@ -20,11 +22,12 @@ function isValidCategoryPair(mainCategory: string, subCategory: string): boolean
 }
 
 // Middleware to check if user is admin
-const isAdmin = async (req: any, res: any, next: any) => {
-  if (!req.user?.claims?.sub) {
+const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = getCurrentUserId(req);
+  if (!userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  const user = await authStorage.getUser(req.user.claims.sub);
+  const [user] = await db.select().from(users).where(eq(users.id, userId));
   if (!user?.isAdmin) {
     return res.status(403).json({ message: "Admin access required" });
   }
@@ -32,8 +35,7 @@ const isAdmin = async (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  await setupAuth(app);
-  registerAuthRoutes(app);
+  setupSimpleAuth(app);
   registerObjectStorageRoutes(app);
 
   // Products API
@@ -64,7 +66,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
     
     // Verify the seller exists before returning their products
-    const seller = await authStorage.getUser(sellerId);
+    const [seller] = await db.select().from(users).where(eq(users.id, sellerId));
     if (!seller) {
       return res.status(404).json({ message: "Seller not found" });
     }
@@ -88,8 +90,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         });
       }
       
-      // @ts-ignore
-      const sellerId = req.user.claims.sub;
+      const sellerId = getCurrentUserId(req)!;
 
       // Check if user has credits
       const credits = await storage.getUserCredits(sellerId);
@@ -126,8 +127,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(404).json({ message: "Product not found" });
     }
     
-    // @ts-ignore
-    const userId = req.user.claims.sub;
+    const userId = getCurrentUserId(req)!;
     if (product.sellerId !== userId) {
        return res.status(401).json({ message: "Unauthorized" });
     }
@@ -138,16 +138,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Favorites API
   app.get("/api/favorites", isAuthenticated, async (req, res) => {
-    // @ts-ignore
-    const userId = req.user.claims.sub;
+    const userId = getCurrentUserId(req)!;
     const favorites = await storage.getFavorites(userId);
     res.json(favorites);
   });
 
   app.post("/api/favorites/:productId", isAuthenticated, async (req, res) => {
     const productId = Number(req.params.productId);
-    // @ts-ignore
-    const userId = req.user.claims.sub;
+    const userId = getCurrentUserId(req)!;
     
     const product = await storage.getProduct(productId);
     if (!product) {
@@ -165,26 +163,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.delete("/api/favorites/:productId", isAuthenticated, async (req, res) => {
     const productId = Number(req.params.productId);
-    // @ts-ignore
-    const userId = req.user.claims.sub;
+    const userId = getCurrentUserId(req)!;
     await storage.removeFavorite(userId, productId);
     res.sendStatus(204);
   });
 
   app.get("/api/favorites/:productId/check", isAuthenticated, async (req, res) => {
     const productId = Number(req.params.productId);
-    // @ts-ignore
-    const userId = req.user.claims.sub;
+    const userId = getCurrentUserId(req)!;
     const isFav = await storage.isFavorite(userId, productId);
     res.json({ isFavorite: isFav });
   });
 
   // User credits API
   app.get("/api/user/credits", isAuthenticated, async (req, res) => {
-    // @ts-ignore
-    const userId = req.user.claims.sub;
+    const userId = getCurrentUserId(req)!;
     const credits = await storage.getUserCredits(userId);
-    const user = await authStorage.getUser(userId);
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
     res.json({ credits, isAdmin: user?.isAdmin || false });
   });
 
