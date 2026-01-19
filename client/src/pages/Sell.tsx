@@ -21,7 +21,8 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Loader2, UploadCloud, AlertCircle, Coins, Clock, Car, Wrench } from "lucide-react";
+import { Loader2, UploadCloud, AlertCircle, Coins, Clock, Car, Wrench, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { useEffect } from "react";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
 
@@ -137,26 +138,30 @@ export default function Sell() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Post Your Listing
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Reach buyers across the UAE
-          </p>
+    <div className="min-h-screen bg-background pb-20">
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center h-14">
+            <Link href="/">
+              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            </Link>
+            <h1 className="flex-1 text-center font-semibold text-lg pr-8">Post Listing</h1>
+          </div>
         </div>
+      </div>
 
-        <div className="mb-6 flex items-center justify-center gap-4">
-          <Card className="inline-flex items-center gap-2 px-4 py-2">
-            <Coins className="h-5 w-5 text-accent" />
-            <span className="font-medium">{userInfo?.credits || 0} Credits</span>
-          </Card>
+      <div className="container mx-auto px-4 pt-4 max-w-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Coins className="h-4 w-4 text-accent" />
+            <span className="text-sm font-medium">{userInfo?.credits || 0} Credits</span>
+          </div>
         </div>
 
         {(!userInfo || userInfo.credits < 1) && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>No Credits</AlertTitle>
             <AlertDescription>
