@@ -13,6 +13,10 @@ declare module "express-session" {
 }
 
 export function setupSimpleAuth(app: Express) {
+  if (!process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET environment variable is required");
+  }
+
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
@@ -22,15 +26,17 @@ export function setupSimpleAuth(app: Express) {
     tableName: "sessions",
   });
 
+  const isProduction = process.env.NODE_ENV === "production";
+
   app.use(
     session({
       store: sessionStore,
-      secret: process.env.SESSION_SECRET || "saman-market-secret-key",
+      secret: process.env.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: false, // Set to true in production with HTTPS
+        secure: isProduction,
         maxAge: sessionTtl,
       },
     })
