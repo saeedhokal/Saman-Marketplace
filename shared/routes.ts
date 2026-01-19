@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { insertProductSchema, products } from './schema';
+import { insertProductSchema, products, type InsertProduct } from './schema';
+
+export type { InsertProduct };
 
 export const errorSchemas = {
   validation: z.object({

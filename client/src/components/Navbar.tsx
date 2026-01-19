@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, User, LogOut, ShoppingBag, Menu } from "lucide-react";
+import { Plus, User, LogOut, ShoppingBag, Menu, Heart } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -54,8 +54,13 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           {user ? (
             <>
+              <Link href="/favorites">
+                <Button variant="ghost" size="icon" className="rounded-full" data-testid="button-favorites">
+                  <Heart className="h-5 w-5" />
+                </Button>
+              </Link>
               <Link href="/sell">
-                <Button className="bg-accent hover:bg-accent/90 text-white font-medium rounded-full px-6 shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5">
+                <Button className="bg-accent hover:bg-accent/90 text-white font-medium rounded-full px-6 shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5" data-testid="button-sell">
                   <Plus className="w-4 h-4 mr-2" />
                   Sell Part
                 </Button>
@@ -133,6 +138,11 @@ export function Navbar() {
                       <Link href="/sell">
                         <Button className="w-full bg-accent hover:bg-accent/90 text-white">
                           <Plus className="w-4 h-4 mr-2" /> Sell Part
+                        </Button>
+                      </Link>
+                      <Link href="/favorites">
+                        <Button variant="outline" className="w-full">
+                          <Heart className="mr-2 h-4 w-4" /> Saved Items
                         </Button>
                       </Link>
                       <Button variant="outline" onClick={() => logout()} className="w-full">

@@ -5,10 +5,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navbar } from "@/components/Navbar";
 
-// Pages
 import Home from "@/pages/Home";
 import ProductDetail from "@/pages/ProductDetail";
 import Sell from "@/pages/Sell";
+import SellerProfile from "@/pages/SellerProfile";
+import Favorites from "@/pages/Favorites";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,8 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/product/:id" component={ProductDetail} />
         <Route path="/sell" component={Sell} />
+        <Route path="/seller/:sellerId" component={SellerProfile} />
+        <Route path="/favorites" component={Favorites} />
         <Route component={NotFound} />
       </Switch>
     </div>

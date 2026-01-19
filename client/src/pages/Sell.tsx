@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useCreateProduct } from "@/hooks/use-products";
 import { useUpload } from "@/hooks/use-upload";
 import { useAuth } from "@/hooks/use-auth";
-import { insertProductSchema } from "@shared/schema";
+import { insertProductSchema, MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
 import { 
   Form, 
   FormControl, 
@@ -26,18 +26,20 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Loader2, UploadCloud, Image as ImageIcon } from "lucide-react";
-import { useEffect } from "react";
+import { Loader2, UploadCloud } from "lucide-react";
+import { useEffect, useState } from "react";
 
-// Frontend form schema - handle string to number conversion for price
 const formSchema = insertProductSchema.extend({
   price: z.coerce.number().min(1, "Price is required"),
   imageUrl: z.string().min(1, "Product image is required"),
+  mainCategory: z.string().min(1, "Main category is required"),
+  subCategory: z.string().min(1, "Sub-category is required"),
+  phoneNumber: z.string().optional(),
+  whatsappNumber: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-const CATEGORIES = ["Engine", "Body", "Electrical", "Interior", "Wheels", "Other"];
 const CONDITIONS = ["New", "Used", "Refurbished"];
 
 export default function Sell() {
@@ -46,28 +48,38 @@ export default function Sell() {
   const { toast } = useToast();
   const createProduct = useCreateProduct();
   const { uploadFile, isUploading, progress } = useUpload();
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
-      category: "",
+      mainCategory: "",
+      subCategory: "",
       condition: "",
       imageUrl: "",
-      sellerId: "", // Will be set before submit
       price: undefined,
+      phoneNumber: "",
+      whatsappNumber: "",
+      location: "",
     },
   });
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!isAuthLoading && !user) {
       window.location.href = "/api/login";
-    } else if (user) {
-      form.setValue("sellerId", user.id);
     }
-  }, [user, isAuthLoading, form]);
+  }, [user, isAuthLoading]);
+
+  const getSubcategories = () => {
+    if (selectedMainCategory === "Spare Parts") {
+      return SPARE_PARTS_SUBCATEGORIES;
+    } else if (selectedMainCategory === "Automotive") {
+      return AUTOMOTIVE_SUBCATEGORIES;
+    }
+    return [];
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,7 +88,6 @@ export default function Sell() {
     try {
       const result = await uploadFile(file);
       if (result) {
-        // objectPath is already the full path like /objects/uploads/uuid
         form.setValue("imageUrl", result.objectPath);
         toast({
           title: "Image uploaded",
@@ -93,7 +104,6 @@ export default function Sell() {
   };
 
   const onSubmit = (data: FormValues) => {
-    // Convert price to cents
     const payload = {
       ...data,
       price: Math.round(data.price * 100),
@@ -103,7 +113,7 @@ export default function Sell() {
       onSuccess: () => {
         toast({
           title: "Product Listed!",
-          description: "Your part is now live on the marketplace.",
+          description: "Your listing is now live on the marketplace.",
         });
         setLocation("/");
       },
@@ -130,10 +140,10 @@ export default function Sell() {
       <div className="max-w-3xl mx-auto">
         <div className="mb-10 text-center">
           <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            List a Part for Sale
+            Post Your Listing
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            Fill in the details below to reach thousands of potential buyers.
+            Fill in the details below to reach potential buyers in the UAE.
           </p>
         </div>
 
@@ -141,7 +151,72 @@ export default function Sell() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               
-              {/* Basic Info */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold border-b pb-2">Category</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="mainCategory"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Main Category</FormLabel>
+                        <Select 
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setSelectedMainCategory(value);
+                            form.setValue("subCategory", "");
+                          }} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-12" data-testid="select-main-category">
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {MAIN_CATEGORIES.map((cat) => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Spare Parts for car parts, Automotive for vehicles
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="subCategory"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sub-Category</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={!selectedMainCategory}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-12" data-testid="select-sub-category">
+                              <SelectValue placeholder={selectedMainCategory ? "Select sub-category" : "Select main category first"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {getSubcategories().map((cat) => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold border-b pb-2">Basic Information</h3>
                 
@@ -150,9 +225,14 @@ export default function Sell() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Product Title</FormLabel>
+                      <FormLabel>Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 2018 Ford Mustang GT Bumper" className="h-12" {...field} />
+                        <Input 
+                          placeholder="e.g. 2018 Toyota Camry Bumper - OEM" 
+                          className="h-12" 
+                          data-testid="input-title"
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -162,36 +242,13 @@ export default function Sell() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {CATEGORIES.map((cat) => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
                     name="condition"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Condition</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="h-12">
+                            <SelectTrigger className="h-12" data-testid="select-condition">
                               <SelectValue placeholder="Select condition" />
                             </SelectTrigger>
                           </FormControl>
@@ -205,35 +262,35 @@ export default function Sell() {
                       </FormItem>
                     )}
                   />
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Price ($)</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            placeholder="0.00" 
-                            className="pl-7 h-12 font-mono" 
-                            {...field} 
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price (AED)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">AED</span>
+                            <Input 
+                              type="number" 
+                              step="0.01" 
+                              placeholder="0.00" 
+                              className="pl-12 h-12 font-mono" 
+                              data-testid="input-price"
+                              {...field} 
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              {/* Description */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold border-b pb-2">Details</h3>
+                <h3 className="text-lg font-semibold border-b pb-2">Description</h3>
                 <FormField
                   control={form.control}
                   name="description"
@@ -242,8 +299,9 @@ export default function Sell() {
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Describe the condition, compatibility, and any defects..." 
+                          placeholder="Describe the condition, compatibility, defects, and any other details..." 
                           className="min-h-[150px] resize-none leading-relaxed" 
+                          data-testid="input-description"
                           {...field} 
                         />
                       </FormControl>
@@ -253,7 +311,78 @@ export default function Sell() {
                 />
               </div>
 
-              {/* Image Upload */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold border-b pb-2">Contact Information</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number (Optional)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="tel" 
+                            placeholder="+971 50 123 4567" 
+                            className="h-12" 
+                            data-testid="input-phone"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Buyers can call this number directly
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="whatsappNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>WhatsApp Number (Optional)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="tel" 
+                            placeholder="+971 50 123 4567" 
+                            className="h-12" 
+                            data-testid="input-whatsapp"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Include country code for WhatsApp
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location (Optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g. Dubai, Abu Dhabi, Sharjah" 
+                          className="h-12" 
+                          data-testid="input-location"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold border-b pb-2">Product Image</h3>
                 
@@ -279,9 +408,11 @@ export default function Sell() {
                               />
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <Button 
+                                  type="button"
                                   variant="secondary" 
                                   size="sm" 
                                   onClick={() => form.setValue("imageUrl", "")}
+                                  data-testid="button-remove-image"
                                 >
                                   Remove Image
                                 </Button>
@@ -302,6 +433,7 @@ export default function Sell() {
                                   variant="outline" 
                                   className="relative overflow-hidden"
                                   disabled={isUploading}
+                                  data-testid="button-upload-image"
                                 >
                                   <input
                                     type="file"
@@ -340,6 +472,7 @@ export default function Sell() {
                   size="lg" 
                   className="w-full h-14 text-lg bg-primary hover:bg-primary/90"
                   disabled={createProduct.isPending || isUploading}
+                  data-testid="button-publish"
                 >
                   {createProduct.isPending ? (
                     <>

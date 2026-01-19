@@ -3,26 +3,48 @@ import { useProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Box } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Box, Car, Wrench, Compass } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
 
-const CATEGORIES = ["All", "Engine", "Body", "Electrical", "Interior", "Wheels", "Other"];
+type TabValue = "all" | "spare-parts" | "automotive";
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeTab, setActiveTab] = useState<TabValue>("all");
+  const [activeSubCategory, setActiveSubCategory] = useState("All");
   
-  // Use debounce or just pass state directly for simplicity in this demo
+  const getMainCategoryFilter = () => {
+    if (activeTab === "spare-parts") return "Spare Parts";
+    if (activeTab === "automotive") return "Automotive";
+    return undefined;
+  };
+
   const { data: products, isLoading, error } = useProducts({ 
     search: search || undefined, 
-    category: activeCategory 
+    mainCategory: getMainCategoryFilter(),
+    subCategory: activeSubCategory !== "All" ? activeSubCategory : undefined,
   });
+
+  const getSubcategories = () => {
+    if (activeTab === "spare-parts") {
+      return ["All", ...SPARE_PARTS_SUBCATEGORIES];
+    } else if (activeTab === "automotive") {
+      return ["All", ...AUTOMOTIVE_SUBCATEGORIES];
+    }
+    return [];
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as TabValue);
+    setActiveSubCategory("All");
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-primary py-20 sm:py-32">
+      <section className="relative overflow-hidden bg-primary py-16 sm:py-24">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent"></div>
         
@@ -32,17 +54,15 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="font-display text-4xl font-extrabold tracking-tight text-white sm:text-6xl mb-6">
-              Find the <span className="text-accent">Perfect Part</span><br />
-              For Your Machine
+            <h1 className="font-display text-3xl font-extrabold tracking-tight text-white sm:text-5xl mb-4">
+              UAE's Marketplace for<br />
+              <span className="text-accent">Parts & Vehicles</span>
             </h1>
-            <p className="mx-auto max-w-2xl text-lg text-primary-foreground/80 mb-10">
-              The most trusted marketplace for authentic spare parts. 
-              Connect with verified sellers and get your equipment back running.
+            <p className="mx-auto max-w-xl text-base text-primary-foreground/80 mb-8">
+              Find spare parts, vehicles, and motorcycles from trusted sellers across the UAE.
             </p>
           </motion.div>
 
-          {/* Search Bar */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -55,12 +75,16 @@ export default function Home() {
                 <Search className="ml-3 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search by part name or number..."
+                  placeholder="Search parts, vehicles, brands..."
                   className="border-0 shadow-none focus-visible:ring-0 text-base h-12 bg-transparent"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  data-testid="input-search"
                 />
-                <Button className="h-10 px-6 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium">
+                <Button 
+                  className="h-10 px-6 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium"
+                  data-testid="button-search"
+                >
                   Search
                 </Button>
               </div>
@@ -69,80 +93,132 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-16">
-        {/* Categories */}
-        <div className="mb-12 overflow-x-auto pb-4 scrollbar-hide">
-          <div className="flex gap-2 min-w-max">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`
-                  px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200
-                  ${activeCategory === cat 
-                    ? "bg-accent text-white shadow-lg shadow-accent/25 ring-2 ring-accent ring-offset-2 ring-offset-background" 
-                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}
-                `}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Product Grid */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-display font-bold text-foreground">
-              {activeCategory === "All" ? "Latest Arrivals" : `${activeCategory} Parts`}
-            </h2>
+      <main className="container mx-auto px-4 py-8">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <TabsList className="grid w-full sm:w-auto grid-cols-3 h-12">
+              <TabsTrigger value="all" className="gap-2 px-6" data-testid="tab-explore-all">
+                <Compass className="h-4 w-4" />
+                <span className="hidden sm:inline">Explore All</span>
+                <span className="sm:hidden">All</span>
+              </TabsTrigger>
+              <TabsTrigger value="spare-parts" className="gap-2 px-6" data-testid="tab-spare-parts">
+                <Wrench className="h-4 w-4" />
+                <span className="hidden sm:inline">Spare Parts</span>
+                <span className="sm:hidden">Parts</span>
+              </TabsTrigger>
+              <TabsTrigger value="automotive" className="gap-2 px-6" data-testid="tab-automotive">
+                <Car className="h-4 w-4" />
+                <span className="hidden sm:inline">Automotive</span>
+                <span className="sm:hidden">Vehicles</span>
+              </TabsTrigger>
+            </TabsList>
+            
             <span className="text-sm text-muted-foreground">
               {products ? `${products.length} items found` : "Loading..."}
             </span>
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} className="space-y-4">
-                  <Skeleton className="h-64 w-full rounded-2xl" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-20 bg-destructive/5 rounded-2xl border border-destructive/20">
-              <h3 className="text-lg font-bold text-destructive">Unable to load products</h3>
-              <p className="text-muted-foreground mt-2">Please try refreshing the page.</p>
-            </div>
-          ) : products?.length === 0 ? (
-            <div className="text-center py-32 bg-secondary/30 rounded-3xl border border-dashed border-border">
-              <Box className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-xl font-bold text-foreground">No products found</h3>
-              <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
-                We couldn't find any parts matching your criteria. Try adjusting your search or filters.
-              </p>
-              <Button 
-                variant="outline" 
-                className="mt-6"
-                onClick={() => { setSearch(""); setActiveCategory("All"); }}
-              >
-                Clear Filters
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-              {products?.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+          {activeTab !== "all" && (
+            <div className="mb-8 overflow-x-auto pb-4 scrollbar-hide">
+              <div className="flex gap-2 min-w-max">
+                {getSubcategories().map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveSubCategory(cat)}
+                    data-testid={`filter-${cat.toLowerCase().replace(/\s+/g, '-')}`}
+                    className={`
+                      px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
+                      ${activeSubCategory === cat 
+                        ? "bg-accent text-white shadow-lg shadow-accent/25 ring-2 ring-accent ring-offset-2 ring-offset-background" 
+                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}
+                    `}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
-        </div>
+
+          <TabsContent value="all" className="mt-0">
+            <ProductGrid products={products} isLoading={isLoading} error={error} setSearch={setSearch} />
+          </TabsContent>
+          
+          <TabsContent value="spare-parts" className="mt-0">
+            <ProductGrid products={products} isLoading={isLoading} error={error} setSearch={setSearch} />
+          </TabsContent>
+          
+          <TabsContent value="automotive" className="mt-0">
+            <ProductGrid products={products} isLoading={isLoading} error={error} setSearch={setSearch} />
+          </TabsContent>
+        </Tabs>
       </main>
+    </div>
+  );
+}
+
+function ProductGrid({ 
+  products, 
+  isLoading, 
+  error, 
+  setSearch 
+}: { 
+  products: any[] | undefined; 
+  isLoading: boolean; 
+  error: Error | null;
+  setSearch: (s: string) => void;
+}) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <div key={i} className="space-y-4">
+            <Skeleton className="h-64 w-full rounded-2xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20 bg-destructive/5 rounded-2xl border border-destructive/20">
+        <h3 className="text-lg font-bold text-destructive">Unable to load listings</h3>
+        <p className="text-muted-foreground mt-2">Please try refreshing the page.</p>
+      </div>
+    );
+  }
+
+  if (!products?.length) {
+    return (
+      <div className="text-center py-32 bg-secondary/30 rounded-3xl border border-dashed border-border">
+        <Box className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+        <h3 className="text-xl font-bold text-foreground">No listings found</h3>
+        <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
+          Try adjusting your search or browse a different category.
+        </p>
+        <Button 
+          variant="outline" 
+          className="mt-6"
+          onClick={() => setSearch("")}
+          data-testid="button-clear-filters"
+        >
+          Clear Filters
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
     </div>
   );
 }
