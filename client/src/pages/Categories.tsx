@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
-import { Search, Car, Wrench, Loader2, ArrowLeft } from "lucide-react";
+import { Search, Car, Wrench, Loader2, ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
+import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
 import {
   Select,
   SelectContent,
@@ -17,12 +17,15 @@ import {
 import { Link } from "wouter";
 
 type MainCategory = "automotive" | "spare-parts";
+type SortOption = "newest" | "price-low" | "price-high";
 
 export default function Categories() {
   const [location] = useLocation();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<MainCategory>("automotive");
   const [activeSubCategory, setActiveSubCategory] = useState("All");
+  const [activeModel, setActiveModel] = useState("All");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -58,7 +61,43 @@ export default function Categories() {
   const handleCategoryChange = (category: MainCategory) => {
     setActiveCategory(category);
     setActiveSubCategory("All");
+    setActiveModel("All");
+    if (category === "spare-parts") {
+      setSortBy("newest");
+    }
   };
+
+  const handleSubCategoryChange = (subCategory: string) => {
+    setActiveSubCategory(subCategory);
+    setActiveModel("All");
+  };
+
+  const getModelsForBrand = () => {
+    if (activeCategory !== "automotive" || activeSubCategory === "All") {
+      return [];
+    }
+    return CAR_MODELS[activeSubCategory] || [];
+  };
+
+  const filteredAndSortedProducts = useMemo(() => {
+    if (!products) return [];
+    
+    let filtered = [...products];
+    
+    if (activeCategory === "automotive" && activeModel !== "All" && activeSubCategory !== "All") {
+      filtered = filtered.filter(p => 
+        p.title.toLowerCase().includes(activeModel.toLowerCase())
+      );
+    }
+    
+    if (sortBy === "price-low") {
+      filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (sortBy === "price-high") {
+      filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+    }
+    
+    return filtered;
+  }, [products, activeModel, sortBy, activeCategory, activeSubCategory]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -132,19 +171,49 @@ export default function Categories() {
           </button>
         </div>
 
-        <div className="mb-4">
-          <Select value={activeSubCategory} onValueChange={setActiveSubCategory}>
+        <div className="mb-4 space-y-3">
+          <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
             <SelectTrigger className="w-full" data-testid="select-category">
-              <SelectValue placeholder="All Categories" />
+              <SelectValue placeholder="All Brands" />
             </SelectTrigger>
             <SelectContent>
               {getSubcategories().map((cat) => (
                 <SelectItem key={cat} value={cat} data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {cat === "All" ? "All Categories" : cat}
+                  {cat === "All" ? "All Brands" : cat}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
+          {activeCategory === "automotive" && getModelsForBrand().length > 0 && (
+            <Select value={activeModel} onValueChange={setActiveModel}>
+              <SelectTrigger className="w-full" data-testid="select-model">
+                <SelectValue placeholder="All Models" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Models</SelectItem>
+                {getModelsForBrand().map((model) => (
+                  <SelectItem key={model} value={model} data-testid={`option-model-${model.toLowerCase().replace(/\s+/g, '-')}`}>
+                    {model}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {activeCategory === "automotive" && (
+            <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
+              <SelectTrigger className="w-full" data-testid="select-sort">
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {isLoading ? (
@@ -155,17 +224,17 @@ export default function Categories() {
           <div className="text-center py-16">
             <p className="text-destructive">Failed to load products</p>
           </div>
-        ) : products && products.length > 0 ? (
+        ) : filteredAndSortedProducts.length > 0 ? (
           <AnimatePresence mode="wait">
             <motion.div 
-              key={`${activeCategory}-${activeSubCategory}`}
+              key={`${activeCategory}-${activeSubCategory}-${activeModel}-${sortBy}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
             >
-              {products.map((product, index) => (
+              {filteredAndSortedProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 10 }}
