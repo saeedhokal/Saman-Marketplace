@@ -1,11 +1,11 @@
-import { Link } from "wouter";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Package, Car, Loader2, Check } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Package, Car, Loader2, Check, Sparkles } from "lucide-react";
+import { type SubscriptionPackage } from "@shared/schema";
 
 interface CreditsInfo {
   sparePartsCredits: number;
@@ -16,32 +16,19 @@ interface CreditsInfo {
 
 export default function Subscription() {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState<"Spare Parts" | "Automotive">("Spare Parts");
 
-  const { data: creditsInfo, isLoading } = useQuery<CreditsInfo>({
+  const { data: creditsInfo, isLoading: creditsLoading } = useQuery<CreditsInfo>({
     queryKey: ["/api/user/credits"],
     enabled: !!user,
   });
 
-  const purchaseCredits = useMutation({
-    mutationFn: async ({ category, amount }: { category: "spare_parts" | "automotive"; amount: number }) => {
-      const res = await apiRequest("POST", "/api/user/credits/purchase", { category, amount });
+  const { data: packages, isLoading: packagesLoading } = useQuery<SubscriptionPackage[]>({
+    queryKey: ["/api/packages", activeTab],
+    queryFn: async () => {
+      const res = await fetch(`/api/packages?category=${encodeURIComponent(activeTab)}`);
       return res.json();
-    },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
-      const categoryName = variables.category === "spare_parts" ? "Spare Parts" : "Automotive";
-      toast({
-        title: "Credits Purchased!",
-        description: `You now have ${variables.amount} more ${categoryName} credit(s).`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        variant: "destructive",
-        title: "Purchase Failed",
-        description: error.message || "Failed to purchase credits",
-      });
     },
   });
 
@@ -58,6 +45,8 @@ export default function Subscription() {
       </div>
     );
   }
+
+  const isLoading = creditsLoading || packagesLoading;
 
   if (isLoading) {
     return (
@@ -96,11 +85,12 @@ export default function Subscription() {
     );
   }
 
-  const creditPackages = [
-    { amount: 1, price: 10 },
-    { amount: 5, price: 45 },
-    { amount: 10, price: 80 },
-  ];
+  const handleSelectPackage = (pkg: SubscriptionPackage) => {
+    setLocation(`/checkout/${pkg.id}`);
+  };
+
+  const totalCredits = (pkg: SubscriptionPackage) => pkg.credits + (pkg.bonusCredits || 0);
+  const pricePerCredit = (pkg: SubscriptionPackage) => (pkg.price / totalCredits(pkg)).toFixed(0);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -117,75 +107,114 @@ export default function Subscription() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="container mx-auto px-4 py-4 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
           <Card className="border-accent/30 bg-accent/5">
-            <CardContent className="pt-4 text-center">
-              <Package className="h-8 w-8 mx-auto text-accent mb-2" />
-              <p className="text-2xl font-bold">{creditsInfo?.sparePartsCredits || 0}</p>
-              <p className="text-xs text-muted-foreground">Spare Parts Credits</p>
+            <CardContent className="p-3 text-center">
+              <Package className="h-6 w-6 mx-auto text-accent mb-1" />
+              <p className="text-xl font-bold">{creditsInfo?.sparePartsCredits || 0}</p>
+              <p className="text-xs text-muted-foreground">Parts Credits</p>
             </CardContent>
           </Card>
           <Card className="border-accent/30 bg-accent/5">
-            <CardContent className="pt-4 text-center">
-              <Car className="h-8 w-8 mx-auto text-accent mb-2" />
-              <p className="text-2xl font-bold">{creditsInfo?.automotiveCredits || 0}</p>
-              <p className="text-xs text-muted-foreground">Automotive Credits</p>
+            <CardContent className="p-3 text-center">
+              <Car className="h-6 w-6 mx-auto text-accent mb-1" />
+              <p className="text-xl font-bold">{creditsInfo?.automotiveCredits || 0}</p>
+              <p className="text-xs text-muted-foreground">Auto Credits</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="space-y-4">
-          <h2 className="font-semibold">Spare Parts Credits</h2>
-          <div className="grid gap-3">
-            {creditPackages.map((pkg) => (
-              <Card key={`spare-${pkg.amount}`} className="overflow-hidden">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold">{pkg.amount} Credit{pkg.amount > 1 ? "s" : ""}</p>
-                    <p className="text-sm text-muted-foreground">AED {pkg.price}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => purchaseCredits.mutate({ category: "spare_parts", amount: pkg.amount })}
-                    disabled={purchaseCredits.isPending}
-                    data-testid={`button-buy-spare-${pkg.amount}`}
-                  >
-                    {purchaseCredits.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buy"}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+          <button
+            onClick={() => setActiveTab("Spare Parts")}
+            className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "Spare Parts"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            data-testid="tab-spare-parts"
+          >
+            <Package className="h-4 w-4 inline mr-1.5" />
+            Spare Parts
+          </button>
+          <button
+            onClick={() => setActiveTab("Automotive")}
+            className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "Automotive"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            data-testid="tab-automotive"
+          >
+            <Car className="h-4 w-4 inline mr-1.5" />
+            Automotive
+          </button>
         </div>
 
-        <div className="space-y-4">
-          <h2 className="font-semibold">Automotive Credits</h2>
-          <div className="grid gap-3">
-            {creditPackages.map((pkg) => (
-              <Card key={`auto-${pkg.amount}`} className="overflow-hidden">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold">{pkg.amount} Credit{pkg.amount > 1 ? "s" : ""}</p>
-                    <p className="text-sm text-muted-foreground">AED {pkg.price}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => purchaseCredits.mutate({ category: "automotive", amount: pkg.amount })}
-                    disabled={purchaseCredits.isPending}
-                    data-testid={`button-buy-auto-${pkg.amount}`}
-                  >
-                    {purchaseCredits.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buy"}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <div className="space-y-3">
+          {packages && packages.length > 0 ? (
+            packages.map((pkg, index) => {
+              const isPopular = index === Math.floor(packages.length / 2);
+              const hasBonusCredits = pkg.bonusCredits > 0;
+              
+              return (
+                <Card 
+                  key={pkg.id} 
+                  className={`relative overflow-hidden ${isPopular ? 'border-accent border-2' : ''}`}
+                >
+                  {isPopular && (
+                    <div className="absolute top-0 right-0 bg-accent text-white text-xs px-3 py-1 rounded-bl-lg font-medium">
+                      <Sparkles className="h-3 w-3 inline mr-1" />
+                      Popular
+                    </div>
+                  )}
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-base">{pkg.name}</h3>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <span className="text-2xl font-bold text-accent">AED {pkg.price}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm text-muted-foreground">
+                            {pkg.credits} Credit{pkg.credits > 1 ? 's' : ''}
+                            {hasBonusCredits && (
+                              <span className="text-green-600 font-medium ml-1">
+                                +{pkg.bonusCredits} FREE
+                              </span>
+                            )}
+                          </span>
+                          {pkg.credits > 1 && (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                              AED {pricePerCredit(pkg)}/credit
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => handleSelectPackage(pkg)}
+                        className={isPopular ? '' : 'bg-secondary text-foreground hover:bg-secondary/80'}
+                        data-testid={`button-select-package-${pkg.id}`}
+                      >
+                        Select
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No packages available for {activeTab}</p>
+            </div>
+          )}
         </div>
 
-        <p className="text-xs text-center text-muted-foreground pt-4">
-          Credits are used to post listings. Each listing requires 1 credit from the matching category.
-          Credits can be purchased multiple times and are added to your balance.
+        <p className="text-xs text-center text-muted-foreground pt-2">
+          Credits are used to post listings in the {activeTab} category.
+          Each listing requires 1 credit. Credits can be purchased multiple times.
         </p>
       </div>
     </div>

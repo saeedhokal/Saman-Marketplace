@@ -9,13 +9,32 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, List, Image, Plus, GripVertical, ArrowLeft } from "lucide-react";
-import type { Product, AppSettings, Banner } from "@shared/schema";
+import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2 } from "lucide-react";
+import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link } from "wouter";
+
+interface RevenueStats {
+  totalRevenue: number;
+  sparePartsRevenue: number;
+  automotiveRevenue: number;
+  transactionCount: number;
+}
 
 export default function Admin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [pendingCategory, setPendingCategory] = useState<"all" | "Spare Parts" | "Automotive">("all");
+  const [packageCategory, setPackageCategory] = useState<"Spare Parts" | "Automotive">("Spare Parts");
+  const [editingPackage, setEditingPackage] = useState<SubscriptionPackage | null>(null);
+  const [newPackage, setNewPackage] = useState({
+    name: "",
+    price: 0,
+    credits: 1,
+    bonusCredits: 0,
+    category: "Spare Parts",
+    isActive: true,
+    sortOrder: 0,
+  });
   const [newBanner, setNewBanner] = useState({
     title: "",
     subtitle: "",
@@ -47,6 +66,16 @@ export default function Admin() {
 
   const { data: banners = [] } = useQuery<Banner[]>({
     queryKey: ["/api/admin/banners"],
+    enabled: !!userInfo?.isAdmin,
+  });
+
+  const { data: packages = [] } = useQuery<SubscriptionPackage[]>({
+    queryKey: ["/api/admin/packages"],
+    enabled: !!userInfo?.isAdmin,
+  });
+
+  const { data: revenueStats } = useQuery<RevenueStats>({
+    queryKey: ["/api/admin/revenue"],
     enabled: !!userInfo?.isAdmin,
   });
 
@@ -115,6 +144,33 @@ export default function Admin() {
     },
   });
 
+  const createPackageMutation = useMutation({
+    mutationFn: (data: typeof newPackage) => apiRequest("POST", "/api/admin/packages", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/packages"] });
+      setNewPackage({ name: "", price: 0, credits: 1, bonusCredits: 0, category: packageCategory, isActive: true, sortOrder: 0 });
+      toast({ title: "Package created" });
+    },
+  });
+
+  const updatePackageMutation = useMutation({
+    mutationFn: ({ id, ...data }: Partial<SubscriptionPackage> & { id: number }) => 
+      apiRequest("PUT", `/api/admin/packages/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/packages"] });
+      setEditingPackage(null);
+      toast({ title: "Package updated" });
+    },
+  });
+
+  const deletePackageMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/admin/packages/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/packages"] });
+      toast({ title: "Package deleted" });
+    },
+  });
+
   if (!userInfo?.isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -135,15 +191,24 @@ export default function Admin() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
+        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 whitespace-nowrap flex-shrink-0"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
       case "approved":
-        return <Badge variant="outline" className="bg-green-500/10 text-green-600"><CheckCircle className="h-3 w-3 mr-1" /> Approved</Badge>;
+        return <Badge variant="outline" className="bg-green-500/10 text-green-600 whitespace-nowrap flex-shrink-0"><CheckCircle className="h-3 w-3 mr-1" /> Approved</Badge>;
       case "rejected":
-        return <Badge variant="outline" className="bg-red-500/10 text-red-600"><XCircle className="h-3 w-3 mr-1" /> Rejected</Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-600 whitespace-nowrap flex-shrink-0"><XCircle className="h-3 w-3 mr-1" /> Rejected</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline" className="whitespace-nowrap flex-shrink-0">{status}</Badge>;
     }
   };
+
+  const filteredPending = pendingListings?.filter(l => 
+    pendingCategory === "all" || l.mainCategory === pendingCategory
+  ) || [];
+
+  const sparePartsPending = pendingListings?.filter(l => l.mainCategory === "Spare Parts").length || 0;
+  const automotivePending = pendingListings?.filter(l => l.mainCategory === "Automotive").length || 0;
+
+  const filteredPackages = packages.filter(p => p.category === packageCategory);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -161,26 +226,58 @@ export default function Admin() {
       </div>
 
       <div className="container mx-auto px-4 pt-4 max-w-6xl">
-        <Tabs defaultValue="pending" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="pending" className="text-xs sm:text-sm">
+        <Tabs defaultValue="pending" className="space-y-4">
+          <TabsList className="grid grid-cols-5 w-full">
+            <TabsTrigger value="pending" className="text-xs">
               Pending ({pendingListings?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="all" className="text-xs sm:text-sm">
+            <TabsTrigger value="all" className="text-xs">
               All
             </TabsTrigger>
-            <TabsTrigger value="banners" className="text-xs sm:text-sm">
-              Banners
+            <TabsTrigger value="packages" className="text-xs">
+              Packages
             </TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs sm:text-sm">
+            <TabsTrigger value="revenue" className="text-xs">
+              Revenue
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs">
               Settings
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pending" className="space-y-4">
+            <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+              <button
+                onClick={() => setPendingCategory("all")}
+                className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-colors ${
+                  pendingCategory === "all" ? "bg-background shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                All ({pendingListings?.length || 0})
+              </button>
+              <button
+                onClick={() => setPendingCategory("Spare Parts")}
+                className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-colors ${
+                  pendingCategory === "Spare Parts" ? "bg-background shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                <Package className="h-3 w-3 inline mr-1" />
+                Parts ({sparePartsPending})
+              </button>
+              <button
+                onClick={() => setPendingCategory("Automotive")}
+                className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-colors ${
+                  pendingCategory === "Automotive" ? "bg-background shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                <Car className="h-3 w-3 inline mr-1" />
+                Auto ({automotivePending})
+              </button>
+            </div>
+
             {pendingLoading ? (
               <div className="text-center py-10 text-muted-foreground">Loading...</div>
-            ) : !pendingListings?.length ? (
+            ) : !filteredPending.length ? (
               <Card>
                 <CardContent className="py-10 text-center text-muted-foreground">
                   <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
@@ -188,7 +285,7 @@ export default function Admin() {
                 </CardContent>
               </Card>
             ) : (
-              pendingListings.map((listing) => (
+              filteredPending.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   listing={listing}
@@ -226,147 +323,179 @@ export default function Admin() {
             )}
           </TabsContent>
 
-          <TabsContent value="banners" className="space-y-6">
+          <TabsContent value="packages" className="space-y-4">
+            <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+              <button
+                onClick={() => setPackageCategory("Spare Parts")}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                  packageCategory === "Spare Parts" ? "bg-background shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                <Package className="h-4 w-4 inline mr-1" />
+                Spare Parts
+              </button>
+              <button
+                onClick={() => setPackageCategory("Automotive")}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                  packageCategory === "Automotive" ? "bg-background shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                <Car className="h-4 w-4 inline mr-1" />
+                Automotive
+              </button>
+            </div>
+
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Add New Banner
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add New {packageCategory} Package
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Title *</label>
+                    <label className="text-xs font-medium mb-1 block">Package Name</label>
                     <Input
-                      placeholder="e.g. Sell your Spare Parts"
-                      value={newBanner.title}
-                      onChange={(e) => setNewBanner({ ...newBanner, title: e.target.value })}
-                      data-testid="input-new-banner-title"
+                      placeholder="e.g. Basic Plan"
+                      value={newPackage.name}
+                      onChange={(e) => setNewPackage({ ...newPackage, name: e.target.value })}
+                      className="h-9"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Subtitle</label>
-                    <Input
-                      placeholder="e.g. Easy and quick today!"
-                      value={newBanner.subtitle}
-                      onChange={(e) => setNewBanner({ ...newBanner, subtitle: e.target.value })}
-                      data-testid="input-new-banner-subtitle"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Image URL *</label>
-                  <Input
-                    placeholder="https://..."
-                    value={newBanner.imageUrl}
-                    onChange={(e) => setNewBanner({ ...newBanner, imageUrl: e.target.value })}
-                    data-testid="input-new-banner-image"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Button Text</label>
-                    <Input
-                      placeholder="e.g. View Offers"
-                      value={newBanner.buttonText}
-                      onChange={(e) => setNewBanner({ ...newBanner, buttonText: e.target.value })}
-                      data-testid="input-new-banner-button"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Link URL</label>
-                    <Input
-                      placeholder="/categories or https://..."
-                      value={newBanner.linkUrl}
-                      onChange={(e) => setNewBanner({ ...newBanner, linkUrl: e.target.value })}
-                      data-testid="input-new-banner-link"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Sort Order</label>
+                    <label className="text-xs font-medium mb-1 block">Price (AED)</label>
                     <Input
                       type="number"
-                      value={newBanner.sortOrder}
-                      onChange={(e) => setNewBanner({ ...newBanner, sortOrder: parseInt(e.target.value) || 0 })}
-                      className="w-24"
-                      data-testid="input-new-banner-order"
+                      placeholder="75"
+                      value={newPackage.price || ""}
+                      onChange={(e) => setNewPackage({ ...newPackage, price: parseInt(e.target.value) || 0 })}
+                      className="h-9"
                     />
                   </div>
-                  <div className="flex items-center gap-2 mt-6">
-                    <Switch
-                      checked={newBanner.isActive}
-                      onCheckedChange={(checked) => setNewBanner({ ...newBanner, isActive: checked })}
-                      data-testid="switch-new-banner-active"
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-medium mb-1 block">Credits</label>
+                    <Input
+                      type="number"
+                      value={newPackage.credits}
+                      onChange={(e) => setNewPackage({ ...newPackage, credits: parseInt(e.target.value) || 1 })}
+                      className="h-9"
                     />
-                    <span className="text-sm">Active</span>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium mb-1 block">Bonus Credits</label>
+                    <Input
+                      type="number"
+                      value={newPackage.bonusCredits}
+                      onChange={(e) => setNewPackage({ ...newPackage, bonusCredits: parseInt(e.target.value) || 0 })}
+                      className="h-9"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium mb-1 block">Sort Order</label>
+                    <Input
+                      type="number"
+                      value={newPackage.sortOrder}
+                      onChange={(e) => setNewPackage({ ...newPackage, sortOrder: parseInt(e.target.value) || 0 })}
+                      className="h-9"
+                    />
                   </div>
                 </div>
                 <Button 
-                  onClick={() => createBannerMutation.mutate(newBanner)}
-                  disabled={!newBanner.title || !newBanner.imageUrl || createBannerMutation.isPending}
-                  data-testid="button-create-banner"
+                  size="sm"
+                  onClick={() => createPackageMutation.mutate({ ...newPackage, category: packageCategory })}
+                  disabled={!newPackage.name || !newPackage.price || createPackageMutation.isPending}
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Banner
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Package
                 </Button>
               </CardContent>
             </Card>
 
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Existing Banners ({banners.length})</h3>
-              {banners.length === 0 ? (
+            <div className="space-y-3">
+              <h3 className="font-semibold">Existing {packageCategory} Packages ({filteredPackages.length})</h3>
+              {filteredPackages.length === 0 ? (
                 <Card>
-                  <CardContent className="py-10 text-center text-muted-foreground">
-                    <Image className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No banners yet. Create your first banner above.</p>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    <Package className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p>No packages yet for {packageCategory}</p>
                   </CardContent>
                 </Card>
               ) : (
-                banners.map((banner) => (
-                  <Card key={banner.id}>
-                    <CardContent className="pt-4">
-                      <div className="flex gap-4">
-                        <div className="w-32 h-20 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
-                          {banner.imageUrl && (
-                            <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
-                          )}
+                filteredPackages.map((pkg) => (
+                  <Card key={pkg.id}>
+                    <CardContent className="p-4">
+                      {editingPackage?.id === pkg.id ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <Input
+                              value={editingPackage.name}
+                              onChange={(e) => setEditingPackage({ ...editingPackage, name: e.target.value })}
+                              className="h-8"
+                            />
+                            <Input
+                              type="number"
+                              value={editingPackage.price}
+                              onChange={(e) => setEditingPackage({ ...editingPackage, price: parseInt(e.target.value) || 0 })}
+                              className="h-8"
+                            />
+                          </div>
+                          <div className="grid grid-cols-3 gap-3">
+                            <Input
+                              type="number"
+                              value={editingPackage.credits}
+                              onChange={(e) => setEditingPackage({ ...editingPackage, credits: parseInt(e.target.value) || 1 })}
+                              className="h-8"
+                            />
+                            <Input
+                              type="number"
+                              value={editingPackage.bonusCredits}
+                              onChange={(e) => setEditingPackage({ ...editingPackage, bonusCredits: parseInt(e.target.value) || 0 })}
+                              className="h-8"
+                            />
+                            <Input
+                              type="number"
+                              value={editingPackage.sortOrder}
+                              onChange={(e) => setEditingPackage({ ...editingPackage, sortOrder: parseInt(e.target.value) || 0 })}
+                              className="h-8"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => updatePackageMutation.mutate(editingPackage)}>Save</Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingPackage(null)}>Cancel</Button>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h4 className="font-semibold">{banner.title}</h4>
-                              {banner.subtitle && <p className="text-sm text-muted-foreground">{banner.subtitle}</p>}
-                            </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div>
                             <div className="flex items-center gap-2">
-                              <Badge variant={banner.isActive ? "default" : "secondary"}>
-                                {banner.isActive ? "Active" : "Inactive"}
+                              <h4 className="font-semibold">{pkg.name}</h4>
+                              <Badge variant={pkg.isActive ? "default" : "secondary"} className="text-xs">
+                                {pkg.isActive ? "Active" : "Inactive"}
                               </Badge>
-                              <span className="text-xs text-muted-foreground">Order: {banner.sortOrder}</span>
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              <span className="font-medium text-accent">AED {pkg.price}</span>
+                              {" - "}
+                              {pkg.credits} credit{pkg.credits > 1 ? "s" : ""}
+                              {pkg.bonusCredits > 0 && <span className="text-green-600"> +{pkg.bonusCredits} free</span>}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 mt-3">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateBannerMutation.mutate({ id: banner.id, isActive: !banner.isActive })}
-                              data-testid={`toggle-banner-${banner.id}`}
-                            >
-                              {banner.isActive ? "Disable" : "Enable"}
+                          <div className="flex gap-2">
+                            <Button size="icon" variant="ghost" onClick={() => setEditingPackage(pkg)}>
+                              <Edit2 className="h-4 w-4" />
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => deleteBannerMutation.mutate(banner.id)}
-                              data-testid={`delete-banner-${banner.id}`}
-                            >
+                            <Button size="icon" variant="ghost" onClick={() => updatePackageMutation.mutate({ id: pkg.id, isActive: !pkg.isActive })}>
+                              {pkg.isActive ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                            </Button>
+                            <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deletePackageMutation.mutate(pkg.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))
@@ -374,33 +503,169 @@ export default function Admin() {
             </div>
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-6">
+          <TabsContent value="revenue" className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="bg-green-500/10 border-green-500/30">
+                <CardContent className="p-4 text-center">
+                  <DollarSign className="h-8 w-8 mx-auto text-green-600 mb-2" />
+                  <p className="text-2xl font-bold text-green-600">AED {revenueStats?.totalRevenue || 0}</p>
+                  <p className="text-xs text-muted-foreground">Total Revenue</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <TrendingUp className="h-8 w-8 mx-auto text-accent mb-2" />
+                  <p className="text-2xl font-bold">{revenueStats?.transactionCount || 0}</p>
+                  <p className="text-xs text-muted-foreground">Transactions</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                      <Package className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold">AED {revenueStats?.sparePartsRevenue || 0}</p>
+                      <p className="text-xs text-muted-foreground">Spare Parts</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                      <Car className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold">AED {revenueStats?.automotiveRevenue || 0}</p>
+                      <p className="text-xs text-muted-foreground">Automotive</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
+                <CardTitle className="text-sm">Revenue Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Detailed transaction history and analytics will appear here as users make purchases.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Settings className="h-4 w-4" />
                   Subscription Settings
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between py-4 border-b">
+                <div className="flex items-center justify-between py-3 border-b">
                   <div>
-                    <p className="font-medium">Credit System</p>
-                    <p className="text-sm text-muted-foreground">
-                      When enabled, users need credits to post listings
+                    <p className="font-medium text-sm">Credit System</p>
+                    <p className="text-xs text-muted-foreground">
+                      When enabled, users need credits to post
                     </p>
                   </div>
                   <Switch
                     checked={settings?.subscriptionEnabled || false}
                     onCheckedChange={(checked) => updateSettingsMutation.mutate({ subscriptionEnabled: checked })}
-                    data-testid="switch-subscription"
                   />
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {settings?.subscriptionEnabled 
                     ? "Users need to purchase credits to post listings (1 credit per listing)"
                     : "Posting is free for all users"}
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Image className="h-4 w-4" />
+                  Banners
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="Banner Title"
+                    value={newBanner.title}
+                    onChange={(e) => setNewBanner({ ...newBanner, title: e.target.value })}
+                    className="h-9"
+                  />
+                  <Input
+                    placeholder="Subtitle"
+                    value={newBanner.subtitle}
+                    onChange={(e) => setNewBanner({ ...newBanner, subtitle: e.target.value })}
+                    className="h-9"
+                  />
+                </div>
+                <Input
+                  placeholder="Image URL (https://...)"
+                  value={newBanner.imageUrl}
+                  onChange={(e) => setNewBanner({ ...newBanner, imageUrl: e.target.value })}
+                  className="h-9"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="Button Text"
+                    value={newBanner.buttonText}
+                    onChange={(e) => setNewBanner({ ...newBanner, buttonText: e.target.value })}
+                    className="h-9"
+                  />
+                  <Input
+                    placeholder="Link URL"
+                    value={newBanner.linkUrl}
+                    onChange={(e) => setNewBanner({ ...newBanner, linkUrl: e.target.value })}
+                    className="h-9"
+                  />
+                </div>
+                <Button 
+                  size="sm"
+                  onClick={() => createBannerMutation.mutate(newBanner)}
+                  disabled={!newBanner.title || !newBanner.imageUrl || createBannerMutation.isPending}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Banner
+                </Button>
+
+                {banners.length > 0 && (
+                  <div className="space-y-2 pt-4 border-t">
+                    <h4 className="text-sm font-medium">Existing Banners ({banners.length})</h4>
+                    {banners.map((banner) => (
+                      <div key={banner.id} className="flex items-center gap-3 p-2 bg-secondary/50 rounded-lg">
+                        <img src={banner.imageUrl} alt={banner.title} className="w-16 h-10 object-cover rounded" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{banner.title}</p>
+                          <Badge variant={banner.isActive ? "default" : "secondary"} className="text-xs">
+                            {banner.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateBannerMutation.mutate({ id: banner.id, isActive: !banner.isActive })}>
+                            {banner.isActive ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteBannerMutation.mutate(banner.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -430,73 +695,63 @@ function ListingCard({
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="flex gap-4">
+      <CardContent className="p-4">
+        <div className="flex gap-3">
           <img
             src={listing.imageUrl}
             alt={listing.title}
-            className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
           />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="font-semibold truncate">{listing.title}</h3>
-                <p className="text-sm text-muted-foreground">
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="flex items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm truncate">{listing.title}</h3>
+                <p className="text-xs text-muted-foreground">
                   {listing.mainCategory} / {listing.subCategory}
                 </p>
                 {listing.price && (
-                  <p className="text-lg font-bold text-accent mt-1">
+                  <p className="text-sm font-bold text-accent mt-0.5">
                     AED {(listing.price / 100).toLocaleString()}
                   </p>
                 )}
               </div>
               {getStatusBadge(listing.status)}
             </div>
-            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{listing.description}</p>
-            
-            {listing.phoneNumber && (
-              <p className="text-xs text-muted-foreground mt-1">Phone: {listing.phoneNumber}</p>
-            )}
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{listing.description}</p>
 
             {showActions && (
-              <div className="flex gap-2 mt-4">
-                <Button size="sm" onClick={onApprove} data-testid={`button-approve-${listing.id}`}>
-                  <Check className="h-4 w-4 mr-1" /> Approve
+              <div className="flex gap-2 mt-3">
+                <Button size="sm" className="h-7 text-xs" onClick={onApprove}>
+                  <Check className="h-3 w-3 mr-1" /> Approve
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowRejectForm(!showRejectForm)}
-                  data-testid={`button-reject-${listing.id}`}
-                >
-                  <X className="h-4 w-4 mr-1" /> Reject
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowRejectForm(!showRejectForm)}>
+                  <X className="h-3 w-3 mr-1" /> Reject
                 </Button>
-                <Button size="sm" variant="destructive" onClick={onDelete} data-testid={`button-delete-${listing.id}`}>
-                  <Trash2 className="h-4 w-4" />
+                <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={onDelete}>
+                  <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
             )}
 
             {showRejectForm && (
-              <div className="mt-4 flex gap-2">
+              <div className="mt-3 flex gap-2">
                 <Textarea
                   placeholder="Reason for rejection..."
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  className="h-20"
-                  data-testid={`input-reject-reason-${listing.id}`}
+                  className="h-16 text-xs"
                 />
                 <Button
                   size="sm"
                   variant="destructive"
+                  className="h-16"
                   onClick={() => {
                     onReject(rejectReason);
                     setShowRejectForm(false);
                     setRejectReason("");
                   }}
-                  data-testid={`button-confirm-reject-${listing.id}`}
                 >
-                  Confirm
+                  OK
                 </Button>
               </div>
             )}

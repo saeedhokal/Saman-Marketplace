@@ -133,6 +133,33 @@ export const banners = pgTable("banners", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Subscription packages (admin-configurable)
+export const subscriptionPackages = pgTable("subscription_packages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  price: integer("price").notNull(), // in AED (not cents for simplicity)
+  credits: integer("credits").notNull(),
+  bonusCredits: integer("bonus_credits").default(0).notNull(), // e.g. "8+2 free" would be credits=8, bonusCredits=2
+  category: text("category").notNull(), // "Spare Parts" or "Automotive"
+  isActive: boolean("is_active").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Payment transactions for revenue tracking
+export const transactions = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  packageId: integer("package_id").references(() => subscriptionPackages.id),
+  amount: integer("amount").notNull(), // in AED
+  credits: integer("credits").notNull(), // Total credits given (including bonus)
+  category: text("category").notNull(), // "Spare Parts" or "Automotive"
+  paymentMethod: text("payment_method"), // "apple_pay", "credit_card"
+  paymentReference: text("payment_reference"), // Telr transaction reference
+  status: text("status").default("completed").notNull(), // "pending", "completed", "failed"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Track user views for "For You" recommendations
 export const userViews = pgTable("user_views", {
   id: serial("id").primaryKey(),
@@ -172,6 +199,16 @@ export const insertUserViewSchema = createInsertSchema(userViews).omit({
   viewedAt: true,
 });
 
+export const insertSubscriptionPackageSchema = createInsertSchema(subscriptionPackages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTransactionSchema = createInsertSchema(transactions).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Favorite = typeof favorites.$inferSelect;
@@ -180,6 +217,10 @@ export type Banner = typeof banners.$inferSelect;
 export type InsertBanner = z.infer<typeof insertBannerSchema>;
 export type UserView = typeof userViews.$inferSelect;
 export type InsertUserView = z.infer<typeof insertUserViewSchema>;
+export type SubscriptionPackage = typeof subscriptionPackages.$inferSelect;
+export type InsertSubscriptionPackage = z.infer<typeof insertSubscriptionPackageSchema>;
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type AppSettings = typeof appSettings.$inferSelect;
 export type { OtpCode } from "./models/auth";
 export { otpCodes } from "./models/auth";

@@ -241,6 +241,60 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // Checkout - process package purchase
+  app.post("/api/checkout", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const { packageId, paymentMethod } = req.body;
+    
+    if (!packageId) {
+      return res.status(400).json({ message: "Package ID is required" });
+    }
+
+    const pkg = await storage.getPackage(packageId);
+    if (!pkg || !pkg.isActive) {
+      return res.status(404).json({ message: "Package not found or inactive" });
+    }
+
+    // TODO: Integrate with Telr payment gateway when keys are provided
+    // For now, we'll process the payment directly (development mode)
+    const telrStoreId = process.env.TELR_STORE_ID;
+    const telrAuthKey = process.env.TELR_AUTH_KEY;
+    
+    if (!telrStoreId || !telrAuthKey) {
+      // Development mode - process directly without payment gateway
+      console.log(`[DEV] Processing payment for package ${pkg.id}: AED ${pkg.price}`);
+    } else {
+      // Production mode - would integrate with Telr here
+      // For now, just log that we would process via Telr
+      console.log(`[TELR] Would process payment via Telr: AED ${pkg.price}`);
+    }
+
+    // Add credits to user
+    const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
+    const category = pkg.category as "Spare Parts" | "Automotive";
+    await storage.addCredits(userId, category, totalCredits);
+
+    // Record transaction
+    await storage.createTransaction({
+      userId,
+      packageId: pkg.id,
+      amount: pkg.price,
+      credits: totalCredits,
+      category: pkg.category,
+      paymentMethod: paymentMethod || "credit_card",
+      paymentReference: `DEV-${Date.now()}`,
+      status: "completed",
+    });
+
+    const newCredits = await storage.getUserCredits(userId);
+    res.json({ 
+      success: true,
+      message: `${totalCredits} ${category} credits added to your account`,
+      sparePartsCredits: newCredits.sparePartsCredits,
+      automotiveCredits: newCredits.automotiveCredits,
+    });
+  });
+
   // User's own listings (all statuses)
   app.get("/api/user/listings", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
@@ -452,6 +506,64 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const id = Number(req.params.id);
     await storage.deleteBanner(id);
     res.sendStatus(204);
+  });
+
+  // ========== SUBSCRIPTION PACKAGE ROUTES ==========
+  
+  // Public: Get active packages for a category
+  app.get("/api/packages", async (req, res) => {
+    const category = req.query.category as string;
+    if (category) {
+      const packages = await storage.getActivePackages(category);
+      res.json(packages);
+    } else {
+      const packages = await storage.getPackages();
+      res.json(packages);
+    }
+  });
+
+  // Admin: Get all packages
+  app.get("/api/admin/packages", isAuthenticated, isAdmin, async (req, res) => {
+    const category = req.query.category as string | undefined;
+    const packages = await storage.getPackages(category);
+    res.json(packages);
+  });
+
+  // Admin: Create package
+  app.post("/api/admin/packages", isAuthenticated, isAdmin, async (req, res) => {
+    const pkg = await storage.createPackage(req.body);
+    res.status(201).json(pkg);
+  });
+
+  // Admin: Update package
+  app.put("/api/admin/packages/:id", isAuthenticated, isAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    const pkg = await storage.updatePackage(id, req.body);
+    if (!pkg) {
+      return res.status(404).json({ message: "Package not found" });
+    }
+    res.json(pkg);
+  });
+
+  // Admin: Delete package
+  app.delete("/api/admin/packages/:id", isAuthenticated, isAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    await storage.deletePackage(id);
+    res.sendStatus(204);
+  });
+
+  // ========== REVENUE & TRANSACTIONS ==========
+  
+  // Admin: Get revenue stats
+  app.get("/api/admin/revenue", isAuthenticated, isAdmin, async (req, res) => {
+    const stats = await storage.getRevenueStats();
+    res.json(stats);
+  });
+
+  // Admin: Get transactions
+  app.get("/api/admin/transactions", isAuthenticated, isAdmin, async (req, res) => {
+    const transactions = await storage.getTransactions();
+    res.json(transactions);
   });
 
   return httpServer;

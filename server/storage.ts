@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { products, favorites, users, appSettings, banners, userViews, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings, type Banner, type InsertBanner, type UserView, type InsertUserView } from "@shared/schema";
-import { eq, ilike, desc, and, or, lt, sql, asc } from "drizzle-orm";
+import { products, favorites, users, appSettings, banners, userViews, subscriptionPackages, transactions, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings, type Banner, type InsertBanner, type UserView, type InsertUserView, type SubscriptionPackage, type InsertSubscriptionPackage, type Transaction, type InsertTransaction } from "@shared/schema";
+import { eq, ilike, desc, and, or, lt, sql, asc, gte, lte, sum } from "drizzle-orm";
 
 export interface IStorage {
   // Products
@@ -50,6 +50,19 @@ export interface IStorage {
   recordView(view: InsertUserView): Promise<void>;
   getRecentProducts(limit?: number): Promise<Product[]>;
   getRecommendedProducts(userId?: string, sessionId?: string, limit?: number): Promise<Product[]>;
+  
+  // Subscription Packages
+  getPackages(category?: string): Promise<SubscriptionPackage[]>;
+  getActivePackages(category: string): Promise<SubscriptionPackage[]>;
+  getPackage(id: number): Promise<SubscriptionPackage | undefined>;
+  createPackage(pkg: InsertSubscriptionPackage): Promise<SubscriptionPackage>;
+  updatePackage(id: number, data: Partial<SubscriptionPackage>): Promise<SubscriptionPackage | undefined>;
+  deletePackage(id: number): Promise<void>;
+  
+  // Transactions & Revenue
+  createTransaction(tx: InsertTransaction): Promise<Transaction>;
+  getTransactions(options?: { userId?: string; startDate?: Date; endDate?: Date }): Promise<Transaction[]>;
+  getRevenueStats(): Promise<{ totalRevenue: number; sparePartsRevenue: number; automotiveRevenue: number; transactionCount: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -387,6 +400,92 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(desc(products.createdAt))
       .limit(limit);
+  }
+
+  // Subscription Packages
+  async getPackages(category?: string): Promise<SubscriptionPackage[]> {
+    if (category) {
+      return await db.select().from(subscriptionPackages)
+        .where(eq(subscriptionPackages.category, category))
+        .orderBy(asc(subscriptionPackages.sortOrder));
+    }
+    return await db.select().from(subscriptionPackages)
+      .orderBy(asc(subscriptionPackages.sortOrder));
+  }
+
+  async getActivePackages(category: string): Promise<SubscriptionPackage[]> {
+    return await db.select().from(subscriptionPackages)
+      .where(and(
+        eq(subscriptionPackages.category, category),
+        eq(subscriptionPackages.isActive, true)
+      ))
+      .orderBy(asc(subscriptionPackages.sortOrder));
+  }
+
+  async getPackage(id: number): Promise<SubscriptionPackage | undefined> {
+    const [pkg] = await db.select().from(subscriptionPackages)
+      .where(eq(subscriptionPackages.id, id));
+    return pkg;
+  }
+
+  async createPackage(pkg: InsertSubscriptionPackage): Promise<SubscriptionPackage> {
+    const [newPkg] = await db.insert(subscriptionPackages).values(pkg).returning();
+    return newPkg;
+  }
+
+  async updatePackage(id: number, data: Partial<SubscriptionPackage>): Promise<SubscriptionPackage | undefined> {
+    const [updated] = await db.update(subscriptionPackages)
+      .set(data)
+      .where(eq(subscriptionPackages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePackage(id: number): Promise<void> {
+    await db.delete(subscriptionPackages).where(eq(subscriptionPackages.id, id));
+  }
+
+  // Transactions & Revenue
+  async createTransaction(tx: InsertTransaction): Promise<Transaction> {
+    const [newTx] = await db.insert(transactions).values(tx).returning();
+    return newTx;
+  }
+
+  async getTransactions(options?: { userId?: string; startDate?: Date; endDate?: Date }): Promise<Transaction[]> {
+    const conditions = [];
+    if (options?.userId) {
+      conditions.push(eq(transactions.userId, options.userId));
+    }
+    if (options?.startDate) {
+      conditions.push(gte(transactions.createdAt, options.startDate));
+    }
+    if (options?.endDate) {
+      conditions.push(lte(transactions.createdAt, options.endDate));
+    }
+    
+    if (conditions.length > 0) {
+      return await db.select().from(transactions)
+        .where(and(...conditions))
+        .orderBy(desc(transactions.createdAt));
+    }
+    return await db.select().from(transactions)
+      .orderBy(desc(transactions.createdAt));
+  }
+
+  async getRevenueStats(): Promise<{ totalRevenue: number; sparePartsRevenue: number; automotiveRevenue: number; transactionCount: number }> {
+    const allTx = await db.select().from(transactions)
+      .where(eq(transactions.status, "completed"));
+    
+    const totalRevenue = allTx.reduce((sum, tx) => sum + tx.amount, 0);
+    const sparePartsRevenue = allTx.filter(tx => tx.category === "Spare Parts").reduce((sum, tx) => sum + tx.amount, 0);
+    const automotiveRevenue = allTx.filter(tx => tx.category === "Automotive").reduce((sum, tx) => sum + tx.amount, 0);
+    
+    return {
+      totalRevenue,
+      sparePartsRevenue,
+      automotiveRevenue,
+      transactionCount: allTx.length,
+    };
   }
 }
 

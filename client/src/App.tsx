@@ -16,6 +16,7 @@ import Profile from "@/pages/Profile";
 import Admin from "@/pages/Admin";
 import Auth from "@/pages/Auth";
 import Subscription from "@/pages/Subscription";
+import Checkout from "@/pages/Checkout";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
         <Route path="/my-listings" component={MyListings} />
         <Route path="/profile" component={Profile} />
         <Route path="/profile/subscription" component={Subscription} />
+        <Route path="/checkout/:id" component={Checkout} />
         <Route path="/admin" component={Admin} />
         <Route path="/auth" component={Auth} />
         <Route component={NotFound} />
