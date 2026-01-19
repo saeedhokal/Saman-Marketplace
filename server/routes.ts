@@ -217,6 +217,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // Purchase credits - allows adding credits to existing balance
+  app.post("/api/user/credits/purchase", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const { category, amount } = req.body;
+    
+    if (!category || !["spare_parts", "automotive"].includes(category)) {
+      return res.status(400).json({ message: "Invalid category" });
+    }
+    if (!amount || amount < 1 || amount > 100) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
+
+    // Add credits to the user's balance
+    const categoryName = category === "spare_parts" ? "Spare Parts" : "Automotive";
+    await storage.addCredits(userId, categoryName as "Spare Parts" | "Automotive", amount);
+    
+    const newCredits = await storage.getUserCredits(userId);
+    res.json({ 
+      success: true,
+      sparePartsCredits: newCredits.sparePartsCredits,
+      automotiveCredits: newCredits.automotiveCredits,
+    });
+  });
+
   // User's own listings (all statuses)
   app.get("/api/user/listings", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
