@@ -6,10 +6,8 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { and, ilike, eq } from "drizzle-orm"; // Import for storage query construction if needed there
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  // Setup Auth first
   await setupAuth(app);
   registerAuthRoutes(app);
   registerObjectStorageRoutes(app);
@@ -17,8 +15,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Products API
   app.get(api.products.list.path, async (req, res) => {
     const search = req.query.search as string | undefined;
-    const category = req.query.category as string | undefined;
-    const products = await storage.getProducts(search, category);
+    const mainCategory = req.query.mainCategory as string | undefined;
+    const subCategory = req.query.subCategory as string | undefined;
+    const products = await storage.getProducts({ search, mainCategory, subCategory });
     res.json(products);
   });
 
@@ -31,11 +30,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(product);
   });
 
+  // Get products by seller (seller profile)
+  app.get("/api/sellers/:sellerId/products", async (req, res) => {
+    const sellerId = req.params.sellerId;
+    const products = await storage.getProductsBySeller(sellerId);
+    res.json(products);
+  });
+
   app.post(api.products.create.path, isAuthenticated, async (req, res) => {
     try {
       const bodySchema = api.products.create.input.extend({
         price: z.coerce.number(),
-        isVehicle: z.coerce.boolean().optional(),
       });
       const input = bodySchema.parse(req.body);
       // @ts-ignore
@@ -59,8 +64,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.delete(api.products.delete.path, isAuthenticated, async (req, res) => {
     const id = Number(req.params.id);
-    // Check ownership? For now, allow deletion.
-    // Ideally we check if product.sellerId === req.user.sub
     const product = await storage.getProduct(id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -74,6 +77,49 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
     await storage.deleteProduct(id);
     res.sendStatus(204);
+  });
+
+  // Favorites API
+  app.get("/api/favorites", isAuthenticated, async (req, res) => {
+    // @ts-ignore
+    const userId = req.user.claims.sub;
+    const favorites = await storage.getFavorites(userId);
+    res.json(favorites);
+  });
+
+  app.post("/api/favorites/:productId", isAuthenticated, async (req, res) => {
+    const productId = Number(req.params.productId);
+    // @ts-ignore
+    const userId = req.user.claims.sub;
+    
+    const product = await storage.getProduct(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const existing = await storage.isFavorite(userId, productId);
+    if (existing) {
+      return res.status(400).json({ message: "Already in favorites" });
+    }
+
+    const fav = await storage.addFavorite(userId, productId);
+    res.status(201).json(fav);
+  });
+
+  app.delete("/api/favorites/:productId", isAuthenticated, async (req, res) => {
+    const productId = Number(req.params.productId);
+    // @ts-ignore
+    const userId = req.user.claims.sub;
+    await storage.removeFavorite(userId, productId);
+    res.sendStatus(204);
+  });
+
+  app.get("/api/favorites/:productId/check", isAuthenticated, async (req, res) => {
+    const productId = Number(req.params.productId);
+    // @ts-ignore
+    const userId = req.user.claims.sub;
+    const isFav = await storage.isFavorite(userId, productId);
+    res.json({ isFavorite: isFav });
   });
 
   return httpServer;

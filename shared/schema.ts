@@ -4,18 +4,48 @@ import { z } from "zod";
 import { users } from "./models/auth";
 export * from "./models/auth";
 
+// Main categories
+export const MAIN_CATEGORIES = ["Spare Parts", "Automotive"] as const;
+export type MainCategory = typeof MAIN_CATEGORIES[number];
+
+// Sub-categories for Spare Parts (car manufacturers + universal)
+export const SPARE_PARTS_SUBCATEGORIES = [
+  "Toyota", "Honda", "Nissan", "Ford", "Chevrolet", "BMW", "Mercedes", "Audi",
+  "Volkswagen", "Hyundai", "Kia", "Mazda", "Mitsubishi", "Lexus", "Infiniti",
+  "Land Rover", "Jeep", "Dodge", "GMC", "Porsche", "Ferrari", "Lamborghini",
+  "Turbos & Superchargers", "Tires", "Brakes", "Suspension", "Exhaust", "Engine Parts",
+  "Transmission", "Electrical", "Body Parts", "Interior", "Lights", "Other"
+] as const;
+
+// Sub-categories for Automotive (vehicles for sale)
+export const AUTOMOTIVE_SUBCATEGORIES = [
+  "Toyota", "Honda", "Nissan", "Ford", "Chevrolet", "BMW", "Mercedes", "Audi",
+  "Volkswagen", "Hyundai", "Kia", "Mazda", "Mitsubishi", "Lexus", "Infiniti",
+  "Land Rover", "Jeep", "Dodge", "GMC", "Porsche", "Ferrari", "Lamborghini",
+  "Offroad", "Motorcycles", "Other"
+] as const;
+
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   price: integer("price").notNull(), // in cents
   imageUrl: text("image_url").notNull(),
-  category: text("category").notNull(),
+  mainCategory: text("main_category").notNull(), // "Spare Parts" or "Automotive"
+  subCategory: text("sub_category").notNull(), // Toyota, Honda, Turbos, Motorcycles, etc.
   condition: text("condition").notNull(), // New, Used, Refurbished
   sellerId: varchar("seller_id").notNull().references(() => users.id),
   location: text("location"),
   phoneNumber: text("phone_number"),
-  isVehicle: boolean("is_vehicle").default(false),
+  whatsappNumber: text("whatsapp_number"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Favorites table for saved items
+export const favorites = pgTable("favorites", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  productId: integer("product_id").notNull().references(() => products.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -25,5 +55,13 @@ export const insertProductSchema = createInsertSchema(products).omit({
   sellerId: true, // Derived from auth
 });
 
+export const insertFavoriteSchema = createInsertSchema(favorites).omit({
+  id: true,
+  createdAt: true,
+  userId: true, // Derived from auth
+});
+
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Favorite = typeof favorites.$inferSelect;
+export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;

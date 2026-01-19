@@ -1,16 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl, type InsertProduct } from "@shared/routes";
+import type { Product } from "@shared/schema";
 
 // GET /api/products
-export function useProducts(filters?: { search?: string; category?: string }) {
+export function useProducts(filters?: { search?: string; mainCategory?: string; subCategory?: string }) {
   const queryKey = [api.products.list.path, filters];
   return useQuery({
     queryKey,
     queryFn: async () => {
-      // Build query params manually since buildUrl is for path params
       const url = new URL(api.products.list.path, window.location.origin);
       if (filters?.search) url.searchParams.append("search", filters.search);
-      if (filters?.category && filters.category !== "All") url.searchParams.append("category", filters.category);
+      if (filters?.mainCategory && filters.mainCategory !== "All") {
+        url.searchParams.append("mainCategory", filters.mainCategory);
+      }
+      if (filters?.subCategory && filters.subCategory !== "All") {
+        url.searchParams.append("subCategory", filters.subCategory);
+      }
       
       const res = await fetch(url.toString(), { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch products");
@@ -31,6 +36,19 @@ export function useProduct(id: number) {
       return api.products.get.responses[200].parse(await res.json());
     },
     enabled: !!id,
+  });
+}
+
+// GET /api/sellers/:sellerId/products
+export function useSellerProducts(sellerId: string) {
+  return useQuery<Product[]>({
+    queryKey: ["/api/sellers", sellerId, "products"],
+    queryFn: async () => {
+      const res = await fetch(`/api/sellers/${sellerId}/products`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch seller products");
+      return res.json();
+    },
+    enabled: !!sellerId,
   });
 }
 

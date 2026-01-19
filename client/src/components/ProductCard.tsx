@@ -45,9 +45,12 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           <CardContent className="p-5">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center gap-1">
               <Badge variant="outline" className="text-xs font-medium text-muted-foreground border-border/60">
-                {product.category}
+                {product.mainCategory}
+              </Badge>
+              <Badge variant="outline" className="text-xs font-medium text-muted-foreground border-border/60">
+                {product.subCategory}
               </Badge>
             </div>
             <h3 className="font-display text-lg font-bold leading-tight text-foreground line-clamp-2 group-hover:text-accent transition-colors">
