@@ -4,12 +4,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Heart, MapPin, Store } from "lucide-react";
+import { ArrowLeft, Phone, Heart, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { type Product } from "@shared/schema";
+import { Card } from "@/components/ui/card";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -20,6 +22,11 @@ export default function ProductDetail() {
   const addFavorite = useAddFavorite();
   const removeFavorite = useRemoveFavorite();
   const { toast } = useToast();
+
+  const { data: sellerProducts } = useQuery<Product[]>({
+    queryKey: ['/api/sellers', product?.sellerId, 'products'],
+    enabled: !!product?.sellerId,
+  });
 
   useEffect(() => {
     if (id && product) {
@@ -127,79 +134,96 @@ export default function ProductDetail() {
           </div>
 
           <div className="flex flex-col justify-center">
-            <div className="space-y-4 mb-6">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" className="px-3 py-1 text-sm font-medium">
-                  {product.mainCategory}
-                </Badge>
-              </div>
-
-              <h1 className="font-display text-3xl sm:text-4xl font-bold text-foreground leading-tight">
+            <div className="space-y-3 mb-6">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight">
                 {product.title}
               </h1>
 
-              <div className="font-display text-4xl font-bold text-primary">
+              <div className="font-display text-3xl font-bold text-primary">
                 {formattedPrice}
               </div>
 
               {product.location && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <MapPin className="h-4 w-4" />
                   <span>{product.location}</span>
                 </div>
               )}
             </div>
 
-            <div className="prose prose-slate max-w-none text-muted-foreground mb-8">
-              <p className="text-base leading-relaxed whitespace-pre-wrap">{product.description}</p>
+            <div className="prose prose-slate max-w-none text-muted-foreground mb-6">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{product.description}</p>
             </div>
 
-            <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-lg shadow-black/5 space-y-4">
-              <h3 className="font-semibold text-foreground mb-4">Contact Seller</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <a 
-                  href={`tel:${product.phoneNumber || '+971501234567'}`}
-                  className="w-full"
-                >
-                  <Button 
-                    size="lg" 
-                    variant="outline"
-                    className="w-full h-14 text-base"
-                    data-testid="button-call"
-                  >
-                    <Phone className="mr-2 h-5 w-5" /> Call Seller
-                  </Button>
-                </a>
-                
-                <a 
-                  href={`https://wa.me/${formatWhatsAppNumber(product.whatsappNumber || '+971501234567')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full"
-                >
-                  <Button 
-                    size="lg" 
-                    className="w-full h-14 text-base bg-green-600 hover:bg-green-700 text-white"
-                    data-testid="button-whatsapp"
-                  >
-                    <SiWhatsapp className="mr-2 h-5 w-5" /> WhatsApp
-                  </Button>
-                </a>
-              </div>
-
-              <Link href={`/seller/${product.sellerId}`}>
+            <div className="flex items-center gap-3 mb-6">
+              <a 
+                href={`tel:${product.phoneNumber || '+971501234567'}`}
+                className="flex-1"
+              >
                 <Button 
-                  variant="ghost" 
-                  className="w-full mt-2"
-                  data-testid="button-view-seller"
+                  size="sm" 
+                  variant="outline"
+                  className="w-full"
+                  data-testid="button-call"
                 >
-                  <Store className="mr-2 h-4 w-4" /> View All Seller Listings
+                  <Phone className="mr-2 h-4 w-4" /> Call
                 </Button>
-              </Link>
+              </a>
+              
+              <a 
+                href={`https://wa.me/${formatWhatsAppNumber(product.whatsappNumber || '+971501234567')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1"
+              >
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="w-full text-green-600 border-green-600 hover:bg-green-50"
+                  data-testid="button-whatsapp"
+                >
+                  <SiWhatsapp className="mr-2 h-4 w-4" /> WhatsApp
+                </Button>
+              </a>
             </div>
           </div>
         </div>
+
+        {/* More from this seller */}
+        {sellerProducts && sellerProducts.filter(p => p.id !== id).length > 0 && (
+          <div className="mt-12">
+            <h2 className="font-display text-xl font-bold text-foreground mb-4">More from this seller</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {sellerProducts
+                .filter(p => p.id !== id)
+                .slice(0, 4)
+                .map(p => {
+                  const price = new Intl.NumberFormat("en-AE", {
+                    style: "currency",
+                    currency: "AED",
+                    maximumFractionDigits: 0,
+                  }).format((p.price || 0) / 100);
+                  return (
+                    <Link key={p.id} href={`/product/${p.id}`}>
+                      <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow rounded-xl">
+                        <div className="aspect-square overflow-hidden bg-secondary/30">
+                          {p.imageUrl ? (
+                            <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Image</div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <p className="text-sm font-medium line-clamp-1">{p.title}</p>
+                          <p className="text-sm font-bold text-primary">{price}</p>
+                        </div>
+                      </Card>
+                    </Link>
+                  );
+                })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
