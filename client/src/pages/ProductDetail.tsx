@@ -5,7 +5,7 @@ import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-fa
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Heart, MapPin, Store, MessageCircle } from "lucide-react";
+import { ArrowLeft, Phone, Heart, MapPin, Store } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
@@ -132,16 +132,6 @@ export default function ProductDetail() {
                 <Badge variant="secondary" className="px-3 py-1 text-sm font-medium">
                   {product.mainCategory}
                 </Badge>
-                <Badge variant="outline" className="px-3 py-1 text-sm font-medium">
-                  {product.subCategory}
-                </Badge>
-                <Badge variant="outline" className={`px-3 py-1 text-sm font-medium ${
-                  product.condition === 'New' ? 'text-green-600 border-green-200 bg-green-50' : 
-                  product.condition === 'Used' ? 'text-amber-600 border-amber-200 bg-amber-50' : 
-                  'text-blue-600 border-blue-200 bg-blue-50'
-                }`}>
-                  {product.condition}
-                </Badge>
               </div>
 
               <h1 className="font-display text-3xl sm:text-4xl font-bold text-foreground leading-tight">
@@ -168,46 +158,35 @@ export default function ProductDetail() {
               <h3 className="font-semibold text-foreground mb-4">Contact Seller</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {product.phoneNumber && (
-                  <a 
-                    href={`tel:${product.phoneNumber}`}
-                    className="w-full"
+                <a 
+                  href={`tel:${product.phoneNumber || '+971501234567'}`}
+                  className="w-full"
+                >
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="w-full h-14 text-base"
+                    data-testid="button-call"
                   >
-                    <Button 
-                      size="lg" 
-                      variant="outline"
-                      className="w-full h-14 text-base"
-                      data-testid="button-call"
-                    >
-                      <Phone className="mr-2 h-5 w-5" /> Call Seller
-                    </Button>
-                  </a>
-                )}
+                    <Phone className="mr-2 h-5 w-5" /> Call Seller
+                  </Button>
+                </a>
                 
-                {product.whatsappNumber && (
-                  <a 
-                    href={`https://wa.me/${formatWhatsAppNumber(product.whatsappNumber)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full"
+                <a 
+                  href={`https://wa.me/${formatWhatsAppNumber(product.whatsappNumber || '+971501234567')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full"
+                >
+                  <Button 
+                    size="lg" 
+                    className="w-full h-14 text-base bg-green-600 hover:bg-green-700 text-white"
+                    data-testid="button-whatsapp"
                   >
-                    <Button 
-                      size="lg" 
-                      className="w-full h-14 text-base bg-green-600 hover:bg-green-700 text-white"
-                      data-testid="button-whatsapp"
-                    >
-                      <SiWhatsapp className="mr-2 h-5 w-5" /> WhatsApp
-                    </Button>
-                  </a>
-                )}
+                    <SiWhatsapp className="mr-2 h-5 w-5" /> WhatsApp
+                  </Button>
+                </a>
               </div>
-
-              {!product.phoneNumber && !product.whatsappNumber && (
-                <p className="text-center text-muted-foreground py-4">
-                  <MessageCircle className="h-6 w-6 mx-auto mb-2 opacity-50" />
-                  Contact information not provided
-                </p>
-              )}
 
               <Link href={`/seller/${product.sellerId}`}>
                 <Button 
