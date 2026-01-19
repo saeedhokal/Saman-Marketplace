@@ -3,22 +3,21 @@ import { useProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Box, Car, Wrench, Compass } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, Box, Car, Wrench } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
 
-type TabValue = "all" | "spare-parts" | "automotive";
+type MainCategory = "automotive" | "spare-parts";
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<TabValue>("all");
+  const [activeCategory, setActiveCategory] = useState<MainCategory>("automotive");
   const [activeSubCategory, setActiveSubCategory] = useState("All");
   
   const getMainCategoryFilter = () => {
-    if (activeTab === "spare-parts") return "Spare Parts";
-    if (activeTab === "automotive") return "Automotive";
+    if (activeCategory === "spare-parts") return "Spare Parts";
+    if (activeCategory === "automotive") return "Automotive";
     return undefined;
   };
 
@@ -29,16 +28,16 @@ export default function Home() {
   });
 
   const getSubcategories = () => {
-    if (activeTab === "spare-parts") {
+    if (activeCategory === "spare-parts") {
       return ["All", ...SPARE_PARTS_SUBCATEGORIES];
-    } else if (activeTab === "automotive") {
+    } else if (activeCategory === "automotive") {
       return ["All", ...AUTOMOTIVE_SUBCATEGORIES];
     }
     return [];
   };
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as TabValue);
+  const handleCategoryChange = (category: MainCategory) => {
+    setActiveCategory(category);
     setActiveSubCategory("All");
   };
 
@@ -94,33 +93,66 @@ export default function Home() {
       </section>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <TabsList className="grid w-full sm:w-auto grid-cols-3 h-12">
-              <TabsTrigger value="all" className="gap-2 px-6" data-testid="tab-explore-all">
-                <Compass className="h-4 w-4" />
-                <span className="hidden sm:inline">Explore All</span>
-                <span className="sm:hidden">All</span>
-              </TabsTrigger>
-              <TabsTrigger value="spare-parts" className="gap-2 px-6" data-testid="tab-spare-parts">
-                <Wrench className="h-4 w-4" />
-                <span className="hidden sm:inline">Spare Parts</span>
-                <span className="sm:hidden">Parts</span>
-              </TabsTrigger>
-              <TabsTrigger value="automotive" className="gap-2 px-6" data-testid="tab-automotive">
-                <Car className="h-4 w-4" />
-                <span className="hidden sm:inline">Automotive</span>
-                <span className="sm:hidden">Vehicles</span>
-              </TabsTrigger>
-            </TabsList>
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden mb-8">
+          <div className="flex border-b">
+            <button
+              onClick={() => handleCategoryChange("automotive")}
+              data-testid="tab-automotive"
+              className={`
+                flex-1 py-4 px-6 text-center font-semibold text-base transition-all relative
+                flex items-center justify-center gap-2
+                ${activeCategory === "automotive" 
+                  ? "text-accent" 
+                  : "text-muted-foreground hover:text-foreground"}
+              `}
+            >
+              <Car className="h-5 w-5" />
+              <span>Automotive</span>
+              {activeCategory === "automotive" && (
+                <motion.div
+                  layoutId="categoryIndicator"
+                  className="absolute bottom-0 left-0 right-0 h-1 bg-accent"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+            </button>
             
-            <span className="text-sm text-muted-foreground">
-              {products ? `${products.length} items found` : "Loading..."}
-            </span>
+            <button
+              onClick={() => handleCategoryChange("spare-parts")}
+              data-testid="tab-spare-parts"
+              className={`
+                flex-1 py-4 px-6 text-center font-semibold text-base transition-all relative
+                flex items-center justify-center gap-2
+                ${activeCategory === "spare-parts" 
+                  ? "text-accent" 
+                  : "text-muted-foreground hover:text-foreground"}
+              `}
+            >
+              <Wrench className="h-5 w-5" />
+              <span>Spare Parts</span>
+              {activeCategory === "spare-parts" && (
+                <motion.div
+                  layoutId="categoryIndicator"
+                  className="absolute bottom-0 left-0 right-0 h-1 bg-accent"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+            </button>
           </div>
-
-          {activeTab !== "all" && (
-            <div className="mb-8 overflow-x-auto pb-4 scrollbar-hide">
+          
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-foreground">
+                {activeCategory === "automotive" ? "Browse Vehicles" : "Browse Spare Parts"}
+              </h2>
+              <span className="text-sm text-muted-foreground">
+                {products ? `${products.length} items` : "Loading..."}
+              </span>
+            </div>
+            
+            <div className="overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
               <div className="flex gap-2 min-w-max">
                 {getSubcategories().map((cat) => (
                   <button
@@ -130,29 +162,29 @@ export default function Home() {
                     className={`
                       px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
                       ${activeSubCategory === cat 
-                        ? "bg-accent text-white shadow-lg shadow-accent/25 ring-2 ring-accent ring-offset-2 ring-offset-background" 
+                        ? "bg-accent text-white shadow-lg shadow-accent/25" 
                         : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}
                     `}
                   >
-                    {cat}
+                    {cat === "All" ? "Explore All" : cat}
                   </button>
                 ))}
               </div>
             </div>
-          )}
+          </div>
+        </div>
 
-          <TabsContent value="all" className="mt-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${activeCategory}-${activeSubCategory}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
             <ProductGrid products={products} isLoading={isLoading} error={error} setSearch={setSearch} />
-          </TabsContent>
-          
-          <TabsContent value="spare-parts" className="mt-0">
-            <ProductGrid products={products} isLoading={isLoading} error={error} setSearch={setSearch} />
-          </TabsContent>
-          
-          <TabsContent value="automotive" className="mt-0">
-            <ProductGrid products={products} isLoading={isLoading} error={error} setSearch={setSearch} />
-          </TabsContent>
-        </Tabs>
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );
