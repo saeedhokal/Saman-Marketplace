@@ -5,7 +5,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
+import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products } from "@shared/schema";
 import { db } from "./db";
 import { users } from "@shared/models/auth";
 import { eq } from "drizzle-orm";
@@ -990,9 +990,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         },
       ];
 
-      // Insert demo listings
+      // Insert demo listings directly (bypasses status override)
       for (const listing of demoListings) {
-        await storage.createProduct(listing);
+        await db.insert(products).values(listing as any);
       }
 
       // Seed subscription packages for both categories
