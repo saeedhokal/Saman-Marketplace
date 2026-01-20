@@ -68,13 +68,22 @@ async function buildAll() {
   if (existsSync(wellKnownSrc)) {
     console.log("copying .well-known folder to dist/public...");
     await mkdir(wellKnownDest, { recursive: true });
-    const applePayFile = "apple-developer-merchantid-domain-association.txt";
-    if (existsSync(path.join(wellKnownSrc, applePayFile))) {
-      await copyFile(
-        path.join(wellKnownSrc, applePayFile),
-        path.join(wellKnownDest, applePayFile)
-      );
-      console.log("Apple Pay verification file copied successfully");
+    
+    // Copy both versions: with and without .txt extension
+    // Apple requires the file WITHOUT .txt extension
+    const applePayFiles = [
+      "apple-developer-merchantid-domain-association",
+      "apple-developer-merchantid-domain-association.txt"
+    ];
+    
+    for (const applePayFile of applePayFiles) {
+      if (existsSync(path.join(wellKnownSrc, applePayFile))) {
+        await copyFile(
+          path.join(wellKnownSrc, applePayFile),
+          path.join(wellKnownDest, applePayFile)
+        );
+        console.log(`Apple Pay verification file copied: ${applePayFile}`);
+      }
     }
   }
 }

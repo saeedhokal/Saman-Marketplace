@@ -9,20 +9,24 @@ const app = express();
 const httpServer = createServer(app);
 
 // Serve Apple Pay domain verification file EARLY (before any middleware)
-app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, res) => {
-  const fileName = "apple-developer-merchantid-domain-association.txt";
+// Apple requires the file WITHOUT .txt extension at: /.well-known/apple-developer-merchantid-domain-association
+const serveApplePayVerification = (req: express.Request, res: express.Response) => {
   const cwd = process.cwd();
   const isProd = process.env.NODE_ENV === "production";
   
-  // Check multiple locations for the verification file
-  const locations = [
-    // Development: project root .well-known/
-    path.join(cwd, ".well-known", fileName),
-    // Production: dist/public/.well-known/
-    path.join(cwd, "dist", "public", ".well-known", fileName),
-    // Alternative prod: public/.well-known/ (relative to cwd which might be dist)
-    path.join(cwd, "public", ".well-known", fileName),
+  // Check both file names (with and without .txt)
+  const fileNames = [
+    "apple-developer-merchantid-domain-association",
+    "apple-developer-merchantid-domain-association.txt"
   ];
+  
+  // Check multiple locations for the verification file
+  const locations: string[] = [];
+  for (const fileName of fileNames) {
+    locations.push(path.join(cwd, ".well-known", fileName));
+    locations.push(path.join(cwd, "dist", "public", ".well-known", fileName));
+    locations.push(path.join(cwd, "public", ".well-known", fileName));
+  }
   
   if (!isProd) {
     console.log("[ApplePay] Checking locations:", locations);
@@ -35,9 +39,13 @@ app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, 
       return;
     }
   }
-  console.log("[ApplePay] Verification file not found. CWD:", cwd, "Locations checked:", locations);
+  console.log("[ApplePay] Verification file not found. CWD:", cwd);
   res.status(404).send("Not found");
-});
+};
+
+// Serve at both URLs (with and without .txt extension)
+app.get("/.well-known/apple-developer-merchantid-domain-association", serveApplePayVerification);
+app.get("/.well-known/apple-developer-merchantid-domain-association.txt", serveApplePayVerification);
 
 declare module "http" {
   interface IncomingMessage {
