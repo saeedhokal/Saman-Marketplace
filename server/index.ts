@@ -2,9 +2,21 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import path from "path";
+import fs from "fs";
 
 const app = express();
 const httpServer = createServer(app);
+
+// Serve Apple Pay domain verification file EARLY (before any middleware)
+app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, res) => {
+  const filePath = path.resolve(process.cwd(), ".well-known", "apple-developer-merchantid-domain-association.txt");
+  if (fs.existsSync(filePath)) {
+    res.type("text/plain").send(fs.readFileSync(filePath, "utf8"));
+  } else {
+    res.status(404).send("Not found");
+  }
+});
 
 declare module "http" {
   interface IncomingMessage {
