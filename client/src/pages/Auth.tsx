@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Phone, Lock, Car } from "lucide-react";
+import { Loader2, Phone, Lock } from "lucide-react";
+import samanLogo from "@/assets/saman-logo.jpg";
 
 interface LoginFormValues {
   phone: string;
@@ -72,9 +73,11 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3d3d3d 100%)' }}>
       <Card className="w-full max-w-md border-2" style={{ borderColor: '#f97316' }}>
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f97316' }}>
-            <Car className="h-8 w-8 text-white" />
-          </div>
+          <img 
+            src={samanLogo} 
+            alt="Saman Marketplace" 
+            className="mx-auto mb-4 w-20 h-20 rounded-xl object-cover"
+          />
           <CardTitle className="text-2xl font-bold" style={{ color: '#f97316' }}>Saman Marketplace</CardTitle>
           <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>UAE Spare Parts and Cars Marketplace</CardDescription>
         </CardHeader>
