@@ -105,7 +105,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    res.json(product);
+    
+    // Attach seller profile image
+    let sellerProfileImageUrl = null;
+    if (product.sellerId) {
+      const [seller] = await db.select({ profileImageUrl: users.profileImageUrl })
+        .from(users).where(eq(users.id, product.sellerId));
+      sellerProfileImageUrl = seller?.profileImageUrl || null;
+    }
+    
+    res.json({ ...product, sellerProfileImageUrl });
   });
 
   // Get products by seller (seller profile)
@@ -206,6 +215,65 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       throw err;
     }
+  });
+
+  app.put("/api/products/:id", isAuthenticated, async (req, res) => {
+    const id = Number(req.params.id);
+    const product = await storage.getProduct(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    
+    const userId = getCurrentUserId(req)!;
+    if (product.sellerId !== userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Validate required fields
+    if (!req.body.title || req.body.title.length < 3) {
+      return res.status(400).json({ message: "Title must be at least 3 characters" });
+    }
+    if (!req.body.description || req.body.description.length < 10) {
+      return res.status(400).json({ message: "Description must be at least 10 characters" });
+    }
+    if (!req.body.mainCategory || !req.body.subCategory) {
+      return res.status(400).json({ message: "Category is required" });
+    }
+    if (!req.body.imageUrl) {
+      return res.status(400).json({ message: "At least one photo is required" });
+    }
+    
+    // Validate category-subcategory combination
+    if (!isValidCategoryPair(req.body.mainCategory, req.body.subCategory)) {
+      return res.status(400).json({ message: "Invalid category-subcategory combination" });
+    }
+
+    const updates = {
+      title: req.body.title,
+      description: req.body.description,
+      mainCategory: req.body.mainCategory,
+      subCategory: req.body.subCategory,
+      imageUrl: req.body.imageUrl,
+      imageUrls: req.body.imageUrls || null,
+      mileage: req.body.mileage || null,
+      year: req.body.year || null,
+      price: req.body.price || null,
+      location: req.body.location || product.location,
+      phoneNumber: req.body.phoneNumber || product.phoneNumber,
+      whatsappNumber: req.body.whatsappNumber || product.whatsappNumber,
+      status: "pending" as const,
+    };
+
+    const updated = await storage.updateProduct(id, updates);
+    
+    // Attach seller profile image
+    const [seller] = await db.select({ profileImageUrl: users.profileImageUrl })
+      .from(users).where(eq(users.id, userId));
+    
+    res.json({
+      ...updated,
+      sellerProfileImageUrl: seller?.profileImageUrl || null
+    });
   });
 
   app.delete(api.products.delete.path, isAuthenticated, async (req, res) => {

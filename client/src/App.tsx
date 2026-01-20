@@ -11,6 +11,7 @@ import LanguageSelect from "@/pages/LanguageSelect";
 import Categories from "@/pages/Categories";
 import ProductDetail from "@/pages/ProductDetail";
 import Sell from "@/pages/Sell";
+import EditListing from "@/pages/EditListing";
 import SellerProfile from "@/pages/SellerProfile";
 import Favorites from "@/pages/Favorites";
 import MyListings from "@/pages/MyListings";
@@ -44,6 +45,7 @@ function Router() {
         <Route path="/categories" component={Categories} />
         <Route path="/product/:id" component={ProductDetail} />
         <Route path="/sell" component={Sell} />
+        <Route path="/edit/:id" component={EditListing} />
         <Route path="/seller/:sellerId" component={SellerProfile} />
         <Route path="/favorites" component={Favorites} />
         <Route path="/my-listings" component={MyListings} />

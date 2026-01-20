@@ -175,6 +175,10 @@ export default function MyListings() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setLocation(`/edit/${listing.id}`)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => markSoldMutation.mutate(listing.id)}>
                           <CheckCircle className="h-4 w-4 mr-2" />
                           Mark as Sold
