@@ -1020,5 +1020,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Admin: Clear demo listings
+  app.delete("/api/admin/clear-demo", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      // Delete all listings from demo sellers
+      const deletedCount = await storage.deleteProductsBySeller(["demo_seller_1", "demo_seller_2", "demo_seller_3"]);
+      res.json({ message: `Removed ${deletedCount} demo listings` });
+    } catch (error) {
+      console.error("Error clearing demo listings:", error);
+      res.status(500).json({ message: "Failed to clear demo listings" });
+    }
+  });
+
   return httpServer;
 }

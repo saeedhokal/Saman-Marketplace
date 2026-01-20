@@ -178,10 +178,25 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/products/recent"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products/recommended"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] });
-      toast({ title: "Demo listings added", description: "10 sample listings have been added to the marketplace." });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/packages"] });
+      toast({ title: "Demo content added", description: "10 listings and 8 subscription packages have been added." });
     },
     onError: () => {
-      toast({ title: "Failed to add demo listings", variant: "destructive" });
+      toast({ title: "Failed to add demo content", variant: "destructive" });
+    },
+  });
+
+  const clearDemoMutation = useMutation({
+    mutationFn: () => apiRequest("DELETE", "/api/admin/clear-demo"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products/recent"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products/recommended"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] });
+      toast({ title: "Demo listings removed", description: "All demo listings have been cleared." });
+    },
+    onError: () => {
+      toast({ title: "Failed to clear demo listings", variant: "destructive" });
     },
   });
 
@@ -614,16 +629,27 @@ export default function Admin() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Add sample listings to showcase the marketplace to reviewers.
+                  Add or remove sample listings to showcase the marketplace to reviewers.
                 </p>
-                <Button 
-                  onClick={() => seedDemoMutation.mutate()}
-                  disabled={seedDemoMutation.isPending}
-                  data-testid="button-seed-demo"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {seedDemoMutation.isPending ? "Adding..." : "Add 10 Demo Listings"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => seedDemoMutation.mutate()}
+                    disabled={seedDemoMutation.isPending || clearDemoMutation.isPending}
+                    data-testid="button-seed-demo"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {seedDemoMutation.isPending ? "Adding..." : "Add Demo Content"}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => clearDemoMutation.mutate()}
+                    disabled={seedDemoMutation.isPending || clearDemoMutation.isPending}
+                    data-testid="button-clear-demo"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {clearDemoMutation.isPending ? "Removing..." : "Clear Demo"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

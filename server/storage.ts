@@ -11,6 +11,7 @@ export interface IStorage {
   getExpiringProducts(sellerId: string, daysLeft?: number): Promise<Product[]>;
   createProduct(product: InsertProduct & { sellerId: string }): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
+  deleteProductsBySeller(sellerIds: string[]): Promise<number>;
   repostProduct(id: number): Promise<Product | undefined>;
   markAsSold(id: number): Promise<void>;
   
@@ -167,6 +168,13 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProduct(id: number): Promise<void> {
     await db.delete(products).where(eq(products.id, id));
+  }
+
+  async deleteProductsBySeller(sellerIds: string[]): Promise<number> {
+    const result = await db.delete(products)
+      .where(or(...sellerIds.map(id => eq(products.sellerId, id))))
+      .returning();
+    return result.length;
   }
 
   // Admin methods
