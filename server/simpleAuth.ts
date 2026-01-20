@@ -83,6 +83,11 @@ export function setupSimpleAuth(app: Express) {
 
   const isProduction = process.env.NODE_ENV === "production";
 
+  // Trust proxy in production (required for secure cookies behind reverse proxy)
+  if (isProduction) {
+    app.set("trust proxy", 1);
+  }
+
   app.use(
     session({
       store: sessionStore,
@@ -92,6 +97,7 @@ export function setupSimpleAuth(app: Express) {
       cookie: {
         httpOnly: true,
         secure: isProduction,
+        sameSite: "lax",
         maxAge: sessionTtl,
       },
     })
