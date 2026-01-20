@@ -57,9 +57,12 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
       
-      - name: Increment build number
+      - name: Set version and build number
         script: |
           cd $CM_BUILD_DIR/ios/App
+          # Set version to 2.0.0 (higher than previous 1.2.9)
+          agvtool new-marketing-version 2.0.0
+          # Get latest build number and increment
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID" || echo "10")
           NEW_BUILD=$((LATEST_BUILD_NUMBER + 1))
           if [ $NEW_BUILD -lt 10 ]; then NEW_BUILD=10; fi

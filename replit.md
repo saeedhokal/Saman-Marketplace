@@ -28,7 +28,7 @@ The application allows users to browse parts by category, search for specific it
 
 The project is configured with Capacitor for building a native iOS app:
 
-- **App ID**: com.saman.marketplace
+- **App ID**: com.saeed.saman
 - **App Name**: Saman Marketplace
 - **iOS Project**: Located in `/ios` directory
 
