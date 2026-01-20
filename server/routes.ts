@@ -21,6 +21,9 @@ function isValidCategoryPair(mainCategory: string, subCategory: string): boolean
   return !!validSubs && (validSubs as readonly string[]).includes(subCategory);
 }
 
+// Owner phone number - always has admin access
+const OWNER_PHONE = "+971507242111";
+
 // Middleware to check if user is admin
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const userId = getCurrentUserId(req);
@@ -28,7 +31,8 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   const [user] = await db.select().from(users).where(eq(users.id, userId));
-  if (!user?.isAdmin) {
+  // Allow if user is admin OR is the owner phone number
+  if (!user?.isAdmin && user?.phone !== OWNER_PHONE) {
     return res.status(403).json({ message: "Admin access required" });
   }
   next();
@@ -254,10 +258,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const credits = await storage.getUserCredits(userId);
     const subscriptionEnabled = await storage.isSubscriptionEnabled();
     const [user] = await db.select().from(users).where(eq(users.id, userId));
+    // Owner phone number is always admin
+    const isOwnerAdmin = user?.phone === OWNER_PHONE;
     res.json({ 
       sparePartsCredits: credits.sparePartsCredits,
       automotiveCredits: credits.automotiveCredits,
-      isAdmin: user?.isAdmin || false, 
+      isAdmin: user?.isAdmin || isOwnerAdmin, 
       subscriptionEnabled 
     });
   });
