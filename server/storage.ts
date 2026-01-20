@@ -63,6 +63,12 @@ export interface IStorage {
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   getTransactions(options?: { userId?: string; startDate?: Date; endDate?: Date }): Promise<Transaction[]>;
   getRevenueStats(): Promise<{ totalRevenue: number; sparePartsRevenue: number; automotiveRevenue: number; transactionCount: number }>;
+  
+  // Account deletion
+  deleteUserProducts(userId: string): Promise<void>;
+  deleteUserFavorites(userId: string): Promise<void>;
+  deleteUserTransactions(userId: string): Promise<void>;
+  deleteUser(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -486,6 +492,22 @@ export class DatabaseStorage implements IStorage {
       automotiveRevenue,
       transactionCount: allTx.length,
     };
+  }
+
+  async deleteUserProducts(userId: string): Promise<void> {
+    await db.delete(products).where(eq(products.sellerId, userId));
+  }
+
+  async deleteUserFavorites(userId: string): Promise<void> {
+    await db.delete(favorites).where(eq(favorites.userId, userId));
+  }
+
+  async deleteUserTransactions(userId: string): Promise<void> {
+    await db.delete(transactions).where(eq(transactions.userId, userId));
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, userId));
   }
 }
 

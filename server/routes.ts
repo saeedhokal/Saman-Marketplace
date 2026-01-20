@@ -456,6 +456,44 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ message: "Listing marked as sold and removed" });
   });
 
+  // Get user's transaction history
+  app.get("/api/user/transactions", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const transactions = await storage.getTransactions({ userId });
+    res.json(transactions);
+  });
+
+  // Delete user account
+  app.delete("/api/user/account", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    
+    try {
+      // Delete all user's products first
+      await storage.deleteUserProducts(userId);
+      
+      // Delete user favorites
+      await storage.deleteUserFavorites(userId);
+      
+      // Delete user's transactions
+      await storage.deleteUserTransactions(userId);
+      
+      // Delete the user account
+      await storage.deleteUser(userId);
+      
+      // Destroy session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Error destroying session:", err);
+        }
+      });
+      
+      res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
   // App settings (public)
   app.get("/api/settings", async (req, res) => {
     const settings = await storage.getAppSettings();

@@ -18,6 +18,17 @@ import Auth from "@/pages/Auth";
 import Subscription from "@/pages/Subscription";
 import Checkout from "@/pages/Checkout";
 import ProfileDetails from "@/pages/ProfileDetails";
+import Notifications from "@/pages/Notifications";
+import CreditHistory from "@/pages/CreditHistory";
+import Settings from "@/pages/Settings";
+import DeleteAccount from "@/pages/DeleteAccount";
+import About from "@/pages/About";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
+import Cookies from "@/pages/Cookies";
+import Contact from "@/pages/Contact";
+import Refund from "@/pages/Refund";
+import Help from "@/pages/Help";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -34,9 +45,20 @@ function Router() {
         <Route path="/profile" component={Profile} />
         <Route path="/profile/details" component={ProfileDetails} />
         <Route path="/profile/subscription" component={Subscription} />
+        <Route path="/profile/notifications" component={Notifications} />
+        <Route path="/profile/credits" component={CreditHistory} />
+        <Route path="/profile/settings" component={Settings} />
+        <Route path="/profile/delete" component={DeleteAccount} />
         <Route path="/checkout/:id" component={Checkout} />
         <Route path="/admin" component={Admin} />
         <Route path="/auth" component={Auth} />
+        <Route path="/about" component={About} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/privacy" component={Privacy} />
+        <Route path="/cookies" component={Cookies} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/refund" component={Refund} />
+        <Route path="/help" component={Help} />
         <Route component={NotFound} />
       </Switch>
       <BottomNav />
