@@ -548,9 +548,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Apple Pay: Validate merchant session with Apple
-  // SECURITY: This endpoint requires merchant identity certificate for production
-  // For now, we use Telr's hosted Apple Pay which handles certificates
+  // Apple Pay: Validate merchant session with Apple using TLS client certificates
   app.post("/api/applepay/session", isAuthenticated, async (req, res) => {
     const { validationURL } = req.body;
     
@@ -581,10 +579,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       "cn-apple-pay-gateway-tj-pod3.apple.com",
     ];
     
+    let parsedUrl: URL;
     try {
-      const url = new URL(validationURL);
-      if (!allowedDomains.includes(url.hostname)) {
-        console.error("[ApplePay] Invalid validation domain:", url.hostname);
+      parsedUrl = new URL(validationURL);
+      if (!allowedDomains.includes(parsedUrl.hostname)) {
+        console.error("[ApplePay] Invalid validation domain:", parsedUrl.hostname);
         return res.status(400).json({ message: "Invalid Apple Pay validation URL" });
       }
     } catch {
@@ -592,58 +591,81 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
 
     const merchantId = process.env.APPLE_PAY_MERCHANT_ID;
+    const certBase64 = process.env.APPLE_PAY_CERT;
+    const keyBase64 = process.env.APPLE_PAY_KEY;
     const domain = process.env.REPLIT_DEPLOYMENT_URL?.replace("https://", "") || "saman-marketplace.replit.app";
     
-    if (!merchantId) {
-      // Apple Pay requires merchant setup - return helpful error
+    if (!merchantId || !certBase64 || !keyBase64) {
+      console.error("[ApplePay] Missing configuration:", { merchantId: !!merchantId, cert: !!certBase64, key: !!keyBase64 });
       return res.status(400).json({ 
-        message: "Apple Pay not configured. Set up your Merchant ID in Apple Developer, share certificates with Telr, then set APPLE_PAY_MERCHANT_ID.",
+        message: "Apple Pay not fully configured. Certificate and key required.",
         setupRequired: true
       });
     }
 
-    // NOTE: Full Apple Pay requires TLS client certificate authentication
-    // This implementation assumes Telr handles certificate management through their SDK
-    // For direct Apple Pay, you need to:
-    // 1. Load merchant identity certificate (.p12) 
-    // 2. Make request with TLS client cert to Apple's validation URL
-    // 3. Return the merchant session to the frontend
+    // Decode certificates from base64
+    const cert = Buffer.from(certBase64, 'base64').toString('utf-8');
+    const key = Buffer.from(keyBase64, 'base64').toString('utf-8');
     
-    // For now, return setup instructions since full certificate handling requires
-    // secure key storage that's typically done through Telr's SDK or hosted solution
-    console.log("[ApplePay] Merchant validation requested for:", merchantId);
+    console.log("[ApplePay] Merchant validation requested for:", merchantId, "domain:", domain);
     
+    const requestBody = JSON.stringify({
+      merchantIdentifier: merchantId,
+      displayName: "Saman Marketplace",
+      initiative: "web",
+      initiativeContext: domain,
+    });
+
+    // Use https module for TLS client certificate authentication
+    const https = await import('https');
+    
+    const options = {
+      hostname: parsedUrl.hostname,
+      port: 443,
+      path: parsedUrl.pathname,
+      method: 'POST',
+      cert: cert,
+      key: key,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(requestBody),
+      },
+    };
+
     try {
-      // Attempt merchant validation (will fail without proper cert in production)
-      const response = await fetch(validationURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          merchantIdentifier: merchantId,
-          displayName: "Saman Marketplace",
-          initiative: "web",
-          initiativeContext: domain,
-        }),
+      const merchantSession = await new Promise<any>((resolve, reject) => {
+        const request = https.request(options, (response) => {
+          let data = '';
+          response.on('data', (chunk) => { data += chunk; });
+          response.on('end', () => {
+            if (response.statusCode === 200) {
+              try {
+                resolve(JSON.parse(data));
+              } catch (e) {
+                reject(new Error('Invalid JSON response from Apple'));
+              }
+            } else {
+              console.error("[ApplePay] Apple response:", response.statusCode, data);
+              reject(new Error(`Apple validation failed: ${response.statusCode}`));
+            }
+          });
+        });
+        
+        request.on('error', (error) => {
+          console.error("[ApplePay] Request error:", error);
+          reject(error);
+        });
+        
+        request.write(requestBody);
+        request.end();
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("[ApplePay] Session validation failed:", response.status, errorText);
-        // This typically fails without TLS client cert - guide user to Telr setup
-        return res.status(400).json({ 
-          message: "Apple Pay requires certificate setup. Please contact Telr support to configure Apple Pay with your merchant certificates.",
-          setupRequired: true
-        });
-      }
-
-      const session = await response.json();
       console.log("[ApplePay] Session validated successfully");
-      res.json(session);
-    } catch (error) {
-      console.error("[ApplePay] Session error:", error);
+      res.json(merchantSession);
+    } catch (error: any) {
+      console.error("[ApplePay] Session error:", error.message);
       res.status(500).json({ 
-        message: "Apple Pay session validation failed. Contact Telr support to complete Apple Pay setup.",
-        setupRequired: true
+        message: "Apple Pay session validation failed: " + error.message,
       });
     }
   });

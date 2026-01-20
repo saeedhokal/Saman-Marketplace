@@ -175,10 +175,14 @@ export default function Checkout() {
   const handlePayment = async () => {
     if (!pkg) return;
     
-    // Both Apple Pay and Credit Card go through Telr's hosted page
-    // Telr's page automatically shows Apple Pay on Safari/iOS
-    setIsProcessing(true);
-    purchaseMutation.mutate({ packageId: pkg.id, paymentMethod });
+    if (paymentMethod === "apple_pay" && applePayAvailable) {
+      // Native Apple Pay with Face ID
+      handleApplePay();
+    } else {
+      // Credit Card goes through Telr's hosted page
+      setIsProcessing(true);
+      purchaseMutation.mutate({ packageId: pkg.id, paymentMethod });
+    }
   };
 
   if (!user) {
@@ -351,7 +355,9 @@ export default function Checkout() {
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          You'll be redirected to our secure payment page. Apple Pay and Card options available.
+          {paymentMethod === "apple_pay" && applePayAvailable
+            ? "Use Face ID or Touch ID to confirm payment instantly."
+            : "You'll be redirected to our secure payment page."}
           {" "}By completing this purchase, you agree to our terms of service.
         </p>
       </div>
