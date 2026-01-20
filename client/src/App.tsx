@@ -4,8 +4,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/BottomNav";
+import { LanguageProvider, useLanguage } from "@/hooks/use-language";
 
 import Landing from "@/pages/Landing";
+import LanguageSelect from "@/pages/LanguageSelect";
 import Categories from "@/pages/Categories";
 import ProductDetail from "@/pages/ProductDetail";
 import Sell from "@/pages/Sell";
@@ -72,12 +74,24 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const { hasSelectedLanguage } = useLanguage();
+  
+  if (!hasSelectedLanguage) {
+    return <LanguageSelect />;
+  }
+  
+  return <Router />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <LanguageProvider>
+          <Toaster />
+          <AppContent />
+        </LanguageProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

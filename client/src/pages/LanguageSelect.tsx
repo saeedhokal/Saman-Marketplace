@@ -1,7 +1,7 @@
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import samanLogo from "@assets/saman-logo.png";
+import samanLogo from "@/assets/saman-logo.jpg";
 
 export default function LanguageSelect() {
   const { setLanguage, setHasSelectedLanguage, t } = useLanguage();
