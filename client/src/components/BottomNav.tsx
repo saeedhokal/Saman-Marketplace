@@ -1,14 +1,14 @@
 import { Link, useLocation } from "wouter";
-import { Home, LayoutGrid, Plus, Package, User } from "lucide-react";
+import { Home, Search, Plus, Heart, User } from "lucide-react";
 
 export function BottomNav() {
   const [location] = useLocation();
 
   const navItems = [
     { href: "/", icon: Home, label: "Home" },
-    { href: "/categories", icon: LayoutGrid, label: "Categories" },
+    { href: "/categories", icon: Search, label: "Search" },
     { href: "/sell", icon: Plus, label: "Post", isCenter: true },
-    { href: "/my-listings", icon: Package, label: "Listings" },
+    { href: "/favorites", icon: Heart, label: "Saved" },
     { href: "/profile", icon: User, label: "Profile" },
   ];
 
