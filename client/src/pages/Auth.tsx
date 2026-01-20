@@ -70,7 +70,7 @@ export default function Auth() {
   const isLoading = isLoggingIn || isRegistering;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3d3d3d 100%)' }}>
       <Card className="w-full max-w-md border-2" style={{ borderColor: '#f97316' }}>
         <CardHeader className="text-center pb-2">
           <img 
