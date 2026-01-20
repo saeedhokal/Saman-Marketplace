@@ -1,14 +1,21 @@
-import { useState } from "react";
+/// <reference types="applepayjs" />
+import { useState, useEffect } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CreditCard, Loader2, Check, Smartphone } from "lucide-react";
+import { ArrowLeft, CreditCard, Loader2, Check, AlertCircle } from "lucide-react";
 import { SiApplepay } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SubscriptionPackage } from "@shared/schema";
+
+declare global {
+  interface Window {
+    ApplePaySession: typeof ApplePaySession;
+  }
+}
 
 export default function Checkout() {
   const [, params] = useRoute("/checkout/:id");
@@ -18,6 +25,14 @@ export default function Checkout() {
   const [, setLocation] = useLocation();
   const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card">("credit_card");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [applePayAvailable, setApplePayAvailable] = useState(false);
+
+  useEffect(() => {
+    if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+      setApplePayAvailable(true);
+      setPaymentMethod("apple_pay");
+    }
+  }, []);
 
   const { data: pkg, isLoading } = useQuery<SubscriptionPackage>({
     queryKey: ["/api/packages", packageId],
@@ -56,10 +71,116 @@ export default function Checkout() {
     },
   });
 
+  const handleApplePay = async () => {
+    if (!pkg || !window.ApplePaySession) return;
+    
+    setIsProcessing(true);
+    const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
+    const amount = (pkg.price / 100).toFixed(2);
+
+    const paymentRequest: ApplePayJS.ApplePayPaymentRequest = {
+      countryCode: "AE",
+      currencyCode: "AED",
+      supportedNetworks: ["visa", "masterCard", "amex"],
+      merchantCapabilities: ["supports3DS"],
+      total: {
+        label: `${pkg.name} - ${totalCredits} Credits`,
+        amount: amount,
+        type: "final",
+      },
+      requiredBillingContactFields: ["email", "name", "postalAddress"],
+    };
+
+    const session = new ApplePaySession(3, paymentRequest);
+
+    session.onvalidatemerchant = async (event) => {
+      try {
+        const response = await fetch("/api/applepay/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ validationURL: event.validationURL }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || "Merchant validation failed");
+        }
+
+        const merchantSession = await response.json();
+        session.completeMerchantValidation(merchantSession);
+      } catch (error) {
+        console.error("Merchant validation failed:", error);
+        session.abort();
+        setIsProcessing(false);
+        toast({
+          variant: "destructive",
+          title: "Apple Pay Error",
+          description: "Merchant validation failed. Please try again or use card payment.",
+        });
+      }
+    };
+
+    session.onpaymentauthorized = async (event) => {
+      try {
+        const response = await fetch("/api/applepay/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            packageId: pkg.id,
+            applePayToken: event.payment.token,
+            billingContact: event.payment.billingContact,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          session.completePayment(ApplePaySession.STATUS_SUCCESS);
+          queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
+          toast({
+            title: "Payment Successful!",
+            description: result.message,
+          });
+          setLocation("/profile/subscription");
+        } else {
+          session.completePayment(ApplePaySession.STATUS_FAILURE);
+          toast({
+            variant: "destructive",
+            title: "Payment Failed",
+            description: result.message || "Please try again",
+          });
+        }
+      } catch (error) {
+        console.error("Payment processing failed:", error);
+        session.completePayment(ApplePaySession.STATUS_FAILURE);
+        toast({
+          variant: "destructive",
+          title: "Payment Failed",
+          description: "Payment processing failed. Please try again.",
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    session.oncancel = () => {
+      setIsProcessing(false);
+    };
+
+    session.begin();
+  };
+
   const handlePayment = async () => {
     if (!pkg) return;
-    setIsProcessing(true);
-    purchaseMutation.mutate({ packageId: pkg.id, paymentMethod });
+    
+    if (paymentMethod === "apple_pay" && applePayAvailable) {
+      handleApplePay();
+    } else {
+      setIsProcessing(true);
+      purchaseMutation.mutate({ packageId: pkg.id, paymentMethod });
+    }
   };
 
   if (!user) {
@@ -149,26 +270,41 @@ export default function Checkout() {
             <CardTitle className="text-lg">Payment Method</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <button
-              onClick={() => setPaymentMethod("apple_pay")}
-              className={`w-full p-4 rounded-lg border-2 transition-colors flex items-center gap-3 ${
-                paymentMethod === "apple_pay" 
-                  ? "border-accent bg-accent/5" 
-                  : "border-border hover:border-accent/50"
-              }`}
-              data-testid="button-apple-pay"
-            >
-              <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
-                <SiApplepay className="h-6 w-6 text-white" />
+            {applePayAvailable ? (
+              <button
+                onClick={() => setPaymentMethod("apple_pay")}
+                className={`w-full p-4 rounded-lg border-2 transition-colors flex items-center gap-3 ${
+                  paymentMethod === "apple_pay" 
+                    ? "border-accent bg-accent/5" 
+                    : "border-border hover:border-accent/50"
+                }`}
+                data-testid="button-apple-pay"
+              >
+                <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                  <SiApplepay className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium">Apple Pay</p>
+                  <p className="text-xs text-muted-foreground">Double-tap to pay instantly</p>
+                </div>
+                {paymentMethod === "apple_pay" && (
+                  <Check className="h-5 w-5 text-accent" />
+                )}
+              </button>
+            ) : (
+              <div className="w-full p-4 rounded-lg border-2 border-border bg-muted/50 flex items-center gap-3 opacity-60">
+                <div className="w-10 h-10 rounded-lg bg-black/50 flex items-center justify-center">
+                  <SiApplepay className="h-6 w-6 text-white/70" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-muted-foreground">Apple Pay</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Use Safari on iPhone/Mac
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 text-left">
-                <p className="font-medium">Apple Pay</p>
-                <p className="text-xs text-muted-foreground">Fast and secure</p>
-              </div>
-              {paymentMethod === "apple_pay" && (
-                <Check className="h-5 w-5 text-accent" />
-              )}
-            </button>
+            )}
 
             <button
               onClick={() => setPaymentMethod("credit_card")}
@@ -204,21 +340,24 @@ export default function Checkout() {
               <Loader2 className="h-5 w-5 mr-2 animate-spin" />
               Processing...
             </>
+          ) : paymentMethod === "apple_pay" && applePayAvailable ? (
+            <>
+              <SiApplepay className="h-5 w-5 mr-2" />
+              Pay with Apple Pay
+            </>
           ) : (
             <>
-              {paymentMethod === "apple_pay" ? (
-                <SiApplepay className="h-5 w-5 mr-2" />
-              ) : (
-                <CreditCard className="h-5 w-5 mr-2" />
-              )}
+              <CreditCard className="h-5 w-5 mr-2" />
               Pay AED {pkg.price}
             </>
           )}
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          Payments are processed securely via Telr.
-          By completing this purchase, you agree to our terms of service.
+          {applePayAvailable && paymentMethod === "apple_pay" 
+            ? "Use Face ID or Touch ID to confirm payment instantly."
+            : "Payments are processed securely via Telr."}
+          {" "}By completing this purchase, you agree to our terms of service.
         </p>
       </div>
     </div>

@@ -467,6 +467,218 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Apple Pay: Validate merchant session with Apple
+  // SECURITY: This endpoint requires merchant identity certificate for production
+  // For now, we use Telr's hosted Apple Pay which handles certificates
+  app.post("/api/applepay/session", isAuthenticated, async (req, res) => {
+    const { validationURL } = req.body;
+    
+    if (!validationURL) {
+      return res.status(400).json({ message: "Validation URL is required" });
+    }
+
+    // SECURITY: Whitelist only Apple Pay validation domains to prevent SSRF
+    const allowedDomains = [
+      "apple-pay-gateway.apple.com",
+      "apple-pay-gateway-nc-pod1.apple.com",
+      "apple-pay-gateway-nc-pod2.apple.com",
+      "apple-pay-gateway-nc-pod3.apple.com",
+      "apple-pay-gateway-nc-pod4.apple.com",
+      "apple-pay-gateway-nc-pod5.apple.com",
+      "apple-pay-gateway-pr-pod1.apple.com",
+      "apple-pay-gateway-pr-pod2.apple.com",
+      "apple-pay-gateway-pr-pod3.apple.com",
+      "apple-pay-gateway-pr-pod4.apple.com",
+      "apple-pay-gateway-pr-pod5.apple.com",
+      "apple-pay-gateway-cert.apple.com",
+      "cn-apple-pay-gateway.apple.com",
+      "cn-apple-pay-gateway-sh-pod1.apple.com",
+      "cn-apple-pay-gateway-sh-pod2.apple.com",
+      "cn-apple-pay-gateway-sh-pod3.apple.com",
+      "cn-apple-pay-gateway-tj-pod1.apple.com",
+      "cn-apple-pay-gateway-tj-pod2.apple.com",
+      "cn-apple-pay-gateway-tj-pod3.apple.com",
+    ];
+    
+    try {
+      const url = new URL(validationURL);
+      if (!allowedDomains.includes(url.hostname)) {
+        console.error("[ApplePay] Invalid validation domain:", url.hostname);
+        return res.status(400).json({ message: "Invalid Apple Pay validation URL" });
+      }
+    } catch {
+      return res.status(400).json({ message: "Invalid validation URL format" });
+    }
+
+    const merchantId = process.env.APPLE_PAY_MERCHANT_ID;
+    const domain = process.env.REPLIT_DEPLOYMENT_URL?.replace("https://", "") || "saman-marketplace.replit.app";
+    
+    if (!merchantId) {
+      // Apple Pay requires merchant setup - return helpful error
+      return res.status(400).json({ 
+        message: "Apple Pay not configured. Set up your Merchant ID in Apple Developer, share certificates with Telr, then set APPLE_PAY_MERCHANT_ID.",
+        setupRequired: true
+      });
+    }
+
+    // NOTE: Full Apple Pay requires TLS client certificate authentication
+    // This implementation assumes Telr handles certificate management through their SDK
+    // For direct Apple Pay, you need to:
+    // 1. Load merchant identity certificate (.p12) 
+    // 2. Make request with TLS client cert to Apple's validation URL
+    // 3. Return the merchant session to the frontend
+    
+    // For now, return setup instructions since full certificate handling requires
+    // secure key storage that's typically done through Telr's SDK or hosted solution
+    console.log("[ApplePay] Merchant validation requested for:", merchantId);
+    
+    try {
+      // Attempt merchant validation (will fail without proper cert in production)
+      const response = await fetch(validationURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          merchantIdentifier: merchantId,
+          displayName: "Saman Marketplace",
+          initiative: "web",
+          initiativeContext: domain,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("[ApplePay] Session validation failed:", response.status, errorText);
+        // This typically fails without TLS client cert - guide user to Telr setup
+        return res.status(400).json({ 
+          message: "Apple Pay requires certificate setup. Please contact Telr support to configure Apple Pay with your merchant certificates.",
+          setupRequired: true
+        });
+      }
+
+      const session = await response.json();
+      console.log("[ApplePay] Session validated successfully");
+      res.json(session);
+    } catch (error) {
+      console.error("[ApplePay] Session error:", error);
+      res.status(500).json({ 
+        message: "Apple Pay session validation failed. Contact Telr support to complete Apple Pay setup.",
+        setupRequired: true
+      });
+    }
+  });
+
+  // Apple Pay: Process payment with Telr Remote API
+  app.post("/api/applepay/process", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const { packageId, applePayToken, billingContact } = req.body;
+    
+    if (!packageId || !applePayToken) {
+      return res.status(400).json({ message: "Package ID and Apple Pay token are required" });
+    }
+
+    const pkg = await storage.getPackage(packageId);
+    if (!pkg || !pkg.isActive) {
+      return res.status(404).json({ message: "Package not found or inactive" });
+    }
+
+    const telrStoreId = process.env.TELR_STORE_ID;
+    const telrAuthKey = process.env.TELR_AUTH_KEY;
+    
+    if (!telrStoreId || !telrAuthKey) {
+      return res.status(400).json({ message: "Payment gateway not configured" });
+    }
+
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    const cartId = `SAMAN-AP-${userId}-${packageId}-${Date.now()}`;
+    const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
+
+    // Create pending transaction
+    const transaction = await storage.createTransaction({
+      userId,
+      packageId: pkg.id,
+      amount: pkg.price,
+      credits: totalCredits,
+      category: pkg.category,
+      paymentMethod: "apple_pay",
+      paymentReference: cartId,
+      status: "pending",
+    });
+
+    try {
+      // Send Apple Pay token to Telr Remote API
+      const telrRequest = {
+        method: "create",
+        store: telrStoreId,
+        authkey: telrAuthKey,
+        order: {
+          cartid: cartId,
+          test: 1, // Change to 0 for production
+          amount: (pkg.price / 100).toFixed(2),
+          currency: "AED",
+          description: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
+        },
+        billing: {
+          name: {
+            forenames: billingContact?.givenName || user?.firstName || "Customer",
+            surname: billingContact?.familyName || user?.lastName || "",
+          },
+          address: {
+            line1: billingContact?.addressLines?.[0] || "Dubai",
+            city: billingContact?.locality || "Dubai",
+            region: billingContact?.administrativeArea || "Dubai",
+            country: billingContact?.countryCode || "AE",
+            areacode: billingContact?.postalCode || "00000",
+          },
+          email: billingContact?.emailAddress || user?.email || "customer@example.com",
+        },
+        applepay: {
+          token: JSON.stringify(applePayToken),
+        },
+      };
+
+      console.log("[ApplePay] Sending to Telr:", JSON.stringify({ ...telrRequest, applepay: { token: "[REDACTED]" } }));
+
+      const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(telrRequest),
+      });
+
+      const telrData = await telrResponse.json();
+      console.log("[ApplePay] Telr response:", JSON.stringify(telrData));
+
+      if (telrData.order?.ref && !telrData.error) {
+        // Payment successful - add credits immediately
+        const category = pkg.category as "Spare Parts" | "Automotive";
+        await storage.addCredits(userId, category, totalCredits);
+        await storage.updateTransactionReference(transaction.id, telrData.order.ref);
+        await storage.updateTransactionStatus(transaction.id, "completed");
+
+        const newCredits = await storage.getUserCredits(userId);
+        return res.json({
+          success: true,
+          message: `${totalCredits} ${category} credits added to your account!`,
+          sparePartsCredits: newCredits.sparePartsCredits,
+          automotiveCredits: newCredits.automotiveCredits,
+        });
+      } else {
+        console.error("[ApplePay] Payment failed:", telrData.error);
+        await storage.updateTransactionStatus(transaction.id, "failed");
+        return res.status(400).json({
+          success: false,
+          message: telrData.error?.message || "Apple Pay payment failed",
+        });
+      }
+    } catch (error) {
+      console.error("[ApplePay] Processing error:", error);
+      await storage.updateTransactionStatus(transaction.id, "failed");
+      return res.status(500).json({
+        success: false,
+        message: "Payment processing failed",
+      });
+    }
+  });
+
   // Telr payment verification endpoint
   app.get("/api/payment/verify", isAuthenticated, async (req, res) => {
     const { cart } = req.query;

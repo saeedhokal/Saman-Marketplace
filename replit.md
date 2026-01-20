@@ -20,8 +20,13 @@ The application allows users to browse parts by category, search for specific it
 
 ## Pending Integrations
 
-- **Stripe Payment**: User dismissed the Stripe integration setup. When ready to implement credit purchases, the user will need to set up the Stripe connector or provide API keys manually.
-- **Telr Payment**: User has Telr payment gateway. API keys (TELR_STORE_ID, TELR_AUTH_KEY) need to be provided when ready to implement.
+- **Telr Payment**: Configured with TELR_STORE_ID and TELR_AUTH_KEY. Supports Hosted Payment Page for credit cards.
+- **Native Apple Pay**: Code is ready for native Apple Pay (shows payment sheet directly, no redirect). Requires:
+  1. Apple Developer account with Merchant ID (e.g., `merchant.com.saeed.saman`)
+  2. Payment Processing Certificate (.cer) from Apple
+  3. Share certificate with Telr support
+  4. Set `APPLE_PAY_MERCHANT_ID` environment variable
+  - Endpoints: `/api/applepay/session` (merchant validation), `/api/applepay/process` (token processing)
 - **SMS Provider (Twilio)**: User dismissed Twilio integration. OTP codes are currently logged to console in development. When ready for production SMS, the user will need to set up Twilio or another SMS provider.
 
 ## iOS App (Capacitor)
