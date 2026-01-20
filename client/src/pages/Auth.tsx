@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Phone, Lock } from "lucide-react";
+import { Loader2, Phone, Lock, Car } from "lucide-react";
 
 interface LoginFormValues {
   phone: string;
@@ -69,11 +69,14 @@ export default function Auth() {
   const isLoading = isLoggingIn || isRegistering;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Saman Marketplace</CardTitle>
-          <CardDescription>UAE Spare Parts Marketplace</CardDescription>
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3d3d3d 100%)' }}>
+      <Card className="w-full max-w-md border-2" style={{ borderColor: '#f97316' }}>
+        <CardHeader className="text-center pb-2">
+          <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f97316' }}>
+            <Car className="h-8 w-8 text-white" />
+          </div>
+          <CardTitle className="text-2xl font-bold" style={{ color: '#f97316' }}>Saman Marketplace</CardTitle>
+          <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>UAE Spare Parts and Cars Marketplace</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -134,7 +137,8 @@ export default function Auth() {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full text-white font-semibold"
+                style={{ backgroundColor: '#f97316' }}
                 disabled={isLoading}
                 data-testid="button-submit"
               >
@@ -150,8 +154,9 @@ export default function Auth() {
 
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 className="w-full"
+                style={{ borderColor: '#f97316', color: '#f97316' }}
                 onClick={() => setIsNewUser(!isNewUser)}
                 disabled={isLoading}
               >
