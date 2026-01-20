@@ -62,10 +62,11 @@ workflows:
           cd $CM_BUILD_DIR/ios/App
           # Set version to 2.0.0 (higher than previous 1.2.9)
           agvtool new-marketing-version 2.0.0
-          # Get latest build number and increment
-          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID" || echo "10")
+          # Get latest build number from App Store Connect and increment
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-build-number "$APP_ID" --platform IOS 2>/dev/null || echo "20")
           NEW_BUILD=$((LATEST_BUILD_NUMBER + 1))
-          if [ $NEW_BUILD -lt 10 ]; then NEW_BUILD=10; fi
+          # Ensure build number is higher than any previously used
+          if [ $NEW_BUILD -lt 25 ]; then NEW_BUILD=25; fi
           echo "Setting build number to $NEW_BUILD"
           agvtool new-version -all $NEW_BUILD
       
