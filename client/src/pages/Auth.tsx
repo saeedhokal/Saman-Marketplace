@@ -73,13 +73,11 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3d3d3d 100%)' }}>
       <Card className="w-full max-w-md border-2" style={{ borderColor: '#f97316' }}>
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto mb-4 w-28 h-28 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: '#f97316' }}>
-            <img 
-              src={samanLogo} 
-              alt="Saman Marketplace" 
-              className="w-20 h-20 rounded-xl object-cover"
-            />
-          </div>
+          <img 
+            src={samanLogo} 
+            alt="Saman Marketplace" 
+            className="mx-auto mb-4 w-24 h-24 rounded-2xl object-cover shadow-lg"
+          />
           <CardTitle className="text-2xl font-bold" style={{ color: '#f97316' }}>Saman Marketplace</CardTitle>
           <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>UAE Spare Parts and Cars Marketplace</CardDescription>
         </CardHeader>
