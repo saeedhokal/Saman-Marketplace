@@ -2,8 +2,12 @@ import { Link } from "wouter";
 import { ArrowLeft, Moon, Sun, Globe, Info } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/hooks/use-language";
+import { Button } from "@/components/ui/button";
 
 export default function Settings() {
+  const { t, language, setLanguage, isRTL } = useLanguage();
+  
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('theme');
@@ -28,13 +32,13 @@ export default function Settings() {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
-          <div className="flex items-center h-14">
+          <div className={`flex items-center h-14 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Link href="/profile">
-              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
+              <button className={`p-2 rounded-lg hover:bg-secondary transition-colors ${isRTL ? '-mr-2' : '-ml-2'}`} data-testid="button-back">
+                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
             </Link>
-            <h1 className="flex-1 text-center font-semibold text-lg pr-8">Settings</h1>
+            <h1 className={`flex-1 text-center font-semibold text-lg ${isRTL ? 'pl-8' : 'pr-8'}`}>{t('settings')}</h1>
           </div>
         </div>
       </div>
@@ -42,20 +46,20 @@ export default function Settings() {
       <div className="container mx-auto px-4 py-6">
         <div className="space-y-6">
           <section>
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
-              Appearance
+            <h2 className={`text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 ${isRTL ? 'text-right' : ''}`}>
+              {isRTL ? 'المظهر' : 'Appearance'}
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
+              <div className={`flex items-center justify-between py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   {darkMode ? (
                     <Moon className="h-5 w-5 text-accent" />
                   ) : (
                     <Sun className="h-5 w-5 text-accent" />
                   )}
-                  <div>
-                    <p className="font-medium">Dark Mode</p>
-                    <p className="text-sm text-muted-foreground">Switch between light and dark themes</p>
+                  <div className={isRTL ? 'text-right' : ''}>
+                    <p className="font-medium">{isRTL ? 'الوضع الداكن' : 'Dark Mode'}</p>
+                    <p className="text-sm text-muted-foreground">{isRTL ? 'التبديل بين الوضع الفاتح والداكن' : 'Switch between light and dark themes'}</p>
                   </div>
                 </div>
                 <Switch 
@@ -70,19 +74,40 @@ export default function Settings() {
           <div className="h-px bg-border" />
 
           <section>
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
-              Language & Region
+            <h2 className={`text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 ${isRTL ? 'text-right' : ''}`}>
+              {isRTL ? 'اللغة' : 'Language'}
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
+              <div className={`flex items-center justify-between py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Globe className="h-5 w-5 text-accent" />
-                  <div>
-                    <p className="font-medium">Language</p>
-                    <p className="text-sm text-muted-foreground">English</p>
+                  <div className={isRTL ? 'text-right' : ''}>
+                    <p className="font-medium">{isRTL ? 'اللغة' : 'Language'}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'en' ? 'English' : 'العربية'}
+                    </p>
                   </div>
                 </div>
-                <span className="text-sm text-muted-foreground" data-testid="text-language-status">Coming soon</span>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={language === 'en' ? 'default' : 'outline'}
+                    onClick={() => setLanguage('en')}
+                    className={language === 'en' ? 'bg-accent text-white' : ''}
+                    data-testid="button-english"
+                  >
+                    English
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={language === 'ar' ? 'default' : 'outline'}
+                    onClick={() => setLanguage('ar')}
+                    className={language === 'ar' ? 'bg-accent text-white' : ''}
+                    data-testid="button-arabic"
+                  >
+                    العربية
+                  </Button>
+                </div>
               </div>
             </div>
           </section>
@@ -90,16 +115,16 @@ export default function Settings() {
           <div className="h-px bg-border" />
 
           <section>
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
-              App Info
+            <h2 className={`text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 ${isRTL ? 'text-right' : ''}`}>
+              {isRTL ? 'معلومات التطبيق' : 'App Info'}
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
+              <div className={`flex items-center justify-between py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Info className="h-5 w-5 text-accent" />
-                  <div>
-                    <p className="font-medium">Version</p>
-                    <p className="text-sm text-muted-foreground" data-testid="text-app-version">1.0.0</p>
+                  <div className={isRTL ? 'text-right' : ''}>
+                    <p className="font-medium">{isRTL ? 'الإصدار' : 'Version'}</p>
+                    <p className="text-sm text-muted-foreground" data-testid="text-app-version">2.0.0</p>
                   </div>
                 </div>
               </div>
@@ -107,8 +132,8 @@ export default function Settings() {
           </section>
 
           <div className="pt-4 text-center text-xs text-muted-foreground">
-            <p>Saman Marketplace</p>
-            <p>Made with care in the UAE</p>
+            <p>{t('appName')}</p>
+            <p>{isRTL ? 'صنع بحب في الإمارات' : 'Made with care in the UAE'}</p>
           </div>
         </div>
       </div>

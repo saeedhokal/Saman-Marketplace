@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, ChevronRight } from "lucide-react";
@@ -9,6 +10,7 @@ import type { Product } from "@shared/schema";
 
 export default function Landing() {
   const { user } = useAuth();
+  const { t, isRTL } = useLanguage();
 
   const { data: recentProducts = [] } = useQuery<Product[]>({
     queryKey: ["/api/products/recent"],
@@ -24,9 +26,9 @@ export default function Landing() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-muted-foreground text-sm">
-              {user ? `Hey, ${user.firstName || 'there'}` : 'Hey, Guest'}
+              {user ? `${t('hey')}, ${user.firstName || 'there'}` : `${t('hey')}, ${t('guest')}`}
             </p>
-            <h1 className="text-xl font-bold text-foreground">Welcome To Saman</h1>
+            <h1 className="text-xl font-bold text-foreground">{t('welcome')}</h1>
           </div>
           <div className="flex items-center gap-3">
             <button className="p-2 rounded-full hover:bg-secondary transition-colors" data-testid="button-notifications">
@@ -44,9 +46,9 @@ export default function Landing() {
         </div>
 
         <Link href="/categories">
-          <div className="flex items-center border border-border rounded-full px-4 py-2 mb-4 hover:bg-secondary/50 transition-colors">
-            <Search className="h-5 w-5 text-muted-foreground mr-3" />
-            <span className="text-muted-foreground">Search</span>
+          <div className={`flex items-center border border-border rounded-full px-4 py-2 mb-4 hover:bg-secondary/50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Search className={`h-5 w-5 text-muted-foreground ${isRTL ? 'ml-3' : 'mr-3'}`} />
+            <span className="text-muted-foreground">{t('search')}</span>
           </div>
         </Link>
 
@@ -73,39 +75,48 @@ export default function Landing() {
                 />
               </svg>
               
-              {/* Content */}
-              <div className="relative z-10 p-6 h-full flex flex-col justify-center">
-                <p className="text-white/60 text-xs uppercase tracking-wider mb-1">UAE's Marketplace</p>
-                <h2 className="text-white text-2xl font-bold mb-1">Buy & Sell</h2>
-                <p className="text-[#f97316] font-semibold text-lg">Spare Parts & Cars</p>
-                <Link href="/sell">
-                  <Button 
-                    size="sm" 
-                    className="mt-3 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-full px-5"
-                    data-testid="banner-cta-sell"
-                  >
-                    Start Selling
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </Link>
+              {/* Content with Slogans */}
+              <div className={`relative z-10 p-6 h-full flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                {/* Left side - Main content */}
+                <div className={`flex flex-col justify-center ${isRTL ? 'items-end text-right' : ''}`}>
+                  <p className="text-white/60 text-xs uppercase tracking-wider mb-1">{t('uaeMarketplace')}</p>
+                  <h2 className="text-white text-xl sm:text-2xl font-bold mb-1">{t('buyAndSell')}</h2>
+                  <p className="text-[#f97316] font-semibold text-base sm:text-lg">{t('sparePartsAndCars')}</p>
+                  <Link href="/sell">
+                    <Button 
+                      size="sm" 
+                      className="mt-3 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-full px-5"
+                      data-testid="banner-cta-sell"
+                    >
+                      {t('startSelling')}
+                      <ChevronRight className={`h-4 w-4 ${isRTL ? 'mr-1 rotate-180' : 'ml-1'}`} />
+                    </Button>
+                  </Link>
+                </div>
+                
+                {/* Right side - Slogans */}
+                <div className={`flex flex-col justify-center ${isRTL ? 'items-start text-left' : 'items-end text-right'}`}>
+                  <p className="text-[#f97316] font-bold text-lg sm:text-xl mb-1">Fe Saman?</p>
+                  <p className="text-[#f97316] font-bold text-xl sm:text-2xl" dir="rtl">في سامان؟</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <h2 className="text-base font-semibold text-foreground mb-4">Categories</h2>
+        <h2 className="text-base font-semibold text-foreground mb-4">{t('categories')}</h2>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <Link href="/categories?tab=automotive">
             <div className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer border border-border" data-testid="card-automotive">
               <img 
                 src="https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop"
-                alt="Automotive"
+                alt={t('automotive')}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-3 left-3">
-                <span className="text-white font-semibold text-base">Automotive</span>
+              <div className={`absolute bottom-3 ${isRTL ? 'right-3' : 'left-3'}`}>
+                <span className="text-white font-semibold text-base">{t('automotive')}</span>
               </div>
             </div>
           </Link>
@@ -114,12 +125,12 @@ export default function Landing() {
             <div className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer border border-border" data-testid="card-spare-parts">
               <img 
                 src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&h=300&fit=crop"
-                alt="Spare Parts"
+                alt={t('spareParts')}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-3 left-3">
-                <span className="text-white font-semibold text-base">Spare Parts</span>
+              <div className={`absolute bottom-3 ${isRTL ? 'right-3' : 'left-3'}`}>
+                <span className="text-white font-semibold text-base">{t('spareParts')}</span>
               </div>
             </div>
           </Link>
@@ -128,9 +139,9 @@ export default function Landing() {
         {recommendedProducts.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-foreground">For you</h2>
+              <h2 className="text-base font-semibold text-foreground">{t('forYou')}</h2>
               <Link href="/categories">
-                <span className="text-accent text-sm font-medium" data-testid="link-view-all-recommended">View All</span>
+                <span className="text-accent text-sm font-medium" data-testid="link-view-all-recommended">{t('viewAll')}</span>
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -149,9 +160,9 @@ export default function Landing() {
         {recentProducts.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-foreground">Recent Posts</h2>
+              <h2 className="text-base font-semibold text-foreground">{t('recentPosts')}</h2>
               <Link href="/categories">
-                <span className="text-accent text-sm font-medium" data-testid="link-view-all-recent">View All</span>
+                <span className="text-accent text-sm font-medium" data-testid="link-view-all-recent">{t('viewAll')}</span>
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-3">

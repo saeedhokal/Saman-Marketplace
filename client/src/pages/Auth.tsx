@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,7 @@ export default function Auth() {
   const [, setLocation] = useLocation();
   const { login, register, isLoggingIn, isRegistering, user } = useAuth();
   const { toast } = useToast();
+  const { t, isRTL } = useLanguage();
   const [isNewUser, setIsNewUser] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -78,8 +80,8 @@ export default function Auth() {
             alt="Saman Marketplace" 
             className="mx-auto mb-4 w-24 h-24 rounded-2xl object-cover shadow-lg"
           />
-          <CardTitle className="text-2xl font-bold" style={{ color: '#f97316' }}>Saman Marketplace</CardTitle>
-          <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>UAE Spare Parts and Cars Marketplace</CardDescription>
+          <CardTitle className="text-2xl font-bold" style={{ color: '#f97316' }}>{t('appName')}</CardTitle>
+          <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>{t('appSubtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -93,14 +95,14 @@ export default function Auth() {
                 }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
+                    <FormLabel>{t('phoneNumber')}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Phone className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                         <Input
                           type="tel"
                           placeholder="+971 50 123 4567"
-                          className="pl-10"
+                          className={isRTL ? 'pr-10' : 'pl-10'}
                           data-testid="input-phone"
                           {...field}
                         />
@@ -120,14 +122,14 @@ export default function Auth() {
                 }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{t('password')}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Lock className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                         <Input
                           type="password"
-                          placeholder="Enter your password"
-                          className="pl-10"
+                          placeholder={t('enterPassword')}
+                          className={isRTL ? 'pr-10' : 'pl-10'}
                           data-testid="input-password"
                           {...field}
                         />
@@ -147,11 +149,11 @@ export default function Auth() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isNewUser ? "Creating account..." : "Logging in..."}
+                    <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {isNewUser ? t('registering') : t('loggingIn')}
                   </>
                 ) : (
-                  isNewUser ? "Sign Up" : "Login"
+                  isNewUser ? t('register') : t('login')
                 )}
               </Button>
 
@@ -163,13 +165,13 @@ export default function Auth() {
                 onClick={() => setIsNewUser(!isNewUser)}
                 disabled={isLoading}
               >
-                {isNewUser ? "Already have an account? Login" : "New user? Sign Up"}
+                {isNewUser ? t('alreadyHaveAccount') : t('dontHaveAccount')}
               </Button>
             </form>
           </Form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            {isRTL ? 'بالمتابعة، فإنك توافق على شروط الخدمة وسياسة الخصوصية' : 'By continuing, you agree to our Terms of Service and Privacy Policy'}
           </p>
         </CardContent>
       </Card>

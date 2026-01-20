@@ -1,15 +1,18 @@
 import { Link, useLocation } from "wouter";
 import { Home, Search, Plus, Package, User } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
+import type { TranslationKey } from "@/lib/translations";
 
 export function BottomNav() {
   const [location] = useLocation();
+  const { t } = useLanguage();
 
-  const navItems = [
-    { href: "/", icon: Home, label: "Home" },
-    { href: "/categories", icon: Search, label: "Search" },
-    { href: "/sell", icon: Plus, label: "Post", isCenter: true },
-    { href: "/my-listings", icon: Package, label: "Listings" },
-    { href: "/profile", icon: User, label: "Profile" },
+  const navItems: { href: string; icon: typeof Home; labelKey: TranslationKey; isCenter?: boolean }[] = [
+    { href: "/", icon: Home, labelKey: "home" },
+    { href: "/categories", icon: Search, labelKey: "search" },
+    { href: "/sell", icon: Plus, labelKey: "sellItem", isCenter: true },
+    { href: "/my-listings", icon: Package, labelKey: "myListings" },
+    { href: "/profile", icon: User, labelKey: "profile" },
   ];
 
   return (
@@ -39,10 +42,10 @@ export function BottomNav() {
                     ? "text-accent" 
                     : "text-muted-foreground hover:text-foreground"
                 }`}
-                data-testid={`nav-${item.label.toLowerCase()}`}
+                data-testid={`nav-${item.labelKey.toLowerCase()}`}
               >
                 <item.icon className={`h-5 w-5 ${isActive ? "stroke-[2.5]" : ""}`} />
-                <span className="text-xs font-medium">{item.label}</span>
+                <span className="text-xs font-medium">{t(item.labelKey)}</span>
               </button>
             </Link>
           );

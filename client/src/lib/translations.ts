@@ -26,6 +26,7 @@ export const translations = {
     continueBtn: "Continue",
     
     // Landing Page
+    home: "Home",
     welcome: "Welcome To Saman",
     hey: "Hey",
     guest: "Guest",
@@ -160,6 +161,7 @@ export const translations = {
     continueBtn: "متابعة",
     
     // Landing Page
+    home: "الرئيسية",
     welcome: "مرحباً بك في سامان",
     hey: "مرحباً",
     guest: "زائر",
