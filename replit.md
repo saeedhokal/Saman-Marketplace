@@ -36,6 +36,25 @@ The project is configured with Capacitor for building a native iOS app:
 - **App ID**: com.saeed.saman
 - **App Name**: Saman Marketplace
 - **iOS Project**: Located in `/ios` directory
+- **Apple Developer Team ID**: KQ542Q98H2
+
+### Apple Pay Configuration (iOS)
+- **Merchant ID**: merchant.saeed.saman
+- **Payment Processing Certificate**: Configured (APPLE_PAY_CERT, APPLE_PAY_KEY env vars)
+- **Registered Domains**: xer--saeedhokal.replit.app
+- **Web Apple Pay**: Uses Apple Pay JS API with TLS client certificate authentication
+- **Native iOS Apple Pay**: For App Store version, will use PassKit framework directly
+
+### iOS App Store Preparation Checklist
+- [ ] Domain verification complete in Apple Developer
+- [ ] Apple Pay working on web (test before iOS)
+- [ ] App icons (1024x1024 for App Store, various sizes for app)
+- [ ] Launch screens configured
+- [ ] Privacy policy URL
+- [ ] App Store description and screenshots
+- [ ] Age rating questionnaire
+- [ ] Export compliance (encryption)
+- [ ] Signing certificates and provisioning profiles
 
 To build for iOS App Store:
 1. Download project to a Mac
