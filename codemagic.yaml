@@ -39,6 +39,10 @@ workflows:
         script: |
           npm run build
       
+      - name: Add iOS platform
+        script: |
+          npx cap add ios || true
+      
       - name: Capacitor sync
         script: |
           npx cap sync ios
@@ -47,15 +51,10 @@ workflows:
         script: |
           cd ios/App && pod install
       
-      - name: Create certificate and profile
-        script: |
-          app-store-connect create-certificate --type IOS_DISTRIBUTION --save || true
-          app-store-connect fetch-signing-files "com.saman.marketplace" \
-            --type IOS_APP_STORE \
-            --create
-      
       - name: Set up code signing
         script: |
+          keychain initialize
+          keychain add-certificates
           xcode-project use-profiles
       
       - name: Increment build number
