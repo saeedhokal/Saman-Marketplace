@@ -170,7 +170,12 @@ export default function Landing() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               {recommendedProducts.slice(0, 4).map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product}
+                  sellerImageUrl={(product as any).sellerProfileImageUrl}
+                  showDate
+                />
               ))}
             </div>
           </div>
@@ -186,7 +191,12 @@ export default function Landing() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               {recentProducts.slice(0, 4).map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product}
+                  sellerImageUrl={(product as any).sellerProfileImageUrl}
+                  showDate
+                />
               ))}
             </div>
           </div>
