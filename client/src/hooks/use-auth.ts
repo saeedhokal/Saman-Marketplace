@@ -68,12 +68,15 @@ async function registerFn(params: RegisterParams): Promise<User> {
 
 export function useAuth() {
   const queryClient = useQueryClient();
-  const { data: user, isLoading } = useQuery<User | null>({
+  const { data: user, isLoading, isFetching, status } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
     queryFn: fetchUser,
     retry: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+  
+  // Consider loading if: initial load OR refetching when we don't have data yet
+  const isAuthLoading = isLoading || (status === 'pending' && user === undefined);
 
   const logoutMutation = useMutation({
     mutationFn: logoutFn,
@@ -101,7 +104,7 @@ export function useAuth() {
 
   return {
     user,
-    isLoading,
+    isLoading: isAuthLoading,
     isAuthenticated: !!user,
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
