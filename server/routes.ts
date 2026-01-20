@@ -253,6 +253,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       description: req.body.description,
       mainCategory: req.body.mainCategory,
       subCategory: req.body.subCategory,
+      model: req.body.model || null,
       imageUrl: req.body.imageUrl,
       imageUrls: req.body.imageUrls || null,
       mileage: req.body.mileage || null,

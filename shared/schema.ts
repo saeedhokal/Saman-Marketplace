@@ -98,6 +98,7 @@ export const products = pgTable("products", {
   imageUrls: text("image_urls").array(), // Additional images (up to 20 total)
   mainCategory: text("main_category").notNull(), // "Spare Parts" or "Automotive"
   subCategory: text("sub_category").notNull(), // Toyota, Honda, Turbos, Motorcycles, etc.
+  model: text("model"), // Car model (e.g., Corvette, F-150) - optional
   condition: text("condition"), // New, Used, Refurbished - optional
   sellerId: varchar("seller_id").notNull().references(() => users.id),
   location: text("location"),
