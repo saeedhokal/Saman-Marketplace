@@ -104,7 +104,7 @@ Routes are defined in `shared/routes.ts` with Zod schemas for type-safe API cont
 
 ### Database Schema
 Defined in `shared/schema.ts` using Drizzle ORM:
-- `products` - Product listings with title, description, price (cents), category, condition, seller reference, image URL, status, expiration
+- `products` - Product listings with title, description, price (cents), category, subcategory, model (optional), condition, seller reference, image URL, status, expiration
 - `users` - User accounts with phone, email, credits, isAdmin flag
 - `sessions` - Session storage for authentication
 - `otp_codes` - OTP codes for phone authentication
