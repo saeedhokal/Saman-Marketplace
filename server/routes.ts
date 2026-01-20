@@ -864,5 +864,143 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(transactions);
   });
 
+  // Admin: Seed demo listings for production review
+  app.post("/api/admin/seed-demo", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const demoListings = [
+        {
+          title: "BMW E46 Headlight Assembly - Original",
+          description: "Genuine BMW headlight assembly for E46 3-series (1999-2006). Left side, in excellent working condition. Crystal clear lens, no cracks or yellowing. Plug and play installation.",
+          price: 85000, // AED 850
+          imageUrl: "https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=800",
+          mainCategory: "Spare Parts",
+          subCategory: "Body Parts",
+          condition: "used",
+          sellerId: "demo_seller_1",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: "Mercedes W204 Front Bumper - Genuine",
+          description: "Original Mercedes-Benz front bumper for C-Class W204 (2007-2014). Minor scratches, ready for paint. Includes all mounting brackets and hardware. AMG Sport package compatible.",
+          price: 120000, // AED 1,200
+          imageUrl: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800",
+          mainCategory: "Spare Parts",
+          subCategory: "Body Parts",
+          condition: "used",
+          sellerId: "demo_seller_1",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: "Toyota Camry 2020 Engine - Low Mileage",
+          description: "2.5L 4-cylinder engine from 2020 Camry. Only 45,000 km, fully tested and inspected. Complete with all sensors and accessories. Perfect for engine swap or replacement.",
+          price: 850000, // AED 8,500
+          imageUrl: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800",
+          mainCategory: "Spare Parts",
+          subCategory: "Engine Parts",
+          condition: "used",
+          sellerId: "demo_seller_2",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: "Nissan Patrol Y62 Transmission - Excellent",
+          description: "Automatic transmission for 2019 Nissan Patrol Y62. Only 50,000 km, excellent condition. Smooth shifting, no issues. Includes torque converter and transfer case.",
+          price: 650000, // AED 6,500
+          imageUrl: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800",
+          mainCategory: "Spare Parts",
+          subCategory: "Transmission",
+          condition: "used",
+          sellerId: "demo_seller_2",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: "2022 Toyota Land Cruiser LC300 - Full Option",
+          description: "Brand new Toyota Land Cruiser LC300, white exterior with beige leather interior. GXR trim with full options including sunroof, 360 camera, JBL premium audio. GCC specs with warranty.",
+          price: 32000000, // AED 320,000
+          imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800",
+          mainCategory: "Automotive",
+          subCategory: "SUVs",
+          condition: "new",
+          sellerId: "demo_seller_3",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: "2021 Mercedes G63 AMG - Night Package",
+          description: "Stunning Mercedes-Benz G63 AMG in obsidian black. Low mileage (25,000 km), full service history at authorized dealer. Night package, Burmester audio, heated/cooled seats.",
+          price: 75000000, // AED 750,000
+          imageUrl: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800",
+          mainCategory: "Automotive",
+          subCategory: "SUVs",
+          condition: "used",
+          sellerId: "demo_seller_3",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: "Honda Accord Brake Pads Set - Genuine",
+          description: "Genuine Honda brake pads for Accord 2018-2022. Front and rear set included. Brand new in original packaging. Direct fit, no modifications needed.",
+          price: 45000, // AED 450
+          imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+          mainCategory: "Spare Parts",
+          subCategory: "Brakes",
+          condition: "new",
+          sellerId: "demo_seller_1",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: "2020 Ford Mustang GT - V8 Manual",
+          description: "Ford Mustang GT 5.0L V8 in race red with black racing stripes. Manual 6-speed transmission, only 25,000 km. Borla exhaust, cold air intake, lowered suspension.",
+          price: 18500000, // AED 185,000
+          imageUrl: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800",
+          mainCategory: "Automotive",
+          subCategory: "Sports Cars",
+          condition: "used",
+          sellerId: "demo_seller_2",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: "Lexus LX570 Grille - Chrome",
+          description: "OEM Lexus LX570 front grille (2016-2021). Chrome finish, perfect condition. Complete with Lexus emblem and all mounting hardware.",
+          price: 95000, // AED 950
+          imageUrl: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800",
+          mainCategory: "Spare Parts",
+          subCategory: "Body Parts",
+          condition: "used",
+          sellerId: "demo_seller_1",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: "2023 Range Rover Sport - First Edition",
+          description: "Brand new Range Rover Sport First Edition in Santorini Black. Full spec with Meridian Signature audio, panoramic roof, air suspension. Under manufacturer warranty.",
+          price: 58000000, // AED 580,000
+          imageUrl: "https://images.unsplash.com/photo-1606664466188-e99f0e5f0235?w=800",
+          mainCategory: "Automotive",
+          subCategory: "SUVs",
+          condition: "new",
+          sellerId: "demo_seller_3",
+          status: "approved",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      ];
+
+      // Insert demo listings
+      for (const listing of demoListings) {
+        await storage.createProduct(listing);
+      }
+
+      res.json({ message: `Successfully added ${demoListings.length} demo listings` });
+    } catch (error) {
+      console.error("Error seeding demo listings:", error);
+      res.status(500).json({ message: "Failed to seed demo listings" });
+    }
+  });
+
   return httpServer;
 }

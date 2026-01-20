@@ -171,6 +171,20 @@ export default function Admin() {
     },
   });
 
+  const seedDemoMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/admin/seed-demo"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products/recent"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products/recommended"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] });
+      toast({ title: "Demo listings added", description: "10 sample listings have been added to the marketplace." });
+    },
+    onError: () => {
+      toast({ title: "Failed to add demo listings", variant: "destructive" });
+    },
+  });
+
   if (!userInfo?.isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -588,6 +602,28 @@ export default function Admin() {
                     ? "Users need to purchase credits to post listings (1 credit per listing)"
                     : "Posting is free for all users"}
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Package className="h-4 w-4" />
+                  Demo Content
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Add sample listings to showcase the marketplace to reviewers.
+                </p>
+                <Button 
+                  onClick={() => seedDemoMutation.mutate()}
+                  disabled={seedDemoMutation.isPending}
+                  data-testid="button-seed-demo"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {seedDemoMutation.isPending ? "Adding..." : "Add 10 Demo Listings"}
+                </Button>
               </CardContent>
             </Card>
 
