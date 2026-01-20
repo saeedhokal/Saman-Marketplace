@@ -175,12 +175,10 @@ export default function Checkout() {
   const handlePayment = async () => {
     if (!pkg) return;
     
-    if (paymentMethod === "apple_pay" && applePayAvailable) {
-      handleApplePay();
-    } else {
-      setIsProcessing(true);
-      purchaseMutation.mutate({ packageId: pkg.id, paymentMethod });
-    }
+    // Both Apple Pay and Credit Card go through Telr's hosted page
+    // Telr's page automatically shows Apple Pay on Safari/iOS
+    setIsProcessing(true);
+    purchaseMutation.mutate({ packageId: pkg.id, paymentMethod });
   };
 
   if (!user) {
@@ -285,7 +283,7 @@ export default function Checkout() {
                 </div>
                 <div className="flex-1 text-left">
                   <p className="font-medium">Apple Pay</p>
-                  <p className="text-xs text-muted-foreground">Double-tap to pay instantly</p>
+                  <p className="text-xs text-muted-foreground">Pay with Face ID or Touch ID</p>
                 </div>
                 {paymentMethod === "apple_pay" && (
                   <Check className="h-5 w-5 text-accent" />
@@ -340,23 +338,20 @@ export default function Checkout() {
               <Loader2 className="h-5 w-5 mr-2 animate-spin" />
               Processing...
             </>
-          ) : paymentMethod === "apple_pay" && applePayAvailable ? (
-            <>
-              <SiApplepay className="h-5 w-5 mr-2" />
-              Pay with Apple Pay
-            </>
           ) : (
             <>
-              <CreditCard className="h-5 w-5 mr-2" />
+              {paymentMethod === "apple_pay" ? (
+                <SiApplepay className="h-5 w-5 mr-2" />
+              ) : (
+                <CreditCard className="h-5 w-5 mr-2" />
+              )}
               Pay AED {pkg.price}
             </>
           )}
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          {applePayAvailable && paymentMethod === "apple_pay" 
-            ? "Use Face ID or Touch ID to confirm payment instantly."
-            : "Payments are processed securely via Telr."}
+          You'll be redirected to our secure payment page. Apple Pay and Card options available.
           {" "}By completing this purchase, you agree to our terms of service.
         </p>
       </div>
