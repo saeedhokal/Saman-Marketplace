@@ -415,10 +415,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return_decl: `${baseUrl}/payment/declined?cart=${cartId}`,
         bill_fname: user?.firstName || "Customer",
         bill_sname: user?.lastName || "",
-        bill_email: user?.email || "",
+        bill_email: user?.email || "customer@example.com",
         bill_phone: user?.phone || "",
-        bill_country: "AE",
+        bill_addr1: "Dubai",
         bill_city: "Dubai",
+        bill_country: "AE",
       });
 
       console.log("[TELR] Sending request:", telrParams.toString());
