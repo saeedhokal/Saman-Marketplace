@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
 
   const { data: userInfo } = useQuery<{ 
     sparePartsCredits: number; 
@@ -19,6 +19,14 @@ export default function Profile() {
     queryKey: ["/api/user/credits"],
     enabled: !!user,
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
