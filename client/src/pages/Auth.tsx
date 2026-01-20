@@ -70,13 +70,13 @@ export default function Auth() {
   const isLoading = isLoggingIn || isRegistering;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3d3d3d 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
       <Card className="w-full max-w-md border-2" style={{ borderColor: '#f97316' }}>
         <CardHeader className="text-center pb-2">
           <img 
             src={samanLogo} 
             alt="Saman Marketplace" 
-            className="mx-auto mb-4 w-20 h-20 rounded-xl object-cover"
+            className="mx-auto mb-4 w-24 h-24 rounded-2xl object-cover shadow-lg"
           />
           <CardTitle className="text-2xl font-bold" style={{ color: '#f97316' }}>Saman Marketplace</CardTitle>
           <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>UAE Spare Parts and Cars Marketplace</CardDescription>
