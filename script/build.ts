@@ -62,11 +62,11 @@ async function buildAll() {
     logLevel: "info",
   });
 
-  // Copy .well-known folder for Apple Pay domain verification
+  // Copy .well-known folder for Apple Pay domain verification to static public folder
   const wellKnownSrc = ".well-known";
-  const wellKnownDest = "dist/.well-known";
+  const wellKnownDest = "dist/public/.well-known";
   if (existsSync(wellKnownSrc)) {
-    console.log("copying .well-known folder...");
+    console.log("copying .well-known folder to dist/public...");
     await mkdir(wellKnownDest, { recursive: true });
     const applePayFile = "apple-developer-merchantid-domain-association.txt";
     if (existsSync(path.join(wellKnownSrc, applePayFile))) {
@@ -74,6 +74,7 @@ async function buildAll() {
         path.join(wellKnownSrc, applePayFile),
         path.join(wellKnownDest, applePayFile)
       );
+      console.log("Apple Pay verification file copied successfully");
     }
   }
 }
