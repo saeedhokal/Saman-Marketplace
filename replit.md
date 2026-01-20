@@ -24,6 +24,22 @@ The application allows users to browse parts by category, search for specific it
 - **Telr Payment**: User has Telr payment gateway. API keys (TELR_STORE_ID, TELR_AUTH_KEY) need to be provided when ready to implement.
 - **SMS Provider (Twilio)**: User dismissed Twilio integration. OTP codes are currently logged to console in development. When ready for production SMS, the user will need to set up Twilio or another SMS provider.
 
+## iOS App (Capacitor)
+
+The project is configured with Capacitor for building a native iOS app:
+
+- **App ID**: com.saman.marketplace
+- **App Name**: Saman Marketplace
+- **iOS Project**: Located in `/ios` directory
+
+To build for iOS App Store:
+1. Download project to a Mac
+2. Run `npm run build && npx cap sync ios`
+3. Open in Xcode: `npx cap open ios`
+4. Configure signing, icons, and submit to App Store
+
+See `IOS_APP_STORE_GUIDE.md` for detailed instructions.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
