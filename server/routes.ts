@@ -9,6 +9,8 @@ import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, p
 import { db } from "./db";
 import { users } from "@shared/models/auth";
 import { eq } from "drizzle-orm";
+import path from "path";
+import fs from "fs";
 
 // Valid subcategories by main category
 const validSubcategories: Record<string, readonly string[]> = {
@@ -41,6 +43,16 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   setupSimpleAuth(app);
   registerObjectStorageRoutes(app);
+
+  // Serve Apple Pay domain verification file
+  app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, res) => {
+    const filePath = path.resolve(process.cwd(), ".well-known", "apple-developer-merchantid-domain-association.txt");
+    if (fs.existsSync(filePath)) {
+      res.type("text/plain").send(fs.readFileSync(filePath, "utf8"));
+    } else {
+      res.status(404).send("Not found");
+    }
+  });
 
   // Helper to attach seller profile images to products
   async function attachSellerImages(productsList: any[]) {
