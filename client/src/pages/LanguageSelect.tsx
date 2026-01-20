@@ -24,10 +24,10 @@ export default function LanguageSelect() {
             className="mx-auto mb-6 w-24 h-24 rounded-2xl object-cover shadow-lg"
           />
           
-          <h1 className="text-2xl font-bold mb-2" style={{ color: '#f97316' }}>
+          <h1 className="text-2xl font-bold mb-2" style={{ color: '#8a8a8a' }}>
             Choose Your Language
           </h1>
-          <p className="text-lg font-semibold mb-1" style={{ color: '#f97316' }}>
+          <p className="text-lg font-semibold mb-1" style={{ color: '#8a8a8a' }}>
             اختر لغتك
           </p>
           <p className="text-muted-foreground mb-8">
