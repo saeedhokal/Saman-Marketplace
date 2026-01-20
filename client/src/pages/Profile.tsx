@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, User, Bell, CreditCard, History, Package, Settings,
-  FileText, Shield, HelpCircle, Trash2, ChevronRight, LogOut
+  FileText, Shield, HelpCircle, Trash2, ChevronRight, LogOut, Heart
 } from "lucide-react";
 
 export default function Profile() {
@@ -36,10 +36,11 @@ export default function Profile() {
 
   const menuItems = [
     { icon: User, label: "My Profile", href: "/profile/details" },
+    { icon: Heart, label: "Saved Listings", href: "/favorites" },
+    { icon: Package, label: "My Listings", href: "/my-listings" },
     { icon: Bell, label: "Notification", href: "/profile/notifications" },
     { icon: CreditCard, label: "Purchase Subscription", href: "/profile/subscription" },
     { icon: History, label: "Credit History", href: "/profile/credits" },
-    { icon: Package, label: "Delisting", href: "/my-listings" },
     { icon: Settings, label: "Settings", href: "/profile/settings" },
     { divider: true },
     { icon: FileText, label: "About Us", href: "/about" },
