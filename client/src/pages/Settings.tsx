@@ -47,7 +47,7 @@ export default function Settings() {
         <div className="space-y-6">
           <section>
             <h2 className={`text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 ${isRTL ? 'text-right' : ''}`}>
-              {isRTL ? 'المظهر' : 'Appearance'}
+              {t('appearance')}
             </h2>
             <div className="space-y-4">
               <div className={`flex items-center justify-between py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -58,8 +58,8 @@ export default function Settings() {
                     <Sun className="h-5 w-5 text-accent" />
                   )}
                   <div className={isRTL ? 'text-right' : ''}>
-                    <p className="font-medium">{isRTL ? 'الوضع الداكن' : 'Dark Mode'}</p>
-                    <p className="text-sm text-muted-foreground">{isRTL ? 'التبديل بين الوضع الفاتح والداكن' : 'Switch between light and dark themes'}</p>
+                    <p className="font-medium">{t('darkMode')}</p>
+                    <p className="text-sm text-muted-foreground">{t('darkModeDesc')}</p>
                   </div>
                 </div>
                 <Switch 
@@ -75,14 +75,14 @@ export default function Settings() {
 
           <section>
             <h2 className={`text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 ${isRTL ? 'text-right' : ''}`}>
-              {isRTL ? 'اللغة' : 'Language'}
+              {t('language')}
             </h2>
             <div className="space-y-4">
               <div className={`flex items-center justify-between py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Globe className="h-5 w-5 text-accent" />
                   <div className={isRTL ? 'text-right' : ''}>
-                    <p className="font-medium">{isRTL ? 'اللغة' : 'Language'}</p>
+                    <p className="font-medium">{t('language')}</p>
                     <p className="text-sm text-muted-foreground">
                       {language === 'en' ? 'English' : 'العربية'}
                     </p>
@@ -116,14 +116,14 @@ export default function Settings() {
 
           <section>
             <h2 className={`text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 ${isRTL ? 'text-right' : ''}`}>
-              {isRTL ? 'معلومات التطبيق' : 'App Info'}
+              {t('appInfo')}
             </h2>
             <div className="space-y-4">
               <div className={`flex items-center justify-between py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Info className="h-5 w-5 text-accent" />
                   <div className={isRTL ? 'text-right' : ''}>
-                    <p className="font-medium">{isRTL ? 'الإصدار' : 'Version'}</p>
+                    <p className="font-medium">{t('version')}</p>
                     <p className="text-sm text-muted-foreground" data-testid="text-app-version">2.0.0</p>
                   </div>
                 </div>
@@ -133,7 +133,7 @@ export default function Settings() {
 
           <div className="pt-4 text-center text-xs text-muted-foreground">
             <p>{t('appName')}</p>
-            <p>{isRTL ? 'صنع بحب في الإمارات' : 'Made with care in the UAE'}</p>
+            <p>{t('madeInUAE')}</p>
           </div>
         </div>
       </div>

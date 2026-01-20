@@ -75,9 +75,8 @@ export default function Landing() {
                 />
               </svg>
               
-              {/* Content with Slogans */}
-              <div className={`relative z-10 p-6 h-full flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                {/* Left side - Main content */}
+              {/* Content */}
+              <div className={`relative z-10 p-6 h-full flex items-center ${isRTL ? 'justify-end' : 'justify-start'}`}>
                 <div className={`flex flex-col justify-center ${isRTL ? 'items-end text-right' : ''}`}>
                   <p className="text-white/60 text-xs uppercase tracking-wider mb-1">{t('uaeMarketplace')}</p>
                   <h2 className="text-white text-xl sm:text-2xl font-bold mb-1">{t('buyAndSell')}</h2>
@@ -92,12 +91,6 @@ export default function Landing() {
                       <ChevronRight className={`h-4 w-4 ${isRTL ? 'mr-1 rotate-180' : 'ml-1'}`} />
                     </Button>
                   </Link>
-                </div>
-                
-                {/* Right side - Slogans */}
-                <div className={`flex flex-col justify-center ${isRTL ? 'items-start text-left' : 'items-end text-right'}`}>
-                  <p className="text-[#f97316] font-bold text-lg sm:text-xl mb-1">Fe Saman?</p>
-                  <p className="text-[#f97316] font-bold text-xl sm:text-2xl" dir="rtl">في سامان؟</p>
                 </div>
               </div>
             </div>

@@ -70,6 +70,15 @@ export const translations = {
     deleteAccount: "Delete Account",
     editProfile: "Edit Profile",
     
+    // Settings
+    appearance: "Appearance",
+    darkMode: "Dark Mode",
+    darkModeDesc: "Switch between light and dark themes",
+    language: "Language",
+    appInfo: "App Info",
+    version: "Version",
+    madeInUAE: "Made with care in the UAE",
+    
     // Sell
     sellItem: "Sell Item",
     createListing: "Create Listing",
@@ -204,6 +213,15 @@ export const translations = {
     logout: "تسجيل الخروج",
     deleteAccount: "حذف الحساب",
     editProfile: "تعديل الملف الشخصي",
+    
+    // Settings
+    appearance: "المظهر",
+    darkMode: "الوضع الداكن",
+    darkModeDesc: "التبديل بين الوضع الفاتح والداكن",
+    language: "اللغة",
+    appInfo: "معلومات التطبيق",
+    version: "الإصدار",
+    madeInUAE: "صنع بحب في الإمارات",
     
     // Sell
     sellItem: "بيع منتج",
