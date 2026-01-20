@@ -266,7 +266,8 @@ export class DatabaseStorage implements IStorage {
 
   async isSubscriptionEnabled(): Promise<boolean> {
     const settings = await this.getAppSettings();
-    return settings?.subscriptionEnabled ?? false;
+    // Default to true if no settings exist (subscriptions enabled by default)
+    return settings?.subscriptionEnabled ?? true;
   }
 
   // App Settings
