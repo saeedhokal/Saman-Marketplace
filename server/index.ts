@@ -10,10 +10,10 @@ const httpServer = createServer(app);
 
 // Serve Apple Pay domain verification file EARLY (before any middleware)
 app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, res) => {
-  // Check multiple locations: root (dev) and dist (prod)
+  // Check multiple locations: root (dev) and dist/public (prod)
   const locations = [
     path.resolve(process.cwd(), ".well-known", "apple-developer-merchantid-domain-association.txt"),
-    path.resolve(process.cwd(), "dist", ".well-known", "apple-developer-merchantid-domain-association.txt"),
+    path.resolve(process.cwd(), "dist", "public", ".well-known", "apple-developer-merchantid-domain-association.txt"),
   ];
   
   for (const filePath of locations) {
