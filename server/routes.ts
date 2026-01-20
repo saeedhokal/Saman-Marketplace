@@ -38,14 +38,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   setupSimpleAuth(app);
   registerObjectStorageRoutes(app);
 
-  // Products API - include seller profile image
-  app.get(api.products.list.path, async (req, res) => {
-    const search = req.query.search as string | undefined;
-    const mainCategory = req.query.mainCategory as string | undefined;
-    const subCategory = req.query.subCategory as string | undefined;
-    const productsList = await storage.getProducts({ search, mainCategory, subCategory });
-    
-    // Get unique seller IDs and fetch their profile images
+  // Helper to attach seller profile images to products
+  async function attachSellerImages(productsList: any[]) {
     const sellerIds = Array.from(new Set(productsList.map(p => p.sellerId).filter(Boolean)));
     const sellerProfiles = await Promise.all(
       sellerIds.map(async (id) => {
@@ -55,21 +49,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       })
     );
     const sellerMap = new Map(sellerProfiles.filter(Boolean).map(s => [s.id, s.profileImageUrl]));
-    
-    // Attach seller profile image to each product
-    const productsWithSeller = productsList.map(p => ({
+    return productsList.map(p => ({
       ...p,
       sellerProfileImageUrl: sellerMap.get(p.sellerId) || null
     }));
-    
+  }
+
+  // Products API - include seller profile image
+  app.get(api.products.list.path, async (req, res) => {
+    const search = req.query.search as string | undefined;
+    const mainCategory = req.query.mainCategory as string | undefined;
+    const subCategory = req.query.subCategory as string | undefined;
+    const productsList = await storage.getProducts({ search, mainCategory, subCategory });
+    const productsWithSeller = await attachSellerImages(productsList);
     res.json(productsWithSeller);
   });
 
   // Public: Get recent products (must come before :id route)
   app.get("/api/products/recent", async (req, res) => {
     const limit = Math.min(Number(req.query.limit) || 10, 20);
-    const products = await storage.getRecentProducts(limit);
-    res.json(products);
+    const productsList = await storage.getRecentProducts(limit);
+    const productsWithSeller = await attachSellerImages(productsList);
+    res.json(productsWithSeller);
   });
 
   // Public: Get recommended products (must come before :id route)
@@ -77,8 +78,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const userId = getCurrentUserId(req);
     const sessionId = req.sessionID;
     const limit = Math.min(Number(req.query.limit) || 10, 20);
-    const products = await storage.getRecommendedProducts(userId || undefined, sessionId, limit);
-    res.json(products);
+    const productsList = await storage.getRecommendedProducts(userId || undefined, sessionId, limit);
+    const productsWithSeller = await attachSellerImages(productsList);
+    res.json(productsWithSeller);
   });
 
   app.get(api.products.get.path, async (req, res) => {
@@ -210,23 +212,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/favorites", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
     const favorites = await storage.getFavorites(userId);
-    
-    // Get unique seller IDs and fetch their profile images
-    const sellerIds = Array.from(new Set(favorites.map(p => p.sellerId).filter(Boolean)));
-    const sellerProfiles = await Promise.all(
-      sellerIds.map(async (id) => {
-        const [user] = await db.select({ id: users.id, profileImageUrl: users.profileImageUrl })
-          .from(users).where(eq(users.id, id));
-        return user;
-      })
-    );
-    const sellerMap = new Map(sellerProfiles.filter(Boolean).map(s => [s.id, s.profileImageUrl]));
-    
-    const favoritesWithSeller = favorites.map(p => ({
-      ...p,
-      sellerProfileImageUrl: sellerMap.get(p.sellerId) || null
-    }));
-    
+    const favoritesWithSeller = await attachSellerImages(favorites);
     res.json(favoritesWithSeller);
   });
 
