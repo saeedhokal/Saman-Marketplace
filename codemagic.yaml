@@ -8,6 +8,8 @@ workflows:
       app_store_connect: codemagic
     
     environment:
+      groups:
+        - app_credentials
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.saman.marketplace
@@ -15,7 +17,6 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-        APP_ID: 1234567890  # Replace with your App Store Connect App ID
       
       node: 20
       xcode: latest
