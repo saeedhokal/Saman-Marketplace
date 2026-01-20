@@ -867,6 +867,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Admin: Seed demo listings for production review
   app.post("/api/admin/seed-demo", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      // First, create demo seller users (ignore if they already exist)
+      const demoUsers = [
+        { id: "demo_seller_1", phone: "+971500000001", firstName: "Ahmed", lastName: "Auto Parts", isAdmin: false },
+        { id: "demo_seller_2", phone: "+971500000002", firstName: "Gulf", lastName: "Motors", isAdmin: false },
+        { id: "demo_seller_3", phone: "+971500000003", firstName: "Emirates", lastName: "Cars", isAdmin: false },
+      ];
+      
+      for (const user of demoUsers) {
+        try {
+          await db.insert(users).values(user).onConflictDoNothing();
+        } catch (e) {
+          // User might already exist, continue
+        }
+      }
+
       const demoListings = [
         {
           title: "BMW E46 Headlight Assembly - Original",
