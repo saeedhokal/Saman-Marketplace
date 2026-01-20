@@ -400,31 +400,43 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     try {
-      const telrParams = new URLSearchParams({
-        ivp_method: "create",
-        ivp_store: telrStoreId,
-        ivp_authkey: telrAuthKey,
-        ivp_cart: cartId,
-        ivp_amount: (pkg.price / 100).toFixed(2), // Convert cents to AED
-        ivp_currency: "AED",
-        ivp_desc: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
-        ivp_test: "1", // Test mode - change to "0" for live
-        ivp_framed: "0", // Full page redirect
-        return_auth: `${baseUrl}/payment/success?cart=${cartId}`,
-        return_can: `${baseUrl}/payment/cancelled?cart=${cartId}`,
-        return_decl: `${baseUrl}/payment/declined?cart=${cartId}`,
-        bill_fname: user?.firstName || "Customer",
-        bill_sname: user?.lastName || "",
-        bill_email: user?.email || "",
-        bill_phone: user?.phone || "",
-        bill_country: "AE",
-        bill_city: "Dubai",
-      });
+      // Use Telr JSON API format
+      const telrPayload = {
+        method: "create",
+        store: parseInt(telrStoreId),
+        authkey: telrAuthKey,
+        order: {
+          cartid: cartId,
+          test: 1, // Test mode - change to 0 for live
+          amount: (pkg.price / 100).toFixed(2),
+          currency: "AED",
+          description: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
+        },
+        return: {
+          authorised: `${baseUrl}/payment/success?cart=${cartId}`,
+          cancelled: `${baseUrl}/payment/cancelled?cart=${cartId}`,
+          declined: `${baseUrl}/payment/declined?cart=${cartId}`,
+        },
+        customer: {
+          name: {
+            forenames: user?.firstName || "Customer",
+            surname: user?.lastName || "",
+          },
+          email: user?.email || "",
+          phone: user?.phone || "",
+          address: {
+            country: "AE",
+            city: "Dubai",
+          },
+        },
+      };
+
+      console.log("[TELR] Sending request:", JSON.stringify(telrPayload));
 
       const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: telrParams.toString(),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(telrPayload),
       });
 
       const telrData = await telrResponse.json();
