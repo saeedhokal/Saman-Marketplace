@@ -11,6 +11,7 @@ interface ImageGalleryProps {
 export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const goToPrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
@@ -20,12 +21,27 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   }, [images.length]);
 
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
   const handleDragEnd = (_: any, info: PanInfo) => {
     const threshold = 50;
+    const wasSwiped = Math.abs(info.offset.x) > threshold;
+    
     if (info.offset.x > threshold) {
       goToPrevious();
     } else if (info.offset.x < -threshold) {
       goToNext();
+    }
+    
+    // Reset dragging state after a short delay to prevent click triggering
+    setTimeout(() => setIsDragging(false), 100);
+  };
+
+  const handleClick = () => {
+    if (!isDragging) {
+      setIsFullscreen(true);
     }
   };
 
@@ -47,15 +63,20 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
     <>
       <div className="relative">
         <motion.div
-          className="aspect-square w-full overflow-hidden rounded-xl bg-secondary/30 cursor-pointer"
-          onClick={() => setIsFullscreen(true)}
+          className="aspect-square w-full overflow-hidden rounded-xl bg-secondary/30 cursor-pointer touch-pan-y"
+          drag={images.length > 1 ? "x" : false}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onClick={handleClick}
           data-testid="image-gallery-main"
         >
           <motion.img
             key={currentIndex}
             src={images[currentIndex]}
             alt={`Image ${currentIndex + 1}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
