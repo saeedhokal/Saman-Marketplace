@@ -10,11 +10,23 @@ const httpServer = createServer(app);
 
 // Serve Apple Pay domain verification file EARLY (before any middleware)
 app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, res) => {
-  // Check multiple locations: root (dev) and dist/public (prod)
+  const fileName = "apple-developer-merchantid-domain-association.txt";
+  const cwd = process.cwd();
+  const isProd = process.env.NODE_ENV === "production";
+  
+  // Check multiple locations for the verification file
   const locations = [
-    path.resolve(process.cwd(), ".well-known", "apple-developer-merchantid-domain-association.txt"),
-    path.resolve(process.cwd(), "dist", "public", ".well-known", "apple-developer-merchantid-domain-association.txt"),
+    // Development: project root .well-known/
+    path.join(cwd, ".well-known", fileName),
+    // Production: dist/public/.well-known/
+    path.join(cwd, "dist", "public", ".well-known", fileName),
+    // Alternative prod: public/.well-known/ (relative to cwd which might be dist)
+    path.join(cwd, "public", ".well-known", fileName),
   ];
+  
+  if (!isProd) {
+    console.log("[ApplePay] Checking locations:", locations);
+  }
   
   for (const filePath of locations) {
     if (fs.existsSync(filePath)) {
@@ -23,7 +35,7 @@ app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, 
       return;
     }
   }
-  console.log("[ApplePay] Verification file not found in:", locations);
+  console.log("[ApplePay] Verification file not found. CWD:", cwd, "Locations checked:", locations);
   res.status(404).send("Not found");
 });
 
