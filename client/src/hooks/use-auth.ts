@@ -24,29 +24,18 @@ async function logoutFn(): Promise<void> {
   });
 }
 
-interface RequestOtpParams {
+interface LoginParams {
   phone: string;
+  password: string;
 }
 
-interface RequestOtpResult {
-  message: string;
+interface RegisterParams {
   phone: string;
-  devCode?: string;
+  password: string;
 }
 
-interface VerifyOtpParams {
-  phone: string;
-  code: string;
-  firstName?: string;
-  lastName?: string;
-}
-
-interface VerifyOtpResult extends User {
-  isNewUser: boolean;
-}
-
-async function requestOtpFn(params: RequestOtpParams): Promise<RequestOtpResult> {
-  const response = await fetch("/api/auth/request-otp", {
+async function loginFn(params: LoginParams): Promise<User> {
+  const response = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -55,14 +44,14 @@ async function requestOtpFn(params: RequestOtpParams): Promise<RequestOtpResult>
   
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || "Failed to send OTP");
+    throw new Error(error.message || "Login failed");
   }
   
   return response.json();
 }
 
-async function verifyOtpFn(params: VerifyOtpParams): Promise<VerifyOtpResult> {
-  const response = await fetch("/api/auth/verify-otp", {
+async function registerFn(params: RegisterParams): Promise<User> {
+  const response = await fetch("/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -71,7 +60,7 @@ async function verifyOtpFn(params: VerifyOtpParams): Promise<VerifyOtpResult> {
   
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || "Failed to verify OTP");
+    throw new Error(error.message || "Registration failed");
   }
   
   return response.json();
@@ -94,12 +83,16 @@ export function useAuth() {
     },
   });
 
-  const requestOtpMutation = useMutation({
-    mutationFn: requestOtpFn,
+  const loginMutation = useMutation({
+    mutationFn: loginFn,
+    onSuccess: (user) => {
+      queryClient.setQueryData(["/api/auth/user"], user);
+      queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
+    },
   });
 
-  const verifyOtpMutation = useMutation({
-    mutationFn: verifyOtpFn,
+  const registerMutation = useMutation({
+    mutationFn: registerFn,
     onSuccess: (user) => {
       queryClient.setQueryData(["/api/auth/user"], user);
       queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
@@ -112,9 +105,9 @@ export function useAuth() {
     isAuthenticated: !!user,
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
-    requestOtp: requestOtpMutation.mutateAsync,
-    isRequestingOtp: requestOtpMutation.isPending,
-    verifyOtp: verifyOtpMutation.mutateAsync,
-    isVerifyingOtp: verifyOtpMutation.isPending,
+    login: loginMutation.mutateAsync,
+    isLoggingIn: loginMutation.isPending,
+    register: registerMutation.mutateAsync,
+    isRegistering: registerMutation.isPending,
   };
 }

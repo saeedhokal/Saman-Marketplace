@@ -4,6 +4,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "./db";
 import { users, otpCodes } from "@shared/models/auth";
 import { eq, and, gt, desc, sql } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 declare module "express-session" {
   interface SessionData {
@@ -235,6 +236,106 @@ export function setupSimpleAuth(app: Express) {
     } catch (error) {
       console.error("Verify OTP error:", error);
       res.status(500).json({ message: "Failed to verify OTP" });
+    }
+  });
+
+  // Login with phone + password
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    try {
+      const { phone, password } = req.body;
+
+      if (!phone || !password) {
+        return res.status(400).json({ message: "Phone and password are required" });
+      }
+
+      const normalizedPhone = normalizePhone(phone);
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.phone, normalizedPhone));
+
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      if (!user.password) {
+        return res.status(401).json({ message: "Please register first" });
+      }
+
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Invalid password" });
+      }
+
+      req.session.userId = user.id;
+
+      res.json({
+        id: user.id,
+        phone: user.phone,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        credits: user.credits,
+        isAdmin: user.isAdmin,
+        profileImageUrl: user.profileImageUrl,
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Register with phone + password
+  app.post("/api/auth/register", async (req: Request, res: Response) => {
+    try {
+      const { phone, password } = req.body;
+
+      if (!phone || !password) {
+        return res.status(400).json({ message: "Phone and password are required" });
+      }
+
+      const normalizedPhone = normalizePhone(phone);
+
+      // Check if user already exists
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.phone, normalizedPhone));
+
+      if (existingUser) {
+        return res.status(400).json({ message: "Phone number already registered" });
+      }
+
+      // Hash password (no complexity requirements)
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create new user
+      const [user] = await db
+        .insert(users)
+        .values({
+          phone: normalizedPhone,
+          password: hashedPassword,
+          credits: 0,
+          isAdmin: false,
+        })
+        .returning();
+
+      req.session.userId = user.id;
+
+      res.json({
+        id: user.id,
+        phone: user.phone,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        credits: user.credits,
+        isAdmin: user.isAdmin,
+        profileImageUrl: user.profileImageUrl,
+      });
+    } catch (error) {
+      console.error("Register error:", error);
+      res.status(500).json({ message: "Registration failed" });
     }
   });
 
