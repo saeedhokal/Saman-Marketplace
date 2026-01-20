@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.saman.marketplace',
   appName: 'Saman Marketplace',
   webDir: 'dist/public',
-  server: {
-    androidScheme: 'https',
-    iosScheme: 'https',
-  },
   ios: {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',

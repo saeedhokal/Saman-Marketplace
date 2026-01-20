@@ -168,6 +168,8 @@ When you make changes:
 4. Increment the build number in Xcode
 5. Archive and upload again
 
+**Note:** Always run `npm run build && npx cap sync ios` after changing `capacitor.config.ts` to apply the changes to the iOS project.
+
 ## Troubleshooting
 
 **Build fails with signing errors:**
