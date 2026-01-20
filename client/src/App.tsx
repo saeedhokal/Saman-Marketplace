@@ -29,6 +29,9 @@ import Cookies from "@/pages/Cookies";
 import Contact from "@/pages/Contact";
 import Refund from "@/pages/Refund";
 import Help from "@/pages/Help";
+import PaymentSuccess from "@/pages/PaymentSuccess";
+import PaymentCancelled from "@/pages/PaymentCancelled";
+import PaymentDeclined from "@/pages/PaymentDeclined";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -59,6 +62,9 @@ function Router() {
         <Route path="/contact" component={Contact} />
         <Route path="/refund" component={Refund} />
         <Route path="/help" component={Help} />
+        <Route path="/payment/success" component={PaymentSuccess} />
+        <Route path="/payment/cancelled" component={PaymentCancelled} />
+        <Route path="/payment/declined" component={PaymentDeclined} />
         <Route component={NotFound} />
       </Switch>
       <BottomNav />

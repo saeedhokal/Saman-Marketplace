@@ -334,7 +334,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
-  // Checkout - process package purchase
+  // Checkout - create Telr payment session
   app.post("/api/checkout", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
     const { packageId, paymentMethod } = req.body;
@@ -348,44 +348,202 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(404).json({ message: "Package not found or inactive" });
     }
 
-    // TODO: Integrate with Telr payment gateway when keys are provided
-    // For now, we'll process the payment directly (development mode)
     const telrStoreId = process.env.TELR_STORE_ID;
     const telrAuthKey = process.env.TELR_AUTH_KEY;
+    
+    // Get user info for billing
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
     
     if (!telrStoreId || !telrAuthKey) {
       // Development mode - process directly without payment gateway
       console.log(`[DEV] Processing payment for package ${pkg.id}: AED ${pkg.price}`);
-    } else {
-      // Production mode - would integrate with Telr here
-      // For now, just log that we would process via Telr
-      console.log(`[TELR] Would process payment via Telr: AED ${pkg.price}`);
+      
+      const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
+      const category = pkg.category as "Spare Parts" | "Automotive";
+      await storage.addCredits(userId, category, totalCredits);
+
+      await storage.createTransaction({
+        userId,
+        packageId: pkg.id,
+        amount: pkg.price,
+        credits: totalCredits,
+        category: pkg.category,
+        paymentMethod: paymentMethod || "credit_card",
+        paymentReference: `DEV-${Date.now()}`,
+        status: "completed",
+      });
+
+      const newCredits = await storage.getUserCredits(userId);
+      return res.json({ 
+        success: true,
+        message: `${totalCredits} ${category} credits added to your account`,
+        sparePartsCredits: newCredits.sparePartsCredits,
+        automotiveCredits: newCredits.automotiveCredits,
+      });
     }
 
-    // Add credits to user
+    // Production mode - create Telr payment session
+    const cartId = `SAMAN-${userId}-${packageId}-${Date.now()}`;
     const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
-    const category = pkg.category as "Spare Parts" | "Automotive";
-    await storage.addCredits(userId, category, totalCredits);
-
-    // Record transaction
-    await storage.createTransaction({
+    const baseUrl = process.env.REPLIT_DEPLOYMENT_URL || `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+    
+    // Create pending transaction
+    const transaction = await storage.createTransaction({
       userId,
       packageId: pkg.id,
       amount: pkg.price,
       credits: totalCredits,
       category: pkg.category,
       paymentMethod: paymentMethod || "credit_card",
-      paymentReference: `DEV-${Date.now()}`,
-      status: "completed",
+      paymentReference: cartId,
+      status: "pending",
     });
 
-    const newCredits = await storage.getUserCredits(userId);
-    res.json({ 
-      success: true,
-      message: `${totalCredits} ${category} credits added to your account`,
-      sparePartsCredits: newCredits.sparePartsCredits,
-      automotiveCredits: newCredits.automotiveCredits,
-    });
+    try {
+      const telrParams = new URLSearchParams({
+        ivp_method: "create",
+        ivp_store: telrStoreId,
+        ivp_authkey: telrAuthKey,
+        ivp_cart: cartId,
+        ivp_amount: (pkg.price / 100).toFixed(2), // Convert cents to AED
+        ivp_currency: "AED",
+        ivp_desc: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
+        ivp_test: "1", // Test mode - change to "0" for live
+        ivp_framed: "0", // Full page redirect
+        return_auth: `${baseUrl}/payment/success?cart=${cartId}`,
+        return_can: `${baseUrl}/payment/cancelled?cart=${cartId}`,
+        return_decl: `${baseUrl}/payment/declined?cart=${cartId}`,
+        bill_fname: user?.firstName || "Customer",
+        bill_sname: user?.lastName || "",
+        bill_email: user?.email || "",
+        bill_phone: user?.phone || "",
+        bill_country: "AE",
+        bill_city: "Dubai",
+      });
+
+      const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: telrParams.toString(),
+      });
+
+      const telrData = await telrResponse.json();
+      console.log("[TELR] Order response:", JSON.stringify(telrData));
+
+      if (telrData.order?.url) {
+        // Update transaction with Telr order reference
+        await storage.updateTransactionReference(transaction.id, telrData.order.ref);
+        
+        return res.json({
+          success: true,
+          paymentUrl: telrData.order.url,
+          orderRef: telrData.order.ref,
+          cartId,
+        });
+      } else {
+        console.error("[TELR] Order creation failed:", telrData.error);
+        await storage.updateTransactionStatus(transaction.id, "failed");
+        return res.status(400).json({
+          success: false,
+          message: telrData.error?.message || "Payment creation failed",
+        });
+      }
+    } catch (error) {
+      console.error("[TELR] API error:", error);
+      await storage.updateTransactionStatus(transaction.id, "failed");
+      return res.status(500).json({
+        success: false,
+        message: "Payment service unavailable",
+      });
+    }
+  });
+
+  // Telr payment verification endpoint
+  app.get("/api/payment/verify", isAuthenticated, async (req, res) => {
+    const { cart } = req.query;
+    const userId = getCurrentUserId(req)!;
+    
+    if (!cart || typeof cart !== "string") {
+      return res.status(400).json({ message: "Cart ID is required" });
+    }
+
+    const telrStoreId = process.env.TELR_STORE_ID;
+    const telrAuthKey = process.env.TELR_AUTH_KEY;
+    
+    if (!telrStoreId || !telrAuthKey) {
+      return res.status(400).json({ message: "Payment not configured" });
+    }
+
+    try {
+      // Check order status with Telr
+      const telrParams = new URLSearchParams({
+        ivp_method: "check",
+        ivp_store: telrStoreId,
+        ivp_authkey: telrAuthKey,
+        order_ref: cart,
+      });
+
+      const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: telrParams.toString(),
+      });
+
+      const telrData = await telrResponse.json();
+      console.log("[TELR] Check response:", JSON.stringify(telrData));
+
+      // Find the pending transaction
+      const transaction = await storage.getTransactionByReference(cart);
+      if (!transaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+
+      if (transaction.userId !== userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if payment was successful (status code 3 = authorized/captured)
+      if (telrData.order?.status?.code === "3" || telrData.order?.status?.code === 3) {
+        // Payment successful - add credits
+        if (transaction.status !== "completed") {
+          const pkg = await storage.getPackage(transaction.packageId!);
+          if (pkg) {
+            const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
+            const category = pkg.category as "Spare Parts" | "Automotive";
+            await storage.addCredits(userId, category, totalCredits);
+            await storage.updateTransactionStatus(transaction.id, "completed");
+          }
+        }
+
+        const newCredits = await storage.getUserCredits(userId);
+        return res.json({
+          success: true,
+          status: "completed",
+          message: "Payment successful! Credits added to your account.",
+          sparePartsCredits: newCredits.sparePartsCredits,
+          automotiveCredits: newCredits.automotiveCredits,
+        });
+      } else if (telrData.order?.status?.code === "2" || telrData.order?.status?.code === 2) {
+        return res.json({
+          success: false,
+          status: "pending",
+          message: "Payment is still processing...",
+        });
+      } else {
+        await storage.updateTransactionStatus(transaction.id, "failed");
+        return res.json({
+          success: false,
+          status: "failed",
+          message: telrData.order?.status?.text || "Payment was not successful",
+        });
+      }
+    } catch (error) {
+      console.error("[TELR] Verify error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Unable to verify payment",
+      });
+    }
   });
 
   // User's own listings (all statuses)

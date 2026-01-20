@@ -62,6 +62,9 @@ export interface IStorage {
   // Transactions & Revenue
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   getTransactions(options?: { userId?: string; startDate?: Date; endDate?: Date }): Promise<Transaction[]>;
+  getTransactionByReference(reference: string): Promise<Transaction | undefined>;
+  updateTransactionStatus(id: number, status: string): Promise<void>;
+  updateTransactionReference(id: number, reference: string): Promise<void>;
   getRevenueStats(): Promise<{ totalRevenue: number; sparePartsRevenue: number; automotiveRevenue: number; transactionCount: number }>;
   
   // Account deletion
@@ -476,6 +479,24 @@ export class DatabaseStorage implements IStorage {
     }
     return await db.select().from(transactions)
       .orderBy(desc(transactions.createdAt));
+  }
+
+  async getTransactionByReference(reference: string): Promise<Transaction | undefined> {
+    const [tx] = await db.select().from(transactions)
+      .where(eq(transactions.paymentReference, reference));
+    return tx;
+  }
+
+  async updateTransactionStatus(id: number, status: string): Promise<void> {
+    await db.update(transactions)
+      .set({ status })
+      .where(eq(transactions.id, id));
+  }
+
+  async updateTransactionReference(id: number, reference: string): Promise<void> {
+    await db.update(transactions)
+      .set({ paymentReference: reference })
+      .where(eq(transactions.id, id));
   }
 
   async getRevenueStats(): Promise<{ totalRevenue: number; sparePartsRevenue: number; automotiveRevenue: number; transactionCount: number }> {

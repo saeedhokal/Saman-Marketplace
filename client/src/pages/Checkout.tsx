@@ -34,13 +34,17 @@ export default function Checkout() {
       const res = await apiRequest("POST", "/api/checkout", data);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
-      toast({
-        title: "Purchase Successful!",
-        description: `Your credits have been added to your account.`,
-      });
-      setLocation("/profile/subscription");
+    onSuccess: (data) => {
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
+        toast({
+          title: "Purchase Successful!",
+          description: data.message || "Your credits have been added to your account.",
+        });
+        setLocation("/profile/subscription");
+      }
     },
     onError: (error: any) => {
       toast({
