@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.saman.marketplace',
+  appId: 'com.saeed.saman',
   appName: 'Saman Marketplace',
   webDir: 'dist/public',
   ios: {

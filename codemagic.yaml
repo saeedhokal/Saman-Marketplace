@@ -10,7 +10,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.saman.marketplace
+        bundle_identifier: com.saeed.saman
       
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
