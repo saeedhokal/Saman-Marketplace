@@ -1,6 +1,8 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, mkdir, copyFile } from "fs/promises";
+import { existsSync } from "fs";
+import path from "path";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -59,6 +61,21 @@ async function buildAll() {
     external: externals,
     logLevel: "info",
   });
+
+  // Copy .well-known folder for Apple Pay domain verification
+  const wellKnownSrc = ".well-known";
+  const wellKnownDest = "dist/.well-known";
+  if (existsSync(wellKnownSrc)) {
+    console.log("copying .well-known folder...");
+    await mkdir(wellKnownDest, { recursive: true });
+    const applePayFile = "apple-developer-merchantid-domain-association.txt";
+    if (existsSync(path.join(wellKnownSrc, applePayFile))) {
+      await copyFile(
+        path.join(wellKnownSrc, applePayFile),
+        path.join(wellKnownDest, applePayFile)
+      );
+    }
+  }
 }
 
 buildAll().catch((err) => {

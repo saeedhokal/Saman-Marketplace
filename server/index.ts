@@ -10,12 +10,21 @@ const httpServer = createServer(app);
 
 // Serve Apple Pay domain verification file EARLY (before any middleware)
 app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, res) => {
-  const filePath = path.resolve(process.cwd(), ".well-known", "apple-developer-merchantid-domain-association.txt");
-  if (fs.existsSync(filePath)) {
-    res.type("text/plain").send(fs.readFileSync(filePath, "utf8"));
-  } else {
-    res.status(404).send("Not found");
+  // Check multiple locations: root (dev) and dist (prod)
+  const locations = [
+    path.resolve(process.cwd(), ".well-known", "apple-developer-merchantid-domain-association.txt"),
+    path.resolve(process.cwd(), "dist", ".well-known", "apple-developer-merchantid-domain-association.txt"),
+  ];
+  
+  for (const filePath of locations) {
+    if (fs.existsSync(filePath)) {
+      console.log("[ApplePay] Serving verification file from:", filePath);
+      res.type("text/plain").send(fs.readFileSync(filePath, "utf8"));
+      return;
+    }
   }
+  console.log("[ApplePay] Verification file not found in:", locations);
+  res.status(404).send("Not found");
 });
 
 declare module "http" {
