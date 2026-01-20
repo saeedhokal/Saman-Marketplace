@@ -148,7 +148,11 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, delay: index * 0.03 }}
                 >
-                  <ProductCard product={product} />
+                  <ProductCard 
+                    product={product} 
+                    sellerImageUrl={(product as any).sellerProfileImageUrl}
+                    showDate
+                  />
                 </motion.div>
               ))}
             </motion.div>

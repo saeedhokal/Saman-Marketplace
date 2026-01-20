@@ -38,13 +38,31 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   setupSimpleAuth(app);
   registerObjectStorageRoutes(app);
 
-  // Products API
+  // Products API - include seller profile image
   app.get(api.products.list.path, async (req, res) => {
     const search = req.query.search as string | undefined;
     const mainCategory = req.query.mainCategory as string | undefined;
     const subCategory = req.query.subCategory as string | undefined;
-    const products = await storage.getProducts({ search, mainCategory, subCategory });
-    res.json(products);
+    const productsList = await storage.getProducts({ search, mainCategory, subCategory });
+    
+    // Get unique seller IDs and fetch their profile images
+    const sellerIds = Array.from(new Set(productsList.map(p => p.sellerId).filter(Boolean)));
+    const sellerProfiles = await Promise.all(
+      sellerIds.map(async (id) => {
+        const [user] = await db.select({ id: users.id, profileImageUrl: users.profileImageUrl })
+          .from(users).where(eq(users.id, id));
+        return user;
+      })
+    );
+    const sellerMap = new Map(sellerProfiles.filter(Boolean).map(s => [s.id, s.profileImageUrl]));
+    
+    // Attach seller profile image to each product
+    const productsWithSeller = productsList.map(p => ({
+      ...p,
+      sellerProfileImageUrl: sellerMap.get(p.sellerId) || null
+    }));
+    
+    res.json(productsWithSeller);
   });
 
   // Public: Get recent products (must come before :id route)
@@ -188,11 +206,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.sendStatus(204);
   });
 
-  // Favorites API
+  // Favorites API - include seller profile images
   app.get("/api/favorites", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
     const favorites = await storage.getFavorites(userId);
-    res.json(favorites);
+    
+    // Get unique seller IDs and fetch their profile images
+    const sellerIds = Array.from(new Set(favorites.map(p => p.sellerId).filter(Boolean)));
+    const sellerProfiles = await Promise.all(
+      sellerIds.map(async (id) => {
+        const [user] = await db.select({ id: users.id, profileImageUrl: users.profileImageUrl })
+          .from(users).where(eq(users.id, id));
+        return user;
+      })
+    );
+    const sellerMap = new Map(sellerProfiles.filter(Boolean).map(s => [s.id, s.profileImageUrl]));
+    
+    const favoritesWithSeller = favorites.map(p => ({
+      ...p,
+      sellerProfileImageUrl: sellerMap.get(p.sellerId) || null
+    }));
+    
+    res.json(favoritesWithSeller);
   });
 
   app.post("/api/favorites/:productId", isAuthenticated, async (req, res) => {
