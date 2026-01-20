@@ -1,6 +1,17 @@
 # Saman Marketplace - iOS App Store Submission Guide
 
-## Prerequisites
+## Choose Your Build Method
+
+### Option A: No Mac Required - Use Codemagic (Recommended)
+If you don't have a Mac, use **Codemagic** to build your iOS app in the cloud.
+See **CODEMAGIC_SETUP_GUIDE.md** for complete instructions.
+
+### Option B: Build on Mac
+If you have access to a Mac, follow the steps below.
+
+---
+
+## Prerequisites (Mac Build)
 
 Before you begin, you'll need:
 1. **A Mac computer** with macOS 13 or later
