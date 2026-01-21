@@ -8,94 +8,110 @@ interface PullToRefreshProps {
 }
 
 export function PullToRefresh({ onRefresh, children, className = "" }: PullToRefreshProps) {
-  const [isPulling, setIsPulling] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
   const pulling = useRef(false);
+  const canPull = useRef(false);
 
-  const PULL_THRESHOLD = 60;
-  const MAX_PULL = 90;
+  const PULL_THRESHOLD = 55;
+  const MAX_PULL = 80;
 
-  const isAtTop = useCallback(() => {
-    // Check all possible scroll positions
-    const windowScroll = window.scrollY || window.pageYOffset || 0;
-    const docScroll = document.documentElement?.scrollTop || 0;
-    const bodyScroll = document.body?.scrollTop || 0;
-    return windowScroll <= 2 && docScroll <= 2 && bodyScroll <= 2;
+  // Detect iOS/Capacitor
+  const isCapacitor = typeof (window as any).Capacitor !== 'undefined';
+
+  const getScrollTop = useCallback(() => {
+    return Math.max(
+      window.scrollY || 0,
+      window.pageYOffset || 0,
+      document.documentElement?.scrollTop || 0,
+      document.body?.scrollTop || 0
+    );
   }, []);
 
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (isRefreshing) return;
-    
-    if (isAtTop()) {
-      startY.current = e.touches[0].clientY;
-      pulling.current = true;
-      setIsPulling(true);
-    }
-  }, [isRefreshing, isAtTop]);
-
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!pulling.current || isRefreshing) return;
-    
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - startY.current;
-    
-    if (diff > 0 && isAtTop()) {
-      const distance = Math.min(diff * 0.5, MAX_PULL);
-      setPullDistance(distance);
+  useEffect(() => {
+    const onTouchStart = (e: TouchEvent) => {
+      if (isRefreshing) return;
       
-      if (distance > 10) {
-        e.preventDefault();
-        e.stopPropagation();
+      const scrollTop = getScrollTop();
+      
+      // Allow pull if at very top
+      if (scrollTop <= 1) {
+        startY.current = e.touches[0].clientY;
+        canPull.current = true;
+      } else {
+        canPull.current = false;
       }
-    } else if (diff < -10) {
-      pulling.current = false;
-      setIsPulling(false);
-      setPullDistance(0);
-    }
-  }, [isRefreshing, isAtTop]);
+    };
 
-  const handleTouchEnd = useCallback(async () => {
-    if (!pulling.current) return;
-    
-    pulling.current = false;
-    setIsPulling(false);
-    
-    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
-      setIsRefreshing(true);
-      setPullDistance(PULL_THRESHOLD);
+    const onTouchMove = (e: TouchEvent) => {
+      if (!canPull.current || isRefreshing) return;
       
-      try {
-        await onRefresh();
-      } finally {
-        setIsRefreshing(false);
+      const scrollTop = getScrollTop();
+      const currentY = e.touches[0].clientY;
+      const diff = currentY - startY.current;
+      
+      // Only activate if still at top and pulling down
+      if (diff > 0 && scrollTop <= 1) {
+        pulling.current = true;
+        const distance = Math.min(diff * 0.4, MAX_PULL);
+        setPullDistance(distance);
+        
+        // Prevent default scroll when pulling
+        if (distance > 5) {
+          e.preventDefault();
+        }
+      } else {
+        // User scrolled or pulled up - cancel
+        if (pulling.current) {
+          pulling.current = false;
+          setPullDistance(0);
+        }
+        canPull.current = false;
+      }
+    };
+
+    const onTouchEnd = async () => {
+      if (!pulling.current) {
+        canPull.current = false;
+        return;
+      }
+      
+      const distance = pullDistance;
+      pulling.current = false;
+      canPull.current = false;
+      
+      if (distance >= PULL_THRESHOLD && !isRefreshing) {
+        setIsRefreshing(true);
+        setPullDistance(PULL_THRESHOLD);
+        
+        try {
+          await onRefresh();
+        } finally {
+          setIsRefreshing(false);
+          setPullDistance(0);
+        }
+      } else {
         setPullDistance(0);
       }
-    } else {
-      setPullDistance(0);
-    }
-  }, [pullDistance, isRefreshing, onRefresh]);
+    };
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const touchMoveOptions = { passive: false, capture: true };
+    // Use document-level listeners for iOS Capacitor
+    const target = isCapacitor ? document : (containerRef.current || document);
     
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('touchmove', handleTouchMove, touchMoveOptions);
-    container.addEventListener('touchend', handleTouchEnd, { passive: true });
-    container.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    target.addEventListener('touchstart', onTouchStart as any, { passive: true });
+    target.addEventListener('touchmove', onTouchMove as any, { passive: false });
+    target.addEventListener('touchend', onTouchEnd as any, { passive: true });
+    target.addEventListener('touchcancel', onTouchEnd as any, { passive: true });
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-      container.removeEventListener('touchcancel', handleTouchEnd);
+      target.removeEventListener('touchstart', onTouchStart as any);
+      target.removeEventListener('touchmove', onTouchMove as any);
+      target.removeEventListener('touchend', onTouchEnd as any);
+      target.removeEventListener('touchcancel', onTouchEnd as any);
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [isRefreshing, onRefresh, pullDistance, getScrollTop, isCapacitor]);
 
   const pullProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);
 
@@ -105,21 +121,22 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
       className={`relative ${className}`}
       style={{ 
         overscrollBehavior: 'none',
-        WebkitOverflowScrolling: 'auto',
       }}
     >
+      {/* Pull indicator */}
       {pullDistance > 0 && (
         <div
-          className="fixed left-0 right-0 flex justify-center items-center z-[100] pointer-events-none"
+          className="fixed left-1/2 z-[9999] pointer-events-none"
           style={{
-            top: 60,
-            opacity: pullProgress,
+            top: 50 + pullDistance * 0.5,
+            transform: 'translateX(-50%)',
           }}
         >
           <div
-            className="bg-orange-500 rounded-full p-2.5 shadow-lg"
+            className="bg-orange-500 rounded-full p-2 shadow-lg"
             style={{
-              transform: `scale(${0.6 + pullProgress * 0.4}) rotate(${pullProgress * 360}deg)`,
+              opacity: pullProgress,
+              transform: `scale(${0.5 + pullProgress * 0.5}) rotate(${pullProgress * 360}deg)`,
             }}
           >
             <Loader2
@@ -129,10 +146,11 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
         </div>
       )}
       
+      {/* Content */}
       <div
         style={{
-          transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : 'none',
-          transition: isPulling ? 'none' : 'transform 0.2s ease-out',
+          transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
+          transition: pulling.current ? 'none' : 'transform 0.2s ease-out',
         }}
       >
         {children}
