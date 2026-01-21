@@ -210,16 +210,15 @@ export default function Categories() {
           <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
             <SheetTrigger asChild>
               <Button 
-                variant="outline" 
-                size="sm" 
-                className="relative rounded-full px-3 gap-1.5"
+                variant="ghost" 
+                size="icon" 
+                className="relative h-8 w-8"
                 data-testid="button-filter"
               >
                 <SlidersHorizontal className="h-4 w-4" />
-                <span className="text-sm">Filter</span>
                 {activeFiltersCount > 0 && (
                   <span 
-                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full text-xs font-bold flex items-center justify-center"
+                    className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full text-[10px] font-bold flex items-center justify-center"
                     style={{ backgroundColor: '#f97316', color: 'white' }}
                   >
                     {activeFiltersCount}
@@ -311,9 +310,8 @@ export default function Categories() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="rounded-full px-3 gap-1.5" data-testid="button-sort">
+              <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-sort">
                 <ArrowUpDown className="h-4 w-4" />
-                <span className="text-sm">{getSortLabel()}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
