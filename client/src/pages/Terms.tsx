@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
-import { SiVisa, SiMastercard, SiAmericanexpress, SiUnionpay } from "react-icons/si";
+import { SiVisa, SiMastercard, SiAmericanexpress } from "react-icons/si";
 
 export default function Terms() {
   return (
@@ -35,7 +35,12 @@ export default function Terms() {
               <div className="flex items-center gap-4 mt-3 mb-3">
                 <SiVisa className="h-8 w-12 text-[#1A1F71]" />
                 <SiMastercard className="h-8 w-10 text-[#EB001B]" />
-                <SiUnionpay className="h-8 w-10 text-[#E21836]" />
+                <svg className="h-8 w-10" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="48" height="48" rx="4" fill="#E21836"/>
+                  <path d="M8 20h6v8H8v-8zm8 0h6v8h-6v-8zm8 0h6v8h-6v-8zm8 0h8v8h-8v-8z" fill="#00447C"/>
+                  <path d="M8 16h32v2H8v-2zm0 14h32v2H8v-2z" fill="#007B84"/>
+                  <text x="24" y="26" textAnchor="middle" fill="white" fontSize="6" fontWeight="bold">UnionPay</text>
+                </svg>
                 <SiAmericanexpress className="h-8 w-10 text-[#006FCF]" />
               </div>
             </li>
