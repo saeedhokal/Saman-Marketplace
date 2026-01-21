@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
-import { SiVisa, SiMastercard, SiAmericanexpress } from "react-icons/si";
+import { SiVisa, SiMastercard, SiAmericanexpress, SiUnionpay } from "react-icons/si";
 
 export default function Terms() {
   return (
@@ -32,9 +32,10 @@ export default function Terms() {
             <li>Visa or MasterCard debit and credit cards in AED are accepted for payment (if applicable in the future).</li>
             <li>
               <span>The displayed price and currency at checkout will match the transaction receipt and the amount charged will be reflected in the cardholder's currency</span>
-              <div className="flex items-center gap-3 mt-3 mb-3">
+              <div className="flex items-center gap-4 mt-3 mb-3">
                 <SiVisa className="h-8 w-12 text-[#1A1F71]" />
                 <SiMastercard className="h-8 w-10 text-[#EB001B]" />
+                <SiUnionpay className="h-8 w-10 text-[#E21836]" />
                 <SiAmericanexpress className="h-8 w-10 text-[#006FCF]" />
               </div>
             </li>
