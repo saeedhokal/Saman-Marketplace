@@ -112,10 +112,16 @@ export default function Profile() {
                   }`}
                   data-testid={`menu-${item.label?.toLowerCase().replace(/\s+/g, '-')}`}
                 >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    item.destructive ? "bg-destructive/10" : "bg-orange-50 dark:bg-orange-500/20"
-                  }`}>
-                    <Icon className={`h-4 w-4 ${item.destructive ? "text-destructive" : "text-[#f97316]"}`} />
+                  <div 
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      item.destructive ? "bg-destructive/10" : ""
+                    }`}
+                    style={item.destructive ? {} : { backgroundColor: 'rgba(249, 115, 22, 0.15)' }}
+                  >
+                    <Icon 
+                      className={`h-4 w-4 ${item.destructive ? "text-destructive" : ""}`}
+                      style={item.destructive ? {} : { color: '#f97316' }}
+                    />
                   </div>
                   <span className="flex-1 text-left font-medium text-sm">{item.label}</span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
