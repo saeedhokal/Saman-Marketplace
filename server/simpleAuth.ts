@@ -317,10 +317,10 @@ export function setupSimpleAuth(app: Express) {
   // Register with phone + password
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const { phone, password } = req.body;
+      const { phone, password, firstName, lastName } = req.body;
 
-      if (!phone || !password) {
-        return res.status(400).json({ message: "Phone and password are required" });
+      if (!phone || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "Phone, password, first name, and last name are required" });
       }
 
       const normalizedPhone = normalizePhone(phone);
@@ -338,8 +338,8 @@ export function setupSimpleAuth(app: Express) {
       // Hash password (no complexity requirements)
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Generate default profile image using phone as seed
-      const defaultProfileImage = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(normalizedPhone)}&backgroundColor=f97316`;
+      // Generate default profile image using name as seed
+      const defaultProfileImage = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(firstName + ' ' + lastName)}&backgroundColor=f97316`;
 
       // Create new user
       const [user] = await db
@@ -347,6 +347,8 @@ export function setupSimpleAuth(app: Express) {
         .values({
           phone: normalizedPhone,
           password: hashedPassword,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           credits: 0,
           isAdmin: false,
           profileImageUrl: defaultProfileImage,

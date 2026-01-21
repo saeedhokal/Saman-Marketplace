@@ -32,6 +32,8 @@ interface LoginParams {
 interface RegisterParams {
   phone: string;
   password: string;
+  firstName: string;
+  lastName: string;
 }
 
 async function loginFn(params: LoginParams): Promise<User> {
