@@ -18,12 +18,23 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
   const PULL_THRESHOLD = 80;
   const MAX_PULL = 120;
 
+  // Check if at top of page - works for both container scroll and window scroll
+  const isAtTop = useCallback(() => {
+    // Check window scroll (iOS Safari typically uses this)
+    if (window.scrollY <= 0) return true;
+    // Check document scroll
+    if (document.documentElement.scrollTop <= 0) return true;
+    // Check container scroll
+    if (containerRef.current && containerRef.current.scrollTop <= 0) return true;
+    return false;
+  }, []);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (containerRef.current && containerRef.current.scrollTop === 0 && !isRefreshing) {
+    if (isAtTop() && !isRefreshing) {
       startY.current = e.touches[0].clientY;
       setIsPulling(true);
     }
-  }, [isRefreshing]);
+  }, [isRefreshing, isAtTop]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isPulling || isRefreshing) return;
@@ -31,11 +42,15 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
     currentY.current = e.touches[0].clientY;
     const diff = currentY.current - startY.current;
     
-    if (diff > 0 && containerRef.current && containerRef.current.scrollTop === 0) {
+    if (diff > 0 && isAtTop()) {
       const distance = Math.min(diff * 0.5, MAX_PULL);
       setPullDistance(distance);
+      // Prevent native scroll while pulling
+      if (distance > 10) {
+        e.preventDefault();
+      }
     }
-  }, [isPulling, isRefreshing]);
+  }, [isPulling, isRefreshing, isAtTop]);
 
   const handleTouchEnd = useCallback(async () => {
     if (!isPulling) return;
@@ -63,6 +78,7 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
     <div
       ref={containerRef}
       className={`relative overflow-auto ${className}`}
+      style={{ touchAction: "pan-y" }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
