@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -239,8 +240,18 @@ export default function Admin() {
 
   const filteredPackages = packages.filter(p => p.category === packageCategory);
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings/pending"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/banners"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/packages"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue"] }),
+    ]);
+  }, [queryClient]);
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">
@@ -733,7 +744,7 @@ export default function Admin() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
 

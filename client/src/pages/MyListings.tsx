@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { Link, useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -118,8 +119,12 @@ export default function MyListings() {
     }
   };
 
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">
@@ -242,6 +247,6 @@ export default function MyListings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PullToRefresh>
   );
 }

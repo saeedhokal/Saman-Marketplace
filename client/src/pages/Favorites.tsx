@@ -5,7 +5,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Heart, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
+import { PullToRefresh } from "@/components/PullToRefresh";
+import { queryClient } from "@/lib/queryClient";
 
 export default function Favorites() {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -32,8 +34,12 @@ export default function Favorites() {
     );
   }
 
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background py-8 px-4">
       <div className="container mx-auto max-w-6xl">
         <Link href="/">
           <Button variant="ghost" className="mb-6" data-testid="button-back">
@@ -87,6 +93,6 @@ export default function Favorites() {
           </div>
         )}
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
