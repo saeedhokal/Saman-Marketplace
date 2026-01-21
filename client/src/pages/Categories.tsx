@@ -188,7 +188,7 @@ export default function Categories() {
           <Input
             type="text"
             placeholder="Search for category..."
-            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-foreground/50 placeholder:font-medium"
+            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-foreground/60 placeholder:font-semibold"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search"
@@ -223,7 +223,7 @@ export default function Categories() {
 
         <div className="mb-3">
           <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
-            <SelectTrigger className="w-full font-medium text-foreground" data-testid="select-category">
+            <SelectTrigger className="w-full font-semibold text-foreground" data-testid="select-category">
               <SelectValue placeholder="All Brands" />
             </SelectTrigger>
             <SelectContent>
