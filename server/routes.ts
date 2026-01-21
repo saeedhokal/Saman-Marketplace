@@ -23,8 +23,8 @@ function isValidCategoryPair(mainCategory: string, subCategory: string): boolean
   return !!validSubs && (validSubs as readonly string[]).includes(subCategory);
 }
 
-// Owner phone numbers - always has admin access (with and without + prefix)
-const OWNER_PHONES = ["+971507242111", "971507242111", "0507242111"];
+// Owner phone - normalized format (without + or leading 0)
+const OWNER_PHONES = ["971507242111"];
 
 // Middleware to check if user is admin
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {

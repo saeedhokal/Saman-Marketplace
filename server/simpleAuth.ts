@@ -17,7 +17,24 @@ function generateOTP(): string {
 }
 
 function normalizePhone(phone: string): string {
-  return phone.replace(/[^0-9+]/g, "");
+  // Remove all non-numeric characters except +
+  let cleaned = phone.replace(/[^0-9+]/g, "");
+  
+  // UAE phone number normalization
+  // Convert local format (0507242111) to international format (971507242111)
+  // Convert +971507242111 to 971507242111 (remove + for consistent storage)
+  
+  // Remove leading + if present
+  if (cleaned.startsWith("+")) {
+    cleaned = cleaned.slice(1);
+  }
+  
+  // If starts with 0 (UAE local format), replace with 971
+  if (cleaned.startsWith("0") && cleaned.length >= 9 && cleaned.length <= 10) {
+    cleaned = "971" + cleaned.slice(1);
+  }
+  
+  return cleaned;
 }
 
 // Simple in-memory rate limiter for OTP endpoints
