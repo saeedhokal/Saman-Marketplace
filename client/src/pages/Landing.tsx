@@ -102,41 +102,33 @@ export default function Landing() {
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Link href="/categories?tab=automotive">
             <div 
-              className="relative h-24 rounded-xl overflow-hidden group cursor-pointer flex items-center p-4 gap-3"
+              className="relative h-28 rounded-xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4"
               style={{ backgroundColor: '#3a4553' }}
               data-testid="card-automotive"
             >
               <div 
-                className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center"
+                className="w-12 h-12 rounded-full flex items-center justify-center mb-2"
                 style={{ backgroundColor: '#f97316' }}
               >
-                <Car className="h-7 w-7 text-white" />
+                <Car className="h-6 w-6 text-white" />
               </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-white font-bold text-base block">{t('automotive')}</span>
-                <span className="text-white/60 text-xs">Cars & Vehicles</span>
-              </div>
-              <ChevronRight className="h-5 w-5 text-white/40 group-hover:text-[#f97316] transition-colors" />
+              <span className="text-white font-bold text-sm">{t('automotive')}</span>
             </div>
           </Link>
 
           <Link href="/categories?tab=spare-parts">
             <div 
-              className="relative h-24 rounded-xl overflow-hidden group cursor-pointer flex items-center p-4 gap-3"
+              className="relative h-28 rounded-xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4"
               style={{ backgroundColor: '#f97316' }}
               data-testid="card-spare-parts"
             >
               <div 
-                className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center"
+                className="w-12 h-12 rounded-full flex items-center justify-center mb-2"
                 style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
               >
-                <Wrench className="h-7 w-7 text-white" />
+                <Wrench className="h-6 w-6 text-white" />
               </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-white font-bold text-base block">{t('spareParts')}</span>
-                <span className="text-white/80 text-xs">Parts & Tools</span>
-              </div>
-              <ChevronRight className="h-5 w-5 text-white/60 group-hover:text-white transition-colors" />
+              <span className="text-white font-bold text-sm">{t('spareParts')}</span>
             </div>
           </Link>
         </div>
