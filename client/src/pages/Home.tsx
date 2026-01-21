@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Search, Car, Wrench, Loader2, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
@@ -53,11 +54,15 @@ export default function Home() {
     return undefined;
   };
 
-  const { data: products, isLoading, error } = useProducts({ 
+  const { data: products, isLoading, error, refetch } = useProducts({ 
     search: search || undefined, 
     mainCategory: getMainCategoryFilter(),
     subCategory: activeSubCategory !== "All" ? activeSubCategory : undefined,
   });
+
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   const getSubcategories = () => {
     if (activeCategory === "spare-parts") {
@@ -152,7 +157,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background">
       <div className="container mx-auto px-4 pt-4">
         <div className="flex items-center border border-border rounded-full px-4 py-2 mb-4">
           <Search className="h-5 w-5 text-foreground/70 mr-3" />
@@ -487,6 +492,6 @@ export default function Home() {
           </div>
         )}
       </main>
-    </div>
+    </PullToRefresh>
   );
 }
