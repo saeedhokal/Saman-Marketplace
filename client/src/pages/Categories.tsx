@@ -133,12 +133,10 @@ export default function Categories() {
           <button
             onClick={() => handleCategoryChange("automotive")}
             data-testid="tab-automotive"
-            className={`
-              flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2
-              ${activeCategory === "automotive" 
-                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30" 
-                : "bg-muted text-muted-foreground hover-elevate"}
-            `}
+            className="flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2"
+            style={activeCategory === "automotive" 
+              ? { backgroundColor: '#2563eb', color: 'white', boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)' } 
+              : { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
           >
             <Car className="h-5 w-5" />
             Automotive
@@ -147,12 +145,10 @@ export default function Categories() {
           <button
             onClick={() => handleCategoryChange("spare-parts")}
             data-testid="tab-spare-parts"
-            className={`
-              flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2
-              ${activeCategory === "spare-parts" 
-                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30" 
-                : "bg-muted text-muted-foreground hover-elevate"}
-            `}
+            className="flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2"
+            style={activeCategory === "spare-parts" 
+              ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
+              : { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
           >
             <Wrench className="h-5 w-5" />
             Spare Parts
