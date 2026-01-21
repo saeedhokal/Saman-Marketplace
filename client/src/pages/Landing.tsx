@@ -124,7 +124,7 @@ export default function Landing() {
             >
               <div 
                 className="w-12 h-12 rounded-full flex items-center justify-center mb-2"
-                style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+                style={{ backgroundColor: '#3a4553' }}
               >
                 <Wrench className="h-6 w-6 text-white" />
               </div>
