@@ -179,78 +179,105 @@ export function CategoryCombobox({
               <CommandInput placeholder="Search sub-category..." />
               <CommandList>
                 <CommandEmpty>No sub-category found.</CommandEmpty>
-                <CommandGroup heading="Brands">
-                  {subcategories
-                    .filter(cat => !["Turbos & Superchargers", "Tires", "Brakes", "Suspension", "Exhaust", "Engine Parts", "Transmission", "Electrical", "Body Parts", "Interior", "Lights", "Offroad", "Motorcycles", "Other"].includes(cat))
-                    .map((cat) => (
-                      <CommandItem
-                        key={cat}
-                        value={cat}
-                        onSelect={() => {
-                          onSubCategoryChange(cat);
-                          setSubOpen(false);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        {cat}
-                        <Check
-                          className={cn(
-                            "ml-auto h-4 w-4",
-                            subCategory === cat ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                      </CommandItem>
-                    ))}
-                </CommandGroup>
                 {mainCategory === "Spare Parts" && (
-                  <CommandGroup heading="Part Types">
-                    {["Turbos & Superchargers", "Tires", "Brakes", "Suspension", "Exhaust", "Engine Parts", "Transmission", "Electrical", "Body Parts", "Interior", "Lights", "Other"]
-                      .filter(cat => subcategories.includes(cat as any))
-                      .map((cat) => (
-                        <CommandItem
-                          key={cat}
-                          value={cat}
-                          onSelect={() => {
-                            onSubCategoryChange(cat);
-                            setSubOpen(false);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {cat}
-                          <Check
-                            className={cn(
-                              "ml-auto h-4 w-4",
-                              subCategory === cat ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                        </CommandItem>
-                      ))}
-                  </CommandGroup>
+                  <>
+                    <CommandGroup heading="Part Types">
+                      {["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other"]
+                        .filter(cat => subcategories.includes(cat as any))
+                        .map((cat) => (
+                          <CommandItem
+                            key={cat}
+                            value={cat}
+                            onSelect={() => {
+                              onSubCategoryChange(cat);
+                              setSubOpen(false);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {cat}
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                subCategory === cat ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                    <CommandGroup heading="Manufacturers">
+                      {subcategories
+                        .filter(cat => !["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other"].includes(cat))
+                        .map((cat) => (
+                          <CommandItem
+                            key={cat}
+                            value={cat}
+                            onSelect={() => {
+                              onSubCategoryChange(cat);
+                              setSubOpen(false);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {cat}
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                subCategory === cat ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </>
                 )}
                 {mainCategory === "Automotive" && (
-                  <CommandGroup heading="Vehicle Types">
-                    {["Offroad", "Motorcycles", "Other"]
-                      .filter(cat => subcategories.includes(cat as any))
-                      .map((cat) => (
-                        <CommandItem
-                          key={cat}
-                          value={cat}
-                          onSelect={() => {
-                            onSubCategoryChange(cat);
-                            setSubOpen(false);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {cat}
-                          <Check
-                            className={cn(
-                              "ml-auto h-4 w-4",
-                              subCategory === cat ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                        </CommandItem>
-                      ))}
-                  </CommandGroup>
+                  <>
+                    <CommandGroup heading="Brands">
+                      {subcategories
+                        .filter(cat => !["Motorcycles", "Other"].includes(cat))
+                        .map((cat) => (
+                          <CommandItem
+                            key={cat}
+                            value={cat}
+                            onSelect={() => {
+                              onSubCategoryChange(cat);
+                              setSubOpen(false);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {cat}
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                subCategory === cat ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                    <CommandGroup heading="Vehicle Types">
+                      {["Motorcycles", "Other"]
+                        .filter(cat => subcategories.includes(cat as any))
+                        .map((cat) => (
+                          <CommandItem
+                            key={cat}
+                            value={cat}
+                            onSelect={() => {
+                              onSubCategoryChange(cat);
+                              setSubOpen(false);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {cat}
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                subCategory === cat ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </>
                 )}
               </CommandList>
             </Command>
