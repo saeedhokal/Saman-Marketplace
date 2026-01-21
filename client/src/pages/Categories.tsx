@@ -3,10 +3,24 @@ import { useLocation } from "wouter";
 import { useProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
-import { Search, Car, Wrench, Loader2, ArrowLeft, SlidersHorizontal } from "lucide-react";
+import { Search, Car, Wrench, Loader2, ArrowLeft, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -26,6 +40,9 @@ export default function Categories() {
   const [activeSubCategory, setActiveSubCategory] = useState("All");
   const [activeModel, setActiveModel] = useState("All");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -79,6 +96,31 @@ export default function Categories() {
     return CAR_MODELS[activeSubCategory] || [];
   };
 
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (activeSubCategory !== "All") count++;
+    if (activeModel !== "All") count++;
+    if (priceMin) count++;
+    if (priceMax) count++;
+    return count;
+  }, [activeSubCategory, activeModel, priceMin, priceMax]);
+
+  const clearAllFilters = () => {
+    setActiveSubCategory("All");
+    setActiveModel("All");
+    setPriceMin("");
+    setPriceMax("");
+  };
+
+  const getSortLabel = () => {
+    switch (sortBy) {
+      case "newest": return "Newest";
+      case "oldest": return "Oldest";
+      case "price-low": return "Price ↑";
+      case "price-high": return "Price ↓";
+    }
+  };
+
   const filteredAndSortedProducts = useMemo(() => {
     if (!products) return [];
     
@@ -88,6 +130,15 @@ export default function Categories() {
       filtered = filtered.filter(p => 
         p.title.toLowerCase().includes(activeModel.toLowerCase())
       );
+    }
+
+    if (priceMin) {
+      const minPrice = parseFloat(priceMin) * 100;
+      filtered = filtered.filter(p => (p.price || 0) >= minPrice);
+    }
+    if (priceMax) {
+      const maxPrice = parseFloat(priceMax) * 100;
+      filtered = filtered.filter(p => (p.price || 0) <= maxPrice);
     }
     
     if (sortBy === "oldest") {
@@ -99,7 +150,7 @@ export default function Categories() {
     }
     
     return filtered;
-  }, [products, activeModel, sortBy, activeCategory, activeSubCategory]);
+  }, [products, activeModel, sortBy, activeCategory, activeSubCategory, priceMin, priceMax]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -155,48 +206,154 @@ export default function Categories() {
           </button>
         </div>
 
-        <div className="mb-4 space-y-3">
-          <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
-            <SelectTrigger className="w-full" data-testid="select-category">
-              <SelectValue placeholder="All Brands" />
-            </SelectTrigger>
-            <SelectContent>
-              {getSubcategories().map((cat) => (
-                <SelectItem key={cat} value={cat} data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {cat === "All" ? "All Brands" : cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2 mb-4">
+          <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+            <SheetTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="relative rounded-full px-3 gap-1.5"
+                data-testid="button-filter"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="text-sm">Filter</span>
+                {activeFiltersCount > 0 && (
+                  <span 
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full text-xs font-bold flex items-center justify-center"
+                    style={{ backgroundColor: '#f97316', color: 'white' }}
+                  >
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+              <SheetHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <SheetTitle className="text-xl">Filters</SheetTitle>
+                  {activeFiltersCount > 0 && (
+                    <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-orange-500">
+                      Clear all
+                    </Button>
+                  )}
+                </div>
+              </SheetHeader>
+              <div className="space-y-6 overflow-y-auto pb-20">
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">Brand / Category</label>
+                  <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
+                    <SelectTrigger className="w-full" data-testid="filter-select-category">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getSubcategories().map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat === "All" ? "All" : cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          {activeCategory === "automotive" && getModelsForBrand().length > 0 && (
-            <Select value={activeModel} onValueChange={setActiveModel}>
-              <SelectTrigger className="w-full" data-testid="select-model">
-                <SelectValue placeholder="All Models" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Models</SelectItem>
-                {getModelsForBrand().map((model) => (
-                  <SelectItem key={model} value={model} data-testid={`option-model-${model.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                {activeCategory === "automotive" && getModelsForBrand().length > 0 && (
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Model</label>
+                    <Select value={activeModel} onValueChange={setActiveModel}>
+                      <SelectTrigger className="w-full" data-testid="filter-select-model">
+                        <SelectValue placeholder="All Models" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Models</SelectItem>
+                        {getModelsForBrand().map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">Price Range</label>
+                  <div className="flex gap-3 items-center">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      className="flex-1"
+                      data-testid="input-price-min"
+                    />
+                    <span className="text-muted-foreground">to</span>
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      className="flex-1"
+                      data-testid="input-price-max"
+                    />
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full mt-6" 
+                  style={{ backgroundColor: '#f97316' }}
+                  onClick={() => setFilterOpen(false)}
+                  data-testid="button-apply-filters"
+                >
+                  Show Results
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="rounded-full px-3 gap-1.5" data-testid="button-sort">
+                <ArrowUpDown className="h-4 w-4" />
+                <span className="text-sm">{getSortLabel()}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={() => setSortBy("newest")} className="cursor-pointer">
+                Newest First
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("oldest")} className="cursor-pointer">
+                Oldest First
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("price-low")} className="cursor-pointer">
+                Price: Low to High
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("price-high")} className="cursor-pointer">
+                Price: High to Low
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {activeFiltersCount > 0 && (
+            <div className="flex-1 flex items-center gap-2 overflow-x-auto">
+              {activeSubCategory !== "All" && (
+                <span 
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                  style={{ backgroundColor: '#fed7aa', color: '#9a3412' }}
+                >
+                  {activeSubCategory}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => { setActiveSubCategory("All"); setActiveModel("All"); }} />
+                </span>
+              )}
+              {activeModel !== "All" && (
+                <span 
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                  style={{ backgroundColor: '#fed7aa', color: '#9a3412' }}
+                >
+                  {activeModel}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setActiveModel("All")} />
+                </span>
+              )}
+            </div>
           )}
-
-          <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
-            <SelectTrigger className="w-full" data-testid="select-sort">
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest to Oldest</SelectItem>
-              <SelectItem value="oldest">Oldest to Newest</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {isLoading ? (

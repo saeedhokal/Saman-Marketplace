@@ -1,11 +1,25 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
-import { Search, Car, Wrench, Loader2 } from "lucide-react";
+import { Search, Car, Wrench, Loader2, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
+import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -15,11 +29,17 @@ import {
 } from "@/components/ui/select";
 
 type MainCategory = "automotive" | "spare-parts";
+type SortOption = "newest" | "oldest" | "price-low" | "price-high";
 
 export default function Home() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<MainCategory>("automotive");
   const [activeSubCategory, setActiveSubCategory] = useState("All");
+  const [activeModel, setActiveModel] = useState("All");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   
   const getMainCategoryFilter = () => {
     if (activeCategory === "spare-parts") return "Spare Parts";
@@ -42,9 +62,78 @@ export default function Home() {
     return [];
   };
 
+  const getModelsForBrand = () => {
+    if (activeCategory !== "automotive" || activeSubCategory === "All") {
+      return [];
+    }
+    return CAR_MODELS[activeSubCategory] || [];
+  };
+
   const handleCategoryChange = (category: MainCategory) => {
     setActiveCategory(category);
     setActiveSubCategory("All");
+    setActiveModel("All");
+  };
+
+  const handleSubCategoryChange = (value: string) => {
+    setActiveSubCategory(value);
+    setActiveModel("All");
+  };
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (activeSubCategory !== "All") count++;
+    if (activeModel !== "All") count++;
+    if (priceMin) count++;
+    if (priceMax) count++;
+    return count;
+  }, [activeSubCategory, activeModel, priceMin, priceMax]);
+
+  const clearAllFilters = () => {
+    setActiveSubCategory("All");
+    setActiveModel("All");
+    setPriceMin("");
+    setPriceMax("");
+  };
+
+  const filteredAndSortedProducts = useMemo(() => {
+    if (!products) return [];
+    
+    let filtered = [...products];
+    
+    if (activeCategory === "automotive" && activeModel !== "All" && activeSubCategory !== "All") {
+      filtered = filtered.filter(p => 
+        p.title.toLowerCase().includes(activeModel.toLowerCase())
+      );
+    }
+
+    if (priceMin) {
+      const minPrice = parseFloat(priceMin) * 100;
+      filtered = filtered.filter(p => (p.price || 0) >= minPrice);
+    }
+    if (priceMax) {
+      const maxPrice = parseFloat(priceMax) * 100;
+      filtered = filtered.filter(p => (p.price || 0) <= maxPrice);
+    }
+    
+    if (sortBy === "oldest") {
+      filtered.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+    } else if (sortBy === "price-low") {
+      filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (sortBy === "price-high") {
+      filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+    }
+    
+    return filtered;
+  }, [products, activeModel, sortBy, activeCategory, activeSubCategory, priceMin, priceMax]);
+
+  const getSortLabel = () => {
+    switch (sortBy) {
+      case "newest": return "Newest";
+      case "oldest": return "Oldest";
+      case "price-low": return "Price ↑";
+      case "price-high": return "Price ↓";
+    }
   };
 
   return (
@@ -62,7 +151,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="flex gap-3 mb-2">
+        <div className="flex gap-3 mb-3">
           <button
             onClick={() => handleCategoryChange("automotive")}
             data-testid="tab-automotive"
@@ -88,19 +177,154 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="py-4">
-          <Select value={activeSubCategory} onValueChange={setActiveSubCategory}>
-            <SelectTrigger className="w-full" data-testid="select-category">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              {getSubcategories().map((cat) => (
-                <SelectItem key={cat} value={cat} data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {cat === "All" ? "All Categories" : cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2 pb-4">
+          <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+            <SheetTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="relative rounded-full px-3 gap-1.5"
+                data-testid="button-filter"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="text-sm">Filter</span>
+                {activeFiltersCount > 0 && (
+                  <span 
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full text-xs font-bold flex items-center justify-center"
+                    style={{ backgroundColor: '#f97316', color: 'white' }}
+                  >
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+              <SheetHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <SheetTitle className="text-xl">Filters</SheetTitle>
+                  {activeFiltersCount > 0 && (
+                    <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-orange-500">
+                      Clear all
+                    </Button>
+                  )}
+                </div>
+              </SheetHeader>
+              <div className="space-y-6 overflow-y-auto pb-20">
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">Brand / Category</label>
+                  <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
+                    <SelectTrigger className="w-full" data-testid="filter-select-category">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getSubcategories().map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat === "All" ? "All" : cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {activeCategory === "automotive" && getModelsForBrand().length > 0 && (
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Model</label>
+                    <Select value={activeModel} onValueChange={setActiveModel}>
+                      <SelectTrigger className="w-full" data-testid="filter-select-model">
+                        <SelectValue placeholder="All Models" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">All Models</SelectItem>
+                        {getModelsForBrand().map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">Price Range</label>
+                  <div className="flex gap-3 items-center">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      className="flex-1"
+                      data-testid="input-price-min"
+                    />
+                    <span className="text-muted-foreground">to</span>
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      className="flex-1"
+                      data-testid="input-price-max"
+                    />
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full mt-6" 
+                  style={{ backgroundColor: '#f97316' }}
+                  onClick={() => setFilterOpen(false)}
+                  data-testid="button-apply-filters"
+                >
+                  Show Results
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="rounded-full px-3 gap-1.5" data-testid="button-sort">
+                <ArrowUpDown className="h-4 w-4" />
+                <span className="text-sm">{getSortLabel()}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={() => setSortBy("newest")} className="cursor-pointer">
+                Newest First
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("oldest")} className="cursor-pointer">
+                Oldest First
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("price-low")} className="cursor-pointer">
+                Price: Low to High
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("price-high")} className="cursor-pointer">
+                Price: High to Low
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {activeFiltersCount > 0 && (
+            <div className="flex-1 flex items-center gap-2 overflow-x-auto">
+              {activeSubCategory !== "All" && (
+                <span 
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                  style={{ backgroundColor: '#fed7aa', color: '#9a3412' }}
+                >
+                  {activeSubCategory}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => { setActiveSubCategory("All"); setActiveModel("All"); }} />
+                </span>
+              )}
+              {activeModel !== "All" && (
+                <span 
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                  style={{ backgroundColor: '#fed7aa', color: '#9a3412' }}
+                >
+                  {activeModel}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setActiveModel("All")} />
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -113,17 +337,17 @@ export default function Home() {
           <div className="text-center py-16">
             <p className="text-destructive">Failed to load products</p>
           </div>
-        ) : products && products.length > 0 ? (
+        ) : filteredAndSortedProducts.length > 0 ? (
           <AnimatePresence mode="wait">
             <motion.div 
-              key={`${activeCategory}-${activeSubCategory}`}
+              key={`${activeCategory}-${activeSubCategory}-${activeModel}-${sortBy}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
             >
-              {products.map((product, index) => (
+              {filteredAndSortedProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 10 }}
