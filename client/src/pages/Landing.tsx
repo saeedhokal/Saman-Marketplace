@@ -102,45 +102,41 @@ export default function Landing() {
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Link href="/categories?tab=automotive">
             <div 
-              className="relative h-32 sm:h-36 rounded-2xl overflow-hidden group cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #4a4a4a 0%, #6b6b6b 50%, #525252 100%)' }}
+              className="relative h-24 rounded-xl overflow-hidden group cursor-pointer flex items-center p-4 gap-3"
+              style={{ backgroundColor: '#1f1f1f' }}
               data-testid="card-automotive"
             >
-              <img 
-                src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=500&h=300&fit=crop&q=80"
-                alt={t('automotive')}
-                className="w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-transparent" />
-              <div className="absolute top-3 right-3">
-                <Car className="h-6 w-6 text-[#f97316]" />
+              <div 
+                className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: '#f97316' }}
+              >
+                <Car className="h-7 w-7 text-white" />
               </div>
-              <div className={`absolute bottom-3 ${isRTL ? 'right-3' : 'left-3'}`}>
-                <span className="text-white font-bold text-lg drop-shadow-lg">{t('automotive')}</span>
+              <div className="flex-1 min-w-0">
+                <span className="text-white font-bold text-base block">{t('automotive')}</span>
+                <span className="text-white/60 text-xs">Cars & Vehicles</span>
               </div>
+              <ChevronRight className="h-5 w-5 text-white/40 group-hover:text-[#f97316] transition-colors" />
             </div>
           </Link>
 
           <Link href="/categories?tab=spare-parts">
             <div 
-              className="relative h-32 sm:h-36 rounded-2xl overflow-hidden group cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%)' }}
+              className="relative h-24 rounded-xl overflow-hidden group cursor-pointer flex items-center p-4 gap-3"
+              style={{ backgroundColor: '#f97316' }}
               data-testid="card-spare-parts"
             >
-              <img 
-                src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&h=300&fit=crop&q=80"
-                alt={t('spareParts')}
-                className="w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-all duration-300"
-              />
-              <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                <Wrench className="h-24 w-24 text-white" />
+              <div 
+                className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+              >
+                <Wrench className="h-7 w-7 text-white" />
               </div>
-              <div className="absolute top-3 right-3">
-                <Wrench className="h-6 w-6 text-white" />
+              <div className="flex-1 min-w-0">
+                <span className="text-white font-bold text-base block">{t('spareParts')}</span>
+                <span className="text-white/80 text-xs">Parts & Tools</span>
               </div>
-              <div className={`absolute bottom-3 ${isRTL ? 'right-3' : 'left-3'}`}>
-                <span className="text-white font-bold text-lg drop-shadow-lg">{t('spareParts')}</span>
-              </div>
+              <ChevronRight className="h-5 w-5 text-white/60 group-hover:text-white transition-colors" />
             </div>
           </Link>
         </div>
