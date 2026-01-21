@@ -46,22 +46,15 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
             
             {sellerImageUrl && (
               <div className="absolute top-2 left-2 z-10">
-                <div className="h-8 w-8 rounded-full border-2 border-white shadow-md overflow-hidden bg-accent/10">
-                  <img 
-                    src={sellerImageUrl} 
+                <Avatar className="h-8 w-8 border-2 border-white shadow-md">
+                  <AvatarImage 
+                    src={sellerImageUrl.replace('/svg?', '/png?')} 
                     alt="Seller"
-                    className="h-full w-full object-cover"
-                    crossOrigin="anonymous"
-                    loading="eager"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                    }}
                   />
-                  <div className="hidden h-full w-full flex items-center justify-center bg-accent/10">
+                  <AvatarFallback className="bg-accent/20">
                     <Store className="h-3 w-3 text-accent" />
-                  </div>
-                </div>
+                  </AvatarFallback>
+                </Avatar>
               </div>
             )}
             
