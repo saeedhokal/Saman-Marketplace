@@ -54,6 +54,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Helper to add cache-busting timestamp to profile image URLs
+  function addCacheBuster(url: string | null): string | null {
+    if (!url) return null;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}_t=${Date.now()}`;
+  }
+
   // Helper to attach seller profile images to products
   async function attachSellerImages(productsList: any[]) {
     const sellerIds = Array.from(new Set(productsList.map(p => p.sellerId).filter(Boolean)));
@@ -64,7 +71,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return user;
       })
     );
-    const sellerMap = new Map(sellerProfiles.filter(Boolean).map(s => [s.id, s.profileImageUrl]));
+    const sellerMap = new Map(sellerProfiles.filter(Boolean).map(s => [s.id, addCacheBuster(s.profileImageUrl)]));
     return productsList.map(p => ({
       ...p,
       sellerProfileImageUrl: sellerMap.get(p.sellerId) || null
@@ -109,12 +116,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(404).json({ message: "Product not found" });
     }
     
-    // Attach seller profile image
+    // Attach seller profile image with cache-busting
     let sellerProfileImageUrl = null;
     if (product.sellerId) {
       const [seller] = await db.select({ profileImageUrl: users.profileImageUrl })
         .from(users).where(eq(users.id, product.sellerId));
-      sellerProfileImageUrl = seller?.profileImageUrl || null;
+      sellerProfileImageUrl = addCacheBuster(seller?.profileImageUrl || null);
     }
     
     res.json({ ...product, sellerProfileImageUrl });
@@ -270,13 +277,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
     const updated = await storage.updateProduct(id, updates);
     
-    // Attach seller profile image
+    // Attach seller profile image with cache-busting
     const [seller] = await db.select({ profileImageUrl: users.profileImageUrl })
       .from(users).where(eq(users.id, userId));
     
     res.json({
       ...updated,
-      sellerProfileImageUrl: seller?.profileImageUrl || null
+      sellerProfileImageUrl: addCacheBuster(seller?.profileImageUrl || null)
     });
   });
 
