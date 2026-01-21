@@ -40,6 +40,12 @@ export default function Home() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
+  const [yearMin, setYearMin] = useState("");
+  const [yearMax, setYearMax] = useState("");
+  const [kmMin, setKmMin] = useState("");
+  const [kmMax, setKmMax] = useState("");
+  const [sellerType, setSellerType] = useState("all");
+  const [condition, setCondition] = useState("all");
   
   const getMainCategoryFilter = () => {
     if (activeCategory === "spare-parts") return "Spare Parts";
@@ -84,16 +90,25 @@ export default function Home() {
     let count = 0;
     if (activeSubCategory !== "All") count++;
     if (activeModel !== "All") count++;
-    if (priceMin) count++;
-    if (priceMax) count++;
+    if (priceMin || priceMax) count++;
+    if (yearMin || yearMax) count++;
+    if (kmMin || kmMax) count++;
+    if (sellerType !== "all") count++;
+    if (condition !== "all") count++;
     return count;
-  }, [activeSubCategory, activeModel, priceMin, priceMax]);
+  }, [activeSubCategory, activeModel, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition]);
 
   const clearAllFilters = () => {
     setActiveSubCategory("All");
     setActiveModel("All");
     setPriceMin("");
     setPriceMax("");
+    setYearMin("");
+    setYearMax("");
+    setKmMin("");
+    setKmMax("");
+    setSellerType("all");
+    setCondition("all");
   };
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -197,78 +212,158 @@ export default function Home() {
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
-              <SheetHeader className="pb-4">
+            <SheetContent side="bottom" className="h-auto max-h-[70vh] rounded-t-2xl">
+              <SheetHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <SheetTitle className="text-xl">Filters</SheetTitle>
+                  <SheetTitle className="text-base font-semibold">Filters</SheetTitle>
                   {activeFiltersCount > 0 && (
-                    <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-orange-500">
+                    <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-orange-500 h-7 text-xs">
                       Clear all
                     </Button>
                   )}
                 </div>
               </SheetHeader>
-              <div className="space-y-6 overflow-y-auto pb-20">
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Brand / Category</label>
-                  <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
-                    <SelectTrigger className="w-full" data-testid="filter-select-category">
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getSubcategories().map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat === "All" ? "All" : cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {activeCategory === "automotive" && getModelsForBrand().length > 0 && (
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium">Model</label>
-                    <Select value={activeModel} onValueChange={setActiveModel}>
-                      <SelectTrigger className="w-full" data-testid="filter-select-model">
-                        <SelectValue placeholder="All Models" />
+              <div className="space-y-4 overflow-y-auto pb-4 max-h-[55vh]">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Brand</label>
+                    <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
+                      <SelectTrigger className="h-9 text-sm" data-testid="filter-select-category">
+                        <SelectValue placeholder="All" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="All">All Models</SelectItem>
-                        {getModelsForBrand().map((model) => (
-                          <SelectItem key={model} value={model}>
-                            {model}
+                        {getSubcategories().map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat === "All" ? "All" : cat}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                )}
 
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Price Range</label>
-                  <div className="flex gap-3 items-center">
+                  {activeCategory === "automotive" && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Model</label>
+                      <Select value={activeModel} onValueChange={setActiveModel} disabled={activeSubCategory === "All"}>
+                        <SelectTrigger className="h-9 text-sm" data-testid="filter-select-model">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All">All</SelectItem>
+                          {getModelsForBrand().map((model) => (
+                            <SelectItem key={model} value={model}>
+                              {model}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Price (AED)</label>
+                  <div className="flex gap-2 items-center">
                     <Input
                       type="number"
                       placeholder="Min"
                       value={priceMin}
                       onChange={(e) => setPriceMin(e.target.value)}
-                      className="flex-1"
+                      className="flex-1 h-9 text-sm"
                       data-testid="input-price-min"
                     />
-                    <span className="text-muted-foreground">to</span>
+                    <span className="text-muted-foreground text-xs">-</span>
                     <Input
                       type="number"
                       placeholder="Max"
                       value={priceMax}
                       onChange={(e) => setPriceMax(e.target.value)}
-                      className="flex-1"
+                      className="flex-1 h-9 text-sm"
                       data-testid="input-price-max"
                     />
                   </div>
                 </div>
 
+                {activeCategory === "automotive" && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">Year</label>
+                        <div className="flex gap-1 items-center">
+                          <Input
+                            type="number"
+                            placeholder="From"
+                            value={yearMin}
+                            onChange={(e) => setYearMin(e.target.value)}
+                            className="flex-1 h-9 text-sm"
+                          />
+                          <span className="text-muted-foreground text-xs">-</span>
+                          <Input
+                            type="number"
+                            placeholder="To"
+                            value={yearMax}
+                            onChange={(e) => setYearMax(e.target.value)}
+                            className="flex-1 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">Kilometers</label>
+                        <div className="flex gap-1 items-center">
+                          <Input
+                            type="number"
+                            placeholder="Min"
+                            value={kmMin}
+                            onChange={(e) => setKmMin(e.target.value)}
+                            className="flex-1 h-9 text-sm"
+                          />
+                          <span className="text-muted-foreground text-xs">-</span>
+                          <Input
+                            type="number"
+                            placeholder="Max"
+                            value={kmMax}
+                            onChange={(e) => setKmMax(e.target.value)}
+                            className="flex-1 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">Seller Type</label>
+                        <Select value={sellerType} onValueChange={setSellerType}>
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="dealer">Dealer</SelectItem>
+                            <SelectItem value="private">Private</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">Condition</label>
+                        <Select value={condition} onValueChange={setCondition}>
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="used">Used</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <Button 
-                  className="w-full mt-6" 
+                  className="w-full h-10 text-sm font-medium" 
                   style={{ backgroundColor: '#f97316' }}
                   onClick={() => setFilterOpen(false)}
                   data-testid="button-apply-filters"
