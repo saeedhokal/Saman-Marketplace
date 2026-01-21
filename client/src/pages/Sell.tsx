@@ -199,22 +199,30 @@ export default function Sell() {
 
       <div className="container mx-auto px-4 pt-4 max-w-2xl">
         {userInfo?.subscriptionEnabled && (
-          <div className="mb-4 flex flex-col gap-2 p-3 bg-secondary/50 rounded-lg">
-            <div className="flex items-center justify-between">
+          <Card className="mb-6 overflow-hidden">
+            <div className="bg-gradient-to-r from-accent/10 to-accent/5 px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <Wrench className="h-4 w-4 text-accent" />
-                <span className="text-sm">Spare Parts Credits</span>
+                <Coins className="h-5 w-5 text-accent" />
+                <span className="font-semibold">Your Credits</span>
               </div>
-              <span className="text-sm font-semibold">{userInfo?.sparePartsCredits || 0}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Car className="h-4 w-4 text-accent" />
-                <span className="text-sm">Automotive Credits</span>
+            <div className="p-4 grid grid-cols-2 gap-4">
+              <div className="flex flex-col items-center justify-center p-4 bg-secondary/30 rounded-xl">
+                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-2">
+                  <Wrench className="h-6 w-6 text-accent" />
+                </div>
+                <span className="text-2xl font-bold">{userInfo?.sparePartsCredits || 0}</span>
+                <span className="text-sm text-muted-foreground">Spare Parts</span>
               </div>
-              <span className="text-sm font-semibold">{userInfo?.automotiveCredits || 0}</span>
+              <div className="flex flex-col items-center justify-center p-4 bg-secondary/30 rounded-xl">
+                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-2">
+                  <Car className="h-6 w-6 text-accent" />
+                </div>
+                <span className="text-2xl font-bold">{userInfo?.automotiveCredits || 0}</span>
+                <span className="text-sm text-muted-foreground">Automotive</span>
+              </div>
             </div>
-          </div>
+          </Card>
         )}
 
         {userInfo?.subscriptionEnabled && mainCategory && (
