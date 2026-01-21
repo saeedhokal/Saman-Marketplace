@@ -1,9 +1,10 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
-import { Search, Car, Wrench, Loader2, SlidersHorizontal, ArrowUpDown, X, RefreshCw } from "lucide-react";
+import { Search, Car, Wrench, Loader2, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
@@ -60,86 +61,10 @@ export default function Home() {
     subCategory: activeSubCategory !== "All" ? activeSubCategory : undefined,
   });
 
-  // Custom pull-to-refresh for iOS native app
-  const [isPulling, setIsPulling] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pullDistance, setPullDistance] = useState(0);
-  const startY = useRef(0);
-  const pulling = useRef(false);
-
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-      await queryClient.invalidateQueries({ queryKey: ['/api/products'] });
-    } finally {
-      setIsRefreshing(false);
-      setPullDistance(0);
-    }
+    await refetch();
+    await queryClient.invalidateQueries({ queryKey: ['/api/products'] });
   }, [refetch]);
-
-  // Native pull-to-refresh for Home page
-  useEffect(() => {
-    const THRESHOLD = 50;
-    const MAX_PULL = 80;
-
-    const getScrollTop = () => Math.max(
-      window.scrollY || 0,
-      document.documentElement?.scrollTop || 0,
-      document.body?.scrollTop || 0
-    );
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (isRefreshing) return;
-      if (getScrollTop() <= 2) {
-        startY.current = e.touches[0].clientY;
-        pulling.current = true;
-      }
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (!pulling.current || isRefreshing) return;
-      
-      const diff = e.touches[0].clientY - startY.current;
-      const scrollTop = getScrollTop();
-      
-      if (diff > 0 && scrollTop <= 2) {
-        const distance = Math.min(diff * 0.4, MAX_PULL);
-        setPullDistance(distance);
-        setIsPulling(true);
-        if (distance > 10) {
-          e.preventDefault();
-        }
-      } else {
-        pulling.current = false;
-        setIsPulling(false);
-        setPullDistance(0);
-      }
-    };
-
-    const onTouchEnd = async () => {
-      if (!pulling.current) return;
-      
-      pulling.current = false;
-      setIsPulling(false);
-      
-      if (pullDistance >= THRESHOLD) {
-        await handleRefresh();
-      } else {
-        setPullDistance(0);
-      }
-    };
-
-    document.addEventListener('touchstart', onTouchStart, { passive: true });
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd, { passive: true });
-
-    return () => {
-      document.removeEventListener('touchstart', onTouchStart);
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [isRefreshing, pullDistance, handleRefresh]);
 
   const getSubcategories = () => {
     if (activeCategory === "spare-parts") {
@@ -233,38 +158,9 @@ export default function Home() {
     }
   };
 
-  const pullProgress = Math.min(pullDistance / 50, 1);
-
   return (
-    <div className="min-h-screen bg-background" style={{ overscrollBehavior: 'none' }}>
-      {/* Pull-to-refresh indicator */}
-      {(pullDistance > 0 || isRefreshing) && (
-        <div
-          className="fixed left-1/2 z-[9999] pointer-events-none"
-          style={{
-            top: 50 + (isRefreshing ? 30 : pullDistance * 0.5),
-            transform: 'translateX(-50%)',
-          }}
-        >
-          <div
-            className="bg-orange-500 rounded-full p-2 shadow-lg"
-            style={{
-              opacity: isRefreshing ? 1 : pullProgress,
-              transform: `scale(${isRefreshing ? 1 : 0.5 + pullProgress * 0.5}) rotate(${pullProgress * 360}deg)`,
-            }}
-          >
-            <Loader2 className={`w-5 h-5 text-white ${isRefreshing ? "animate-spin" : ""}`} />
-          </div>
-        </div>
-      )}
-      
-      <div 
-        className="container mx-auto px-4 pt-4"
-        style={{
-          transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
-          transition: isPulling ? 'none' : 'transform 0.2s ease-out',
-        }}
-      >
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
+      <div className="container mx-auto px-4 pt-4">
         <div className="flex items-center border border-border rounded-full px-4 py-2 mb-4">
           <Search className="h-5 w-5 text-foreground/70 mr-3" />
           <Input
@@ -563,13 +459,7 @@ export default function Home() {
         </div>
       </div>
 
-      <main 
-        className="container mx-auto px-4 pb-8"
-        style={{
-          transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
-          transition: isPulling ? 'none' : 'transform 0.2s ease-out',
-        }}
-      >
+      <main className="container mx-auto px-4 pb-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-accent" />
@@ -620,6 +510,6 @@ export default function Home() {
           </div>
         )}
       </main>
-    </div>
+    </PullToRefresh>
   );
 }

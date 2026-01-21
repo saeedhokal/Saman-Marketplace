@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
@@ -6,22 +7,32 @@ import { Button } from "@/components/ui/button";
 import { Search, Bell, ChevronRight, Car, Wrench } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProductCard } from "@/components/ProductCard";
+import { PullToRefresh } from "@/components/PullToRefresh";
+import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 
 export default function Landing() {
   const { user } = useAuth();
   const { t, isRTL } = useLanguage();
 
-  const { data: recentProducts = [] } = useQuery<Product[]>({
+  const { data: recentProducts = [], refetch: refetchRecent } = useQuery<Product[]>({
     queryKey: ["/api/products/recent"],
   });
 
-  const { data: recommendedProducts = [] } = useQuery<Product[]>({
+  const { data: recommendedProducts = [], refetch: refetchRecommended } = useQuery<Product[]>({
     queryKey: ["/api/products/recommended"],
   });
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      refetchRecent(),
+      refetchRecommended(),
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] }),
+    ]);
+  }, [refetchRecent, refetchRecommended]);
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
       <div className="container mx-auto px-4 pt-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -175,6 +186,6 @@ export default function Landing() {
           </div>
         )}
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
