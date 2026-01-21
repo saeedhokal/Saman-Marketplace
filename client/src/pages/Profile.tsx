@@ -114,13 +114,13 @@ export default function Profile() {
                 >
                   <div 
                     className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      item.destructive ? "bg-destructive/10" : ""
+                      item.destructive ? "bg-destructive/10" : "bg-[#f97316]/15"
                     }`}
-                    style={item.destructive ? {} : { backgroundColor: 'rgba(249, 115, 22, 0.15)' }}
                   >
                     <Icon 
-                      className={`h-4 w-4 ${item.destructive ? "text-destructive" : ""}`}
-                      style={item.destructive ? {} : { color: '#f97316' }}
+                      className="h-4 w-4"
+                      stroke={item.destructive ? "hsl(var(--destructive))" : "#f97316"}
+                      strokeWidth={2}
                     />
                   </div>
                   <span className="flex-1 text-left font-medium text-sm">{item.label}</span>
