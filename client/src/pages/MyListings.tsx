@@ -156,7 +156,7 @@ export default function MyListings() {
             <Loader2 className="h-8 w-8 animate-spin text-accent" />
           </div>
         ) : filteredListings && filteredListings.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-3 pb-24">
             {filteredListings.map((listing) => (
               <div
                 key={listing.id}
@@ -220,9 +220,9 @@ export default function MyListings() {
         )}
       </div>
 
-      <div className="fixed bottom-20 left-0 right-0 p-4 bg-gradient-to-t from-background to-transparent">
-        <Link href="/sell">
-          <Button className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-medium rounded-full" data-testid="button-add-listing">
+      <div className="fixed bottom-20 left-0 right-0 p-4 pointer-events-none">
+        <Link href="/sell" className="pointer-events-auto">
+          <Button className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-medium rounded-full shadow-lg" data-testid="button-add-listing">
             Add Listing
           </Button>
         </Link>
