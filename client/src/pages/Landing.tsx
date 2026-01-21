@@ -137,7 +137,7 @@ export default function Landing() {
                 <span className="text-accent text-sm font-medium" data-testid="link-view-all-recommended">{t('viewAll')}</span>
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {recommendedProducts.slice(0, 6).map((product) => (
                 <ProductCard 
                   key={product.id} 
@@ -158,7 +158,7 @@ export default function Landing() {
                 <span className="text-accent text-sm font-medium" data-testid="link-view-all-recent">{t('viewAll')}</span>
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {recentProducts.slice(0, 6).map((product) => (
                 <ProductCard 
                   key={product.id} 
