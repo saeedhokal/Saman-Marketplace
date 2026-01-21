@@ -155,11 +155,11 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 pt-4">
         <div className="flex items-center border border-border rounded-full px-4 py-2 mb-4">
-          <Search className="h-5 w-5 text-muted-foreground mr-3" />
+          <Search className="h-5 w-5 text-foreground/70 mr-3" />
           <Input
             type="text"
             placeholder="Search for category..."
-            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0"
+            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-foreground/50 placeholder:font-medium"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search"
@@ -194,7 +194,7 @@ export default function Home() {
 
         <div className="pb-3">
           <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
-            <SelectTrigger className="w-full" data-testid="select-category">
+            <SelectTrigger className="w-full font-medium text-foreground" data-testid="select-category">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
