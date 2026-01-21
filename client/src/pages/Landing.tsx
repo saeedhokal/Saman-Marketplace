@@ -103,7 +103,7 @@ export default function Landing() {
           <Link href="/categories?tab=automotive">
             <div 
               className="relative h-24 rounded-xl overflow-hidden group cursor-pointer flex items-center p-4 gap-3"
-              style={{ backgroundColor: '#1f1f1f' }}
+              style={{ backgroundColor: '#3a4553' }}
               data-testid="card-automotive"
             >
               <div 
