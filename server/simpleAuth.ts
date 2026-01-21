@@ -205,7 +205,7 @@ export function setupSimpleAuth(app: Express) {
       if (!user) {
         // Generate default profile image using name or phone as seed
         const seed = firstName || normalizedPhone;
-        const defaultProfileImage = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=f97316`;
+        const defaultProfileImage = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(seed)}&backgroundColor=f97316`;
         
         // Create new user
         [user] = await db
@@ -322,7 +322,7 @@ export function setupSimpleAuth(app: Express) {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Generate default profile image using phone as seed
-      const defaultProfileImage = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(normalizedPhone)}&backgroundColor=f97316`;
+      const defaultProfileImage = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(normalizedPhone)}&backgroundColor=f97316`;
 
       // Create new user
       const [user] = await db
