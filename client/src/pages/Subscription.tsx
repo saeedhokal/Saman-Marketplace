@@ -125,29 +125,29 @@ export default function Subscription() {
           </Card>
         </div>
 
-        <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+        <div className="flex gap-2 p-1.5 bg-secondary/80 rounded-xl">
           <button
             onClick={() => setActiveTab("Spare Parts")}
-            className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "Spare Parts"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-accent text-accent-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
             data-testid="tab-spare-parts"
           >
-            <Package className="h-4 w-4 inline mr-1.5" />
+            <Package className="h-4 w-4 inline mr-2" />
             Spare Parts
           </button>
           <button
             onClick={() => setActiveTab("Automotive")}
-            className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "Automotive"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-accent text-accent-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
             data-testid="tab-automotive"
           >
-            <Car className="h-4 w-4 inline mr-1.5" />
+            <Car className="h-4 w-4 inline mr-2" />
             Automotive
           </button>
         </div>
