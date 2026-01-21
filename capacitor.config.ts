@@ -4,6 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.saeed.saman',
   appName: 'Saman Marketplace',
   webDir: 'dist/public',
+  server: {
+    url: 'https://saman-market-fixer--saeedhokal.replit.app',
+    cleartext: false,
+  },
   ios: {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
