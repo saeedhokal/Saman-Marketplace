@@ -593,7 +593,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const merchantId = process.env.APPLE_PAY_MERCHANT_ID;
     const certBase64 = process.env.APPLE_PAY_CERT;
     const keyBase64 = process.env.APPLE_PAY_KEY;
-    const domain = process.env.REPLIT_DEPLOYMENT_URL?.replace("https://", "") || "xer--saeedhokal.replit.app";
+    const domain = process.env.REPLIT_DEPLOYMENT_URL?.replace("https://", "") || "saman-market-fixer--saeedhokal.replit.app";
     
     if (!merchantId || !certBase64 || !keyBase64) {
       console.error("[ApplePay] Missing configuration:", { merchantId: !!merchantId, cert: !!certBase64, key: !!keyBase64 });
