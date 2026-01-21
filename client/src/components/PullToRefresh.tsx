@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 interface PullToRefreshProps {
@@ -13,44 +13,50 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
   const [pullDistance, setPullDistance] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
-  const currentY = useRef(0);
+  const startScrollTop = useRef(0);
 
-  const PULL_THRESHOLD = 80;
-  const MAX_PULL = 120;
+  const PULL_THRESHOLD = 70;
+  const MAX_PULL = 100;
 
-  // Check if at top of page - works for both container scroll and window scroll
-  const isAtTop = useCallback(() => {
-    // Check window scroll (iOS Safari typically uses this)
-    if (window.scrollY <= 0) return true;
-    // Check document scroll
-    if (document.documentElement.scrollTop <= 0) return true;
-    // Check container scroll
-    if (containerRef.current && containerRef.current.scrollTop <= 0) return true;
-    return false;
-  }, []);
+  // Detect if we're in a Capacitor/native app
+  const isNativeApp = typeof (window as any).Capacitor !== 'undefined';
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (isAtTop() && !isRefreshing) {
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (isRefreshing) return;
+    
+    // Get current scroll position
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+    startScrollTop.current = scrollTop;
+    
+    // Only activate if at top
+    if (scrollTop <= 5) {
       startY.current = e.touches[0].clientY;
       setIsPulling(true);
     }
-  }, [isRefreshing, isAtTop]);
+  }, [isRefreshing]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!isPulling || isRefreshing) return;
     
-    currentY.current = e.touches[0].clientY;
-    const diff = currentY.current - startY.current;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - startY.current;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
     
-    if (diff > 0 && isAtTop()) {
-      const distance = Math.min(diff * 0.5, MAX_PULL);
+    // Only pull if we're at the top and pulling down
+    if (diff > 0 && scrollTop <= 5) {
+      const distance = Math.min(diff * 0.4, MAX_PULL);
       setPullDistance(distance);
-      // Prevent native scroll while pulling
-      if (distance > 10) {
+      
+      // Prevent native scroll/bounce while pulling
+      if (distance > 5) {
         e.preventDefault();
       }
+    } else if (diff < 0) {
+      // User is scrolling up, cancel pull
+      setIsPulling(false);
+      setPullDistance(0);
     }
-  }, [isPulling, isRefreshing, isAtTop]);
+  }, [isPulling, isRefreshing]);
 
   const handleTouchEnd = useCallback(async () => {
     if (!isPulling) return;
@@ -72,29 +78,50 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
     }
   }, [isPulling, pullDistance, isRefreshing, onRefresh]);
 
+  // Use native event listeners for better iOS support
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Add event listeners with passive: false to allow preventDefault
+    const options = { passive: false };
+    
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, options);
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+
   const pullProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);
 
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-auto ${className}`}
-      style={{ touchAction: "pan-y" }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      className={`relative ${className}`}
+      style={{ 
+        overscrollBehavior: 'none',
+        WebkitOverflowScrolling: 'touch',
+      }}
     >
+      {/* Pull indicator - fixed at top */}
       <div
-        className="absolute left-0 right-0 flex justify-center items-center transition-all duration-200 z-10"
+        className="fixed left-0 right-0 flex justify-center items-center z-50 pointer-events-none"
         style={{
-          top: 0,
-          height: pullDistance,
+          top: Math.max(0, pullDistance - 50),
           opacity: pullProgress,
+          transition: isPulling ? 'none' : 'all 0.2s ease-out',
         }}
       >
         <div
-          className="bg-orange-500 rounded-full p-2"
+          className="bg-orange-500 rounded-full p-2 shadow-lg"
           style={{
-            transform: `rotate(${pullProgress * 360}deg)`,
+            transform: `scale(${0.5 + pullProgress * 0.5}) rotate(${pullProgress * 360}deg)`,
+            transition: isPulling ? 'none' : 'all 0.2s ease-out',
           }}
         >
           <Loader2
@@ -102,10 +129,12 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
           />
         </div>
       </div>
+      
+      {/* Content with pull transform */}
       <div
         style={{
           transform: `translateY(${pullDistance}px)`,
-          transition: isPulling ? "none" : "transform 0.2s ease-out",
+          transition: isPulling ? 'none' : 'transform 0.2s ease-out',
         }}
       >
         {children}
