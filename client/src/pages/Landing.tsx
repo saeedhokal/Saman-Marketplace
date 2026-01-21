@@ -99,31 +99,31 @@ export default function Landing() {
 
         <h2 className="text-base font-semibold text-foreground mb-4">{t('categories')}</h2>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-6 max-w-2xl">
           <Link href="/categories?tab=automotive">
-            <div className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer border border-border" data-testid="card-automotive">
+            <div className="relative aspect-[16/9] sm:aspect-[2/1] rounded-xl overflow-hidden group cursor-pointer border border-border" data-testid="card-automotive">
               <img 
-                src="https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop"
+                src="https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=200&fit=crop"
                 alt={t('automotive')}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className={`absolute bottom-3 ${isRTL ? 'right-3' : 'left-3'}`}>
-                <span className="text-white font-semibold text-base">{t('automotive')}</span>
+              <div className={`absolute bottom-2 ${isRTL ? 'right-2' : 'left-2'}`}>
+                <span className="text-white font-semibold text-sm sm:text-base">{t('automotive')}</span>
               </div>
             </div>
           </Link>
 
           <Link href="/categories?tab=spare-parts">
-            <div className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer border border-border" data-testid="card-spare-parts">
+            <div className="relative aspect-[16/9] sm:aspect-[2/1] rounded-xl overflow-hidden group cursor-pointer border border-border" data-testid="card-spare-parts">
               <img 
-                src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&h=300&fit=crop"
+                src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&h=200&fit=crop"
                 alt={t('spareParts')}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className={`absolute bottom-3 ${isRTL ? 'right-3' : 'left-3'}`}>
-                <span className="text-white font-semibold text-base">{t('spareParts')}</span>
+              <div className={`absolute bottom-2 ${isRTL ? 'right-2' : 'left-2'}`}>
+                <span className="text-white font-semibold text-sm sm:text-base">{t('spareParts')}</span>
               </div>
             </div>
           </Link>
