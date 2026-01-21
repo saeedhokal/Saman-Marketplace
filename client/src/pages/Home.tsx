@@ -197,19 +197,35 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="pb-3">
+        <div className="pb-3 flex gap-2">
           <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
-            <SelectTrigger className="w-full font-semibold text-foreground" data-testid="select-category">
-              <SelectValue placeholder="All Categories" />
+            <SelectTrigger className="flex-1 font-semibold text-foreground" data-testid="select-category">
+              <SelectValue placeholder="All Brands" />
             </SelectTrigger>
             <SelectContent>
               {getSubcategories().map((cat) => (
                 <SelectItem key={cat} value={cat} data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {cat === "All" ? "All Categories" : cat}
+                  {cat === "All" ? (activeCategory === "automotive" ? "All Brands" : "All Categories") : cat}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          
+          {activeCategory === "automotive" && activeSubCategory !== "All" && getModelsForBrand().length > 0 && (
+            <Select value={activeModel} onValueChange={setActiveModel}>
+              <SelectTrigger className="flex-1 font-semibold text-foreground" data-testid="select-model">
+                <SelectValue placeholder="All Models" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Models</SelectItem>
+                {getModelsForBrand().map((model) => (
+                  <SelectItem key={model} value={model} data-testid={`option-model-${model.toLowerCase().replace(/\s+/g, '-')}`}>
+                    {model}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <div className="flex items-center gap-2 pb-4">
