@@ -221,6 +221,21 @@ export default function Categories() {
           </button>
         </div>
 
+        <div className="mb-3">
+          <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
+            <SelectTrigger className="w-full" data-testid="select-category">
+              <SelectValue placeholder="All Brands" />
+            </SelectTrigger>
+            <SelectContent>
+              {getSubcategories().map((cat) => (
+                <SelectItem key={cat} value={cat} data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}>
+                  {cat === "All" ? "All Brands" : cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="flex items-center gap-2 mb-4">
           <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
             <SheetTrigger asChild>
