@@ -31,7 +31,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
     >
       <Link href={`/product/${product.id}`}>
         <Card className="group h-full overflow-hidden border-border/50 bg-card hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 cursor-pointer rounded-2xl">
-          <div className="relative aspect-[4/3] overflow-hidden bg-secondary/30">
+          <div className="relative aspect-[4/3] md:aspect-square overflow-hidden bg-secondary/30">
             {product.imageUrl ? (
               <img
                 src={product.imageUrl}
