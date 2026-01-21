@@ -62,47 +62,33 @@ export default function Home() {
           />
         </div>
 
-        <div className="flex border-b border-border">
+        <div className="flex gap-3 mb-2">
           <button
             onClick={() => handleCategoryChange("automotive")}
             data-testid="tab-automotive"
             className={`
-              flex-1 py-3 text-center font-medium text-base transition-all relative
+              flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2
               ${activeCategory === "automotive" 
-                ? "text-foreground" 
-                : "text-muted-foreground"}
+                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30" 
+                : "bg-muted text-muted-foreground hover-elevate"}
             `}
           >
+            <Car className="h-5 w-5" />
             Automotive
-            {activeCategory === "automotive" && (
-              <motion.div
-                layoutId="tabIndicator"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"
-                initial={false}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              />
-            )}
           </button>
           
           <button
             onClick={() => handleCategoryChange("spare-parts")}
             data-testid="tab-spare-parts"
             className={`
-              flex-1 py-3 text-center font-medium text-base transition-all relative
+              flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2
               ${activeCategory === "spare-parts" 
-                ? "text-foreground" 
-                : "text-muted-foreground"}
+                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30" 
+                : "bg-muted text-muted-foreground hover-elevate"}
             `}
           >
+            <Wrench className="h-5 w-5" />
             Spare Parts
-            {activeCategory === "spare-parts" && (
-              <motion.div
-                layoutId="tabIndicator"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"
-                initial={false}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              />
-            )}
           </button>
         </div>
 
