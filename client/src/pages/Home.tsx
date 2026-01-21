@@ -68,8 +68,8 @@ export default function Home() {
             data-testid="tab-automotive"
             className="flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2"
             style={activeCategory === "automotive" 
-              ? { backgroundColor: '#2563eb', color: 'white', boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)' } 
-              : { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+              ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
+              : { backgroundColor: '#fed7aa', color: '#9a3412' }}
           >
             <Car className="h-5 w-5" />
             Automotive
@@ -81,7 +81,7 @@ export default function Home() {
             className="flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2"
             style={activeCategory === "spare-parts" 
               ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
-              : { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+              : { backgroundColor: '#fed7aa', color: '#9a3412' }}
           >
             <Wrench className="h-5 w-5" />
             Spare Parts
