@@ -81,7 +81,7 @@ export default function Profile() {
       <div className="container mx-auto px-4 pt-6">
         {/* Profile Photo Section */}
         <div className="flex flex-col items-center mb-8">
-          <Avatar className="h-24 w-24 mb-4 ring-4 ring-orange-200 dark:ring-orange-900/30">
+          <Avatar className="h-24 w-24 mb-4">
             <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "Profile"} />
             <AvatarFallback className="bg-[#3a4553] text-white text-2xl font-semibold">
               {user.firstName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
