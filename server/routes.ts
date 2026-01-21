@@ -73,6 +73,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Products API - include seller profile image
   app.get(api.products.list.path, async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     const search = req.query.search as string | undefined;
     const mainCategory = req.query.mainCategory as string | undefined;
     const subCategory = req.query.subCategory as string | undefined;
@@ -83,6 +84,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Public: Get recent products (must come before :id route)
   app.get("/api/products/recent", async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     const limit = Math.min(Number(req.query.limit) || 10, 20);
     const productsList = await storage.getRecentProducts(limit);
     const productsWithSeller = await attachSellerImages(productsList);
@@ -91,6 +93,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Public: Get recommended products (must come before :id route)
   app.get("/api/products/recommended", async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     const userId = getCurrentUserId(req);
     const sessionId = req.sessionID;
     const limit = Math.min(Number(req.query.limit) || 10, 20);
