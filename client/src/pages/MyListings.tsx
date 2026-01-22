@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { Link, useLocation } from "wouter";
@@ -38,6 +38,15 @@ export default function MyListings() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+  const handleEdit = useCallback((id: number) => {
+    // Close the menu first, then navigate after a brief delay for iOS
+    setOpenMenuId(null);
+    setTimeout(() => {
+      setLocation(`/edit/${id}`);
+    }, 100);
+  }, [setLocation]);
 
   const { data: listings, isLoading, refetch } = useQuery<ListingWithStatus[]>({
     queryKey: ["/api/user/listings"],
@@ -175,23 +184,32 @@ export default function MyListings() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-medium text-sm truncate">{listing.title}</h3>
-                    <DropdownMenu>
+                    <DropdownMenu 
+                      open={openMenuId === listing.id} 
+                      onOpenChange={(open) => setOpenMenuId(open ? listing.id : null)}
+                    >
                       <DropdownMenuTrigger asChild>
                         <button className="p-1 rounded hover:bg-secondary" data-testid={`menu-${listing.id}`}>
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setLocation(`/edit/${listing.id}`)}>
+                        <DropdownMenuItem onSelect={() => handleEdit(listing.id)}>
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => markSoldMutation.mutate(listing.id)}>
+                        <DropdownMenuItem onSelect={() => {
+                          setOpenMenuId(null);
+                          markSoldMutation.mutate(listing.id);
+                        }}>
                           <CheckCircle className="h-4 w-4 mr-2" />
                           Mark as Sold
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={() => setDeleteId(listing.id)}
+                          onSelect={() => {
+                            setOpenMenuId(null);
+                            setDeleteId(listing.id);
+                          }}
                           className="text-destructive"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
