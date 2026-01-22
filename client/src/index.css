@@ -45,7 +45,7 @@
 }
 
 @layer base {
-  html {
+  html, body {
     background-color: hsl(var(--background));
   }
   
