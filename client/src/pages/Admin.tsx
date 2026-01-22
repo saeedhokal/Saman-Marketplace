@@ -53,15 +53,15 @@ export default function Admin() {
   const { data: pendingListings, isLoading: pendingLoading } = useQuery<Product[]>({
     queryKey: ["/api/admin/listings/pending"],
     enabled: !!userInfo?.isAdmin,
-    refetchInterval: 30000,
     refetchOnWindowFocus: true,
+    staleTime: 15000,
   });
 
   const { data: allListings, isLoading: allLoading } = useQuery<Product[]>({
     queryKey: ["/api/admin/listings"],
     enabled: !!userInfo?.isAdmin,
-    refetchInterval: 60000,
     refetchOnWindowFocus: true,
+    staleTime: 30000,
   });
 
   const { data: settings } = useQuery<AppSettings>({

@@ -42,8 +42,8 @@ export default function MyListings() {
   const { data: listings, isLoading, refetch } = useQuery<ListingWithStatus[]>({
     queryKey: ["/api/user/listings"],
     enabled: !!user,
-    refetchInterval: 60000,
     refetchOnWindowFocus: true,
+    staleTime: 30000,
   });
 
   const deleteMutation = useMutation({

@@ -18,14 +18,14 @@ export default function Landing() {
 
   const { data: recentProducts = [], refetch: refetchRecent } = useQuery<Product[]>({
     queryKey: ["/api/products/recent"],
-    refetchInterval: 60000,
     refetchOnWindowFocus: true,
+    staleTime: 30000,
   });
 
   const { data: recommendedProducts = [], refetch: refetchRecommended } = useQuery<Product[]>({
     queryKey: ["/api/products/recommended"],
-    refetchInterval: 60000,
     refetchOnWindowFocus: true,
+    staleTime: 30000,
   });
 
   const { data: unreadData } = useQuery<{ count: number }>({

@@ -119,9 +119,6 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
     <div
       ref={containerRef}
       className={`relative ${className}`}
-      style={{ 
-        overscrollBehavior: 'none',
-      }}
     >
       {/* Pull indicator */}
       {pullDistance > 0 && (
