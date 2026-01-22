@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageProvider, useLanguage } from "@/hooks/use-language";
+import { PushNotificationProvider } from "@/components/PushNotificationProvider";
 
 import Landing from "@/pages/Landing";
 import LanguageSelect from "@/pages/LanguageSelect";
@@ -85,7 +86,11 @@ function AppContent() {
     return <LanguageSelect />;
   }
   
-  return <Router />;
+  return (
+    <PushNotificationProvider>
+      <Router />
+    </PushNotificationProvider>
+  );
 }
 
 function App() {

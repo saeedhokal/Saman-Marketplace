@@ -11,6 +11,15 @@ import { users } from "@shared/models/auth";
 import { eq } from "drizzle-orm";
 import path from "path";
 import fs from "fs";
+import {
+  registerDeviceToken,
+  unregisterDeviceToken,
+  notifyNewListing,
+  notifyListingApproved,
+  notifyListingRejected,
+  notifyCreditsAdded,
+  sendPushToAdmins,
+} from "./pushNotifications";
 
 // Valid subcategories by main category
 const validSubcategories: Record<string, readonly string[]> = {
@@ -228,6 +237,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             relatedId: product.id,
           });
         }
+        
+        // Get seller name for push notification
+        const [seller] = await db.select({ firstName: users.firstName, lastName: users.lastName })
+          .from(users).where(eq(users.id, sellerId));
+        const sellerName = seller ? `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'A user' : 'A user';
+        
+        // Send push notification to admins
+        await notifyNewListing(product.title, sellerName);
       } catch (notifyErr) {
         console.error("Failed to notify admins about new listing:", notifyErr);
       }
@@ -1013,6 +1030,38 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(settings || {});
   });
 
+  // ========== PUSH NOTIFICATION ROUTES ==========
+
+  // Register device token for push notifications
+  app.post("/api/device-token", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const { fcmToken, deviceOs, deviceName } = req.body;
+    
+    if (!fcmToken || typeof fcmToken !== 'string' || fcmToken.length < 20) {
+      return res.status(400).json({ message: "Invalid FCM token" });
+    }
+    
+    const success = await registerDeviceToken(userId, fcmToken, deviceOs, deviceName);
+    if (success) {
+      res.json({ message: "Device token registered" });
+    } else {
+      res.status(500).json({ message: "Failed to register device token" });
+    }
+  });
+
+  // Unregister device token (for logout)
+  app.delete("/api/device-token", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const { fcmToken } = req.body;
+    
+    if (!fcmToken) {
+      return res.status(400).json({ message: "FCM token required" });
+    }
+    
+    await unregisterDeviceToken(userId, fcmToken);
+    res.json({ message: "Device token unregistered" });
+  });
+
   // ========== ADMIN ROUTES ==========
   
   // Get all pending listings
@@ -1030,10 +1079,37 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Approve a listing
   app.post("/api/admin/listings/:id/approve", isAuthenticated, isAdmin, async (req, res) => {
     const id = Number(req.params.id);
+    
+    // Get product before approval to get seller info
+    const existingProduct = await storage.getProduct(id);
+    if (!existingProduct) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    
     const product = await storage.approveProduct(id);
     if (!product) {
       return res.status(404).json({ message: "Listing not found" });
     }
+    
+    // Create in-app notification for the seller
+    if (existingProduct.sellerId) {
+      try {
+        await storage.createNotification({
+          userId: existingProduct.sellerId,
+          type: "listing_approved",
+          title: "Listing Approved",
+          message: `Your listing "${existingProduct.title}" has been approved and is now live!`,
+          relatedId: id,
+        });
+        
+        // Send push notification
+        await notifyListingApproved(existingProduct.sellerId, existingProduct.title);
+        console.log(`[Notification] Sent approval notification for listing ${id}`);
+      } catch (notifError) {
+        console.error("[Notification] Failed to send approval notification:", notifError);
+      }
+    }
+    
     res.json(product);
   });
 
@@ -1067,9 +1143,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           message: `Your listing "${existingProduct.title}" has been rejected. Reason: ${reason || "Does not meet our guidelines"}. Your credit has been refunded.`,
           relatedId: id,
         });
-        console.log(`[Notification] Created rejection notification for user ${existingProduct.sellerId}`);
+        
+        // Send push notification
+        await notifyListingRejected(existingProduct.sellerId, existingProduct.title, reason);
+        console.log(`[Notification] Sent rejection notification for user ${existingProduct.sellerId}`);
       } catch (notifError) {
-        console.error("[Notification] Failed to create notification:", notifError);
+        console.error("[Notification] Failed to send notification:", notifError);
       }
     }
     
@@ -1103,6 +1182,20 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    
+    // Create notification and send push
+    try {
+      await storage.createNotification({
+        userId,
+        type: "credits_added",
+        title: "Credits Added",
+        message: `${amount} ${category} credits have been added to your account!`,
+      });
+      await notifyCreditsAdded(userId, amount, category);
+    } catch (err) {
+      console.error("Failed to send credits notification:", err);
+    }
+    
     res.json(user);
   });
 

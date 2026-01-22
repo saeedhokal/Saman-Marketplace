@@ -45,6 +45,34 @@ The project is configured with Capacitor for building a native iOS app:
 - **Web Apple Pay**: Uses Apple Pay JS API with TLS client certificate authentication
 - **Native iOS Apple Pay**: For App Store version, will use PassKit framework directly
 
+### Push Notifications (Firebase Cloud Messaging)
+Native push notifications that work when the app is closed:
+
+**Firebase Project**: `saman-car-spare-parts`
+**Bundle ID**: `com.saeed.saman`
+
+**Configuration Files**:
+- `ios/App/App/GoogleService-Info.plist` - Firebase iOS config
+- APNs Key ID: `GMC5C3M7JF` (primary) or `6CM9536S2R` (backup)
+
+**Environment Variable Required**:
+- `FIREBASE_ADMIN_CREDENTIALS` - JSON string of Firebase Admin SDK service account
+
+**Notifications Sent**:
+- New listing submitted → Admin notification
+- Listing approved → User notification
+- Listing rejected → User notification
+- Credits added → User notification
+
+**iOS Setup in Codemagic**:
+1. Enable Push Notifications capability in Xcode project
+2. Ensure APNs key is uploaded to Firebase Console (Project Settings → Cloud Messaging → APNs Authentication Key)
+3. Build and test via TestFlight
+
+**API Endpoints**:
+- `POST /api/device-token` - Register FCM token for push notifications
+- `DELETE /api/device-token` - Unregister FCM token (for logout)
+
 ### iOS App Store Preparation Checklist
 - [ ] Domain verification complete in Apple Developer
 - [ ] Apple Pay working on web (test before iOS)
