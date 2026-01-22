@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "saman-car-spare-parts",
+  "private_key_id": "00e24bc7bf70629974bc3a159aef178136f70505",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCMABwJjKJQMww+\nG6mvYVQ97WmcPz68BXDzXDp08sPU10CFNLqsRSATNJo/ERePzYQ+6WERMoBMrqmi\nfPGC8P+HmwCGb+moiDDN9g3JDQpc7WtqaxwYvWS808lxfS3c8xL3Up+nzc5ITV18\nBSMt8Hc8whksbUttK71w2Ksrs6mJFn6nyUfB73IqXY8K+xI29fxKQWX7pUG2XI8T\n2QDxW5eMmFKVwHDnBEp91zhY8QUsn3LRTFIATL1We1SJqfEN7vttNWaLf+NUPduo\nZdKO6ok4CZcYBeJJtzTV3qoJSgdwx9KnFEp31+AxlFS80F1tMCdEz3iGwQJM/Z3a\nQFlpv7hXAgMBAAECggEAMbSIP8uyhQ7ateJUaHQB2MrFyDecKl00MPL5vjPC23pg\n6epCrI8OSENQ0DtdRi0NWti5IcXwT0lj6NC7XmX6E0cw9IofRzqzOSy20D7VAxE4\nJdxJaW80qOX4i1aKRfv3K+Al1wn2xyzQmAuq5dCORQAUt/VF5ki1Ra9ndmifNJBF\nhrv2mfBCMIJVCKoPtXj2l8zTGh+oL27iUwH24+SY2+0vYk3YrKYuctVkPabVDBH5\nhDaGgPpXUxKW0Ze2dnSvaCKydvRv78MQ6xT/rjxxmJJDUQI1YOR0p+xQm0dWmrJH\nF/eeIHMkaOrbuUTobXBAc3wViB4/un/DVV8lwN1oAQKBgQDCI5JKpKDeH0uXpZbs\nAGSzxKSraEvxuLQPWxBBExqzG1AxC6KSqqZsfzkRToR/k3XU65ekL62rofJTT3My\nD61InOfu4GEzKcw3qUrC7bt4eEaXR6h92DcyXktTPTDUpaF4TIMwzfdsjexI0XAE\nM+BFWLVjjZnHErAXcKXyKhIfAQKBgQC4nFC4Ia0m78dl9SJlU7zwfuKgiKsZhI5L\nVJKY/OOsU0oH7pNW1jwIwpdio6xZYaJQ24oMZUY2N5KfN61wBG1g/fXy9pt3N040\nt+DOjH+PQ3tl4PB87Ba5JN8/pyzwDbnDYN/PJ9xC67UFqzRSKBjZvVCCgmAi+HiW\n8oga7+YvVwKBgQCWv1pUPZtwfyqKeZlEblXDxXj8ZEM8Umj214Y6kaQU2aueOeOm\nMX6DFxLwHmECUzWW/M1GP4OCl4D8MeBISiYLEVODiJXRTa52ti0ISeNdez+NLqZl\n+aN6p/+jhgtJw8crC3Z/Sh/LGjUUohRyHvoRvv0ybXywORGlUeJ5tTNXAQKBgExH\nUlbymz/2XTZ0ljS15+CbHPrl3YSar8zScgxCmbQPagxi+IAt3vpjpPd9123LGK0+\nOQksI1mtlqiw8bnSKnukE6bDXLNip67Ct2HAzcgdQvRygAut5Sm04YXEhp3dnf7r\nnS5UMv93swFXnzO/G52ESqrSQfTRI8qDBdfTfhHbAoGAL30zBCV7YiQOno5lr6dh\nGb0VdqZ1VNlm9Eqp4VyL4eMHhJUYLQ2r53JH6f7UvlPAbgjxNwtz7OK+iW2WbUFx\ntN+g0rIGvLTR20pUwXHKOxfAVZxTLn1ETcqnS/BWX5e643E5JB6nmnfIsV+HIJrN\nAj10Vc0oWQ0ttQET6jMVH7o=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@saman-car-spare-parts.iam.gserviceaccount.com",
+  "client_id": "105823382904729104244",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40saman-car-spare-parts.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
