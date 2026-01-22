@@ -189,20 +189,26 @@ export default function MyListings() {
                       onOpenChange={(open) => setOpenMenuId(open ? listing.id : null)}
                     >
                       <DropdownMenuTrigger asChild>
-                        <button className="p-1 rounded hover:bg-secondary" data-testid={`menu-${listing.id}`}>
-                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                        <button className="p-2 -m-1 rounded-lg hover:bg-secondary active:bg-secondary/80" data-testid={`menu-${listing.id}`}>
+                          <MoreVertical className="h-5 w-5 text-muted-foreground" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => handleEdit(listing.id)}>
-                          <Pencil className="h-4 w-4 mr-2" />
+                      <DropdownMenuContent align="end" className="min-w-[160px]">
+                        <DropdownMenuItem 
+                          onSelect={() => handleEdit(listing.id)}
+                          className="py-3 text-base cursor-pointer"
+                        >
+                          <Pencil className="h-5 w-5 mr-3" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => {
-                          setOpenMenuId(null);
-                          markSoldMutation.mutate(listing.id);
-                        }}>
-                          <CheckCircle className="h-4 w-4 mr-2" />
+                        <DropdownMenuItem 
+                          onSelect={() => {
+                            setOpenMenuId(null);
+                            markSoldMutation.mutate(listing.id);
+                          }}
+                          className="py-3 text-base cursor-pointer"
+                        >
+                          <CheckCircle className="h-5 w-5 mr-3" />
                           Mark as Sold
                         </DropdownMenuItem>
                         <DropdownMenuItem 
@@ -210,9 +216,9 @@ export default function MyListings() {
                             setOpenMenuId(null);
                             setDeleteId(listing.id);
                           }}
-                          className="text-destructive"
+                          className="text-destructive py-3 text-base cursor-pointer"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="h-5 w-5 mr-3" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
