@@ -399,7 +399,7 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 // Notifications table
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id),
   type: varchar("type", { length: 50 }).notNull(), // listing_approved, listing_rejected, credit_added, etc.
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message").notNull(),

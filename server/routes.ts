@@ -1038,13 +1038,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     
     // Create notification for the seller
     if (existingProduct.sellerId) {
-      await storage.createNotification({
-        userId: parseInt(existingProduct.sellerId),
-        type: "listing_rejected",
-        title: "Listing Rejected",
-        message: `Your listing "${existingProduct.title}" has been rejected. Reason: ${reason || "Does not meet our guidelines"}. Your credit has been refunded.`,
-        relatedId: id,
-      });
+      try {
+        await storage.createNotification({
+          userId: existingProduct.sellerId,
+          type: "listing_rejected",
+          title: "Listing Rejected",
+          message: `Your listing "${existingProduct.title}" has been rejected. Reason: ${reason || "Does not meet our guidelines"}. Your credit has been refunded.`,
+          relatedId: id,
+        });
+        console.log(`[Notification] Created rejection notification for user ${existingProduct.sellerId}`);
+      } catch (notifError) {
+        console.error("[Notification] Failed to create notification:", notifError);
+      }
     }
     
     res.json(product);
@@ -1387,14 +1392,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   
   // Get all notifications for current user
   app.get("/api/notifications", isAuthenticated, async (req, res) => {
-    const userId = (req.user as any).id;
+    const userId = getCurrentUserId(req);
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
     const notifs = await storage.getNotifications(userId);
     res.json(notifs);
   });
 
   // Get unread notification count
   app.get("/api/notifications/unread-count", isAuthenticated, async (req, res) => {
-    const userId = (req.user as any).id;
+    const userId = getCurrentUserId(req);
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
     const count = await storage.getUnreadCount(userId);
     res.json({ count });
   });
@@ -1408,7 +1415,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Mark all notifications as read
   app.post("/api/notifications/mark-all-read", isAuthenticated, async (req, res) => {
-    const userId = (req.user as any).id;
+    const userId = getCurrentUserId(req);
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
     await storage.markAllAsRead(userId);
     res.sendStatus(200);
   });

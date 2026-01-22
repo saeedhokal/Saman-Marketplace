@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +14,7 @@ import type { Product } from "@shared/schema";
 export default function Landing() {
   const { user } = useAuth();
   const { t, isRTL } = useLanguage();
+  const [, navigate] = useLocation();
 
   const { data: recentProducts = [], refetch: refetchRecent } = useQuery<Product[]>({
     queryKey: ["/api/products/recent"],
@@ -47,16 +48,18 @@ export default function Landing() {
             <h1 className="text-xl font-bold text-foreground">{t('welcome')}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link href={user ? "/inbox" : "/auth"}>
-              <button className="relative p-2 rounded-full hover:bg-secondary transition-colors" data-testid="button-notifications">
-                <Bell className="h-5 w-5 text-muted-foreground" />
-                {unreadData && unreadData.count > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#FF5722] text-white text-xs font-medium px-1">
-                    {unreadData.count > 99 ? '99+' : unreadData.count}
-                  </span>
-                )}
-              </button>
-            </Link>
+            <button 
+              onClick={() => navigate(user ? "/inbox" : "/auth")}
+              className="relative p-2 rounded-full hover:bg-secondary transition-colors" 
+              data-testid="button-notifications"
+            >
+              <Bell className="h-5 w-5 text-muted-foreground" />
+              {unreadData && unreadData.count > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#FF5722] text-white text-xs font-medium px-1">
+                  {unreadData.count > 99 ? '99+' : unreadData.count}
+                </span>
+              )}
+            </button>
             <Link href="/profile">
               <Avatar className="h-9 w-9 border-2 border-border">
                 <AvatarImage src={user?.profileImageUrl || undefined} />

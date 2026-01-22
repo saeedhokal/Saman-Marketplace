@@ -556,14 +556,14 @@ export class DatabaseStorage implements IStorage {
 
   async getNotifications(userId: string): Promise<Notification[]> {
     return db.select().from(notifications)
-      .where(eq(notifications.userId, parseInt(userId)))
+      .where(eq(notifications.userId, userId))
       .orderBy(desc(notifications.createdAt));
   }
 
   async getUnreadCount(userId: string): Promise<number> {
     const result = await db.select().from(notifications)
       .where(and(
-        eq(notifications.userId, parseInt(userId)),
+        eq(notifications.userId, userId),
         eq(notifications.isRead, false)
       ));
     return result.length;
@@ -578,7 +578,7 @@ export class DatabaseStorage implements IStorage {
   async markAllAsRead(userId: string): Promise<void> {
     await db.update(notifications)
       .set({ isRead: true })
-      .where(eq(notifications.userId, parseInt(userId)));
+      .where(eq(notifications.userId, userId));
   }
 
   async deleteNotification(id: number): Promise<void> {
