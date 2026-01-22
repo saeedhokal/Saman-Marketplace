@@ -56,7 +56,16 @@ The project is configured with Capacitor for building a native iOS app:
 - [ ] Export compliance (encryption)
 - [ ] Signing certificates and provisioning profiles
 
-To build for iOS App Store:
+### iOS Build Workflow (Codemagic + TestFlight)
+**This is the primary workflow for testing iOS changes:**
+1. Make changes in Replit
+2. Push to GitHub using Git panel in Replit sidebar (click Git icon → Push/Sync)
+3. Go to Codemagic and start a new build
+4. Download TestFlight build and test on iPhone
+
+**GitHub Repository**: https://github.com/saeedhokal/Saman-Marketplace.git
+
+To build for iOS App Store (alternative - requires Mac):
 1. Download project to a Mac
 2. Run `npm run build && npx cap sync ios`
 3. Open in Xcode: `npx cap open ios`
