@@ -47,7 +47,7 @@ export default function Profile() {
     { icon: User, label: "My Profile", href: "/profile/details" },
     { icon: Heart, label: "Saved Listings", href: "/favorites" },
     { icon: Package, label: "My Listings", href: "/my-listings" },
-    { icon: Bell, label: "Notification", href: "/profile/notifications" },
+    { icon: Bell, label: "Notification", href: "/inbox" },
     { icon: CreditCard, label: "Purchase Subscription", href: "/profile/subscription" },
     { icon: History, label: "Credit History", href: "/profile/credits" },
     { icon: Settings, label: "Settings", href: "/profile/settings" },

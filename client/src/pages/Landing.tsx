@@ -23,6 +23,11 @@ export default function Landing() {
     queryKey: ["/api/products/recommended"],
   });
 
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ["/api/notifications/unread-count"],
+    enabled: !!user,
+  });
+
   const handleRefresh = useCallback(async () => {
     await Promise.all([
       refetchRecent(),
@@ -42,9 +47,16 @@ export default function Landing() {
             <h1 className="text-xl font-bold text-foreground">{t('welcome')}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <button className="p-2 rounded-full hover:bg-secondary transition-colors" data-testid="button-notifications">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-            </button>
+            <Link href={user ? "/inbox" : "/auth"}>
+              <button className="relative p-2 rounded-full hover:bg-secondary transition-colors" data-testid="button-notifications">
+                <Bell className="h-5 w-5 text-muted-foreground" />
+                {unreadData && unreadData.count > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#FF5722] text-white text-xs font-medium px-1">
+                    {unreadData.count > 99 ? '99+' : unreadData.count}
+                  </span>
+                )}
+              </button>
+            </Link>
             <Link href="/profile">
               <Avatar className="h-9 w-9 border-2 border-border">
                 <AvatarImage src={user?.profileImageUrl || undefined} />
