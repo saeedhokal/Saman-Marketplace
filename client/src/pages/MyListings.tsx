@@ -39,9 +39,11 @@ export default function MyListings() {
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const { data: listings, isLoading } = useQuery<ListingWithStatus[]>({
+  const { data: listings, isLoading, refetch } = useQuery<ListingWithStatus[]>({
     queryKey: ["/api/user/listings"],
     enabled: !!user,
+    refetchInterval: 60000,
+    refetchOnWindowFocus: true,
   });
 
   const deleteMutation = useMutation({
