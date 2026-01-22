@@ -9,12 +9,11 @@ const config: CapacitorConfig = {
     cleartext: false,
   },
   ios: {
-    contentInset: 'never',
+    contentInset: 'automatic',
     preferredContentMode: 'mobile',
     backgroundColor: '#F5F6F8',
     scrollEnabled: true,
     allowsLinkPreview: false,
-    overrideUserInterfaceStyle: 'light',
   },
   plugins: {
     SplashScreen: {
