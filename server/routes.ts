@@ -215,7 +215,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         ...input,
         sellerId,
       });
-      res.status(201).json(product);
+      
+      // Notify all admin users about the new listing request
+      try {
+        const adminUsers = await storage.getAdminUsers();
+        for (const admin of adminUsers) {
+          await storage.createNotification({
+            userId: admin.id,
+            type: "new_listing_request",
+            title: "New Listing Request",
+            message: `A new listing "${product.title}" needs your approval.`,
+            relatedId: product.id,
+          });
+        }
+      } catch (notifyErr) {
+        console.error("Failed to notify admins about new listing:", notifyErr);
+      }
+      
+      res.status(201).json({
+        ...product,
+        pendingApproval: true,
+        message: "Your listing has been submitted and is pending approval. You can check the status in My Listings.",
+      });
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({

@@ -27,6 +27,8 @@ export default function Landing() {
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
     enabled: !!user,
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time badge updates
+    refetchOnWindowFocus: true,
   });
 
   const handleRefresh = useCallback(async () => {
@@ -34,6 +36,7 @@ export default function Landing() {
       refetchRecent(),
       refetchRecommended(),
       queryClient.invalidateQueries({ queryKey: ['/api/products'] }),
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] }),
     ]);
   }, [refetchRecent, refetchRecommended]);
 

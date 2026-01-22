@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { products, favorites, users, appSettings, banners, userViews, subscriptionPackages, transactions, notifications, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings, type Banner, type InsertBanner, type UserView, type InsertUserView, type SubscriptionPackage, type InsertSubscriptionPackage, type Transaction, type InsertTransaction, type Notification, type InsertNotification } from "@shared/schema";
-import { eq, ilike, desc, and, or, lt, sql, asc, gte, lte, sum } from "drizzle-orm";
+import { eq, ilike, desc, and, or, lt, sql, asc, gte, lte, sum, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Products
@@ -81,6 +81,9 @@ export interface IStorage {
   markAsRead(id: number): Promise<void>;
   markAllAsRead(userId: string): Promise<void>;
   deleteNotification(id: number): Promise<void>;
+  
+  // Admin users
+  getAdminUsers(): Promise<{ id: string; phone: string | null }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -583,6 +586,21 @@ export class DatabaseStorage implements IStorage {
 
   async deleteNotification(id: number): Promise<void> {
     await db.delete(notifications).where(eq(notifications.id, id));
+  }
+  
+  async getAdminUsers(): Promise<{ id: string; phone: string | null }[]> {
+    // Get users with isAdmin=true OR who are in the owner phones list
+    const OWNER_PHONES = ["971507242111"];
+    const adminUsers = await db.select({
+      id: users.id,
+      phone: users.phone,
+    }).from(users).where(
+      or(
+        eq(users.isAdmin, true),
+        inArray(users.phone, OWNER_PHONES)
+      )
+    );
+    return adminUsers;
   }
 }
 

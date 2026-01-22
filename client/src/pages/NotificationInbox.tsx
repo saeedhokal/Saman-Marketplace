@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Bell, Check, Trash2, PackageX, CheckCheck, CreditCard, Clock } from "lucide-react";
+import { ArrowLeft, Bell, Check, Trash2, PackageX, CheckCheck, CreditCard, Clock, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
@@ -64,6 +64,8 @@ export default function NotificationInbox() {
       navigate(`/product/${notification.relatedId}`);
     } else if (notification.type === "credit_added") {
       navigate(`/profile/credits`);
+    } else if (notification.type === "new_listing_request") {
+      navigate(`/admin`);
     }
   };
 
@@ -91,6 +93,12 @@ export default function NotificationInbox() {
         return (
           <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
             <Clock className="h-5 w-5 text-amber-600" />
+          </div>
+        );
+      case "new_listing_request":
+        return (
+          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <Package className="h-5 w-5 text-blue-500" />
           </div>
         );
       default:
