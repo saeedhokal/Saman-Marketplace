@@ -1036,6 +1036,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       await storage.refundCredit(existingProduct.sellerId, category);
     }
     
+    // Create notification for the seller
+    if (existingProduct.sellerId) {
+      await storage.createNotification({
+        userId: parseInt(existingProduct.sellerId),
+        type: "listing_rejected",
+        title: "Listing Rejected",
+        message: `Your listing "${existingProduct.title}" has been rejected. Reason: ${reason || "Does not meet our guidelines"}. Your credit has been refunded.`,
+        relatedId: id,
+      });
+    }
+    
     res.json(product);
   });
 
@@ -1370,6 +1381,43 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.error("Error clearing demo listings:", error);
       res.status(500).json({ message: "Failed to clear demo listings" });
     }
+  });
+
+  // ==================== NOTIFICATIONS ====================
+  
+  // Get all notifications for current user
+  app.get("/api/notifications", isAuthenticated, async (req, res) => {
+    const userId = (req.user as any).id;
+    const notifs = await storage.getNotifications(userId);
+    res.json(notifs);
+  });
+
+  // Get unread notification count
+  app.get("/api/notifications/unread-count", isAuthenticated, async (req, res) => {
+    const userId = (req.user as any).id;
+    const count = await storage.getUnreadCount(userId);
+    res.json({ count });
+  });
+
+  // Mark single notification as read
+  app.post("/api/notifications/:id/read", isAuthenticated, async (req, res) => {
+    const id = Number(req.params.id);
+    await storage.markAsRead(id);
+    res.sendStatus(200);
+  });
+
+  // Mark all notifications as read
+  app.post("/api/notifications/mark-all-read", isAuthenticated, async (req, res) => {
+    const userId = (req.user as any).id;
+    await storage.markAllAsRead(userId);
+    res.sendStatus(200);
+  });
+
+  // Delete a notification
+  app.delete("/api/notifications/:id", isAuthenticated, async (req, res) => {
+    const id = Number(req.params.id);
+    await storage.deleteNotification(id);
+    res.sendStatus(204);
   });
 
   return httpServer;

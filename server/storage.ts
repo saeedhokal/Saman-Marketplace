@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { products, favorites, users, appSettings, banners, userViews, subscriptionPackages, transactions, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings, type Banner, type InsertBanner, type UserView, type InsertUserView, type SubscriptionPackage, type InsertSubscriptionPackage, type Transaction, type InsertTransaction } from "@shared/schema";
+import { products, favorites, users, appSettings, banners, userViews, subscriptionPackages, transactions, notifications, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings, type Banner, type InsertBanner, type UserView, type InsertUserView, type SubscriptionPackage, type InsertSubscriptionPackage, type Transaction, type InsertTransaction, type Notification, type InsertNotification } from "@shared/schema";
 import { eq, ilike, desc, and, or, lt, sql, asc, gte, lte, sum } from "drizzle-orm";
 
 export interface IStorage {
@@ -73,6 +73,14 @@ export interface IStorage {
   deleteUserFavorites(userId: string): Promise<void>;
   deleteUserTransactions(userId: string): Promise<void>;
   deleteUser(userId: string): Promise<void>;
+  
+  // Notifications
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotifications(userId: string): Promise<Notification[]>;
+  getUnreadCount(userId: string): Promise<number>;
+  markAsRead(id: number): Promise<void>;
+  markAllAsRead(userId: string): Promise<void>;
+  deleteNotification(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -538,6 +546,43 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(userId: string): Promise<void> {
     await db.delete(users).where(eq(users.id, userId));
+  }
+
+  // Notifications
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [created] = await db.insert(notifications).values(notification).returning();
+    return created;
+  }
+
+  async getNotifications(userId: string): Promise<Notification[]> {
+    return db.select().from(notifications)
+      .where(eq(notifications.userId, parseInt(userId)))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async getUnreadCount(userId: string): Promise<number> {
+    const result = await db.select().from(notifications)
+      .where(and(
+        eq(notifications.userId, parseInt(userId)),
+        eq(notifications.isRead, false)
+      ));
+    return result.length;
+  }
+
+  async markAsRead(id: number): Promise<void> {
+    await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id));
+  }
+
+  async markAllAsRead(userId: string): Promise<void> {
+    await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, parseInt(userId)));
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, id));
   }
 }
 
