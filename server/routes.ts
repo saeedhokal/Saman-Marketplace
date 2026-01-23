@@ -5,10 +5,10 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products } from "@shared/schema";
+import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products, deviceTokens, notifications } from "@shared/schema";
 import { db } from "./db";
 import { users } from "@shared/models/auth";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import path from "path";
 import fs from "fs";
 import {
@@ -1204,6 +1204,29 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/admin/cleanup-expired", isAuthenticated, isAdmin, async (req, res) => {
     const count = await storage.deleteExpiredProducts();
     res.json({ deletedCount: count });
+  });
+
+  // Admin: Database diagnostic endpoint
+  app.get("/api/admin/db-status", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const userCount = await db.select({ count: sql`count(*)` }).from(users);
+      const tokenCount = await db.select({ count: sql`count(*)` }).from(deviceTokens);
+      const notifCount = await db.select({ count: sql`count(*)` }).from(notifications);
+      
+      res.json({
+        users: Number(userCount[0]?.count || 0),
+        deviceTokens: Number(tokenCount[0]?.count || 0),
+        notifications: Number(notifCount[0]?.count || 0),
+        databaseConnected: true,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      res.json({
+        databaseConnected: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
   });
 
   // Admin: Broadcast push notification to all users
