@@ -1,148 +1,8 @@
 # Saman Marketplace - Spare Parts & Automotive Marketplace
 
-## Recent Changes (January 2026)
-
-### Session: January 23, 2026
-**Fixes Applied (requires new Codemagic build to see on iOS):**
-1. ✅ **Broadcast notifications saving to inboxes** - Fixed `savedCount` naming mismatch in server response. Notifications now properly save to all user inboxes.
-2. ✅ **Toast message "undefined" fix** - Added fallbacks so toast shows "0" instead of "undefined" when no devices registered.
-3. ✅ **In-app notification banner overlapping status bar** - Fixed positioning to appear BELOW iOS status bar using `top: max(env(safe-area-inset-top, 20px), 20px)` + 8px padding.
-4. ✅ **Pull-to-refresh leaving gap** - Fixed to snap back instantly without leaving persistent space at top.
-5. ✅ **Toast notifications overlapping status bar** - Fixed ToastViewport positioning to appear below iOS status bar instead of at top-0.
-
-**Files Changed:**
-- `server/routes.ts` - Fixed broadcast response to return `savedCount`
-- `client/src/components/InAppNotificationBanner.tsx` - Fixed positioning below status bar
-- `client/src/components/PullToRefresh.tsx` - Fixed snap-back transition
-- `client/src/pages/Admin.tsx` - Added fallbacks for undefined values in toast
-- `client/src/components/ui/toast.tsx` - Fixed ToastViewport positioning below status bar
-
-**Testing Status:** All changes tested and working in development. Broadcast API returns correct format: `{"savedCount": 12, "sent": 0, "message": "Saved to 12 inboxes, sent to 0 devices"}`
-
-**Next Steps:** Push to GitHub → Codemagic build → TestFlight install
-
----
-
 ## Overview
 
-Saman Marketplace is a full-stack marketplace application for buying and selling spare parts and automotive in the UAE. It features a React frontend with a modern industrial design aesthetic, an Express.js backend with PostgreSQL database, and object storage for images.
-
-The application allows users to browse parts by category, search for specific items, view detailed product listings, and authenticated users can create their own listings with image uploads. Key features include:
-- **Phone + OTP Authentication**: Users log in with phone number and 6-digit OTP code
-- **Category-specific credits**: Spare Parts Credits and Automotive Credits are separate and cannot be used across categories
-- **Subscription packages**: Admin-configurable packages with pricing tiers (e.g., Basic 1 credit AED 30, Premium 10+2 credits AED 250)
-- **Payment processing**: Checkout flow with Apple Pay and Credit Card options via Telr gateway
-- **Revenue tracking**: Admin dashboard shows total revenue, breakdown by category, transaction count, with time-based filtering (Today, Week, Month, Year, All Time, Custom date range)
-- **User management**: Admin can view all users, search by name/phone/email, and delete accounts (with cascade delete of all related data)
-- **Broadcast notifications**: Admin can send push notifications to all app users
-- **Credit refund on rejection**: When listings are rejected, users get their category-specific credit back
-- **Admin moderation**: All listings require admin approval before going live
-- **1-month expiration**: Approved listings remain active for 1 month
-- **Expiration notifications**: Users can see listings about to expire and repost them
-- **Two-tier categories**: Spare Parts and Automotive with subcategories
-- **Seller profiles**: View all listings from a specific seller
-- **Favorites**: Save listings for later
-
-## Payment Integrations
-
-- **Telr Payment**: Configured with TELR_STORE_ID and TELR_AUTH_KEY. Supports Hosted Payment Page for credit cards.
-- **Native Apple Pay**: ✅ WORKING - Double-click power button triggers native Apple Pay sheet
-  - Merchant ID: `merchant.saeed.saman`
-  - Endpoints: `/api/applepay/session` (merchant validation), `/api/applepay/process` (token processing)
-
-## Pending Integrations
-
-- **SMS Provider (Twilio)**: User dismissed Twilio integration. OTP codes are currently logged to console in development. When ready for production SMS, the user will need to set up Twilio or another SMS provider.
-
-## iOS App (Capacitor)
-
-The project is configured with Capacitor for building a native iOS app:
-
-- **App ID**: com.saeed.saman
-- **App Name**: Saman Marketplace
-- **iOS Project**: Located in `/ios` directory
-- **Apple Developer Team ID**: KQ542Q98H2
-
-### Apple Pay Configuration (iOS)
-- **Merchant ID**: merchant.saeed.saman
-- **Payment Processing Certificate**: Configured (APPLE_PAY_CERT, APPLE_PAY_KEY env vars)
-- **Registered Domains**: xer--saeedhokal.replit.app
-- **Web Apple Pay**: Uses Apple Pay JS API with TLS client certificate authentication
-- **Native iOS Apple Pay**: For App Store version, will use PassKit framework directly
-
-### Push Notifications (Firebase Cloud Messaging)
-Native push notifications that work when the app is closed:
-
-**Firebase Project**: `saman-car-spare-parts`
-**Bundle ID**: `com.saeed.saman`
-
-**Configuration Files**:
-- `ios/App/App/GoogleService-Info.plist` - Firebase iOS config
-- APNs Key ID: `GMC5C3M7JF` (primary) or `6CM9536S2R` (backup)
-
-**Environment Variable Required**:
-- `FIREBASE_ADMIN_CREDENTIALS` - JSON string of Firebase Admin SDK service account
-
-**Notifications Sent**:
-- New listing submitted → Admin notification
-- Listing approved → User notification
-- Listing rejected → User notification
-- Credits added → User notification
-- Broadcast notifications → All users (saved to inbox + push)
-
-**Broadcast Notification Design** (Admin Panel):
-- Modern dark gradient card design (from-[#1e293b] to-[#0f172a])
-- Orange accent color (#f97316) for icons, buttons, and selected states
-- **Scheduling options**: Send Now / Delay (5-120 min slider) / Schedule (date + time picker)
-- All broadcast notifications are saved to every user's notification inbox (bell icon)
-- Orange megaphone icon for broadcast notifications in inbox
-
-**In-App Notification Banner**:
-- `client/src/components/InAppNotificationBanner.tsx`
-- Positioned BELOW the iOS status bar using: `top: max(env(safe-area-inset-top, 20px), 20px)` + 8px padding
-- Works on both notched (44-47px) and non-notched (20px) iPhones
-- Smooth slide-down animation from top with Framer Motion
-- Gradient orange bell icon, 20px rounded corners, backdrop blur
-- Auto-dismiss after 5 seconds, can tap to dismiss
-- Shows when app is open and receives a notification
-
-**iOS Setup in Codemagic**:
-1. Enable Push Notifications capability in Xcode project
-2. Ensure APNs key is uploaded to Firebase Console (Project Settings → Cloud Messaging → APNs Authentication Key)
-3. Build and test via TestFlight
-
-**API Endpoints**:
-- `POST /api/device-token` - Register FCM token for push notifications
-- `DELETE /api/device-token` - Unregister FCM token (for logout)
-- `POST /api/admin/broadcast` - Send broadcast notification to all users (saves to inbox + sends push)
-
-### iOS App Store Preparation Checklist
-- [ ] Domain verification complete in Apple Developer
-- [ ] Apple Pay working on web (test before iOS)
-- [ ] App icons (1024x1024 for App Store, various sizes for app)
-- [ ] Launch screens configured
-- [ ] Privacy policy URL
-- [ ] App Store description and screenshots
-- [ ] Age rating questionnaire
-- [ ] Export compliance (encryption)
-- [ ] Signing certificates and provisioning profiles
-
-### iOS Build Workflow (Codemagic + TestFlight)
-**This is the primary workflow for testing iOS changes:**
-1. Make changes in Replit
-2. Push to GitHub using Git panel in Replit sidebar (click Git icon → Push/Sync)
-3. Go to Codemagic and start a new build
-4. Download TestFlight build and test on iPhone
-
-**GitHub Repository**: https://github.com/saeedhokal/Saman-Marketplace.git
-
-To build for iOS App Store (alternative - requires Mac):
-1. Download project to a Mac
-2. Run `npm run build && npx cap sync ios`
-3. Open in Xcode: `npx cap open ios`
-4. Configure signing, icons, and submit to App Store
-
-See `IOS_APP_STORE_GUIDE.md` for detailed instructions.
+Saman Marketplace is a full-stack e-commerce platform for buying and selling automotive spare parts and vehicles in the UAE. It aims to provide a modern, user-friendly experience with robust features for both buyers and sellers. The platform includes a React frontend, an Express.js backend with a PostgreSQL database, and object storage for images. Key capabilities include phone + OTP authentication, category-specific credit packages, integrated payment processing (Apple Pay, Credit Card), admin moderation of listings, and comprehensive revenue tracking. The project's ambition is to become the leading marketplace for automotive goods in the UAE.
 
 ## User Preferences
 
@@ -151,117 +11,52 @@ Region: UAE (phone-based auth is preferred over email)
 Currency: AED
 Testing: Uses TestFlight iOS app as primary testing environment (no Mac available)
 Build workflow: Uses Codemagic for iOS builds, pushes to GitHub manually via Replit Git panel
-
-**User Background**:
+User Background:
 - Non-technical user - does not code and has never used Xcode
-- Previous development company handled most technical setup
-- Left previous company due to reliability/accountability issues - app crashed under user load
 - All iOS builds handled through Codemagic (no Mac access)
 - Requires simple, non-technical explanations for all changes
-
-## Admin Configuration
-
-**Admin Phone Numbers**: Defined in `OWNER_PHONES` array in `server/routes.ts` - currently `["971507242111"]`
-- Users with these phone numbers automatically get admin privileges
-- Admin accounts cannot be deleted to prevent lockout
-
-**Admin Panel Tabs**:
-1. **Pending** - Review and approve/reject new listings (with bulk actions)
-2. **All Listings** - View all listings with status filters
-3. **Packages** - Manage subscription packages (Spare Parts and Automotive credits)
-4. **Banners** - Manage homepage promotional banners
-5. **Notifications** - Send broadcast push notifications to all app users
-6. **Users** - View/search all users, delete accounts (cascade deletes all related data)
-7. **Revenue** - Financial tracking with time filters (Today, Week, Month, Year, All Time, Custom date range)
 
 ## System Architecture
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
-- **Routing**: Wouter (lightweight React router)
-- **State Management**: TanStack Query (React Query) for server state
-- **Styling**: Tailwind CSS with shadcn/ui component library
-- **Animations**: Framer Motion for page transitions and micro-interactions
+- **Routing**: Wouter
+- **State Management**: TanStack Query for server state
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Animations**: Framer Motion
 - **Form Handling**: React Hook Form with Zod validation
 - **Build Tool**: Vite
-
-The frontend follows a component-based architecture with:
-- Pages in `client/src/pages/` (Home, ProductDetail, Sell, Auth, not-found)
-- Reusable components in `client/src/components/`
-- Custom hooks in `client/src/hooks/` for auth, products, uploads, and toasts
-- UI primitives from shadcn/ui in `client/src/components/ui/`
+- **UI/UX**: Modern industrial design aesthetic with a dark gradient card design (from-[#1e293b] to-[#0f172a]) and orange accent color (#f97316) for icons, buttons, and selected states.
 
 ### Backend Architecture
 - **Framework**: Express.js with TypeScript
 - **Database ORM**: Drizzle ORM with PostgreSQL
-- **Authentication**: Phone + OTP authentication (no password required)
-- **Session Storage**: PostgreSQL-backed sessions via connect-pg-simple
+- **Authentication**: Phone + OTP authentication, session-based via `connect-pg-simple`
 - **File Uploads**: Google Cloud Storage with presigned URLs via Uppy
-
-The backend uses a modular structure:
-- `server/routes.ts` - API route definitions
-- `server/storage.ts` - Database access layer (repository pattern)
-- `server/simpleAuth.ts` - Phone + OTP authentication
-- `server/db.ts` - Database connection pool
-- `server/replit_integrations/` - Object storage integration
+- **Modular Structure**: Routes, storage, authentication, and database logic are separated.
 
 ### API Design
-Routes are defined in `shared/routes.ts` with Zod schemas for type-safe API contracts:
-- `GET /api/products` - List products with optional search/category filters
-- `GET /api/products/:id` - Get single product
-- `POST /api/products` - Create product (authenticated)
-- `DELETE /api/products/:id` - Delete product (authenticated)
-- `POST /api/auth/request-otp` - Request OTP for phone number
-- `POST /api/auth/verify-otp` - Verify OTP and login/register
-- `GET /api/user/listings` - Get user's own listings (all statuses)
-- `GET /api/user/listings/expiring` - Get listings about to expire
-- `POST /api/user/listings/:id/repost` - Repost a listing
-- `POST /api/user/listings/:id/sold` - Mark listing as sold
-- `GET /api/packages` - Get active subscription packages
-- `POST /api/checkout` - Process package purchase
-- `GET /api/admin/packages` - List all packages (admin)
-- `POST /api/admin/packages` - Create package (admin)
-- `PUT /api/admin/packages/:id` - Update package (admin)
-- `DELETE /api/admin/packages/:id` - Delete package (admin)
-- `GET /api/admin/revenue` - Get revenue statistics (admin)
+API routes are type-safe, defined with Zod schemas for various functionalities including product listings, user authentication, user-specific listings (expiring, repost, sold), subscription package management, checkout processes, and admin functionalities (packages, revenue, broadcast notifications).
 
 ### Database Schema
-Defined in `shared/schema.ts` using Drizzle ORM:
-- `products` - Product listings with title, description, price (cents), category, subcategory, model (optional), condition, seller reference, image URL, status, expiration
-- `users` - User accounts with phone, email, credits, isAdmin flag
-- `sessions` - Session storage for authentication
-- `otp_codes` - OTP codes for phone authentication
-- `favorites` - User's saved listings
-- `app_settings` - App settings including subscriptionEnabled toggle
-- `subscription_packages` - Credit packages with name, price, credits, bonusCredits, category
-- `transactions` - Payment transactions for revenue tracking
+The PostgreSQL database schema, defined using Drizzle ORM, includes tables for products, users, sessions, OTP codes, favorites, app settings, subscription packages, and transactions.
 
 ### Build System
-- Development: `tsx` for TypeScript execution with Vite dev server
-- Production: Custom build script using esbuild for server bundling and Vite for client
+- **Development**: `tsx` with Vite dev server.
+- **Production**: Custom build script using esbuild for server and Vite for client.
+
+### iOS App (Capacitor)
+- The project is configured with Capacitor for native iOS app generation.
+- Supports Apple Pay (native and web) and Firebase Cloud Messaging for push notifications.
+- Push notifications are sent for new listings, approvals, rejections, credit additions, and admin broadcasts.
+- In-app notification banners are positioned below the iOS status bar and feature smooth animations and auto-dismissal.
 
 ## External Dependencies
 
-### Database
-- **PostgreSQL**: Primary database via `DATABASE_URL` environment variable
-- **Drizzle Kit**: Database migrations with `npm run db:push`
-
-### Authentication
-- **Phone + OTP**: Users authenticate with phone number and 6-digit OTP
-- OTP codes expire after 5 minutes
-- In development, OTP codes are logged to console and returned in API response
-- Session-based authentication via express-session
-- Requires `SESSION_SECRET` environment variable
-
-### File Storage
-- **Google Cloud Storage**: Object storage for product images via Replit's sidecar service
-- Uses presigned URLs for direct browser uploads
-- Uppy library handles the upload UI and flow
-
-### Key NPM Packages
-- `@tanstack/react-query` - Server state management
-- `drizzle-orm` / `drizzle-zod` - Type-safe database queries
-- `@uppy/core` / `@uppy/dashboard` - File upload handling
-- `framer-motion` - Animations
-- `input-otp` - OTP input component
-- Full shadcn/ui component suite via Radix primitives
+- **PostgreSQL**: Primary database.
+- **Telr Payment Gateway**: For credit card processing.
+- **Apple Pay**: Integrated for native iOS and web payments (`merchant.saeed.saman`).
+- **Google Cloud Storage**: For object storage of product images.
+- **Firebase Cloud Messaging (FCM)**: For native push notifications (`saman-car-spare-parts`).
+- **NPM Packages**: Key packages include `@tanstack/react-query`, `drizzle-orm`, `@uppy`, `framer-motion`, `input-otp`, and `shadcn/ui`.
+- **Twilio (Pending)**: SMS provider for OTP, currently logged to console in development.

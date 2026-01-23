@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 import { apiRequest } from '@/lib/queryClient';
@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { showInAppNotification } from '@/components/InAppNotificationBanner';
 
 const FCM_TOKEN_KEY = 'saman_fcm_token';
+const PENDING_TOKEN_KEY = 'saman_pending_fcm_token';
 
 function navigateTo(path: string) {
   window.location.href = path;
@@ -13,18 +14,27 @@ function navigateTo(path: string) {
 
 export function usePushNotifications() {
   const { user } = useAuth();
+  const hasRegistered = useRef(false);
 
   const registerToken = useCallback(async (token: string) => {
-    if (!user) return;
+    // Save token for later if not logged in
+    if (!user) {
+      console.log('User not logged in, saving token for later registration');
+      localStorage.setItem(PENDING_TOKEN_KEY, token);
+      return;
+    }
     
     try {
+      console.log('Registering push notification token with server...');
       await apiRequest('POST', '/api/device-token', {
         fcmToken: token,
         deviceOs: Capacitor.getPlatform(),
         deviceName: `${Capacitor.getPlatform()} device`,
       });
       localStorage.setItem(FCM_TOKEN_KEY, token);
-      console.log('Push notification token registered successfully');
+      localStorage.removeItem(PENDING_TOKEN_KEY);
+      hasRegistered.current = true;
+      console.log('Push notification token registered successfully!');
     } catch (error) {
       console.error('Failed to register push notification token:', error);
     }
@@ -67,21 +77,42 @@ export function usePushNotifications() {
     }
   }, []);
 
+  // When user logs in, check for any pending token to register
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !user) return;
+    if (!user || hasRegistered.current) return;
+    
+    const pendingToken = localStorage.getItem(PENDING_TOKEN_KEY);
+    if (pendingToken) {
+      console.log('Found pending push token, registering now...');
+      registerToken(pendingToken);
+    }
+  }, [user, registerToken]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      console.log('Not on native platform, skipping push notification setup');
+      return;
+    }
+    
+    if (!user) {
+      console.log('User not logged in, will register token after login');
+      return;
+    }
+
+    console.log('Setting up push notification listeners for user:', user.id);
 
     const setupListeners = async () => {
       await PushNotifications.addListener('registration', (token: Token) => {
-        console.log('Push registration success, token:', token.value);
+        console.log('Push registration success, token:', token.value?.substring(0, 20) + '...');
         registerToken(token.value);
       });
 
       await PushNotifications.addListener('registrationError', (error: any) => {
-        console.error('Push registration error:', error);
+        console.error('Push registration error:', JSON.stringify(error));
       });
 
       await PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
-        console.log('Push notification received:', notification);
+        console.log('Push notification received:', notification.title);
         showInAppNotification(
           notification.title || 'Saman Marketplace',
           notification.body || ''
@@ -100,6 +131,7 @@ export function usePushNotifications() {
         }
       });
 
+      console.log('Initializing push notifications...');
       await initializePushNotifications();
     };
 
