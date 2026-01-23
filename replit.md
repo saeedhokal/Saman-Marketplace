@@ -28,17 +28,17 @@
 
 **Next Steps:** Push to GitHub → Codemagic build → TestFlight install
 
-**CRITICAL: Capacitor Native Bridge Issue (Jan 23, 2026)**
-The current TestFlight app has a broken Capacitor bridge - it cannot detect that it's running as a native iOS app. This means:
-- Push notification token registration doesn't work
-- Any native iOS features won't work
-- The app thinks it's running in a web browser
+**Push Notification Fix (Jan 23, 2026):**
+Previous TestFlight builds had two issues:
+1. ✅ FIXED: Capacitor native bridge wasn't detecting iOS platform (fixed with new build)
+2. ✅ FIXED: Firebase SDK missing from iOS app - added `Firebase/Messaging` to Podfile and updated AppDelegate
 
-**Solution:** A new Codemagic build is REQUIRED. After installing the new build:
-1. Allow notifications when prompted
-2. Log in to your account
-3. The app should now register for push notifications
-4. Broadcasts will show "sent to 1 device" instead of 0
+**Changes Made:**
+- Added `pod 'Firebase/Messaging'` to `ios/App/Podfile`
+- Updated `ios/App/App/AppDelegate.swift` to initialize Firebase and handle FCM tokens
+- APNs token now passed to Firebase for proper FCM token generation
+
+**Next Build Required:** After building with these changes, push notifications should fully work.
 
 ---
 
