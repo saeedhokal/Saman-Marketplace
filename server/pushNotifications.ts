@@ -270,9 +270,18 @@ export async function broadcastPushNotification(
 ): Promise<{ sent: number; failed: number; saved: number }> {
   let saved = 0;
   
+  console.log('Starting broadcast notification:', payload.title);
+  
   // First, save notification to database for ALL users (so it appears in their inbox)
   try {
     const allUsers = await db.select({ id: users.id }).from(users);
+    console.log(`Found ${allUsers.length} users for broadcast`);
+    
+    if (allUsers.length === 0) {
+      console.log('No users found in database for broadcast');
+      return { sent: 0, failed: 0, saved: 0 };
+    }
+    
     await Promise.all(
       allUsers.map(async (user) => {
         try {
