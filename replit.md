@@ -34,11 +34,14 @@
 - ✅ Simplified AppDelegate.swift to basic Capacitor template
 - ✅ Using standard Capacitor push notifications with APNs tokens
 - ✅ Server receives APNs tokens and stores them
+- ✅ **Added push notification entitlements** - Created App.entitlements with `aps-environment = production`
+- ✅ **Added background modes** - Info.plist now has `UIBackgroundModes` with `remote-notification`
+- ✅ **Updated Xcode project** - Both Debug and Release configurations now reference App.entitlements
 
 **Current Status:**
 - The in-app notification inbox works perfectly (notifications saved to database)
-- Push-to-phone notifications need further configuration on Firebase Console
-- App should no longer crash on startup
+- Push notification entitlements now properly configured
+- App should register for push notifications without "Registration failed" error
 
 **How it works now:**
 1. App registers for push with APNs (native iOS)
