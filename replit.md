@@ -20,15 +20,15 @@ The application allows users to browse parts by category, search for specific it
 - **Seller profiles**: View all listings from a specific seller
 - **Favorites**: Save listings for later
 
-## Pending Integrations
+## Payment Integrations
 
 - **Telr Payment**: Configured with TELR_STORE_ID and TELR_AUTH_KEY. Supports Hosted Payment Page for credit cards.
-- **Native Apple Pay**: Code is ready for native Apple Pay (shows payment sheet directly, no redirect). Requires:
-  1. Apple Developer account with Merchant ID (e.g., `merchant.com.saeed.saman`)
-  2. Payment Processing Certificate (.cer) from Apple
-  3. Share certificate with Telr support
-  4. Set `APPLE_PAY_MERCHANT_ID` environment variable
+- **Native Apple Pay**: ✅ WORKING - Double-click power button triggers native Apple Pay sheet
+  - Merchant ID: `merchant.saeed.saman`
   - Endpoints: `/api/applepay/session` (merchant validation), `/api/applepay/process` (token processing)
+
+## Pending Integrations
+
 - **SMS Provider (Twilio)**: User dismissed Twilio integration. OTP codes are currently logged to console in development. When ready for production SMS, the user will need to set up Twilio or another SMS provider.
 
 ## iOS App (Capacitor)
