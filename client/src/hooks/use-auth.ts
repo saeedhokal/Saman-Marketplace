@@ -1,5 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Capacitor } from '@capacitor/core';
 import type { User } from "@shared/models/auth";
+
+const FCM_TOKEN_KEY = 'saman_fcm_token';
+
+async function unregisterPushToken(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  
+  const storedToken = localStorage.getItem(FCM_TOKEN_KEY);
+  if (!storedToken) return;
+  
+  try {
+    await fetch('/api/device-token', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ fcmToken: storedToken }),
+    });
+    localStorage.removeItem(FCM_TOKEN_KEY);
+  } catch (error) {
+    console.error('Failed to unregister push token:', error);
+  }
+}
 
 async function fetchUser(): Promise<User | null> {
   const response = await fetch("/api/auth/user", {
@@ -18,6 +40,7 @@ async function fetchUser(): Promise<User | null> {
 }
 
 async function logoutFn(): Promise<void> {
+  await unregisterPushToken();
   await fetch("/api/auth/logout", {
     method: "POST",
     credentials: "include",

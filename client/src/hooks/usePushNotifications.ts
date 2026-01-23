@@ -6,6 +6,10 @@ import { useAuth } from '@/hooks/use-auth';
 
 const FCM_TOKEN_KEY = 'saman_fcm_token';
 
+function navigateTo(path: string) {
+  window.location.href = path;
+}
+
 export function usePushNotifications() {
   const { user } = useAuth();
 
@@ -83,11 +87,11 @@ export function usePushNotifications() {
         console.log('Push notification action performed:', notification);
         const data = notification.notification.data;
         if (data?.type === 'listing_approved' || data?.type === 'listing_rejected') {
-          window.location.href = '/my-listings';
+          navigateTo('/my-listings');
         } else if (data?.type === 'new_listing') {
-          window.location.href = '/admin';
+          navigateTo('/admin');
         } else if (data?.type === 'credits_added') {
-          window.location.href = '/profile';
+          navigateTo('/profile');
         }
       });
 
