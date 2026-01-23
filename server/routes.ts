@@ -1208,12 +1208,64 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Admin: Broadcast push notification to all users
   app.post("/api/admin/broadcast", isAuthenticated, isAdmin, async (req, res) => {
-    const { title, body } = req.body;
+    const { title, body, scheduleType, delayMinutes, scheduledDate, scheduledTime } = req.body;
     
     if (!title || !body) {
       return res.status(400).json({ message: "Title and body are required" });
     }
     
+    // Handle delay scheduling
+    if (scheduleType === "delay" && delayMinutes > 0) {
+      const delayMs = delayMinutes * 60 * 1000;
+      setTimeout(async () => {
+        try {
+          await broadcastPushNotification({ title, body });
+          console.log(`Scheduled notification sent after ${delayMinutes} minutes delay`);
+        } catch (error) {
+          console.error("Failed to send scheduled notification:", error);
+        }
+      }, delayMs);
+      
+      return res.json({ 
+        success: true, 
+        scheduled: true,
+        message: `Notification scheduled to send in ${delayMinutes} minutes` 
+      });
+    }
+    
+    // Handle scheduled date/time
+    if (scheduleType === "scheduled" && scheduledDate && scheduledTime) {
+      const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+      const now = new Date();
+      const delayMs = scheduledDateTime.getTime() - now.getTime();
+      
+      if (delayMs <= 0) {
+        return res.status(400).json({ message: "Scheduled time must be in the future" });
+      }
+      
+      setTimeout(async () => {
+        try {
+          await broadcastPushNotification({ title, body });
+          console.log(`Scheduled notification sent at ${scheduledDateTime.toISOString()}`);
+        } catch (error) {
+          console.error("Failed to send scheduled notification:", error);
+        }
+      }, delayMs);
+      
+      const formattedTime = scheduledDateTime.toLocaleString('en-AE', { 
+        dateStyle: 'medium', 
+        timeStyle: 'short' 
+      });
+      
+      return res.json({ 
+        success: true, 
+        scheduled: true,
+        scheduledFor: scheduledDateTime.toISOString(),
+        message: `Notification scheduled for ${formattedTime}` 
+      });
+    }
+    
+    // Send immediately
     const result = await broadcastPushNotification({ title, body });
     res.json({ 
       success: true, 
