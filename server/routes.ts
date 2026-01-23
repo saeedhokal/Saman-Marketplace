@@ -1323,11 +1323,60 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.sendStatus(204);
   });
 
+  // ========== USER MANAGEMENT ==========
+
+  // Admin: Get all users
+  app.get("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
+    const allUsers = await storage.getAllUsers();
+    res.json(allUsers);
+  });
+
+  // Admin: Get user by ID
+  app.get("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
+    const userId = String(req.params.id);
+    const user = await storage.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  });
+
+  // Admin: Delete user account
+  app.delete("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
+    const userId = String(req.params.id);
+    const user = await storage.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Don't allow deleting admin accounts
+    if (user.isAdmin) {
+      return res.status(403).json({ message: "Cannot delete admin accounts" });
+    }
+    
+    // Delete user's data first (cascade delete all related data)
+    await storage.deleteUserProducts(userId);
+    await storage.deleteUserFavorites(userId);
+    await storage.deleteUserTransactions(userId);
+    await storage.deleteUserNotifications(userId);
+    await storage.deleteUserDeviceTokens(userId);
+    await storage.deleteUser(userId);
+    
+    res.json({ message: "User account deleted successfully" });
+  });
+
   // ========== REVENUE & TRANSACTIONS ==========
   
   // Admin: Get revenue stats
   app.get("/api/admin/revenue", isAuthenticated, isAdmin, async (req, res) => {
     const stats = await storage.getRevenueStats();
+    res.json(stats);
+  });
+
+  // Admin: Get detailed revenue stats with time period filter
+  app.get("/api/admin/revenue/detailed", isAuthenticated, isAdmin, async (req, res) => {
+    const period = (req.query.period as 'day' | 'week' | 'month' | 'year' | 'all') || 'all';
+    const stats = await storage.getDetailedRevenueStats(period);
     res.json(stats);
   });
 

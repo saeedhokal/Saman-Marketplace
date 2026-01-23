@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { products, favorites, users, appSettings, banners, userViews, subscriptionPackages, transactions, notifications, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings, type Banner, type InsertBanner, type UserView, type InsertUserView, type SubscriptionPackage, type InsertSubscriptionPackage, type Transaction, type InsertTransaction, type Notification, type InsertNotification } from "@shared/schema";
+import { products, favorites, users, appSettings, banners, userViews, subscriptionPackages, transactions, notifications, deviceTokens, type Product, type InsertProduct, type Favorite, type InsertFavorite, type User, type AppSettings, type Banner, type InsertBanner, type UserView, type InsertUserView, type SubscriptionPackage, type InsertSubscriptionPackage, type Transaction, type InsertTransaction, type Notification, type InsertNotification } from "@shared/schema";
 import { eq, ilike, desc, and, or, lt, sql, asc, gte, lte, sum, inArray } from "drizzle-orm";
 
 export interface IStorage {
@@ -72,6 +72,8 @@ export interface IStorage {
   deleteUserProducts(userId: string): Promise<void>;
   deleteUserFavorites(userId: string): Promise<void>;
   deleteUserTransactions(userId: string): Promise<void>;
+  deleteUserNotifications(userId: string): Promise<void>;
+  deleteUserDeviceTokens(userId: string): Promise<void>;
   deleteUser(userId: string): Promise<void>;
   
   // Notifications
@@ -84,6 +86,15 @@ export interface IStorage {
   
   // Admin users
   getAdminUsers(): Promise<{ id: string; phone: string | null }[]>;
+  getAllUsers(): Promise<any[]>;
+  getUserById(userId: string): Promise<any>;
+  getDetailedRevenueStats(period?: 'day' | 'week' | 'month' | 'year' | 'all'): Promise<{
+    totalRevenue: number;
+    sparePartsRevenue: number;
+    automotiveRevenue: number;
+    transactionCount: number;
+    periodLabel: string;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -547,6 +558,14 @@ export class DatabaseStorage implements IStorage {
     await db.delete(transactions).where(eq(transactions.userId, userId));
   }
 
+  async deleteUserNotifications(userId: string): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.userId, userId));
+  }
+
+  async deleteUserDeviceTokens(userId: string): Promise<void> {
+    await db.delete(deviceTokens).where(eq(deviceTokens.userId, userId));
+  }
+
   async deleteUser(userId: string): Promise<void> {
     await db.delete(users).where(eq(users.id, userId));
   }
@@ -601,6 +620,92 @@ export class DatabaseStorage implements IStorage {
       )
     );
     return adminUsers;
+  }
+
+  async getAllUsers(): Promise<any[]> {
+    const allUsers = await db.select({
+      id: users.id,
+      phone: users.phone,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      sparePartsCredits: users.sparePartsCredits,
+      automotiveCredits: users.automotiveCredits,
+      isAdmin: users.isAdmin,
+      profileImageUrl: users.profileImageUrl,
+      createdAt: users.createdAt,
+    }).from(users).orderBy(desc(users.createdAt));
+    return allUsers;
+  }
+
+  async getUserById(userId: string): Promise<any> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    return user;
+  }
+
+  async getDetailedRevenueStats(period: 'day' | 'week' | 'month' | 'year' | 'all' = 'all'): Promise<{
+    totalRevenue: number;
+    sparePartsRevenue: number;
+    automotiveRevenue: number;
+    transactionCount: number;
+    periodLabel: string;
+  }> {
+    let startDate: Date | null = null;
+    let periodLabel = 'All Time';
+    const now = new Date();
+
+    switch (period) {
+      case 'day':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        periodLabel = 'Today';
+        break;
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        periodLabel = 'Last 7 Days';
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        periodLabel = 'This Month';
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        periodLabel = 'This Year';
+        break;
+      default:
+        periodLabel = 'All Time';
+    }
+
+    const conditions = [eq(transactions.status, 'completed')];
+    if (startDate) {
+      conditions.push(sql`${transactions.createdAt} >= ${startDate}`);
+    }
+
+    const result = await db.select({
+      totalRevenue: sql<number>`COALESCE(SUM(${transactions.amount}), 0)`,
+      transactionCount: sql<number>`COUNT(*)`,
+    }).from(transactions).where(and(...conditions));
+
+    const sparePartsResult = await db.select({
+      revenue: sql<number>`COALESCE(SUM(${transactions.amount}), 0)`,
+    }).from(transactions).where(and(
+      ...conditions,
+      eq(transactions.category, 'Spare Parts')
+    ));
+
+    const automotiveResult = await db.select({
+      revenue: sql<number>`COALESCE(SUM(${transactions.amount}), 0)`,
+    }).from(transactions).where(and(
+      ...conditions,
+      eq(transactions.category, 'Automotive')
+    ));
+
+    return {
+      totalRevenue: Number(result[0]?.totalRevenue || 0),
+      sparePartsRevenue: Number(sparePartsResult[0]?.revenue || 0),
+      automotiveRevenue: Number(automotiveResult[0]?.revenue || 0),
+      transactionCount: Number(result[0]?.transactionCount || 0),
+      periodLabel,
+    };
   }
 }
 

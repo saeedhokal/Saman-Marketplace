@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send } from "lucide-react";
+import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link } from "wouter";
 
@@ -51,6 +51,8 @@ export default function Admin() {
     title: "",
     body: "",
   });
+  const [userSearch, setUserSearch] = useState("");
+  const [revenuePeriod, setRevenuePeriod] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('all');
 
   const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
     queryKey: ["/api/user/credits"],
@@ -88,6 +90,53 @@ export default function Admin() {
   const { data: revenueStats } = useQuery<RevenueStats>({
     queryKey: ["/api/admin/revenue"],
     enabled: !!userInfo?.isAdmin,
+  });
+
+  interface DetailedRevenueStats extends RevenueStats {
+    periodLabel: string;
+  }
+
+  const { data: detailedRevenueStats } = useQuery<DetailedRevenueStats>({
+    queryKey: ["/api/admin/revenue/detailed", revenuePeriod],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/revenue/detailed?period=${revenuePeriod}`);
+      if (!res.ok) throw new Error("Failed to fetch revenue");
+      return res.json();
+    },
+    enabled: !!userInfo?.isAdmin,
+  });
+
+  interface UserData {
+    id: string;
+    phone: string | null;
+    email: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    sparePartsCredits: number;
+    automotiveCredits: number;
+    isAdmin: boolean;
+    profileImageUrl: string | null;
+    createdAt: string;
+  }
+
+  const { data: allUsers = [] } = useQuery<UserData[]>({
+    queryKey: ["/api/admin/users"],
+    enabled: !!userInfo?.isAdmin,
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) => apiRequest("DELETE", `/api/admin/users/${userId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "User deleted", description: "The account has been removed." });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to delete", 
+        description: error.message || "Could not delete the user",
+        variant: "destructive"
+      });
+    },
   });
 
   const approveMutation = useMutation({
@@ -332,7 +381,7 @@ export default function Admin() {
 
       <div className="container mx-auto px-4 pt-4 max-w-6xl">
         <Tabs defaultValue="pending" className="space-y-4">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="pending" className="text-xs">
               Pending ({pendingListings?.length || 0})
             </TabsTrigger>
@@ -344,6 +393,9 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="revenue" className="text-xs">
               Revenue
+            </TabsTrigger>
+            <TabsTrigger value="users" className="text-xs">
+              Users
             </TabsTrigger>
             <TabsTrigger value="settings" className="text-xs">
               Settings
@@ -653,18 +705,37 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="revenue" className="space-y-4">
+            <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+              {(['day', 'week', 'month', 'year', 'all'] as const).map((period) => (
+                <button
+                  key={period}
+                  onClick={() => setRevenuePeriod(period)}
+                  className={`flex-1 py-2 px-2 rounded-md text-xs font-medium transition-colors ${
+                    revenuePeriod === period ? "bg-background shadow-sm" : "text-muted-foreground"
+                  }`}
+                  data-testid={`button-revenue-${period}`}
+                >
+                  {period === 'day' ? 'Today' : period === 'week' ? 'Week' : period === 'month' ? 'Month' : period === 'year' ? 'Year' : 'All Time'}
+                </button>
+              ))}
+            </div>
+
+            <p className="text-center text-sm text-muted-foreground">
+              {detailedRevenueStats?.periodLabel || 'All Time'}
+            </p>
+
             <div className="grid grid-cols-2 gap-3">
               <Card className="bg-green-500/10 border-green-500/30">
                 <CardContent className="p-4 text-center">
                   <DollarSign className="h-8 w-8 mx-auto text-green-600 mb-2" />
-                  <p className="text-2xl font-bold text-green-600">AED {revenueStats?.totalRevenue || 0}</p>
+                  <p className="text-2xl font-bold text-green-600">AED {detailedRevenueStats?.totalRevenue || 0}</p>
                   <p className="text-xs text-muted-foreground">Total Revenue</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
                   <TrendingUp className="h-8 w-8 mx-auto text-accent mb-2" />
-                  <p className="text-2xl font-bold">{revenueStats?.transactionCount || 0}</p>
+                  <p className="text-2xl font-bold">{detailedRevenueStats?.transactionCount || 0}</p>
                   <p className="text-xs text-muted-foreground">Transactions</p>
                 </CardContent>
               </Card>
@@ -678,7 +749,7 @@ export default function Admin() {
                       <Package className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <p className="text-lg font-bold">AED {revenueStats?.sparePartsRevenue || 0}</p>
+                      <p className="text-lg font-bold">AED {detailedRevenueStats?.sparePartsRevenue || 0}</p>
                       <p className="text-xs text-muted-foreground">Spare Parts</p>
                     </div>
                   </div>
@@ -691,7 +762,7 @@ export default function Admin() {
                       <Car className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <p className="text-lg font-bold">AED {revenueStats?.automotiveRevenue || 0}</p>
+                      <p className="text-lg font-bold">AED {detailedRevenueStats?.automotiveRevenue || 0}</p>
                       <p className="text-xs text-muted-foreground">Automotive</p>
                     </div>
                   </div>
@@ -701,12 +772,114 @@ export default function Admin() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Revenue Breakdown</CardTitle>
+                <CardTitle className="text-sm">All-Time Summary</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Detailed transaction history and analytics will appear here as users make purchases.
-                </p>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total Revenue (All Time)</span>
+                  <span className="font-medium">AED {revenueStats?.totalRevenue || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total Transactions</span>
+                  <span className="font-medium">{revenueStats?.transactionCount || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Spare Parts Revenue</span>
+                  <span className="font-medium">AED {revenueStats?.sparePartsRevenue || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Automotive Revenue</span>
+                  <span className="font-medium">AED {revenueStats?.automotiveRevenue || 0}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Users className="h-4 w-4" />
+                  User Management ({allUsers.length} total)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, phone, or email..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="pl-9 h-9"
+                    data-testid="input-user-search"
+                  />
+                </div>
+                
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {allUsers
+                    .filter((user) => {
+                      if (!userSearch) return true;
+                      const search = userSearch.toLowerCase();
+                      return (
+                        user.firstName?.toLowerCase().includes(search) ||
+                        user.lastName?.toLowerCase().includes(search) ||
+                        user.phone?.includes(search) ||
+                        user.email?.toLowerCase().includes(search)
+                      );
+                    })
+                    .map((user) => (
+                      <div 
+                        key={user.id} 
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                        data-testid={`user-row-${user.id}`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm truncate">
+                              {user.firstName || ""} {user.lastName || ""}
+                              {!user.firstName && !user.lastName && <span className="text-muted-foreground">No name</span>}
+                            </p>
+                            {user.isAdmin && (
+                              <Badge variant="secondary" className="text-xs">Admin</Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {user.phone || user.email || "No contact info"}
+                          </p>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                            <span>Parts: {user.sparePartsCredits} credits</span>
+                            <span>Auto: {user.automotiveCredits} credits</span>
+                            {user.createdAt && (
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(user.createdAt).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {!user.isAdmin && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive"
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to delete ${user.firstName || "this user"}'s account? This cannot be undone.`)) {
+                                deleteUserMutation.mutate(user.id);
+                              }
+                            }}
+                            data-testid={`button-delete-user-${user.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  {allUsers.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-4">
+                      No registered users yet
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
