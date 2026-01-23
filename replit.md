@@ -9,7 +9,9 @@ The application allows users to browse parts by category, search for specific it
 - **Category-specific credits**: Spare Parts Credits and Automotive Credits are separate and cannot be used across categories
 - **Subscription packages**: Admin-configurable packages with pricing tiers (e.g., Basic 1 credit AED 30, Premium 10+2 credits AED 250)
 - **Payment processing**: Checkout flow with Apple Pay and Credit Card options via Telr gateway
-- **Revenue tracking**: Admin dashboard shows total revenue, breakdown by category, and transaction count
+- **Revenue tracking**: Admin dashboard shows total revenue, breakdown by category, transaction count, with time-based filtering (Today, Week, Month, Year, All Time, Custom date range)
+- **User management**: Admin can view all users, search by name/phone/email, and delete accounts (with cascade delete of all related data)
+- **Broadcast notifications**: Admin can send push notifications to all app users
 - **Credit refund on rejection**: When listings are rejected, users get their category-specific credit back
 - **Admin moderation**: All listings require admin approval before going live
 - **1-month expiration**: Approved listings remain active for 1 month
