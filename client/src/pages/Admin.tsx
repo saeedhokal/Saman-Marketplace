@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square } from "lucide-react";
+import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link } from "wouter";
 
@@ -46,6 +46,10 @@ export default function Admin() {
     buttonText: "",
     isActive: true,
     sortOrder: 0,
+  });
+  const [broadcastNotification, setBroadcastNotification] = useState({
+    title: "",
+    body: "",
   });
 
   const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
@@ -160,6 +164,25 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/banners"] });
       queryClient.invalidateQueries({ queryKey: ["/api/banners"] });
       toast({ title: "Banner deleted" });
+    },
+  });
+
+  const broadcastMutation = useMutation({
+    mutationFn: (data: { title: string; body: string }) => 
+      apiRequest("POST", "/api/admin/broadcast", data),
+    onSuccess: (data: any) => {
+      setBroadcastNotification({ title: "", body: "" });
+      toast({ 
+        title: "Notification sent", 
+        description: `Sent to ${data.sent} devices` 
+      });
+    },
+    onError: () => {
+      toast({ 
+        title: "Failed to send", 
+        description: "Could not send the notification",
+        variant: "destructive"
+      });
     },
   });
 
@@ -747,6 +770,42 @@ export default function Admin() {
                     {clearDemoMutation.isPending ? "Removing..." : "Clear Demo"}
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Bell className="h-4 w-4" />
+                  Broadcast Notification
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Send a push notification to all app users.
+                </p>
+                <Input
+                  placeholder="Notification Title"
+                  value={broadcastNotification.title}
+                  onChange={(e) => setBroadcastNotification({ ...broadcastNotification, title: e.target.value })}
+                  className="h-9"
+                  data-testid="input-broadcast-title"
+                />
+                <Textarea
+                  placeholder="Message body..."
+                  value={broadcastNotification.body}
+                  onChange={(e) => setBroadcastNotification({ ...broadcastNotification, body: e.target.value })}
+                  className="min-h-[80px]"
+                  data-testid="input-broadcast-body"
+                />
+                <Button 
+                  onClick={() => broadcastMutation.mutate(broadcastNotification)}
+                  disabled={!broadcastNotification.title || !broadcastNotification.body || broadcastMutation.isPending}
+                  data-testid="button-send-broadcast"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {broadcastMutation.isPending ? "Sending..." : "Send to All Users"}
+                </Button>
               </CardContent>
             </Card>
 

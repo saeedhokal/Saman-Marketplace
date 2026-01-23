@@ -264,3 +264,78 @@ export async function notifyCreditsAdded(
     },
   });
 }
+
+export async function broadcastPushNotification(
+  payload: PushNotificationPayload
+): Promise<{ sent: number; failed: number }> {
+  if (!initializeFirebase()) {
+    console.log('Push notifications not available - Firebase not initialized');
+    return { sent: 0, failed: 0 };
+  }
+
+  try {
+    const allTokens = await db.select().from(deviceTokens);
+    
+    if (allTokens.length === 0) {
+      console.log('No device tokens found for broadcast');
+      return { sent: 0, failed: 0 };
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    await Promise.all(
+      allTokens.map(async (token) => {
+        if (!token.fcmToken || token.fcmToken.length < 20) {
+          failed++;
+          return;
+        }
+
+        const message: admin.messaging.Message = {
+          token: token.fcmToken,
+          notification: {
+            title: payload.title,
+            body: payload.body,
+          },
+          data: {
+            ...payload.data,
+            type: 'broadcast',
+          },
+          apns: {
+            payload: {
+              aps: {
+                sound: 'default',
+                mutableContent: true,
+              },
+            },
+          },
+          android: {
+            priority: 'high',
+            notification: {
+              title: payload.title,
+              body: payload.body,
+              sound: 'default',
+            },
+          },
+        };
+
+        try {
+          await admin.messaging().send(message);
+          sent++;
+        } catch (error: any) {
+          failed++;
+          if (error.code === 'messaging/registration-token-not-registered' ||
+              error.code === 'messaging/invalid-registration-token') {
+            await db.delete(deviceTokens).where(eq(deviceTokens.id, token.id));
+          }
+        }
+      })
+    );
+
+    console.log(`Broadcast complete: ${sent} sent, ${failed} failed`);
+    return { sent, failed };
+  } catch (error) {
+    console.error('Failed to broadcast push notification:', error);
+    return { sent: 0, failed: 0 };
+  }
+}

@@ -19,6 +19,7 @@ import {
   notifyListingRejected,
   notifyCreditsAdded,
   sendPushToAdmins,
+  broadcastPushNotification,
 } from "./pushNotifications";
 
 // Valid subcategories by main category
@@ -1203,6 +1204,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/admin/cleanup-expired", isAuthenticated, isAdmin, async (req, res) => {
     const count = await storage.deleteExpiredProducts();
     res.json({ deletedCount: count });
+  });
+
+  // Admin: Broadcast push notification to all users
+  app.post("/api/admin/broadcast", isAuthenticated, isAdmin, async (req, res) => {
+    const { title, body } = req.body;
+    
+    if (!title || !body) {
+      return res.status(400).json({ message: "Title and body are required" });
+    }
+    
+    const result = await broadcastPushNotification({ title, body });
+    res.json({ 
+      success: true, 
+      sent: result.sent, 
+      failed: result.failed,
+      message: `Notification sent to ${result.sent} devices` 
+    });
   });
 
   // ========== BANNER ROUTES ==========
