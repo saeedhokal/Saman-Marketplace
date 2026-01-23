@@ -1,16 +1,44 @@
+import apn from '@parse/node-apn';
 import admin from 'firebase-admin';
 import { db } from './db';
 import { deviceTokens, users, notifications } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 
+let apnProvider: apn.Provider | null = null;
 let firebaseInitialized = false;
 
-function initializeFirebase() {
+function initializeAPNs(): boolean {
+  if (apnProvider) return true;
+  
+  const apnsKey = process.env.APNS_AUTH_KEY;
+  if (!apnsKey) {
+    console.log('APNs key not configured - iOS push notifications disabled');
+    return false;
+  }
+
+  try {
+    apnProvider = new apn.Provider({
+      token: {
+        key: apnsKey,
+        keyId: 'GMC5C3M7JF',
+        teamId: 'KQ542Q98H2',
+      },
+      production: true,
+    });
+    console.log('APNs provider initialized successfully');
+    return true;
+  } catch (error) {
+    console.error('Failed to initialize APNs provider:', error);
+    return false;
+  }
+}
+
+function initializeFirebase(): boolean {
   if (firebaseInitialized) return true;
   
   const firebaseCredentials = process.env.FIREBASE_ADMIN_CREDENTIALS;
   if (!firebaseCredentials) {
-    console.log('Firebase credentials not configured - push notifications disabled');
+    console.log('Firebase credentials not configured - Android push notifications disabled');
     return false;
   }
   
@@ -73,7 +101,7 @@ export async function registerDeviceToken(
       });
     }
     
-    console.log(`Device token registered for user ${userId}`);
+    console.log(`Device token registered for user ${userId} (${deviceOs})`);
     return true;
   } catch (error) {
     console.error('Failed to register device token:', error);
@@ -99,15 +127,87 @@ export async function unregisterDeviceToken(
   }
 }
 
+async function sendAPNsNotification(
+  token: string,
+  payload: PushNotificationPayload,
+  badgeCount: number = 0
+): Promise<boolean> {
+  if (!initializeAPNs() || !apnProvider) {
+    console.log('APNs not available');
+    return false;
+  }
+
+  try {
+    const note = new apn.Notification();
+    note.expiry = Math.floor(Date.now() / 1000) + 3600;
+    note.badge = badgeCount;
+    note.sound = 'default';
+    note.alert = {
+      title: payload.title,
+      body: payload.body,
+    };
+    note.topic = 'com.saeed.saman';
+    note.payload = payload.data || {};
+
+    const result = await apnProvider.send(note, token);
+    
+    if (result.failed.length > 0) {
+      console.error('APNs send failed:', result.failed[0].response);
+      return false;
+    }
+    
+    console.log(`APNs notification sent to ${token.substring(0, 20)}...`);
+    return true;
+  } catch (error) {
+    console.error('APNs send error:', error);
+    return false;
+  }
+}
+
+async function sendFirebaseNotification(
+  token: string,
+  payload: PushNotificationPayload,
+  badgeCount: number = 0
+): Promise<boolean> {
+  if (!initializeFirebase()) {
+    console.log('Firebase not available');
+    return false;
+  }
+
+  try {
+    const message: admin.messaging.Message = {
+      token: token,
+      notification: {
+        title: payload.title,
+        body: payload.body,
+      },
+      data: {
+        ...payload.data,
+        count: String(badgeCount),
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          title: payload.title,
+          body: payload.body,
+          sound: 'default',
+        },
+      },
+    };
+
+    await admin.messaging().send(message);
+    console.log(`Firebase notification sent to ${token.substring(0, 20)}...`);
+    return true;
+  } catch (error: any) {
+    console.error('Firebase send error:', error);
+    return false;
+  }
+}
+
 export async function sendPushNotification(
   userId: string,
   payload: PushNotificationPayload
 ): Promise<boolean> {
-  if (!initializeFirebase()) {
-    console.log('Push notifications not available - Firebase not initialized');
-    return false;
-  }
-
   try {
     const userTokens = await db.select()
       .from(deviceTokens)
@@ -129,59 +229,16 @@ export async function sendPushNotification(
     const results = await Promise.all(
       userTokens.map(async (token) => {
         if (!token.fcmToken || token.fcmToken.length < 20) {
-          console.log(`Invalid FCM token for device ${token.id}`);
+          console.log(`Invalid token for device ${token.id}`);
           return false;
         }
 
-        const message: admin.messaging.Message = {
-          token: token.fcmToken,
-          notification: {
-            title: payload.title,
-            body: payload.body,
-          },
-          data: {
-            ...payload.data,
-            count: String(badgeCount),
-          },
-          apns: {
-            payload: {
-              aps: {
-                badge: badgeCount,
-                sound: 'default',
-                mutableContent: true,
-                category: 'SamanNotification',
-              },
-            },
-            fcmOptions: payload.imageUrl ? { imageUrl: payload.imageUrl } : undefined,
-          },
-          android: {
-            priority: 'high',
-            ttl: 60 * 60 * 24 * 1000,
-            notification: {
-              title: payload.title,
-              body: payload.body,
-              sound: 'default',
-              defaultSound: true,
-              defaultLightSettings: true,
-              notificationCount: badgeCount,
-              visibility: 'public',
-              imageUrl: payload.imageUrl,
-            },
-          },
-        };
-
-        try {
-          const response = await admin.messaging().send(message);
-          console.log(`Push notification sent to ${token.fcmToken.substring(0, 20)}...: ${response}`);
-          return true;
-        } catch (error: any) {
-          console.error(`Failed to send push notification to device ${token.id}:`, error);
-          if (error.code === 'messaging/registration-token-not-registered' ||
-              error.code === 'messaging/invalid-registration-token') {
-            await db.delete(deviceTokens).where(eq(deviceTokens.id, token.id));
-            console.log(`Removed invalid token for device ${token.id}`);
-          }
-          return false;
+        const isIOS = token.deviceOs === 'ios';
+        
+        if (isIOS) {
+          return sendAPNsNotification(token.fcmToken, payload, badgeCount);
+        } else {
+          return sendFirebaseNotification(token.fcmToken, payload, badgeCount);
         }
       })
     );
@@ -272,7 +329,6 @@ export async function broadcastPushNotification(
   
   console.log('Starting broadcast notification:', payload.title);
   
-  // First, save notification to database for ALL users (so it appears in their inbox)
   try {
     const allUsers = await db.select({ id: users.id }).from(users);
     console.log(`Found ${allUsers.length} users for broadcast`);
@@ -302,10 +358,8 @@ export async function broadcastPushNotification(
     console.error('Failed to save broadcast notifications to database:', error);
   }
 
-  if (!initializeFirebase()) {
-    console.log('Push notifications not available - Firebase not initialized');
-    return { sent: 0, failed: 0, saved };
-  }
+  let sent = 0;
+  let failed = 0;
 
   try {
     const allTokens = await db.select().from(deviceTokens);
@@ -315,8 +369,7 @@ export async function broadcastPushNotification(
       return { sent: 0, failed: 0, saved };
     }
 
-    let sent = 0;
-    let failed = 0;
+    console.log(`Sending push to ${allTokens.length} devices`);
 
     await Promise.all(
       allTokens.map(async (token) => {
@@ -325,42 +378,22 @@ export async function broadcastPushNotification(
           return;
         }
 
-        const message: admin.messaging.Message = {
-          token: token.fcmToken,
-          notification: {
-            title: payload.title,
-            body: payload.body,
-          },
-          data: {
-            ...payload.data,
-            type: 'broadcast',
-          },
-          apns: {
-            payload: {
-              aps: {
-                sound: 'default',
-                mutableContent: true,
-              },
-            },
-          },
-          android: {
-            priority: 'high',
-            notification: {
-              title: payload.title,
-              body: payload.body,
-              sound: 'default',
-            },
-          },
-        };
+        const isIOS = token.deviceOs === 'ios';
+        let success = false;
 
-        try {
-          await admin.messaging().send(message);
+        if (isIOS) {
+          success = await sendAPNsNotification(token.fcmToken, payload, 1);
+        } else {
+          success = await sendFirebaseNotification(token.fcmToken, payload, 1);
+        }
+
+        if (success) {
           sent++;
-        } catch (error: any) {
+        } else {
           failed++;
-          if (error.code === 'messaging/registration-token-not-registered' ||
-              error.code === 'messaging/invalid-registration-token') {
+          if (token.deviceOs === 'ios') {
             await db.delete(deviceTokens).where(eq(deviceTokens.id, token.id));
+            console.log(`Removed invalid iOS token ${token.id}`);
           }
         }
       })

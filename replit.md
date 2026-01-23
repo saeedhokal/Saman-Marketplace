@@ -28,7 +28,7 @@
 
 **Next Steps:** Push to GitHub → Codemagic build → TestFlight install
 
-**Push Notification Fix - Simplified Approach (Jan 23, 2026):**
+**Push Notification Fix - Direct APNs (Jan 23, 2026):**
 - ✅ Downgraded to Capacitor v7 for Codemagic compatibility (Capacitor v8 requires Node.js 22+)
 - ✅ Removed FCM plugin and Firebase from native iOS code to prevent crashes
 - ✅ Simplified AppDelegate.swift to basic Capacitor template
@@ -37,11 +37,14 @@
 - ✅ **Added push notification entitlements** - Created App.entitlements with `aps-environment = production`
 - ✅ **Added background modes** - Info.plist now has `UIBackgroundModes` with `remote-notification`
 - ✅ **Updated Xcode project** - Both Debug and Release configurations now reference App.entitlements
+- ✅ **Direct APNs sending** - Server now sends push notifications directly to Apple (no Firebase needed for iOS)
+- ✅ **APNS_AUTH_KEY secret added** - Contains the .p8 authentication key
 
 **Current Status:**
 - The in-app notification inbox works perfectly (notifications saved to database)
-- Push notification entitlements now properly configured
-- App should register for push notifications without "Registration failed" error
+- Push notification entitlements now properly configured  
+- Server uses APNs directly for iOS push (Key ID: GMC5C3M7JF, Team ID: KQ542Q98H2)
+- No more Firebase dependency for iOS push notifications
 
 **How it works now:**
 1. App registers for push with APNs (native iOS)
