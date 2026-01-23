@@ -341,18 +341,24 @@ export async function broadcastPushNotification(
 ): Promise<{ sent: number; failed: number; saved: number }> {
   let saved = 0;
   
-  console.log('Starting broadcast notification:', payload.title);
+  console.log('=== BROADCAST START ===');
+  console.log('Title:', payload.title);
+  console.log('Body:', payload.body);
+  console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
   
   try {
+    console.log('Querying users table...');
     const allUsers = await db.select({ id: users.id }).from(users);
     console.log(`Found ${allUsers.length} users for broadcast`);
     
     if (allUsers.length === 0) {
-      console.log('No users found in database for broadcast');
+      console.log('WARNING: No users found in database for broadcast');
       return { sent: 0, failed: 0, saved: 0 };
     }
     
-    await Promise.all(
+    console.log('User IDs:', allUsers.map(u => u.id).slice(0, 5).join(', ') + (allUsers.length > 5 ? '...' : ''));
+    
+    const saveResults = await Promise.all(
       allUsers.map(async (user) => {
         try {
           await db.insert(notifications).values({
@@ -361,15 +367,17 @@ export async function broadcastPushNotification(
             title: payload.title,
             message: payload.body,
           });
-          saved++;
+          return true;
         } catch (err) {
-          console.error(`Failed to save broadcast notification for user ${user.id}:`, err);
+          console.error(`Failed to save notification for user ${user.id}:`, err);
+          return false;
         }
       })
     );
-    console.log(`Broadcast notification saved to ${saved} user inboxes`);
+    saved = saveResults.filter(r => r).length;
+    console.log(`Broadcast saved to ${saved} user inboxes`);
   } catch (error) {
-    console.error('Failed to save broadcast notifications to database:', error);
+    console.error('CRITICAL: Failed to query/save broadcast:', error);
   }
 
   let sent = 0;

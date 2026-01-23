@@ -86,6 +86,7 @@
 - **Testing:** TestFlight iOS app (no Mac available, never used Xcode)
 - **Build workflow:** Codemagic for iOS builds, GitHub via Replit Git panel
 - **Important:** User does NOT code - all changes must be made by agent
+- **IMPORTANT:** User is ALWAYS logged in on their iPhone, using the PUBLISHED URL (not preview), and has notifications enabled. Do not ask about this again.
 
 ---
 
