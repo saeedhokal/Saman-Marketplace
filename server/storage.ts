@@ -88,7 +88,7 @@ export interface IStorage {
   getAdminUsers(): Promise<{ id: string; phone: string | null }[]>;
   getAllUsers(): Promise<any[]>;
   getUserById(userId: string): Promise<any>;
-  getDetailedRevenueStats(period?: 'day' | 'week' | 'month' | 'year' | 'all'): Promise<{
+  getDetailedRevenueStats(period?: 'day' | 'week' | 'month' | 'year' | 'all' | 'custom', startDate?: string, endDate?: string): Promise<{
     totalRevenue: number;
     sparePartsRevenue: number;
     automotiveRevenue: number;
@@ -643,7 +643,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getDetailedRevenueStats(period: 'day' | 'week' | 'month' | 'year' | 'all' = 'all'): Promise<{
+  async getDetailedRevenueStats(period: 'day' | 'week' | 'month' | 'year' | 'all' | 'custom' = 'all', customStartDate?: string, customEndDate?: string): Promise<{
     totalRevenue: number;
     sparePartsRevenue: number;
     automotiveRevenue: number;
@@ -651,6 +651,7 @@ export class DatabaseStorage implements IStorage {
     periodLabel: string;
   }> {
     let startDate: Date | null = null;
+    let endDate: Date | null = null;
     let periodLabel = 'All Time';
     const now = new Date();
 
@@ -671,6 +672,18 @@ export class DatabaseStorage implements IStorage {
         startDate = new Date(now.getFullYear(), 0, 1);
         periodLabel = 'This Year';
         break;
+      case 'custom':
+        if (customStartDate && customEndDate) {
+          startDate = new Date(customStartDate);
+          endDate = new Date(customEndDate);
+          endDate.setHours(23, 59, 59, 999);
+          const startFormatted = startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          const endFormatted = endDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          periodLabel = `${startFormatted} - ${endFormatted}`;
+        } else {
+          periodLabel = 'Select dates';
+        }
+        break;
       default:
         periodLabel = 'All Time';
     }
@@ -678,6 +691,9 @@ export class DatabaseStorage implements IStorage {
     const conditions = [eq(transactions.status, 'completed')];
     if (startDate) {
       conditions.push(sql`${transactions.createdAt} >= ${startDate}`);
+    }
+    if (endDate) {
+      conditions.push(sql`${transactions.createdAt} <= ${endDate}`);
     }
 
     const result = await db.select({

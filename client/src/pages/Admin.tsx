@@ -52,7 +52,11 @@ export default function Admin() {
     body: "",
   });
   const [userSearch, setUserSearch] = useState("");
-  const [revenuePeriod, setRevenuePeriod] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('all');
+  const [revenuePeriod, setRevenuePeriod] = useState<'day' | 'week' | 'month' | 'year' | 'all' | 'custom'>('all');
+  const [customDateRange, setCustomDateRange] = useState({
+    startDate: '',
+    endDate: '',
+  });
 
   const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
     queryKey: ["/api/user/credits"],
@@ -97,9 +101,13 @@ export default function Admin() {
   }
 
   const { data: detailedRevenueStats } = useQuery<DetailedRevenueStats>({
-    queryKey: ["/api/admin/revenue/detailed", revenuePeriod],
+    queryKey: ["/api/admin/revenue/detailed", revenuePeriod, customDateRange.startDate, customDateRange.endDate],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/revenue/detailed?period=${revenuePeriod}`);
+      let url = `/api/admin/revenue/detailed?period=${revenuePeriod}`;
+      if (revenuePeriod === 'custom' && customDateRange.startDate && customDateRange.endDate) {
+        url += `&startDate=${customDateRange.startDate}&endDate=${customDateRange.endDate}`;
+      }
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch revenue");
       return res.json();
     },
@@ -705,20 +713,45 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="revenue" className="space-y-4">
-            <div className="flex gap-2 p-1 bg-secondary rounded-lg">
-              {(['day', 'week', 'month', 'year', 'all'] as const).map((period) => (
+            <div className="flex gap-2 p-1 bg-secondary rounded-lg flex-wrap">
+              {(['day', 'week', 'month', 'year', 'all', 'custom'] as const).map((period) => (
                 <button
                   key={period}
                   onClick={() => setRevenuePeriod(period)}
-                  className={`flex-1 py-2 px-2 rounded-md text-xs font-medium transition-colors ${
+                  className={`flex-1 py-2 px-2 rounded-md text-xs font-medium transition-colors min-w-[60px] ${
                     revenuePeriod === period ? "bg-background shadow-sm" : "text-muted-foreground"
                   }`}
                   data-testid={`button-revenue-${period}`}
                 >
-                  {period === 'day' ? 'Today' : period === 'week' ? 'Week' : period === 'month' ? 'Month' : period === 'year' ? 'Year' : 'All Time'}
+                  {period === 'day' ? 'Today' : period === 'week' ? 'Week' : period === 'month' ? 'Month' : period === 'year' ? 'Year' : period === 'all' ? 'All' : 'Custom'}
                 </button>
               ))}
             </div>
+
+            {revenuePeriod === 'custom' && (
+              <div className="flex gap-2 items-center">
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground mb-1 block">From</label>
+                  <Input
+                    type="date"
+                    value={customDateRange.startDate}
+                    onChange={(e) => setCustomDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="text-sm"
+                    data-testid="input-revenue-start-date"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground mb-1 block">To</label>
+                  <Input
+                    type="date"
+                    value={customDateRange.endDate}
+                    onChange={(e) => setCustomDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="text-sm"
+                    data-testid="input-revenue-end-date"
+                  />
+                </div>
+              </div>
+            )}
 
             <p className="text-center text-sm text-muted-foreground">
               {detailedRevenueStats?.periodLabel || 'All Time'}

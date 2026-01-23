@@ -1375,8 +1375,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Admin: Get detailed revenue stats with time period filter
   app.get("/api/admin/revenue/detailed", isAuthenticated, isAdmin, async (req, res) => {
-    const period = (req.query.period as 'day' | 'week' | 'month' | 'year' | 'all') || 'all';
-    const stats = await storage.getDetailedRevenueStats(period);
+    const period = (req.query.period as 'day' | 'week' | 'month' | 'year' | 'all' | 'custom') || 'all';
+    const startDate = req.query.startDate as string | undefined;
+    const endDate = req.query.endDate as string | undefined;
+    const stats = await storage.getDetailedRevenueStats(period, startDate, endDate);
     res.json(stats);
   });
 
