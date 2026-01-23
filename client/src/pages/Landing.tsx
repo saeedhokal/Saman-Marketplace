@@ -46,7 +46,7 @@ export default function Landing() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
-      <div className="container mx-auto px-4 pt-6">
+      <div className="container mx-auto px-4 pt-3">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-muted-foreground text-sm">
@@ -167,9 +167,9 @@ export default function Landing() {
         </div>
 
         {recommendedProducts.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-foreground">{t('forYou')}</h2>
+          <div className="mb-4 -mx-4 px-4 py-4 bg-secondary/30">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-foreground">{t('forYou')}</h2>
               <Link href="/categories">
                 <span className="text-accent text-sm font-medium" data-testid="link-view-all-recommended">{t('viewAll')}</span>
               </Link>
@@ -188,9 +188,9 @@ export default function Landing() {
         )}
 
         {recentProducts.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-foreground">{t('recentPosts')}</h2>
+          <div className="mb-4 -mx-4 px-4 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-foreground">{t('recentPosts')}</h2>
               <Link href="/categories">
                 <span className="text-accent text-sm font-medium" data-testid="link-view-all-recent">{t('viewAll')}</span>
               </Link>
