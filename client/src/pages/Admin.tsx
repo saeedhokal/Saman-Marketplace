@@ -50,6 +50,10 @@ export default function Admin() {
   const [broadcastNotification, setBroadcastNotification] = useState({
     title: "",
     body: "",
+    scheduleType: "now" as "now" | "delay" | "scheduled",
+    delayMinutes: 30,
+    scheduledDate: "",
+    scheduledTime: "",
   });
   const [userSearch, setUserSearch] = useState("");
   const [revenuePeriod, setRevenuePeriod] = useState<'day' | 'week' | 'month' | 'year' | 'all' | 'custom'>('all');
@@ -225,13 +229,13 @@ export default function Admin() {
   });
 
   const broadcastMutation = useMutation({
-    mutationFn: (data: { title: string; body: string }) => 
+    mutationFn: (data: { title: string; body: string; scheduleType?: string; delayMinutes?: number; scheduledDate?: string; scheduledTime?: string }) => 
       apiRequest("POST", "/api/admin/broadcast", data),
     onSuccess: (data: any) => {
-      setBroadcastNotification({ title: "", body: "" });
+      setBroadcastNotification({ title: "", body: "", scheduleType: "now", delayMinutes: 30, scheduledDate: "", scheduledTime: "" });
       toast({ 
-        title: "Notification sent", 
-        description: `Sent to ${data.sent} devices` 
+        title: data.scheduled ? "Notification scheduled" : "Notification sent", 
+        description: data.message || `Sent to ${data.sent} devices, saved to ${data.savedCount || 0} inboxes`
       });
     },
     onError: () => {
@@ -979,41 +983,147 @@ export default function Admin() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Bell className="h-4 w-4" />
-                  Broadcast Notification
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Send a push notification to all app users.
-                </p>
-                <Input
-                  placeholder="Notification Title"
-                  value={broadcastNotification.title}
-                  onChange={(e) => setBroadcastNotification({ ...broadcastNotification, title: e.target.value })}
-                  className="h-9"
-                  data-testid="input-broadcast-title"
-                />
-                <Textarea
-                  placeholder="Message body..."
-                  value={broadcastNotification.body}
-                  onChange={(e) => setBroadcastNotification({ ...broadcastNotification, body: e.target.value })}
-                  className="min-h-[80px]"
-                  data-testid="input-broadcast-body"
-                />
+            {/* Broadcast Notification - Modern Styled Card */}
+            <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#1e293b] to-[#0f172a] p-5 shadow-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-[#f97316] flex items-center justify-center">
+                  <Bell className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-lg">Broadcast Notification</h3>
+                  <p className="text-white/60 text-xs">Send push notifications to all users</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-white/70 text-xs font-medium mb-1.5 block">Title</label>
+                  <Input
+                    placeholder="Enter notification title..."
+                    value={broadcastNotification.title}
+                    onChange={(e) => setBroadcastNotification({ ...broadcastNotification, title: e.target.value })}
+                    className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl focus:border-[#f97316] focus:ring-[#f97316]"
+                    data-testid="input-broadcast-title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-white/70 text-xs font-medium mb-1.5 block">Message</label>
+                  <Textarea
+                    placeholder="Write your message here..."
+                    value={broadcastNotification.body}
+                    onChange={(e) => setBroadcastNotification({ ...broadcastNotification, body: e.target.value })}
+                    className="min-h-[100px] bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl focus:border-[#f97316] focus:ring-[#f97316] resize-none"
+                    data-testid="input-broadcast-body"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-white/70 text-xs font-medium mb-2 block">When to Send</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBroadcastNotification({ ...broadcastNotification, scheduleType: "now" })}
+                      className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
+                        broadcastNotification.scheduleType === "now"
+                          ? "bg-[#f97316] text-white"
+                          : "bg-white/10 text-white/70 hover:bg-white/20"
+                      }`}
+                      data-testid="button-schedule-now"
+                    >
+                      Send Now
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBroadcastNotification({ ...broadcastNotification, scheduleType: "delay" })}
+                      className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
+                        broadcastNotification.scheduleType === "delay"
+                          ? "bg-[#f97316] text-white"
+                          : "bg-white/10 text-white/70 hover:bg-white/20"
+                      }`}
+                      data-testid="button-schedule-delay"
+                    >
+                      Delay
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBroadcastNotification({ ...broadcastNotification, scheduleType: "scheduled" })}
+                      className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
+                        broadcastNotification.scheduleType === "scheduled"
+                          ? "bg-[#f97316] text-white"
+                          : "bg-white/10 text-white/70 hover:bg-white/20"
+                      }`}
+                      data-testid="button-schedule-date"
+                    >
+                      Schedule
+                    </button>
+                  </div>
+                </div>
+
+                {broadcastNotification.scheduleType === "delay" && (
+                  <div className="bg-white/5 rounded-xl p-3">
+                    <label className="text-white/70 text-xs font-medium mb-2 block">Delay (minutes)</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="5"
+                        max="120"
+                        step="5"
+                        value={broadcastNotification.delayMinutes}
+                        onChange={(e) => setBroadcastNotification({ ...broadcastNotification, delayMinutes: parseInt(e.target.value) })}
+                        className="flex-1 accent-[#f97316]"
+                        data-testid="input-delay-minutes"
+                      />
+                      <span className="text-white font-medium min-w-[60px] text-right">
+                        {broadcastNotification.delayMinutes} min
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {broadcastNotification.scheduleType === "scheduled" && (
+                  <div className="bg-white/5 rounded-xl p-3 space-y-3">
+                    <div>
+                      <label className="text-white/70 text-xs font-medium mb-1.5 block">Date</label>
+                      <Input
+                        type="date"
+                        value={broadcastNotification.scheduledDate}
+                        onChange={(e) => setBroadcastNotification({ ...broadcastNotification, scheduledDate: e.target.value })}
+                        className="h-10 bg-white/10 border-white/20 text-white rounded-xl"
+                        data-testid="input-schedule-date"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-white/70 text-xs font-medium mb-1.5 block">Time</label>
+                      <Input
+                        type="time"
+                        value={broadcastNotification.scheduledTime}
+                        onChange={(e) => setBroadcastNotification({ ...broadcastNotification, scheduledTime: e.target.value })}
+                        className="h-10 bg-white/10 border-white/20 text-white rounded-xl"
+                        data-testid="input-schedule-time"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <Button 
                   onClick={() => broadcastMutation.mutate(broadcastNotification)}
                   disabled={!broadcastNotification.title || !broadcastNotification.body || broadcastMutation.isPending}
+                  className="w-full h-12 bg-[#f97316] hover:bg-[#ea580c] text-white font-semibold rounded-xl shadow-lg shadow-orange-500/25"
                   data-testid="button-send-broadcast"
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  {broadcastMutation.isPending ? "Sending..." : "Send to All Users"}
+                  {broadcastMutation.isPending 
+                    ? "Sending..." 
+                    : broadcastNotification.scheduleType === "now" 
+                      ? "Send to All Users" 
+                      : broadcastNotification.scheduleType === "delay"
+                        ? `Send in ${broadcastNotification.delayMinutes} minutes`
+                        : "Schedule Notification"
+                  }
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             <Card>
               <CardHeader>
