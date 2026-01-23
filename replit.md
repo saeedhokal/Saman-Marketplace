@@ -65,6 +65,21 @@ Native push notifications that work when the app is closed:
 - Listing approved → User notification
 - Listing rejected → User notification
 - Credits added → User notification
+- Broadcast notifications → All users (saved to inbox + push)
+
+**Broadcast Notification Design** (Admin Panel):
+- Modern dark gradient card design (from-[#1e293b] to-[#0f172a])
+- Orange accent color (#f97316) for icons, buttons, and selected states
+- **Scheduling options**: Send Now / Delay (5-120 min slider) / Schedule (date + time picker)
+- All broadcast notifications are saved to every user's notification inbox (bell icon)
+- Orange megaphone icon for broadcast notifications in inbox
+
+**In-App Notification Banner**:
+- `client/src/components/InAppNotificationBanner.tsx`
+- Smooth slide-down animation from top with Framer Motion
+- Gradient orange bell icon, rounded corners
+- Auto-dismiss after 5 seconds, can tap to dismiss
+- Shows when app is open and receives a notification
 
 **iOS Setup in Codemagic**:
 1. Enable Push Notifications capability in Xcode project
@@ -74,6 +89,7 @@ Native push notifications that work when the app is closed:
 **API Endpoints**:
 - `POST /api/device-token` - Register FCM token for push notifications
 - `DELETE /api/device-token` - Unregister FCM token (for logout)
+- `POST /api/admin/broadcast` - Send broadcast notification to all users (saves to inbox + sends push)
 
 ### iOS App Store Preparation Checklist
 - [ ] Domain verification complete in Apple Developer
