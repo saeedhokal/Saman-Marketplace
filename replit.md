@@ -26,7 +26,19 @@
 
 **Testing Status:** All changes tested and working in development. Broadcast API returns correct format: `{"savedCount": 12, "sent": 0, "message": "Saved to 12 inboxes, sent to 0 devices"}`
 
-**Next Steps:** Push to GitHub → Codemagic build → TestFlight install → Log out and back in to register push token
+**Next Steps:** Push to GitHub → Codemagic build → TestFlight install
+
+**CRITICAL: Capacitor Native Bridge Issue (Jan 23, 2026)**
+The current TestFlight app has a broken Capacitor bridge - it cannot detect that it's running as a native iOS app. This means:
+- Push notification token registration doesn't work
+- Any native iOS features won't work
+- The app thinks it's running in a web browser
+
+**Solution:** A new Codemagic build is REQUIRED. After installing the new build:
+1. Allow notifications when prompted
+2. Log in to your account
+3. The app should now register for push notifications
+4. Broadcasts will show "sent to 1 device" instead of 0
 
 ---
 

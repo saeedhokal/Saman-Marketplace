@@ -84,7 +84,7 @@ export function usePushNotifications() {
     }
   }, []);
 
-  // Show debug info on first load (once per app session)
+  // Initialize push on first load
   useEffect(() => {
     if (debugShown.current) return;
     debugShown.current = true;
@@ -92,20 +92,12 @@ export function usePushNotifications() {
     const platform = Capacitor.getPlatform();
     const isNative = Capacitor.isNativePlatform();
     
-    console.log('=== PUSH DEBUG ===');
-    console.log('Platform:', platform);
-    console.log('Is Native:', isNative);
+    console.log('Push init - Platform:', platform, 'Native:', isNative);
     
-    // Use native alert on iOS to make sure user sees it
-    setTimeout(() => {
-      if (isNative) {
-        alert(`Push Debug:\nPlatform: ${platform}\nNative: ${isNative}`);
-      }
-      showInAppNotification(
-        'Debug',
-        `Platform: ${platform}, Native: ${isNative}`
-      );
-    }, 2000);
+    // Show confirmation when push is enabled on iOS
+    if (isNative) {
+      showInAppNotification('Notifications', 'Setting up push notifications...');
+    }
   }, []);
 
   // When user logs in, check for any pending token to register
