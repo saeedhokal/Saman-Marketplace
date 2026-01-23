@@ -1,9 +1,10 @@
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Bell, Check, Trash2, PackageX, CheckCheck, CreditCard, Clock, Package, Megaphone } from "lucide-react";
+import { ArrowLeft, Bell, Check, Trash2, PackageX, CreditCard, Clock, Package, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
+import { useEffect, useRef } from "react";
 
 interface Notification {
   id: number;
@@ -18,10 +19,25 @@ interface Notification {
 
 export default function NotificationInbox() {
   const [, navigate] = useLocation();
+  const hasMarkedAsRead = useRef(false);
 
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
   });
+
+  // Mark all as read when page opens
+  useEffect(() => {
+    if (!isLoading && notifications.length > 0 && !hasMarkedAsRead.current) {
+      const hasUnread = notifications.some(n => !n.isRead);
+      if (hasUnread) {
+        hasMarkedAsRead.current = true;
+        apiRequest("POST", "/api/notifications/mark-all-read").then(() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+        });
+      }
+    }
+  }, [isLoading, notifications]);
 
   const markAsReadMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -33,9 +49,9 @@ export default function NotificationInbox() {
     },
   });
 
-  const markAllReadMutation = useMutation({
+  const clearAllMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/notifications/mark-all-read");
+      await apiRequest("DELETE", "/api/notifications");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
@@ -116,8 +132,6 @@ export default function NotificationInbox() {
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
@@ -131,16 +145,16 @@ export default function NotificationInbox() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="flex-1 text-center font-semibold text-lg">Notifications</h1>
-            {unreadCount > 0 ? (
+            {notifications.length > 0 ? (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => markAllReadMutation.mutate()}
-                disabled={markAllReadMutation.isPending}
-                data-testid="button-mark-all-read"
+                onClick={() => clearAllMutation.mutate()}
+                disabled={clearAllMutation.isPending}
+                data-testid="button-clear-all"
               >
-                <CheckCheck className="h-4 w-4 mr-1" />
-                Read All
+                <Trash2 className="h-4 w-4 mr-1" />
+                Clear All
               </Button>
             ) : (
               <div className="w-20" />

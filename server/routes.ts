@@ -1612,5 +1612,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.sendStatus(204);
   });
 
+  // Clear all notifications for user
+  app.delete("/api/notifications", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req);
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+    await storage.deleteUserNotifications(userId);
+    res.sendStatus(204);
+  });
+
   return httpServer;
 }
