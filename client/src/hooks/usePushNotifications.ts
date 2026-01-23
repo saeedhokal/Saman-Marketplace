@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
+import { showInAppNotification } from '@/components/InAppNotificationBanner';
 
 const FCM_TOKEN_KEY = 'saman_fcm_token';
 
@@ -81,6 +82,10 @@ export function usePushNotifications() {
 
       await PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
         console.log('Push notification received:', notification);
+        showInAppNotification(
+          notification.title || 'Saman Marketplace',
+          notification.body || ''
+        );
       });
 
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
