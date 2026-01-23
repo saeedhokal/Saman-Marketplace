@@ -267,10 +267,35 @@ export async function notifyCreditsAdded(
 
 export async function broadcastPushNotification(
   payload: PushNotificationPayload
-): Promise<{ sent: number; failed: number }> {
+): Promise<{ sent: number; failed: number; saved: number }> {
+  let saved = 0;
+  
+  // First, save notification to database for ALL users (so it appears in their inbox)
+  try {
+    const allUsers = await db.select({ id: users.id }).from(users);
+    await Promise.all(
+      allUsers.map(async (user) => {
+        try {
+          await db.insert(notifications).values({
+            userId: user.id,
+            type: 'broadcast',
+            title: payload.title,
+            message: payload.body,
+          });
+          saved++;
+        } catch (err) {
+          console.error(`Failed to save broadcast notification for user ${user.id}:`, err);
+        }
+      })
+    );
+    console.log(`Broadcast notification saved to ${saved} user inboxes`);
+  } catch (error) {
+    console.error('Failed to save broadcast notifications to database:', error);
+  }
+
   if (!initializeFirebase()) {
     console.log('Push notifications not available - Firebase not initialized');
-    return { sent: 0, failed: 0 };
+    return { sent: 0, failed: 0, saved };
   }
 
   try {
@@ -278,7 +303,7 @@ export async function broadcastPushNotification(
     
     if (allTokens.length === 0) {
       console.log('No device tokens found for broadcast');
-      return { sent: 0, failed: 0 };
+      return { sent: 0, failed: 0, saved };
     }
 
     let sent = 0;
@@ -332,10 +357,10 @@ export async function broadcastPushNotification(
       })
     );
 
-    console.log(`Broadcast complete: ${sent} sent, ${failed} failed`);
-    return { sent, failed };
+    console.log(`Broadcast complete: ${sent} sent, ${failed} failed, ${saved} saved to inbox`);
+    return { sent, failed, saved };
   } catch (error) {
     console.error('Failed to broadcast push notification:', error);
-    return { sent: 0, failed: 0 };
+    return { sent: 0, failed: 0, saved };
   }
 }

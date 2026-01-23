@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Bell, Check, Trash2, PackageX, CheckCheck, CreditCard, Clock, Package } from "lucide-react";
+import { ArrowLeft, Bell, Check, Trash2, PackageX, CheckCheck, CreditCard, Clock, Package, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
@@ -99,6 +99,12 @@ export default function NotificationInbox() {
         return (
           <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
             <Package className="h-5 w-5 text-blue-500" />
+          </div>
+        );
+      case "broadcast":
+        return (
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+            <Megaphone className="h-5 w-5 text-white" />
           </div>
         );
       default:

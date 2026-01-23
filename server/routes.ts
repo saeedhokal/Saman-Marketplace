@@ -1219,7 +1219,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       success: true, 
       sent: result.sent, 
       failed: result.failed,
-      message: `Notification sent to ${result.sent} devices` 
+      saved: result.saved,
+      message: `Saved to ${result.saved} inboxes, sent to ${result.sent} devices` 
     });
   });
 
