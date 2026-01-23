@@ -1219,7 +1219,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       success: true, 
       sent: result.sent, 
       failed: result.failed,
-      saved: result.saved,
+      savedCount: result.saved,
       message: `Saved to ${result.saved} inboxes, sent to ${result.sent} devices` 
     });
   });

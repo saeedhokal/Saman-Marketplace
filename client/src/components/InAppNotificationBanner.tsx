@@ -40,25 +40,30 @@ export function InAppNotificationBanner() {
   }, [addNotification]);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[9999] pointer-events-none flex flex-col items-center pt-2 px-3 gap-2">
+    <div 
+      className="fixed top-0 left-0 right-0 z-[9999] pointer-events-none flex flex-col items-center px-4 gap-2"
+      style={{
+        paddingTop: 'calc(env(safe-area-inset-top, 12px) + 8px)'
+      }}
+    >
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, y: -100, scale: 0.9 }}
+            initial={{ opacity: 0, y: -100, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -50, scale: 0.9 }}
+            exit={{ opacity: 0, y: -30, scale: 0.95 }}
             transition={{ 
               type: "spring", 
-              stiffness: 400, 
-              damping: 30 
+              stiffness: 300, 
+              damping: 25 
             }}
-            className="pointer-events-auto w-full max-w-md"
+            className="pointer-events-auto w-full max-w-sm"
           >
             <div 
-              className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden"
+              className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-[20px] shadow-2xl border border-white/20 dark:border-zinc-700/50 overflow-hidden"
               style={{
-                boxShadow: '0 10px 40px rgba(0,0,0,0.15), 0 2px 10px rgba(0,0,0,0.1)'
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08)'
               }}
             >
               <div className="flex items-start gap-3 p-4">

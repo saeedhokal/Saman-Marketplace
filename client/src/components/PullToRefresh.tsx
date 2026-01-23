@@ -143,11 +143,11 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
         </div>
       )}
       
-      {/* Content */}
+      {/* Content - only transform when actively pulling, snap back instantly otherwise */}
       <div
         style={{
-          transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
-          transition: pulling.current ? 'none' : 'transform 0.2s ease-out',
+          transform: pulling.current && pullDistance > 0 ? `translateY(${pullDistance}px)` : 'translateY(0)',
+          transition: pulling.current ? 'none' : 'transform 0.15s ease-out',
         }}
       >
         {children}
