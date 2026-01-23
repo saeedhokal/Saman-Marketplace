@@ -41,9 +41,10 @@ export function InAppNotificationBanner() {
 
   return (
     <div 
-      className="fixed top-0 left-0 right-0 z-[9999] pointer-events-none flex flex-col items-center px-4 gap-2"
+      className="fixed left-0 right-0 z-[9999] pointer-events-none flex flex-col items-center px-4 gap-2"
       style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 12px) + 8px)'
+        top: 'max(env(safe-area-inset-top, 20px), 20px)',
+        paddingTop: '8px'
       }}
     >
       <AnimatePresence>

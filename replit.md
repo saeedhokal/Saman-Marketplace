@@ -76,8 +76,10 @@ Native push notifications that work when the app is closed:
 
 **In-App Notification Banner**:
 - `client/src/components/InAppNotificationBanner.tsx`
+- Positioned BELOW the iOS status bar using: `top: max(env(safe-area-inset-top, 20px), 20px)` + 8px padding
+- Works on both notched (44-47px) and non-notched (20px) iPhones
 - Smooth slide-down animation from top with Framer Motion
-- Gradient orange bell icon, rounded corners
+- Gradient orange bell icon, 20px rounded corners, backdrop blur
 - Auto-dismiss after 5 seconds, can tap to dismiss
 - Shows when app is open and receives a notification
 
