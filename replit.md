@@ -111,6 +111,13 @@ Currency: AED
 Testing: Uses TestFlight iOS app as primary testing environment (no Mac available)
 Build workflow: Uses Codemagic for iOS builds, pushes to GitHub manually via Replit Git panel
 
+**User Background**:
+- Non-technical user - does not code and has never used Xcode
+- Previous development company handled most technical setup
+- Left previous company due to reliability/accountability issues - app crashed under user load
+- All iOS builds handled through Codemagic (no Mac access)
+- Requires simple, non-technical explanations for all changes
+
 ## Admin Configuration
 
 **Admin Phone Numbers**: Defined in `OWNER_PHONES` array in `server/routes.ts` - currently `["971507242111"]`
