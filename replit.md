@@ -1,5 +1,26 @@
 # Saman Marketplace - Spare Parts & Automotive Marketplace
 
+## Recent Changes (January 2026)
+
+### Session: January 23, 2026
+**Fixes Applied (requires new Codemagic build to see on iOS):**
+1. ✅ **Broadcast notifications saving to inboxes** - Fixed `savedCount` naming mismatch in server response. Notifications now properly save to all user inboxes.
+2. ✅ **Toast message "undefined" fix** - Added fallbacks so toast shows "0" instead of "undefined" when no devices registered.
+3. ✅ **In-app notification banner overlapping status bar** - Fixed positioning to appear BELOW iOS status bar using `top: max(env(safe-area-inset-top, 20px), 20px)` + 8px padding.
+4. ✅ **Pull-to-refresh leaving gap** - Fixed to snap back instantly without leaving persistent space at top.
+
+**Files Changed:**
+- `server/routes.ts` - Fixed broadcast response to return `savedCount`
+- `client/src/components/InAppNotificationBanner.tsx` - Fixed positioning below status bar
+- `client/src/components/PullToRefresh.tsx` - Fixed snap-back transition
+- `client/src/pages/Admin.tsx` - Added fallbacks for undefined values in toast
+
+**Testing Status:** All changes tested and working in development. Broadcast API returns correct format: `{"savedCount": 12, "sent": 0, "message": "Saved to 12 inboxes, sent to 0 devices"}`
+
+**Next Steps:** Push to GitHub → Codemagic build → TestFlight install
+
+---
+
 ## Overview
 
 Saman Marketplace is a full-stack marketplace application for buying and selling spare parts and automotive in the UAE. It features a React frontend with a modern industrial design aesthetic, an Express.js backend with PostgreSQL database, and object storage for images.
