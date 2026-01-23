@@ -15,7 +15,7 @@
 2. ✅ **Toast message "undefined" fix** - Added fallbacks so toast shows "0" instead of "undefined" when no devices registered.
 3. ✅ **Toast notifications overlapping status bar** - Fixed ToastViewport positioning to appear BELOW iOS status bar using `top: max(env(safe-area-inset-top, 20px), 20px)`.
 4. ✅ **Pull-to-refresh leaving gap** - Fixed to snap back instantly without leaving persistent space at top.
-5. ✅ **Push notification token registration** - Improved flow to save token locally if not logged in, then register when user logs in. Added better logging for debugging.
+5. ✅ **Push notification token registration (MAJOR FIX)** - Fixed race condition where token was captured before user session loaded. Now uses userRef to track user state, adds 500ms delay for session loading, and re-registers stored tokens on login.
 
 **Files Changed:**
 - `server/routes.ts` - Fixed broadcast response to return `savedCount`
