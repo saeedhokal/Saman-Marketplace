@@ -12,40 +12,17 @@ function navigateTo(path: string) {
   window.location.href = path;
 }
 
-// Initialize push notifications immediately when module loads
-// This runs before any React components mount
-const platform = Capacitor.getPlatform();
-const isNative = Capacitor.isNativePlatform();
-
-// Log to help debug
-console.log('=== PUSH NOTIFICATION INIT ===');
-console.log('Platform:', platform);
-console.log('Is Native:', isNative);
-
-// Show debug banner after page loads (only once per session)
-if (typeof window !== 'undefined') {
-  const debugKey = 'push_debug_v2';
-  if (!sessionStorage.getItem(debugKey)) {
-    sessionStorage.setItem(debugKey, 'true');
-    setTimeout(() => {
-      showInAppNotification(
-        'Platform Check',
-        `${platform} | Native: ${isNative}`
-      );
-    }, 3000);
-  }
-}
-
 export function usePushNotifications() {
   const { user } = useAuth();
   const hasRegistered = useRef(false);
+  const debugShown = useRef(false);
 
   const registerToken = useCallback(async (token: string) => {
     // Save token for later if not logged in
     if (!user) {
       console.log('User not logged in, saving token for later registration');
       localStorage.setItem(PENDING_TOKEN_KEY, token);
-      showInAppNotification('Push Token', 'Saved, will register on login');
+      showInAppNotification('Push Token', 'Saved for later');
       return;
     }
     
@@ -53,17 +30,17 @@ export function usePushNotifications() {
       console.log('Registering push notification token with server...');
       await apiRequest('POST', '/api/device-token', {
         fcmToken: token,
-        deviceOs: platform,
-        deviceName: `${platform} device`,
+        deviceOs: Capacitor.getPlatform(),
+        deviceName: `${Capacitor.getPlatform()} device`,
       });
       localStorage.setItem(FCM_TOKEN_KEY, token);
       localStorage.removeItem(PENDING_TOKEN_KEY);
       hasRegistered.current = true;
       console.log('Push notification token registered successfully!');
-      showInAppNotification('Push Enabled', 'You will receive push notifications');
+      showInAppNotification('Push Enabled', 'Notifications are now active');
     } catch (error) {
       console.error('Failed to register push notification token:', error);
-      showInAppNotification('Push Error', 'Failed to register for notifications');
+      showInAppNotification('Push Error', 'Failed to register');
     }
   }, [user]);
 
@@ -81,7 +58,7 @@ export function usePushNotifications() {
   }, []);
 
   const initializePushNotifications = useCallback(async () => {
-    if (!isNative) {
+    if (!Capacitor.isNativePlatform()) {
       console.log('Push notifications not available on web');
       return;
     }
@@ -96,7 +73,7 @@ export function usePushNotifications() {
 
       if (permStatus.receive !== 'granted') {
         console.log('Push notification permission not granted');
-        showInAppNotification('Push Blocked', 'Please enable notifications in Settings');
+        showInAppNotification('Push Blocked', 'Enable in Settings');
         return;
       }
 
@@ -104,8 +81,31 @@ export function usePushNotifications() {
       await PushNotifications.register();
     } catch (error) {
       console.error('Error initializing push notifications:', error);
-      showInAppNotification('Push Error', String(error));
     }
+  }, []);
+
+  // Show debug info on first load (once per app session)
+  useEffect(() => {
+    if (debugShown.current) return;
+    debugShown.current = true;
+    
+    const platform = Capacitor.getPlatform();
+    const isNative = Capacitor.isNativePlatform();
+    
+    console.log('=== PUSH DEBUG ===');
+    console.log('Platform:', platform);
+    console.log('Is Native:', isNative);
+    
+    // Use native alert on iOS to make sure user sees it
+    setTimeout(() => {
+      if (isNative) {
+        alert(`Push Debug:\nPlatform: ${platform}\nNative: ${isNative}`);
+      }
+      showInAppNotification(
+        'Debug',
+        `Platform: ${platform}, Native: ${isNative}`
+      );
+    }, 2000);
   }, []);
 
   // When user logs in, check for any pending token to register
@@ -119,16 +119,13 @@ export function usePushNotifications() {
     }
   }, [user, registerToken]);
 
-  // Setup push notifications when on native platform and logged in
+  // Setup push notifications when on native platform
   useEffect(() => {
+    const isNative = Capacitor.isNativePlatform();
+    
     if (!isNative) {
       console.log('Not on native platform, skipping push notification setup');
       return;
-    }
-    
-    if (!user) {
-      // Even if not logged in, still set up listeners and get the token
-      console.log('User not logged in, but will still get push token...');
     }
 
     console.log('Setting up push notification listeners...');
@@ -141,7 +138,7 @@ export function usePushNotifications() {
 
       await PushNotifications.addListener('registrationError', (error: any) => {
         console.error('Push registration error:', JSON.stringify(error));
-        showInAppNotification('Push Reg Error', JSON.stringify(error).substring(0, 50));
+        showInAppNotification('Push Error', 'Registration failed');
       });
 
       await PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
@@ -173,7 +170,7 @@ export function usePushNotifications() {
     return () => {
       PushNotifications.removeAllListeners();
     };
-  }, [user, registerToken, initializePushNotifications]);
+  }, [registerToken, initializePushNotifications]);
 
   return {
     initializePushNotifications,
