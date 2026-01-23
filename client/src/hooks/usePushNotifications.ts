@@ -7,6 +7,7 @@ import { showInAppNotification } from '@/components/InAppNotificationBanner';
 
 const FCM_TOKEN_KEY = 'saman_fcm_token';
 const PENDING_TOKEN_KEY = 'saman_pending_fcm_token';
+const DEBUG_SHOWN_KEY = 'saman_push_debug_shown';
 
 function navigateTo(path: string) {
   window.location.href = path;
@@ -15,6 +16,7 @@ function navigateTo(path: string) {
 export function usePushNotifications() {
   const { user } = useAuth();
   const hasRegistered = useRef(false);
+  const debugShown = useRef(false);
 
   const registerToken = useCallback(async (token: string) => {
     // Save token for later if not logged in
@@ -87,6 +89,28 @@ export function usePushNotifications() {
       registerToken(pendingToken);
     }
   }, [user, registerToken]);
+
+  // Debug effect - show platform info on login (only once per session)
+  useEffect(() => {
+    if (!user || debugShown.current) return;
+    
+    const platform = Capacitor.getPlatform();
+    const isNative = Capacitor.isNativePlatform();
+    const storedToken = localStorage.getItem(FCM_TOKEN_KEY);
+    const pendingToken = localStorage.getItem(PENDING_TOKEN_KEY);
+    
+    // Show debug info so user can tell us what's happening
+    if (isNative && !localStorage.getItem(DEBUG_SHOWN_KEY)) {
+      setTimeout(() => {
+        showInAppNotification(
+          'Push Debug Info',
+          `Platform: ${platform}, Native: ${isNative}, Token saved: ${!!storedToken}, Pending: ${!!pendingToken}`
+        );
+        localStorage.setItem(DEBUG_SHOWN_KEY, 'true');
+      }, 2000);
+    }
+    debugShown.current = true;
+  }, [user]);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) {
