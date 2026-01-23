@@ -8,12 +8,14 @@
 2. ✅ **Toast message "undefined" fix** - Added fallbacks so toast shows "0" instead of "undefined" when no devices registered.
 3. ✅ **In-app notification banner overlapping status bar** - Fixed positioning to appear BELOW iOS status bar using `top: max(env(safe-area-inset-top, 20px), 20px)` + 8px padding.
 4. ✅ **Pull-to-refresh leaving gap** - Fixed to snap back instantly without leaving persistent space at top.
+5. ✅ **Toast notifications overlapping status bar** - Fixed ToastViewport positioning to appear below iOS status bar instead of at top-0.
 
 **Files Changed:**
 - `server/routes.ts` - Fixed broadcast response to return `savedCount`
 - `client/src/components/InAppNotificationBanner.tsx` - Fixed positioning below status bar
 - `client/src/components/PullToRefresh.tsx` - Fixed snap-back transition
 - `client/src/pages/Admin.tsx` - Added fallbacks for undefined values in toast
+- `client/src/components/ui/toast.tsx` - Fixed ToastViewport positioning below status bar
 
 **Testing Status:** All changes tested and working in development. Broadcast API returns correct format: `{"savedCount": 12, "sent": 0, "message": "Saved to 12 inboxes, sent to 0 devices"}`
 
