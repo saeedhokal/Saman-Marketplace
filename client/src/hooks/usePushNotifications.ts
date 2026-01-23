@@ -1,13 +1,12 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
-import { FCM } from '@capacitor-community/fcm';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { showInAppNotification } from '@/components/InAppNotificationBanner';
 
-const FCM_TOKEN_KEY = 'saman_fcm_token';
-const PENDING_TOKEN_KEY = 'saman_pending_fcm_token';
+const TOKEN_KEY = 'saman_push_token';
+const PENDING_TOKEN_KEY = 'saman_pending_push_token';
 
 function navigateTo(path: string) {
   window.location.href = path;
@@ -26,33 +25,33 @@ export function usePushNotifications() {
     }
     
     try {
-      console.log('Registering FCM token with server...');
+      console.log('Registering push token with server...');
       await apiRequest('POST', '/api/device-token', {
         fcmToken: token,
         deviceOs: Capacitor.getPlatform(),
         deviceName: `${Capacitor.getPlatform()} device`,
       });
-      localStorage.setItem(FCM_TOKEN_KEY, token);
+      localStorage.setItem(TOKEN_KEY, token);
       localStorage.removeItem(PENDING_TOKEN_KEY);
       hasRegistered.current = true;
-      console.log('FCM token registered successfully!');
+      console.log('Push token registered successfully!');
       showInAppNotification('Push Enabled', 'You will receive notifications');
     } catch (error) {
-      console.error('Failed to register FCM token:', error);
+      console.error('Failed to register push token:', error);
       showInAppNotification('Push Error', 'Failed to enable notifications');
     }
   }, [user]);
 
   const unregisterToken = useCallback(async () => {
-    const storedToken = localStorage.getItem(FCM_TOKEN_KEY);
+    const storedToken = localStorage.getItem(TOKEN_KEY);
     if (!storedToken) return;
     
     try {
       await apiRequest('DELETE', '/api/device-token', { fcmToken: storedToken });
-      localStorage.removeItem(FCM_TOKEN_KEY);
-      console.log('FCM token unregistered');
+      localStorage.removeItem(TOKEN_KEY);
+      console.log('Push token unregistered');
     } catch (error) {
-      console.error('Failed to unregister FCM token:', error);
+      console.error('Failed to unregister push token:', error);
     }
   }, []);
 
@@ -101,7 +100,7 @@ export function usePushNotifications() {
     
     const pendingToken = localStorage.getItem(PENDING_TOKEN_KEY);
     if (pendingToken) {
-      console.log('Found pending FCM token, registering now...');
+      console.log('Found pending push token, registering now...');
       registerToken(pendingToken);
     }
   }, [user, registerToken]);
@@ -118,24 +117,15 @@ export function usePushNotifications() {
     console.log('Setting up push notification listeners...');
 
     const setupListeners = async () => {
-      // Listen for APNs registration success - then get FCM token
+      // Listen for push registration success
       await PushNotifications.addListener('registration', async (token: Token) => {
-        console.log('APNs registration success, getting FCM token...');
-        try {
-          // Use FCM plugin to get the FCM token (converts APNs token to FCM)
-          const fcmTokenResult = await FCM.getToken();
-          const fcmToken = fcmTokenResult.token;
-          console.log('FCM token obtained:', fcmToken?.substring(0, 30) + '...');
-          
-          if (fcmToken) {
-            registerToken(fcmToken);
-          } else {
-            console.error('FCM token is empty');
-            showInAppNotification('Push Error', 'Could not get notification token');
-          }
-        } catch (fcmError) {
-          console.error('Failed to get FCM token:', fcmError);
-          showInAppNotification('Push Error', 'Token conversion failed');
+        console.log('Push registration success, token:', token.value?.substring(0, 30) + '...');
+        
+        if (token.value) {
+          registerToken(token.value);
+        } else {
+          console.error('Push token is empty');
+          showInAppNotification('Push Error', 'Could not get notification token');
         }
       });
 
