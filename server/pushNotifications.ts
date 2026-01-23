@@ -17,9 +17,11 @@ function initializeAPNs(): boolean {
   }
 
   try {
+    const keyBuffer = Buffer.from(apnsKey, 'utf8');
+    
     apnProvider = new apn.Provider({
       token: {
-        key: apnsKey,
+        key: keyBuffer,
         keyId: 'GMC5C3M7JF',
         teamId: 'KQ542Q98H2',
       },
@@ -132,8 +134,10 @@ async function sendAPNsNotification(
   payload: PushNotificationPayload,
   badgeCount: number = 0
 ): Promise<boolean> {
+  console.log(`Attempting APNs send to token: ${token.substring(0, 30)}...`);
+  
   if (!initializeAPNs() || !apnProvider) {
-    console.log('APNs not available');
+    console.log('APNs not available - provider not initialized');
     return false;
   }
 
@@ -148,15 +152,25 @@ async function sendAPNsNotification(
     };
     note.topic = 'com.saeed.saman';
     note.payload = payload.data || {};
+    note.pushType = 'alert';
 
+    console.log(`Sending APNs notification: title="${payload.title}", topic=${note.topic}`);
     const result = await apnProvider.send(note, token);
     
+    console.log(`APNs result: sent=${result.sent.length}, failed=${result.failed.length}`);
+    
     if (result.failed.length > 0) {
-      console.error('APNs send failed:', result.failed[0].response);
+      const failure = result.failed[0];
+      console.error('APNs send failed:', JSON.stringify({
+        device: failure.device,
+        status: failure.status,
+        response: failure.response,
+        error: failure.error
+      }));
       return false;
     }
     
-    console.log(`APNs notification sent to ${token.substring(0, 20)}...`);
+    console.log(`APNs notification sent successfully to ${token.substring(0, 20)}...`);
     return true;
   } catch (error) {
     console.error('APNs send error:', error);
