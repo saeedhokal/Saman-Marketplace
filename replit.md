@@ -1,62 +1,230 @@
 # Saman Marketplace - Spare Parts & Automotive Marketplace
 
-## Overview
+## CRITICAL TESTING NOTES
 
-Saman Marketplace is a full-stack e-commerce platform for buying and selling automotive spare parts and vehicles in the UAE. It aims to provide a modern, user-friendly experience with robust features for both buyers and sellers. The platform includes a React frontend, an Express.js backend with a PostgreSQL database, and object storage for images. Key capabilities include phone + OTP authentication, category-specific credit packages, integrated payment processing (Apple Pay, Credit Card), admin moderation of listings, and comprehensive revenue tracking. The project's ambition is to become the leading marketplace for automotive goods in the UAE.
+**ALL TESTING IS DONE ON iPHONE VIA TESTFLIGHT** - User talks to agent on desktop, tests on iPhone.
+**Build Workflow:** Push to GitHub → Codemagic build → TestFlight install
+
+---
+
+## Recent Changes (January 2026)
+
+### Session: January 23, 2026
+**Fixes Applied (requires new Codemagic build to see on iOS):**
+1. ✅ **Broadcast notifications saving to inboxes** - Fixed `savedCount` naming mismatch in server response. Notifications now properly save to all user inboxes.
+2. ✅ **Toast message "undefined" fix** - Added fallbacks so toast shows "0" instead of "undefined" when no devices registered.
+3. ✅ **Toast notifications overlapping status bar** - Fixed ToastViewport positioning to appear BELOW iOS status bar using `top: max(env(safe-area-inset-top, 20px), 20px)`.
+4. ✅ **Pull-to-refresh leaving gap** - Fixed to snap back instantly without leaving persistent space at top.
+5. ✅ **Push notification token registration** - Improved flow to save token locally if not logged in, then register when user logs in. Added better logging for debugging.
+
+**Files Changed:**
+- `server/routes.ts` - Fixed broadcast response to return `savedCount`
+- `client/src/components/ui/toast.tsx` - Fixed ToastViewport positioning below status bar
+- `client/src/components/PullToRefresh.tsx` - Fixed snap-back transition
+- `client/src/pages/Admin.tsx` - Added fallbacks for undefined values in toast
+- `client/src/hooks/usePushNotifications.ts` - Improved token registration flow with better logging
+
+**Testing Status:** All changes tested and working in development. Broadcast API returns correct format: `{"savedCount": 12, "sent": 0, "message": "Saved to 12 inboxes, sent to 0 devices"}`
+
+**Next Steps:** Push to GitHub → Codemagic build → TestFlight install → Log out and back in to register push token
+
+---
+
+## Known Issues & Solutions
+
+### Push Notifications Not Working
+**Symptoms:** Broadcasts show "sent to 0 devices"
+**Cause:** Device token not registered because user wasn't logged in when app first opened
+**Solution:** 
+1. Build new version with improved token registration
+2. Install via TestFlight
+3. Log out and log back in (this triggers token registration)
+4. Push notifications should work after that
+
+### Toast/Notifications Overlapping Status Bar
+**Symptoms:** Notification appears behind the time/wifi/battery icons on iPhone
+**Solution:** Fixed with `top: max(env(safe-area-inset-top, 20px), 20px)` positioning
+
+### "Saved to 0 inboxes" Issue
+**Symptoms:** Broadcast sends but shows 0 saved
+**Cause:** Server was returning `saved` but client expected `savedCount`
+**Solution:** Fixed server response to use `savedCount`
+
+---
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
-Region: UAE (phone-based auth is preferred over email)
-Currency: AED
-Testing: Uses TestFlight iOS app as primary testing environment (no Mac available)
-Build workflow: Uses Codemagic for iOS builds, pushes to GitHub manually via Replit Git panel
-User Background:
-- Non-technical user - does not code and has never used Xcode
-- All iOS builds handled through Codemagic (no Mac access)
-- Requires simple, non-technical explanations for all changes
+- **Communication style:** Simple, everyday language (non-technical)
+- **Region:** UAE
+- **Currency:** AED
+- **Testing:** TestFlight iOS app (no Mac available, never used Xcode)
+- **Build workflow:** Codemagic for iOS builds, GitHub via Replit Git panel
+- **Important:** User does NOT code - all changes must be made by agent
 
-## System Architecture
+---
 
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript
-- **Routing**: Wouter
-- **State Management**: TanStack Query for server state
-- **Styling**: Tailwind CSS with shadcn/ui components
-- **Animations**: Framer Motion
-- **Form Handling**: React Hook Form with Zod validation
-- **Build Tool**: Vite
-- **UI/UX**: Modern industrial design aesthetic with a dark gradient card design (from-[#1e293b] to-[#0f172a]) and orange accent color (#f97316) for icons, buttons, and selected states.
+## Design Specifications
 
-### Backend Architecture
-- **Framework**: Express.js with TypeScript
-- **Database ORM**: Drizzle ORM with PostgreSQL
-- **Authentication**: Phone + OTP authentication, session-based via `connect-pg-simple`
-- **File Uploads**: Google Cloud Storage with presigned URLs via Uppy
-- **Modular Structure**: Routes, storage, authentication, and database logic are separated.
+### UI Theme
+- **Primary accent color:** Orange (#f97316)
+- **Dark gradient cards:** from-[#1e293b] to-[#0f172a]
+- **Selected state backgrounds:** Orange with white text
+- **Card design:** Rounded corners, subtle shadows
 
-### API Design
-API routes are type-safe, defined with Zod schemas for various functionalities including product listings, user authentication, user-specific listings (expiring, repost, sold), subscription package management, checkout processes, and admin functionalities (packages, revenue, broadcast notifications).
+### Notification Styling
+**Toast Notifications (success/error messages after actions):**
+- Position: `top: max(env(safe-area-inset-top, 20px), 20px)` - appears below iOS status bar
+- Background: Primary color (orange) with white text
+- Rounded corners (rounded-xl), shadow
 
-### Database Schema
-The PostgreSQL database schema, defined using Drizzle ORM, includes tables for products, users, sessions, OTP codes, favorites, app settings, subscription packages, and transactions.
+**Broadcast Notification Form (Admin Panel):**
+- Dark gradient background (from-[#1e293b] to-[#0f172a])
+- Orange bell icon in rounded box
+- "Send Now" / "Delay" / "Schedule" toggle buttons
+- Delay: Slider from 5-120 minutes
+- Schedule: Date and time pickers
 
-### Build System
-- **Development**: `tsx` with Vite dev server.
-- **Production**: Custom build script using esbuild for server and Vite for client.
+### Safe Area Handling (iOS)
+- Body has `padding-top: env(safe-area-inset-top)` for notch area
+- Toast viewport uses `top: max(env(safe-area-inset-top, 20px), 20px)`
+- Bottom nav has safe area padding for home indicator
 
-### iOS App (Capacitor)
-- The project is configured with Capacitor for native iOS app generation.
-- Supports Apple Pay (native and web) and Firebase Cloud Messaging for push notifications.
-- Push notifications are sent for new listings, approvals, rejections, credit additions, and admin broadcasts.
-- In-app notification banners are positioned below the iOS status bar and feature smooth animations and auto-dismissal.
+---
 
-## External Dependencies
+## Push Notifications (Firebase Cloud Messaging)
 
-- **PostgreSQL**: Primary database.
-- **Telr Payment Gateway**: For credit card processing.
-- **Apple Pay**: Integrated for native iOS and web payments (`merchant.saeed.saman`).
-- **Google Cloud Storage**: For object storage of product images.
-- **Firebase Cloud Messaging (FCM)**: For native push notifications (`saman-car-spare-parts`).
-- **NPM Packages**: Key packages include `@tanstack/react-query`, `drizzle-orm`, `@uppy`, `framer-motion`, `input-otp`, and `shadcn/ui`.
-- **Twilio (Pending)**: SMS provider for OTP, currently logged to console in development.
+### Configuration
+- **Firebase Project:** saman-car-spare-parts
+- **APNs Key ID:** GMC5C3M7JF (uploaded to Firebase Console)
+- **Credentials:** FIREBASE_ADMIN_CREDENTIALS secret contains service account JSON
+
+### How It Works
+1. User opens app on iPhone
+2. App requests notification permission
+3. iOS returns device token (APNs token)
+4. App sends token to server (`POST /api/device-token`)
+5. Server stores token in `device_tokens` table
+6. When broadcast sent, server uses Firebase Admin SDK to send to all tokens
+
+### Token Registration Flow (Fixed Jan 23, 2026)
+- If user not logged in: Token saved to localStorage
+- When user logs in: Pending token automatically registered
+- Logs to console for debugging:
+  - "Setting up push notification listeners for user: [id]"
+  - "Push registration success, token: [first 20 chars]..."
+  - "Registering push notification token with server..."
+  - "Push notification token registered successfully!"
+
+### Testing Push Notifications
+1. Build new version in Codemagic
+2. Install via TestFlight
+3. Allow notifications when prompted
+4. **Log out and log back in** (critical for token registration)
+5. Go to Admin → Broadcast Notification → Send a test
+6. Should see "sent to 1 device" in success message
+
+---
+
+## iOS App (Capacitor)
+
+### Configuration
+- **App ID:** com.saeed.saman
+- **App Name:** Saman Marketplace
+- **Team ID:** KQ542Q98H2
+- **Server URL:** https://saman-market-fixer--saeedhokal.replit.app
+
+### Apple Pay
+- **Merchant ID:** merchant.saeed.saman
+- **Status:** Working - double-click power button triggers native Apple Pay sheet
+- **Certificates:** APPLE_PAY_CERT, APPLE_PAY_KEY secrets configured
+
+### Capacitor Plugins
+- @capacitor/push-notifications - For FCM
+- @capacitor/splash-screen - Launch screen
+- Standard iOS plugins for core functionality
+
+---
+
+## Admin Features
+
+### Broadcast Notifications
+- **Location:** Admin Panel → Notifications tab
+- **Options:** 
+  - Send Now (immediate)
+  - Delay (5-120 minutes slider)
+  - Schedule (specific date/time)
+- **What happens:**
+  1. Notification saved to ALL user inboxes (appears in bell icon)
+  2. Push notification sent to all registered devices
+
+### Listing Moderation
+- All new listings require admin approval
+- Admin can approve or reject with reason
+- Rejection refunds the user's credit
+
+### Revenue Tracking
+- Total revenue display
+- Breakdown by category (Spare Parts vs Automotive)
+- Time filters: Today, Week, Month, Year, All Time, Custom range
+
+---
+
+## Payment Integrations
+
+- **Telr Payment Gateway:** Credit card processing (TELR_STORE_ID, TELR_AUTH_KEY)
+- **Apple Pay:** Native iOS payments (merchant.saeed.saman)
+
+---
+
+## Database Tables
+
+- **users:** User accounts with phone, name, credits
+- **products:** Listings with categories, prices, status
+- **device_tokens:** FCM tokens for push notifications
+- **notifications:** User notification inbox
+- **transactions:** Payment records
+- **subscription_packages:** Credit packages for purchase
+- **favorites:** User saved listings
+
+---
+
+## Important Files
+
+- `client/src/hooks/usePushNotifications.ts` - Push notification registration
+- `client/src/components/ui/toast.tsx` - Toast notification styling
+- `client/src/components/PullToRefresh.tsx` - Pull to refresh component
+- `client/src/pages/Admin.tsx` - Admin panel with broadcast
+- `server/pushNotifications.ts` - Firebase Admin SDK, sending notifications
+- `server/routes.ts` - All API endpoints
+- `ios/App/App/AppDelegate.swift` - iOS app delegate with push setup
+- `capacitor.config.ts` - Capacitor configuration
+
+---
+
+## Architecture
+
+### Frontend
+- React 18 + TypeScript
+- Vite build tool
+- TanStack Query for data fetching
+- Tailwind CSS + shadcn/ui components
+- Framer Motion for animations
+- Wouter for routing
+
+### Backend
+- Express.js + TypeScript
+- Drizzle ORM with PostgreSQL
+- Session-based auth (connect-pg-simple)
+- Google Cloud Storage for images
+
+### iOS
+- Capacitor for native wrapper
+- Firebase Cloud Messaging for push
+- Native Apple Pay integration
+
+---
+
+## Pending Items
+
+- **SMS Provider (Twilio):** Not configured - OTP codes logged to console in dev
+- **Production SMS:** Need to set up Twilio or alternative when ready
