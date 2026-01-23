@@ -29,11 +29,11 @@
 **Next Steps:** Push to GitHub → Codemagic build → TestFlight install
 
 **Push Notification Fix - Proper FCM Integration (Jan 23, 2026):**
-- ✅ Installed `@capacitor-community/fcm` v8.1.0 for proper APNs → FCM token conversion
+- ✅ Installed `@capacitor-community/fcm` v7.x for proper APNs → FCM token conversion
 - ✅ Updated `ios/App/Podfile` with `Firebase/Messaging ~> 10.0`
 - ✅ Updated `ios/App/App/AppDelegate.swift` with Firebase initialization and MessagingDelegate
 - ✅ Updated `client/src/hooks/usePushNotifications.ts` to use FCM plugin for token conversion
-- ✅ Fixed Capacitor CLI version mismatch (now v8.0.1)
+- ✅ **IMPORTANT:** Downgraded to Capacitor v7 (from v8) for Codemagic compatibility - Capacitor v8 requires Node.js 22+ which Codemagic doesn't support yet
 
 **How it works now:**
 1. App registers for push with APNs (native iOS)

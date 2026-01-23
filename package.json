@@ -11,11 +11,11 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@capacitor-community/fcm": "^8.1.0",
-    "@capacitor/cli": "^8.0.1",
-    "@capacitor/core": "^8.0.1",
-    "@capacitor/ios": "^8.0.1",
-    "@capacitor/push-notifications": "^8.0.0",
+    "@capacitor-community/fcm": "^7.3.0",
+    "@capacitor/cli": "^7.4.5",
+    "@capacitor/core": "^7.4.5",
+    "@capacitor/ios": "^7.4.5",
+    "@capacitor/push-notifications": "^7.0.4",
     "@google-cloud/storage": "^7.18.0",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
