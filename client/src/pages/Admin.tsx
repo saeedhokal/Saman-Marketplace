@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2 } from "lucide-react";
+import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link } from "wouter";
 
@@ -27,6 +28,7 @@ export default function Admin() {
   const [pendingCategory, setPendingCategory] = useState<"all" | "Spare Parts" | "Automotive">("all");
   const [packageCategory, setPackageCategory] = useState<"Spare Parts" | "Automotive">("Spare Parts");
   const [editingPackage, setEditingPackage] = useState<SubscriptionPackage | null>(null);
+  const [selectedListings, setSelectedListings] = useState<Set<number>>(new Set());
   const [newPackage, setNewPackage] = useState({
     name: "",
     price: 0,
@@ -90,6 +92,18 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/listings/pending"] });
       toast({ title: "Listing approved", description: "The listing is now visible to users." });
+    },
+  });
+
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      await Promise.all(ids.map(id => apiRequest("POST", `/api/admin/listings/${id}/approve`)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings/pending"] });
+      setSelectedListings(new Set());
+      toast({ title: "Listings approved", description: `${selectedListings.size} listings approved successfully.` });
     },
   });
 
@@ -244,6 +258,30 @@ export default function Admin() {
 
   const filteredPackages = packages.filter(p => p.category === packageCategory);
 
+  const toggleListingSelection = (id: number) => {
+    setSelectedListings(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllFiltered = () => {
+    const allIds = filteredPending.map(l => l.id);
+    setSelectedListings(new Set(allIds));
+  };
+
+  const deselectAll = () => {
+    setSelectedListings(new Set());
+  };
+
+  const isAllSelected = filteredPending.length > 0 && filteredPending.every(l => selectedListings.has(l.id));
+  const hasSelections = selectedListings.size > 0;
+
   const handleRefresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["/api/admin/listings/pending"] }),
@@ -319,6 +357,47 @@ export default function Admin() {
               </button>
             </div>
 
+            {filteredPending.length > 0 && (
+              <div className="flex items-center justify-between gap-2 p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={isAllSelected ? deselectAll : selectAllFiltered}
+                    data-testid="button-select-all"
+                  >
+                    {isAllSelected ? (
+                      <>
+                        <Square className="h-4 w-4 mr-2" />
+                        Deselect All
+                      </>
+                    ) : (
+                      <>
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        Select All ({filteredPending.length})
+                      </>
+                    )}
+                  </Button>
+                  {hasSelections && (
+                    <span className="text-sm text-muted-foreground">
+                      {selectedListings.size} selected
+                    </span>
+                  )}
+                </div>
+                {hasSelections && (
+                  <Button
+                    size="sm"
+                    onClick={() => bulkApproveMutation.mutate(Array.from(selectedListings))}
+                    disabled={bulkApproveMutation.isPending}
+                    data-testid="button-bulk-approve"
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    {bulkApproveMutation.isPending ? "Approving..." : `Approve ${selectedListings.size}`}
+                  </Button>
+                )}
+              </div>
+            )}
+
             {pendingLoading ? (
               <div className="text-center py-10 text-muted-foreground">Loading...</div>
             ) : !filteredPending.length ? (
@@ -338,6 +417,9 @@ export default function Admin() {
                   onDelete={() => deleteMutation.mutate(listing.id)}
                   showActions
                   getStatusBadge={getStatusBadge}
+                  isSelected={selectedListings.has(listing.id)}
+                  onToggleSelect={() => toggleListingSelection(listing.id)}
+                  showCheckbox
                 />
               ))
             )}
@@ -759,6 +841,9 @@ function ListingCard({
   onDelete,
   showActions,
   getStatusBadge,
+  isSelected = false,
+  onToggleSelect,
+  showCheckbox = false,
 }: {
   listing: Product;
   onApprove: () => void;
@@ -766,14 +851,26 @@ function ListingCard({
   onDelete: () => void;
   showActions: boolean;
   getStatusBadge: (status: string) => JSX.Element;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
+  showCheckbox?: boolean;
 }) {
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
 
   return (
-    <Card>
+    <Card className={isSelected ? "ring-2 ring-primary" : ""}>
       <CardContent className="p-4">
         <div className="flex gap-3">
+          {showCheckbox && (
+            <div className="flex items-center">
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={onToggleSelect}
+                data-testid={`checkbox-listing-${listing.id}`}
+              />
+            </div>
+          )}
           <img
             src={listing.imageUrl}
             alt={listing.title}
