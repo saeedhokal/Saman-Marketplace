@@ -28,14 +28,21 @@
 
 **Next Steps:** Push to GitHub → Codemagic build → TestFlight install
 
-**Push Notification Status (Jan 23, 2026):**
-- ✅ Capacitor native bridge is working (app detects iOS platform correctly)
-- ✅ In-app notifications (inbox) are fully working
-- ⚠️ Push notifications to device showing "Registration failed" - APNs token not converting to FCM token
+**Push Notification Fix - Proper FCM Integration (Jan 23, 2026):**
+- ✅ Installed `@capacitor-community/fcm` v8.1.0 for proper APNs → FCM token conversion
+- ✅ Updated `ios/App/Podfile` with `Firebase/Messaging ~> 10.0`
+- ✅ Updated `ios/App/App/AppDelegate.swift` with Firebase initialization and MessagingDelegate
+- ✅ Updated `client/src/hooks/usePushNotifications.ts` to use FCM plugin for token conversion
+- ✅ Fixed Capacitor CLI version mismatch (now v8.0.1)
 
-**Note:** Firebase SDK integration caused app crash - reverted. The @capacitor/push-notifications plugin uses native APNs tokens, but server uses Firebase Admin SDK which expects FCM tokens. Need alternative solution.
+**How it works now:**
+1. App registers for push with APNs (native iOS)
+2. APNs token is passed to Firebase SDK in the app
+3. FCM plugin converts APNs token to FCM token
+4. FCM token is sent to server
+5. Server uses Firebase Admin SDK to send notifications
 
-**Current Workaround:** In-app notifications work perfectly. Users see notifications in their inbox (bell icon). Real push notifications to locked phone screen need further investigation.
+**Next Step:** Push to GitHub → Codemagic build → TestFlight install
 
 ---
 

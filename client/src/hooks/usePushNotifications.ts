@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
+import { FCM } from '@capacitor-community/fcm';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { showInAppNotification } from '@/components/InAppNotificationBanner';
@@ -18,16 +19,14 @@ export function usePushNotifications() {
   const debugShown = useRef(false);
 
   const registerToken = useCallback(async (token: string) => {
-    // Save token for later if not logged in
     if (!user) {
       console.log('User not logged in, saving token for later registration');
       localStorage.setItem(PENDING_TOKEN_KEY, token);
-      showInAppNotification('Push Token', 'Saved for later');
       return;
     }
     
     try {
-      console.log('Registering push notification token with server...');
+      console.log('Registering FCM token with server...');
       await apiRequest('POST', '/api/device-token', {
         fcmToken: token,
         deviceOs: Capacitor.getPlatform(),
@@ -36,11 +35,11 @@ export function usePushNotifications() {
       localStorage.setItem(FCM_TOKEN_KEY, token);
       localStorage.removeItem(PENDING_TOKEN_KEY);
       hasRegistered.current = true;
-      console.log('Push notification token registered successfully!');
-      showInAppNotification('Push Enabled', 'Notifications are now active');
+      console.log('FCM token registered successfully!');
+      showInAppNotification('Push Enabled', 'You will receive notifications');
     } catch (error) {
-      console.error('Failed to register push notification token:', error);
-      showInAppNotification('Push Error', 'Failed to register');
+      console.error('Failed to register FCM token:', error);
+      showInAppNotification('Push Error', 'Failed to enable notifications');
     }
   }, [user]);
 
@@ -51,9 +50,9 @@ export function usePushNotifications() {
     try {
       await apiRequest('DELETE', '/api/device-token', { fcmToken: storedToken });
       localStorage.removeItem(FCM_TOKEN_KEY);
-      console.log('Push notification token unregistered');
+      console.log('FCM token unregistered');
     } catch (error) {
-      console.error('Failed to unregister push notification token:', error);
+      console.error('Failed to unregister FCM token:', error);
     }
   }, []);
 
@@ -73,7 +72,7 @@ export function usePushNotifications() {
 
       if (permStatus.receive !== 'granted') {
         console.log('Push notification permission not granted');
-        showInAppNotification('Push Blocked', 'Enable in Settings');
+        showInAppNotification('Notifications Blocked', 'Enable in Settings to receive updates');
         return;
       }
 
@@ -81,6 +80,7 @@ export function usePushNotifications() {
       await PushNotifications.register();
     } catch (error) {
       console.error('Error initializing push notifications:', error);
+      showInAppNotification('Push Error', 'Could not set up notifications');
     }
   }, []);
 
@@ -93,11 +93,6 @@ export function usePushNotifications() {
     const isNative = Capacitor.isNativePlatform();
     
     console.log('Push init - Platform:', platform, 'Native:', isNative);
-    
-    // Show confirmation when push is enabled on iOS
-    if (isNative) {
-      showInAppNotification('Notifications', 'Setting up push notifications...');
-    }
   }, []);
 
   // When user logs in, check for any pending token to register
@@ -106,7 +101,7 @@ export function usePushNotifications() {
     
     const pendingToken = localStorage.getItem(PENDING_TOKEN_KEY);
     if (pendingToken) {
-      console.log('Found pending push token, registering now...');
+      console.log('Found pending FCM token, registering now...');
       registerToken(pendingToken);
     }
   }, [user, registerToken]);
@@ -123,9 +118,25 @@ export function usePushNotifications() {
     console.log('Setting up push notification listeners...');
 
     const setupListeners = async () => {
-      await PushNotifications.addListener('registration', (token: Token) => {
-        console.log('Push registration success, token:', token.value?.substring(0, 20) + '...');
-        registerToken(token.value);
+      // Listen for APNs registration success - then get FCM token
+      await PushNotifications.addListener('registration', async (token: Token) => {
+        console.log('APNs registration success, getting FCM token...');
+        try {
+          // Use FCM plugin to get the FCM token (converts APNs token to FCM)
+          const fcmTokenResult = await FCM.getToken();
+          const fcmToken = fcmTokenResult.token;
+          console.log('FCM token obtained:', fcmToken?.substring(0, 30) + '...');
+          
+          if (fcmToken) {
+            registerToken(fcmToken);
+          } else {
+            console.error('FCM token is empty');
+            showInAppNotification('Push Error', 'Could not get notification token');
+          }
+        } catch (fcmError) {
+          console.error('Failed to get FCM token:', fcmError);
+          showInAppNotification('Push Error', 'Token conversion failed');
+        }
       });
 
       await PushNotifications.addListener('registrationError', (error: any) => {
