@@ -108,6 +108,23 @@ See `IOS_APP_STORE_GUIDE.md` for detailed instructions.
 Preferred communication style: Simple, everyday language.
 Region: UAE (phone-based auth is preferred over email)
 Currency: AED
+Testing: Uses TestFlight iOS app as primary testing environment (no Mac available)
+Build workflow: Uses Codemagic for iOS builds, pushes to GitHub manually via Replit Git panel
+
+## Admin Configuration
+
+**Admin Phone Numbers**: Defined in `OWNER_PHONES` array in `server/routes.ts` - currently `["971507242111"]`
+- Users with these phone numbers automatically get admin privileges
+- Admin accounts cannot be deleted to prevent lockout
+
+**Admin Panel Tabs**:
+1. **Pending** - Review and approve/reject new listings (with bulk actions)
+2. **All Listings** - View all listings with status filters
+3. **Packages** - Manage subscription packages (Spare Parts and Automotive credits)
+4. **Banners** - Manage homepage promotional banners
+5. **Notifications** - Send broadcast push notifications to all app users
+6. **Users** - View/search all users, delete accounts (cascade deletes all related data)
+7. **Revenue** - Financial tracking with time filters (Today, Week, Month, Year, All Time, Custom date range)
 
 ## System Architecture
 
