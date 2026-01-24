@@ -44,10 +44,16 @@ export function PushDiagnostics() {
 
     let serverTokens = 'N/A';
     try {
-      const res: any = await apiRequest('GET', '/api/health');
-      serverTokens = `${res.tokens || 0} tokens, ${res.users || 0} users`;
+      // Use direct fetch to avoid any caching issues
+      const response = await fetch('/api/health', { 
+        method: 'GET',
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      const res = await response.json();
+      serverTokens = `${res.tokens ?? '?'} tokens, ${res.users ?? '?'} users (v${res.version || '?'})`;
     } catch (err: any) {
-      serverTokens = 'Error: ' + (err?.message || 'Unknown');
+      serverTokens = 'Fetch Error: ' + (err?.message || String(err));
     }
 
     setDiagnostics({
@@ -97,6 +103,25 @@ export function PushDiagnostics() {
     }
   };
 
+  const registerStoredToken = async () => {
+    const storedToken = localStorage.getItem(TOKEN_KEY);
+    if (!storedToken) {
+      alert('No stored token found!');
+      return;
+    }
+    try {
+      const res = await apiRequest('POST', '/api/device-token', {
+        fcmToken: storedToken,
+        deviceOs: Capacitor.getPlatform(),
+        deviceName: `${Capacitor.getPlatform()} device (manual)`,
+      });
+      alert('Registered! Response: ' + JSON.stringify(res));
+      checkDiagnostics();
+    } catch (err: any) {
+      alert('Register Error: ' + (err?.message || 'Unknown'));
+    }
+  };
+
   useEffect(() => {
     checkDiagnostics();
   }, []);
@@ -138,13 +163,16 @@ export function PushDiagnostics() {
       </div>
 
       <div className="flex gap-2 mt-4 flex-wrap">
-        <Button size="sm" onClick={checkDiagnostics} disabled={isRefreshing}>
+        <Button size="sm" onClick={checkDiagnostics} disabled={isRefreshing} data-testid="btn-refresh-diag">
           {isRefreshing ? 'Checking...' : 'Refresh'}
         </Button>
-        <Button size="sm" variant="secondary" onClick={forceRegister}>
+        <Button size="sm" variant="secondary" onClick={forceRegister} data-testid="btn-force-register">
           Force Register
         </Button>
-        <Button size="sm" variant="outline" onClick={testTokenApi}>
+        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={registerStoredToken} data-testid="btn-register-token">
+          Register Token
+        </Button>
+        <Button size="sm" variant="outline" onClick={testTokenApi} data-testid="btn-test-api">
           Test API
         </Button>
       </div>
