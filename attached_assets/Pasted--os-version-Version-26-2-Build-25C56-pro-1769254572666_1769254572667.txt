@@ -1,0 +1,50 @@
+
+=======================================
+{
+  "os-version" : "Version 26.2 (Build 25C56)",
+  "product-errors" : [
+    {
+      "code" : 409,
+      "message" : "Validation failed",
+      "underlying-errors" : [
+        {
+          "code" : -19241,
+          "message" : "Validation failed",
+          "underlying-errors" : [
+
+          ],
+          "user-info" : {
+            "NSLocalizedDescription" : "Validation failed",
+            "NSLocalizedFailureReason" : "Upload limit reached. The upload limit for your application has been reached. Please wait 1 day and try again.",
+            "code" : "STATE_ERROR.VALIDATION_ERROR",
+            "detail" : "Upload limit reached. The upload limit for your application has been reached. Please wait 1 day and try again.",
+            "id" : "a5c049cc-9cfd-4a0e-acd1-8be0c471efdf",
+            "status" : "409",
+            "title" : "Validation failed"
+          }
+        }
+      ],
+      "user-info" : {
+        "NSLocalizedDescription" : "Validation failed",
+        "NSLocalizedFailureReason" : "Upload limit reached. The upload limit for your application has been reached. Please wait 1 day and try again. (ID: a5c049cc-9cfd-4a0e-acd1-8be0c471efdf)",
+        "NSUnderlyingError" : "Error Domain=IrisAPI Code=-19241 \"Validation failed\" UserInfo={status=409, detail=Upload limit reached. The upload limit for your application has been reached. Please wait 1 day and try again., id=a5c049cc-9cfd-4a0e-acd1-8be0c471efdf, code=STATE_ERROR.VALIDATION_ERROR, title=Validation failed, NSLocalizedFailureReason=Upload limit reached. The upload limit for your application has been reached. Please wait 1 day and try again., NSLocalizedDescription=Validation failed}",
+        "iris-code" : "STATE_ERROR.VALIDATION_ERROR"
+      }
+    }
+  ],
+  "tool-path" : "/Applications/Xcode-26.2.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources",
+  "tool-version" : "26.10.1 (171001)"
+}
+
+Failed to upload archive at "/Users/builder/clone/build/ios/ipa/App.ipa":
+Validation failed
+Failed to publish /Users/builder/clone/build/ios/ipa/App.ipa
+
+Failed to publish App.ipa to App Store Connect.
+
+Build failed :|
+
+
+Publishing failed :|
+Failed to publish App.ipa to App Store Connect.
+
