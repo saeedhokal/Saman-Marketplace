@@ -339,13 +339,12 @@ export async function notifyCreditsAdded(
 export async function broadcastPushNotification(
   payload: PushNotificationPayload
 ): Promise<{ sent: number; failed: number; saved: number }> {
-  let saved = 0;
-  
   console.log('=== BROADCAST START ===');
   console.log('Title:', payload.title);
   console.log('Body:', payload.body);
-  console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
   
+  let saved = 0;
+
   try {
     console.log('Querying users table...');
     const allUsers = await db.select({ id: users.id }).from(users);
@@ -367,17 +366,19 @@ export async function broadcastPushNotification(
             title: payload.title,
             message: payload.body,
           });
-          return true;
+          return { success: true, userId: user.id };
         } catch (err) {
           console.error(`Failed to save notification for user ${user.id}:`, err);
-          return false;
+          return { success: false, userId: user.id };
         }
       })
     );
-    saved = saveResults.filter(r => r).length;
-    console.log(`Broadcast saved to ${saved} user inboxes`);
+    
+    saved = saveResults.filter(r => r.success).length;
+    console.log(`Broadcast saved to ${saved}/${allUsers.length} user inboxes`);
   } catch (error) {
     console.error('CRITICAL: Failed to query/save broadcast:', error);
+    return { sent: 0, failed: 0, saved: 0 };
   }
 
   let sent = 0;
@@ -387,17 +388,16 @@ export async function broadcastPushNotification(
     const allTokens = await db.select().from(deviceTokens);
     
     if (allTokens.length === 0) {
-      console.log('No device tokens found for broadcast');
+      console.log('No device tokens found for broadcast, returning saved count:', saved);
       return { sent: 0, failed: 0, saved };
     }
 
     console.log(`Sending push to ${allTokens.length} devices`);
 
-    await Promise.all(
+    const pushResults = await Promise.all(
       allTokens.map(async (token) => {
         if (!token.fcmToken || token.fcmToken.length < 20) {
-          failed++;
-          return;
+          return { success: false, tokenId: token.id, reason: 'invalid_token' };
         }
 
         const isIOS = token.deviceOs === 'ios';
@@ -409,19 +409,25 @@ export async function broadcastPushNotification(
           success = await sendFirebaseNotification(token.fcmToken, payload, 1);
         }
 
-        if (success) {
-          sent++;
-        } else {
-          failed++;
-          if (token.deviceOs === 'ios') {
+        if (!success && token.deviceOs === 'ios') {
+          try {
             await db.delete(deviceTokens).where(eq(deviceTokens.id, token.id));
             console.log(`Removed invalid iOS token ${token.id}`);
+          } catch (deleteErr) {
+            console.error(`Failed to delete invalid token ${token.id}:`, deleteErr);
           }
         }
+
+        return { success, tokenId: token.id, os: token.deviceOs };
       })
     );
 
-    console.log(`Broadcast complete: ${sent} sent, ${failed} failed, ${saved} saved to inbox`);
+    sent = pushResults.filter(r => r.success).length;
+    failed = pushResults.filter(r => !r.success).length;
+
+    console.log(`=== BROADCAST COMPLETE ===`);
+    console.log(`Saved: ${saved} inboxes, Sent: ${sent} pushes, Failed: ${failed} pushes`);
+    
     return { sent, failed, saved };
   } catch (error) {
     console.error('Failed to broadcast push notification:', error);
