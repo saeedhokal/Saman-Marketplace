@@ -79,6 +79,29 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Debug endpoint to check APNs configuration
+  app.get("/api/debug-apns", async (req, res) => {
+    const apnsKey = process.env.APNS_AUTH_KEY;
+    const hasKey = !!apnsKey;
+    const keyLength = apnsKey?.length || 0;
+    const keyStart = apnsKey?.substring(0, 30) || 'N/A';
+    const keyEnd = apnsKey?.substring(apnsKey.length - 20) || 'N/A';
+    const hasBeginMarker = apnsKey?.includes('BEGIN PRIVATE KEY') || false;
+    const hasEndMarker = apnsKey?.includes('END PRIVATE KEY') || false;
+    
+    res.json({
+      hasKey,
+      keyLength,
+      keyStart: hasKey ? keyStart + '...' : 'N/A',
+      keyEnd: hasKey ? '...' + keyEnd : 'N/A',
+      hasBeginMarker,
+      hasEndMarker,
+      keyId: 'GMC5C3M7JF',
+      teamId: 'KQ542Q98H2',
+      bundleId: 'com.saeed.saman'
+    });
+  });
+
   // Quick test endpoint to send broadcast notification (for debugging)
   app.get("/api/test-push", async (req, res) => {
     try {
