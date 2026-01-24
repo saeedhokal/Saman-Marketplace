@@ -7,6 +7,7 @@ import {
   ArrowLeft, User, Bell, CreditCard, History, Package, Settings,
   FileText, Shield, HelpCircle, Trash2, ChevronRight, LogOut, Heart
 } from "lucide-react";
+import { PushDiagnostics } from "@/components/PushDiagnostics";
 
 export default function Profile() {
   const { user, logout, isLoading } = useAuth();
@@ -141,6 +142,11 @@ export default function Profile() {
             </Link>
           </div>
         )}
+
+        {/* Push Notification Diagnostics - for debugging */}
+        <div className="mt-4">
+          <PushDiagnostics />
+        </div>
 
         <div className="mt-4 pt-4">
           <Button 
