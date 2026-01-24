@@ -20,10 +20,38 @@ function initializeAPNs(): boolean {
   }
 
   try {
-    // Normalize the key - replace literal \n with actual newlines
-    let normalizedKey = apnsKey;
-    if (apnsKey.includes('\\n')) {
-      normalizedKey = apnsKey.replace(/\\n/g, '\n');
+    // Normalize the key - handle various formats
+    let normalizedKey = apnsKey.trim();
+    
+    // Replace literal \n with actual newlines
+    if (normalizedKey.includes('\\n')) {
+      normalizedKey = normalizedKey.replace(/\\n/g, '\n');
+    }
+    
+    // If no newlines, try to reconstruct proper PEM format
+    if (!normalizedKey.includes('\n')) {
+      console.log('APNs key has no newlines, attempting to reconstruct PEM format');
+      
+      // Extract the base64 content between headers
+      const beginHeader = '-----BEGIN PRIVATE KEY-----';
+      const endHeader = '-----END PRIVATE KEY-----';
+      
+      let base64Content = normalizedKey;
+      if (normalizedKey.includes(beginHeader)) {
+        base64Content = normalizedKey
+          .replace(beginHeader, '')
+          .replace(endHeader, '')
+          .replace(/\s/g, ''); // Remove any whitespace
+      }
+      
+      // Reconstruct with proper newlines (64 chars per line)
+      const lines = [];
+      for (let i = 0; i < base64Content.length; i += 64) {
+        lines.push(base64Content.substring(i, i + 64));
+      }
+      
+      normalizedKey = `${beginHeader}\n${lines.join('\n')}\n${endHeader}`;
+      console.log('Reconstructed PEM key with proper newlines');
     }
     
     console.log(`APNs key length: ${apnsKey.length}, normalized: ${normalizedKey.length}`);
