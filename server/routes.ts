@@ -88,6 +88,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const keyEnd = apnsKey?.substring(apnsKey.length - 20) || 'N/A';
     const hasBeginMarker = apnsKey?.includes('BEGIN PRIVATE KEY') || false;
     const hasEndMarker = apnsKey?.includes('END PRIVATE KEY') || false;
+    const hasLiteralNewlines = apnsKey?.includes('\\n') || false;
+    const hasRealNewlines = apnsKey?.includes('\n') || false;
+    
+    // Try to initialize and get error
+    const { getApnInitError } = await import('./pushNotifications');
+    const initError = getApnInitError();
+    
+    // Try a test send to trigger initialization
+    try {
+      const { broadcastPushNotification } = await import('./pushNotifications');
+      // Don't actually send, just trigger init by checking
+    } catch (e) {}
     
     res.json({
       hasKey,
@@ -96,6 +108,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       keyEnd: hasKey ? '...' + keyEnd : 'N/A',
       hasBeginMarker,
       hasEndMarker,
+      hasLiteralNewlines,
+      hasRealNewlines,
+      initError,
       keyId: 'GMC5C3M7JF',
       teamId: 'KQ542Q98H2',
       bundleId: 'com.saeed.saman'

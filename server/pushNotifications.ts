@@ -7,17 +7,29 @@ import { eq, and } from 'drizzle-orm';
 let apnProvider: apn.Provider | null = null;
 let firebaseInitialized = false;
 
+let apnInitError: string | null = null;
+
 function initializeAPNs(): boolean {
   if (apnProvider) return true;
   
   const apnsKey = process.env.APNS_AUTH_KEY;
   if (!apnsKey) {
+    apnInitError = 'APNs key not configured';
     console.log('APNs key not configured - iOS push notifications disabled');
     return false;
   }
 
   try {
-    const keyBuffer = Buffer.from(apnsKey, 'utf8');
+    // Normalize the key - replace literal \n with actual newlines
+    let normalizedKey = apnsKey;
+    if (apnsKey.includes('\\n')) {
+      normalizedKey = apnsKey.replace(/\\n/g, '\n');
+    }
+    
+    console.log(`APNs key length: ${apnsKey.length}, normalized: ${normalizedKey.length}`);
+    console.log(`APNs key has newlines: ${normalizedKey.includes('\n')}`);
+    
+    const keyBuffer = Buffer.from(normalizedKey, 'utf8');
     
     apnProvider = new apn.Provider({
       token: {
@@ -28,11 +40,17 @@ function initializeAPNs(): boolean {
       production: true,
     });
     console.log('APNs provider initialized successfully');
+    apnInitError = null;
     return true;
-  } catch (error) {
+  } catch (error: any) {
+    apnInitError = error?.message || 'Unknown initialization error';
     console.error('Failed to initialize APNs provider:', error);
     return false;
   }
+}
+
+export function getApnInitError(): string | null {
+  return apnInitError;
 }
 
 function initializeFirebase(): boolean {
