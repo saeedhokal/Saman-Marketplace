@@ -11,6 +11,9 @@ import { users } from "@shared/models/auth";
 import { eq, sql } from "drizzle-orm";
 import path from "path";
 import fs from "fs";
+
+// Server version for deployment verification
+const SERVER_VERSION = "v3.0.1";
 import {
   registerDeviceToken,
   unregisterDeviceToken,
@@ -1224,7 +1227,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const userIds = await db.select({ id: users.id }).from(users).limit(10);
       
       res.json({
-        version: 'v3',
+        version: SERVER_VERSION,
         users: Number(userCount[0]?.count || 0),
         userIds: userIds.map(u => u.id.substring(0, 8) + '...'),
         deviceTokens: Number(tokenCount[0]?.count || 0),
@@ -1238,7 +1241,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
     } catch (error: any) {
       res.json({
-        version: 'v3',
+        version: SERVER_VERSION,
         databaseConnected: false,
         error: error.message,
         timestamp: new Date().toISOString()
@@ -1265,14 +1268,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         failed: result.failed,
         savedCount: result.saved,
         message: `Saved to ${result.saved} inboxes, sent to ${result.sent} devices`,
-        version: 'v2'
+        version: SERVER_VERSION
       });
     } catch (error) {
       console.error('[BROADCAST] Error:', error);
       res.status(500).json({ 
         success: false, 
         message: 'Broadcast failed: ' + (error instanceof Error ? error.message : 'Unknown error'),
-        version: 'v2'
+        version: SERVER_VERSION
       });
     }
   });
