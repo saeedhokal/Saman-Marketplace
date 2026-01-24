@@ -1213,10 +1213,20 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const tokenCount = await db.select({ count: sql`count(*)` }).from(deviceTokens);
       const notifCount = await db.select({ count: sql`count(*)` }).from(notifications);
       
+      // Get token details
+      const tokens = await db.select({
+        id: deviceTokens.id,
+        deviceOs: deviceTokens.deviceOs,
+        tokenPrefix: sql`substring(${deviceTokens.fcmToken}, 1, 30)`,
+      }).from(deviceTokens);
+      
       res.json({
         users: Number(userCount[0]?.count || 0),
         deviceTokens: Number(tokenCount[0]?.count || 0),
         notifications: Number(notifCount[0]?.count || 0),
+        tokenDetails: tokens,
+        apnsKeyConfigured: !!process.env.APNS_AUTH_KEY,
+        apnsKeyLength: process.env.APNS_AUTH_KEY?.length || 0,
         databaseConnected: true,
         timestamp: new Date().toISOString()
       });
