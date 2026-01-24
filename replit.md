@@ -1,82 +1,8 @@
 # Saman Marketplace - Spare Parts & Automotive Marketplace
 
-## CRITICAL TESTING NOTES
+## Overview
 
-**ALL TESTING IS DONE ON iPHONE VIA TESTFLIGHT** - User talks to agent on desktop, tests on iPhone.
-**Build Workflow:** Push to GitHub → Codemagic build → TestFlight install
-
----
-
-## Recent Changes (January 2026)
-
-### Session: January 23, 2026
-**Fixes Applied (requires new Codemagic build to see on iOS):**
-1. ✅ **Broadcast notifications saving to inboxes** - Fixed `savedCount` naming mismatch in server response. Notifications now properly save to all user inboxes.
-2. ✅ **Toast message "undefined" fix** - Added fallbacks so toast shows "0" instead of "undefined" when no devices registered.
-3. ✅ **Toast notifications overlapping status bar** - Fixed ToastViewport positioning to appear BELOW iOS status bar using `top: max(env(safe-area-inset-top, 20px), 20px)`.
-4. ✅ **Pull-to-refresh leaving gap** - Fixed to snap back instantly without leaving persistent space at top.
-5. ✅ **Push notification token registration (MAJOR FIX)** - Fixed race condition where token was captured before user session loaded. Now uses userRef to track user state, adds 500ms delay for session loading, and re-registers stored tokens on login.
-
-**Files Changed:**
-- `server/routes.ts` - Fixed broadcast response to return `savedCount`
-- `client/src/components/ui/toast.tsx` - Fixed ToastViewport positioning below status bar
-- `client/src/components/PullToRefresh.tsx` - Fixed snap-back transition
-- `client/src/pages/Admin.tsx` - Added fallbacks for undefined values in toast
-- `client/src/hooks/usePushNotifications.ts` - Improved token registration flow with better logging
-
-**Testing Status:** All changes tested and working in development. Broadcast API returns correct format: `{"savedCount": 12, "sent": 0, "message": "Saved to 12 inboxes, sent to 0 devices"}`
-
-**Next Steps:** Push to GitHub → Codemagic build → TestFlight install
-
-**Push Notification Fix - Direct APNs (Jan 23, 2026):**
-- ✅ Downgraded to Capacitor v7 for Codemagic compatibility (Capacitor v8 requires Node.js 22+)
-- ✅ Removed FCM plugin and Firebase from native iOS code to prevent crashes
-- ✅ Simplified AppDelegate.swift to basic Capacitor template
-- ✅ Using standard Capacitor push notifications with APNs tokens
-- ✅ Server receives APNs tokens and stores them
-- ✅ **Added push notification entitlements** - Created App.entitlements with `aps-environment = production`
-- ✅ **Added background modes** - Info.plist now has `UIBackgroundModes` with `remote-notification`
-- ✅ **Updated Xcode project** - Both Debug and Release configurations now reference App.entitlements
-- ✅ **Direct APNs sending** - Server now sends push notifications directly to Apple (no Firebase needed for iOS)
-- ✅ **APNS_AUTH_KEY secret added** - Contains the .p8 authentication key
-
-**Current Status:**
-- The in-app notification inbox works perfectly (notifications saved to database)
-- Push notification entitlements now properly configured  
-- Server uses APNs directly for iOS push (Key ID: GMC5C3M7JF, Team ID: KQ542Q98H2)
-- No more Firebase dependency for iOS push notifications
-
-**How it works now:**
-1. App registers for push with APNs (native iOS)
-2. APNs token is sent directly to server
-3. Server stores the token
-4. Broadcasts are saved to user inboxes (visible when opening notification inbox)
-
-**Next Step:** Push to GitHub → Codemagic build → TestFlight install
-
----
-
-## Known Issues & Solutions
-
-### Push Notifications Not Working
-**Symptoms:** Broadcasts show "sent to 0 devices"
-**Cause:** Device token not registered because user wasn't logged in when app first opened
-**Solution:** 
-1. Build new version with improved token registration
-2. Install via TestFlight
-3. Log out and log back in (this triggers token registration)
-4. Push notifications should work after that
-
-### Toast/Notifications Overlapping Status Bar
-**Symptoms:** Notification appears behind the time/wifi/battery icons on iPhone
-**Solution:** Fixed with `top: max(env(safe-area-inset-top, 20px), 20px)` positioning
-
-### "Saved to 0 inboxes" Issue
-**Symptoms:** Broadcast sends but shows 0 saved
-**Cause:** Server was returning `saved` but client expected `savedCount`
-**Solution:** Fixed server response to use `savedCount`
-
----
+Saman Marketplace is an automotive spare parts and vehicles marketplace focusing on the UAE region, utilizing AED currency. The project aims to provide a platform for users to buy and sell spare parts and automotive items. Key capabilities include listing management, user authentication, in-app notifications, and payment processing. The current development focus is on stabilizing and enhancing the push notification system for iOS devices, ensuring reliable delivery of notifications to users.
 
 ## User Preferences
 
@@ -88,170 +14,42 @@
 - **Important:** User does NOT code - all changes must be made by agent
 - **IMPORTANT:** User is ALWAYS logged in on their iPhone, using the PUBLISHED URL (not preview), and has notifications enabled. Do not ask about this again.
 
----
+## System Architecture
 
-## Design Specifications
+The Saman Marketplace employs a modern web and mobile application architecture.
 
-### UI Theme
-- **Primary accent color:** Orange (#f97316)
-- **Dark gradient cards:** from-[#1e293b] to-[#0f172a]
-- **Selected state backgrounds:** Orange with white text
-- **Card design:** Rounded corners, subtle shadows
+**Frontend:**
+- Developed with React 18 and TypeScript, utilizing Vite for fast builds.
+- Data fetching is handled by TanStack Query, and styling is managed with Tailwind CSS and shadcn/ui components.
+- Animations are implemented using Framer Motion, and Wouter is used for client-side routing.
+- UI elements feature an orange (#f97316) primary accent color, dark gradient cards (from-[#1e293b] to-[#0f172a]), and rounded corners with subtle shadows.
+- iOS safe area handling is critical, with `padding-top: env(safe-area-inset-top)` for the body and specific positioning for toast notifications to appear below the status bar (`top: max(env(safe-area-inset-top, 20px), 20px)`).
 
-### Notification Styling
-**Toast Notifications (success/error messages after actions):**
-- Position: `top: max(env(safe-area-inset-top, 20px), 20px)` - appears below iOS status bar
-- Background: Primary color (orange) with white text
-- Rounded corners (rounded-xl), shadow
+**Backend:**
+- Built using Express.js with TypeScript.
+- Drizzle ORM manages database interactions with PostgreSQL.
+- Session-based authentication is provided by `connect-pg-simple`.
+- Google Cloud Storage is used for image storage.
+- Push notifications for iOS are handled directly via Apple Push Notification service (APNs) using `@parse/node-apn`, bypassing Firebase for iOS devices.
 
-**Broadcast Notification Form (Admin Panel):**
-- Dark gradient background (from-[#1e293b] to-[#0f172a])
-- Orange bell icon in rounded box
-- "Send Now" / "Delay" / "Schedule" toggle buttons
-- Delay: Slider from 5-120 minutes
-- Schedule: Date and time pickers
+**iOS Application:**
+- The mobile application is wrapped using Capacitor v7, enabling native functionality.
+- Direct APNs integration is used for push notifications, configured with specific entitlements (`aps-environment = production`) and background modes (`remote-notification`).
+- Native Apple Pay integration is implemented.
+- The build workflow involves pushing changes to GitHub, triggering Codemagic builds, and distributing via TestFlight.
 
-### Safe Area Handling (iOS)
-- Body has `padding-top: env(safe-area-inset-top)` for notch area
-- Toast viewport uses `top: max(env(safe-area-inset-top, 20px), 20px)`
-- Bottom nav has safe area padding for home indicator
+**Core Features:**
+- **Admin Panel:** Includes broadcast notification capabilities (immediate, delayed, or scheduled), listing moderation (approval/rejection), and revenue tracking with various filters.
+- **Push Notifications:** The system registers device tokens, stores them in the database, and sends notifications via APNs for iOS. A diagnostic endpoint `/api/admin/db-status` is available to monitor the status of users, device tokens, and notifications.
 
----
+## External Dependencies
 
-## Push Notifications (Firebase Cloud Messaging)
-
-### Configuration
-- **Firebase Project:** saman-car-spare-parts
-- **APNs Key ID:** GMC5C3M7JF (uploaded to Firebase Console)
-- **Credentials:** FIREBASE_ADMIN_CREDENTIALS secret contains service account JSON
-
-### How It Works
-1. User opens app on iPhone
-2. App requests notification permission
-3. iOS returns device token (APNs token)
-4. App sends token to server (`POST /api/device-token`)
-5. Server stores token in `device_tokens` table
-6. When broadcast sent, server uses Firebase Admin SDK to send to all tokens
-
-### Token Registration Flow (Fixed Jan 23, 2026)
-- If user not logged in: Token saved to localStorage
-- When user logs in: Pending token automatically registered
-- Logs to console for debugging:
-  - "Setting up push notification listeners for user: [id]"
-  - "Push registration success, token: [first 20 chars]..."
-  - "Registering push notification token with server..."
-  - "Push notification token registered successfully!"
-
-### Testing Push Notifications
-1. Build new version in Codemagic
-2. Install via TestFlight
-3. Allow notifications when prompted
-4. **Log out and log back in** (critical for token registration)
-5. Go to Admin → Broadcast Notification → Send a test
-6. Should see "sent to 1 device" in success message
-
----
-
-## iOS App (Capacitor)
-
-### Configuration
-- **App ID:** com.saeed.saman
-- **App Name:** Saman Marketplace
-- **Team ID:** KQ542Q98H2
-- **Server URL:** https://saman-market-fixer--saeedhokal.replit.app
-
-### Apple Pay
-- **Merchant ID:** merchant.saeed.saman
-- **Status:** Working - double-click power button triggers native Apple Pay sheet
-- **Certificates:** APPLE_PAY_CERT, APPLE_PAY_KEY secrets configured
-
-### Capacitor Plugins
-- @capacitor/push-notifications - For FCM
-- @capacitor/splash-screen - Launch screen
-- Standard iOS plugins for core functionality
-
----
-
-## Admin Features
-
-### Broadcast Notifications
-- **Location:** Admin Panel → Notifications tab
-- **Options:** 
-  - Send Now (immediate)
-  - Delay (5-120 minutes slider)
-  - Schedule (specific date/time)
-- **What happens:**
-  1. Notification saved to ALL user inboxes (appears in bell icon)
-  2. Push notification sent to all registered devices
-
-### Listing Moderation
-- All new listings require admin approval
-- Admin can approve or reject with reason
-- Rejection refunds the user's credit
-
-### Revenue Tracking
-- Total revenue display
-- Breakdown by category (Spare Parts vs Automotive)
-- Time filters: Today, Week, Month, Year, All Time, Custom range
-
----
-
-## Payment Integrations
-
-- **Telr Payment Gateway:** Credit card processing (TELR_STORE_ID, TELR_AUTH_KEY)
-- **Apple Pay:** Native iOS payments (merchant.saeed.saman)
-
----
-
-## Database Tables
-
-- **users:** User accounts with phone, name, credits
-- **products:** Listings with categories, prices, status
-- **device_tokens:** FCM tokens for push notifications
-- **notifications:** User notification inbox
-- **transactions:** Payment records
-- **subscription_packages:** Credit packages for purchase
-- **favorites:** User saved listings
-
----
-
-## Important Files
-
-- `client/src/hooks/usePushNotifications.ts` - Push notification registration
-- `client/src/components/ui/toast.tsx` - Toast notification styling
-- `client/src/components/PullToRefresh.tsx` - Pull to refresh component
-- `client/src/pages/Admin.tsx` - Admin panel with broadcast
-- `server/pushNotifications.ts` - Firebase Admin SDK, sending notifications
-- `server/routes.ts` - All API endpoints
-- `ios/App/App/AppDelegate.swift` - iOS app delegate with push setup
-- `capacitor.config.ts` - Capacitor configuration
-
----
-
-## Architecture
-
-### Frontend
-- React 18 + TypeScript
-- Vite build tool
-- TanStack Query for data fetching
-- Tailwind CSS + shadcn/ui components
-- Framer Motion for animations
-- Wouter for routing
-
-### Backend
-- Express.js + TypeScript
-- Drizzle ORM with PostgreSQL
-- Session-based auth (connect-pg-simple)
-- Google Cloud Storage for images
-
-### iOS
-- Capacitor for native wrapper
-- Firebase Cloud Messaging for push
-- Native Apple Pay integration
-
----
-
-## Pending Items
-
-- **SMS Provider (Twilio):** Not configured - OTP codes logged to console in dev
-- **Production SMS:** Need to set up Twilio or alternative when ready
+- **PostgreSQL:** Primary database for storing user data, product listings, device tokens, and notifications.
+- **Google Cloud Storage:** Used for storing images associated with product listings.
+- **Apple Push Notification service (APNs):** For direct push notification delivery to iOS devices. Configured with `APNS_AUTH_KEY` (p.8 key), `keyId`, `teamId`, and `bundleId`.
+- **Telr Payment Gateway:** For credit card processing, requiring `TELR_STORE_ID` and `TELR_AUTH_KEY` secrets.
+- **Apple Pay:** Native payment integration using `merchant.saeed.saman` and associated `APPLE_PAY_CERT`, `APPLE_PAY_KEY` secrets.
+- **Codemagic:** CI/CD platform for automating iOS builds and deployment to TestFlight.
+- **GitHub:** Version control system where the codebase is hosted.
+- **Firebase:** (Note: Used for Android push notifications, but specifically bypassed for iOS in this project).
+- **Twilio:** (Pending setup) Intended for SMS services, such as OTP codes.
