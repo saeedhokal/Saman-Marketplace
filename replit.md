@@ -53,3 +53,45 @@ The Saman Marketplace employs a modern web and mobile application architecture.
 - **GitHub:** Version control system where the codebase is hosted.
 - **Firebase:** (Note: Used for Android push notifications, but specifically bypassed for iOS in this project).
 - **Twilio:** (Pending setup) Intended for SMS services, such as OTP codes.
+
+## Recent Changes (January 24, 2026)
+
+### APNs Push Notification Configuration Fix - COMPLETED
+
+**Problem Identified:** Push notifications were not being delivered to iOS devices due to APNs Key ID mismatch.
+
+**Root Cause:** The code was using the wrong Key ID (`GMC5C3M7JF`) that didn't match the .p8 key file.
+
+**Fix Applied:**
+1. Updated Key ID from `GMC5C3M7JF` to `6CM9536S2R` in:
+   - `server/pushNotifications.ts` (APNs provider configuration)
+   - `server/routes.ts` (debug endpoint)
+2. Updated key file path to: `attached_assets/AuthKey_6CM9536S2R_1769284994277.p8`
+
+**Current APNs Configuration (CORRECT):**
+- **Key ID:** `6CM9536S2R`
+- **Team ID:** `KQ542Q98H2`
+- **Bundle ID:** `com.saeed.saman`
+- **Key File:** `attached_assets/AuthKey_6CM9536S2R_1769284994277.p8`
+- **Mode:** Production (not sandbox)
+
+**How It Works:**
+1. iOS app registers device token via AppDelegate.swift
+2. Token is sent to backend via `/api/register-device-token`
+3. Tokens stored in `device_tokens` table in PostgreSQL
+4. When sending notifications, server uses `@parse/node-apn` library
+5. Server reads .p8 key file directly (preserves proper newlines)
+6. APNs provider sends to Apple's production servers
+
+**Important Files:**
+- `server/pushNotifications.ts` - APNs provider setup and notification sending
+- `server/routes.ts` - API endpoints including `/api/test-push` for testing
+- `ios/App/App/AppDelegate.swift` - iOS token registration
+- `attached_assets/AuthKey_6CM9536S2R_1769284994277.p8` - The actual APNs key file
+
+**Testing Endpoints:**
+- `GET /api/test-push` - Sends broadcast test notification to all registered devices
+- `GET /api/debug-apns` - Shows APNs configuration status
+- `GET /api/admin/db-status` - Shows user count, token count, notification count
+
+**Published Version:** v3.0.1 (commit 3ee3d57)
