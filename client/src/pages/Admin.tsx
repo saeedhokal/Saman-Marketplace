@@ -235,7 +235,7 @@ export default function Admin() {
       setBroadcastNotification({ title: "", body: "", scheduleType: "now", delayMinutes: 30, scheduledDate: "", scheduledTime: "" });
       toast({ 
         title: data.scheduled ? "Notification scheduled" : "Notification sent", 
-        description: data.message || `Saved to ${data.savedCount || 0} inboxes, sent to ${data.sent || 0} devices`
+        description: `${data.message || `Saved to ${data.savedCount || 0} inboxes, sent to ${data.sent || 0} devices`}${data.version ? ` (${data.version})` : ''}`
       });
     },
     onError: () => {

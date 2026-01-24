@@ -1247,14 +1247,27 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(400).json({ message: "Title and body are required" });
     }
     
-    const result = await broadcastPushNotification({ title, body });
-    res.json({ 
-      success: true, 
-      sent: result.sent, 
-      failed: result.failed,
-      savedCount: result.saved,
-      message: `Saved to ${result.saved} inboxes, sent to ${result.sent} devices` 
-    });
+    try {
+      console.log('[BROADCAST] Starting broadcast:', { title, body });
+      const result = await broadcastPushNotification({ title, body });
+      console.log('[BROADCAST] Result:', result);
+      
+      res.json({ 
+        success: true, 
+        sent: result.sent, 
+        failed: result.failed,
+        savedCount: result.saved,
+        message: `Saved to ${result.saved} inboxes, sent to ${result.sent} devices`,
+        version: 'v2'
+      });
+    } catch (error) {
+      console.error('[BROADCAST] Error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Broadcast failed: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        version: 'v2'
+      });
+    }
   });
 
   // ========== BANNER ROUTES ==========
