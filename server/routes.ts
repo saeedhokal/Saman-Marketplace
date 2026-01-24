@@ -78,6 +78,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
     }
   });
+
+  // Quick test endpoint to send broadcast notification (for debugging)
+  app.get("/api/test-push", async (req, res) => {
+    try {
+      console.log('[TEST-PUSH] Sending test broadcast notification');
+      const result = await broadcastPushNotification({
+        title: 'Test Notification',
+        body: 'Push notifications are working! 🎉',
+      });
+      console.log('[TEST-PUSH] Result:', result);
+      res.json({ 
+        success: true, 
+        sent: result.sent, 
+        failed: result.failed,
+        saved: result.saved,
+        message: `Test sent to ${result.sent} devices`
+      });
+    } catch (error: any) {
+      console.error('[TEST-PUSH] Error:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
   
   // Test token registration endpoint (for debugging)
   app.post("/api/admin/test-token", isAuthenticated, isAdmin, async (req, res) => {
