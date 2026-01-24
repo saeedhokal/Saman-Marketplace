@@ -1,5 +1,7 @@
 import apn from '@parse/node-apn';
 import admin from 'firebase-admin';
+import fs from 'fs';
+import path from 'path';
 import { db } from './db';
 import { deviceTokens, users, notifications } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
@@ -12,7 +14,24 @@ let apnInitError: string | null = null;
 function initializeAPNs(): boolean {
   if (apnProvider) return true;
   
-  const apnsKey = process.env.APNS_AUTH_KEY;
+  // Try to read the key from file first (preferred - proper newlines)
+  const keyFilePath = path.join(process.cwd(), 'attached_assets', 'AuthKey_GMC5C3M7JF_1769283529392.p8');
+  let apnsKey: string | undefined;
+  
+  try {
+    if (fs.existsSync(keyFilePath)) {
+      apnsKey = fs.readFileSync(keyFilePath, 'utf8');
+      console.log('APNs key loaded from file');
+    }
+  } catch (err) {
+    console.log('Could not read APNs key from file, trying environment variable');
+  }
+  
+  // Fall back to environment variable
+  if (!apnsKey) {
+    apnsKey = process.env.APNS_AUTH_KEY;
+  }
+  
   if (!apnsKey) {
     apnInitError = 'APNs key not configured';
     console.log('APNs key not configured - iOS push notifications disabled');
