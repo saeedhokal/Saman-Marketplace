@@ -57,6 +57,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   setupSimpleAuth(app);
   registerObjectStorageRoutes(app);
 
+  // Public health check endpoint (no auth required) for deployment verification
+  app.get("/api/health", async (req, res) => {
+    try {
+      const userCount = await db.select({ count: sql`count(*)` }).from(users);
+      const tokenCount = await db.select({ count: sql`count(*)` }).from(deviceTokens);
+      res.json({
+        status: "ok",
+        version: SERVER_VERSION,
+        users: Number(userCount[0]?.count || 0),
+        tokens: Number(tokenCount[0]?.count || 0),
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      res.json({
+        status: "error",
+        version: SERVER_VERSION,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Serve Apple Pay domain verification file
   app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, res) => {
     const filePath = path.resolve(process.cwd(), ".well-known", "apple-developer-merchantid-domain-association.txt");
