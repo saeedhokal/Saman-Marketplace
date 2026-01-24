@@ -78,6 +78,39 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
     }
   });
+  
+  // Test token registration endpoint (for debugging)
+  app.post("/api/admin/test-token", isAuthenticated, isAdmin, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const testToken = `test_token_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    
+    try {
+      console.log(`[Token Test] Creating test token for admin user ${userId}`);
+      
+      // Insert a test token
+      await db.insert(deviceTokens).values({
+        userId,
+        fcmToken: testToken,
+        deviceOs: 'ios',
+        deviceName: 'Test Device',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      
+      // Count tokens
+      const tokenCount = await db.select({ count: sql`count(*)` }).from(deviceTokens);
+      
+      res.json({
+        success: true,
+        message: "Test token created",
+        tokenCount: Number(tokenCount[0]?.count || 0),
+        testTokenPrefix: testToken.substring(0, 30)
+      });
+    } catch (error: any) {
+      console.error('[Token Test] Error:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
 
   // Serve Apple Pay domain verification file
   app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, res) => {
@@ -1063,14 +1096,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const userId = getCurrentUserId(req)!;
     const { fcmToken, deviceOs, deviceName } = req.body;
     
+    console.log(`[Token] Registering token - userId: ${userId}, os: ${deviceOs || 'unknown'}, tokenLength: ${fcmToken?.length || 0}`);
+    
     if (!fcmToken || typeof fcmToken !== 'string' || fcmToken.length < 20) {
+      console.log(`[Token] Invalid token - length: ${fcmToken?.length || 0}`);
       return res.status(400).json({ message: "Invalid FCM token" });
     }
     
     const success = await registerDeviceToken(userId, fcmToken, deviceOs, deviceName);
     if (success) {
+      console.log(`[Token] Token registered successfully for user ${userId}`);
       res.json({ message: "Device token registered" });
     } else {
+      console.log(`[Token] Failed to register token for user ${userId}`);
       res.status(500).json({ message: "Failed to register device token" });
     }
   });

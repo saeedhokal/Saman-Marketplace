@@ -995,23 +995,42 @@ export default function Admin() {
                     <p className="text-white/60 text-xs">Check production database connection</p>
                   </div>
                 </div>
-                <Button
-                  onClick={async () => {
-                    try {
-                      const res: any = await apiRequest("GET", "/api/admin/db-status");
-                      toast({
-                        title: `DB Status (${res.version || 'unknown'})`,
-                        description: `Users: ${res.users}, Tokens: ${res.deviceTokens}, Notifications: ${res.notifications}`
-                      });
-                    } catch (err) {
-                      toast({ title: "Error", description: "Failed to check DB status", variant: "destructive" });
-                    }
-                  }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
-                  data-testid="button-check-db-status"
-                >
-                  Check Status
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const res: any = await apiRequest("GET", "/api/admin/db-status");
+                        toast({
+                          title: `DB Status (${res.version || 'unknown'})`,
+                          description: `Users: ${res.users}, Tokens: ${res.deviceTokens}, Notifications: ${res.notifications}`
+                        });
+                      } catch (err) {
+                        toast({ title: "Error", description: "Failed to check DB status", variant: "destructive" });
+                      }
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    data-testid="button-check-db-status"
+                  >
+                    Check Status
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const res: any = await apiRequest("POST", "/api/admin/test-token");
+                        toast({
+                          title: res.success ? "Test Token Created" : "Failed",
+                          description: `Total tokens: ${res.tokenCount}`
+                        });
+                      } catch (err) {
+                        toast({ title: "Error", description: "Failed to create test token", variant: "destructive" });
+                      }
+                    }}
+                    className="bg-green-500 hover:bg-green-600 text-white"
+                    data-testid="button-create-test-token"
+                  >
+                    Create Test Token
+                  </Button>
+                </div>
               </div>
             </div>
 
