@@ -111,7 +111,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       hasLiteralNewlines,
       hasRealNewlines,
       initError,
-      keyId: 'GMC5C3M7JF',
+      keyId: '6CM9536S2R',
       teamId: 'KQ542Q98H2',
       bundleId: 'com.saeed.saman'
     });

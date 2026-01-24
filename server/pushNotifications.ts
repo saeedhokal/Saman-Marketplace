@@ -15,7 +15,7 @@ function initializeAPNs(): boolean {
   if (apnProvider) return true;
   
   // Try to read the key from file first (preferred - proper newlines)
-  const keyFilePath = path.join(process.cwd(), 'attached_assets', 'AuthKey_GMC5C3M7JF_1769283529392.p8');
+  const keyFilePath = path.join(process.cwd(), 'attached_assets', 'AuthKey_6CM9536S2R_1769284994277.p8');
   let apnsKey: string | undefined;
   
   try {
@@ -81,7 +81,7 @@ function initializeAPNs(): boolean {
     apnProvider = new apn.Provider({
       token: {
         key: keyBuffer,
-        keyId: 'GMC5C3M7JF',
+        keyId: '6CM9536S2R',
         teamId: 'KQ542Q98H2',
       },
       production: true,
