@@ -134,11 +134,20 @@ async function sendAPNsNotification(
   payload: PushNotificationPayload,
   badgeCount: number = 0
 ): Promise<boolean> {
+  const result = await sendAPNsNotificationWithError(token, payload, badgeCount);
+  return result.success;
+}
+
+async function sendAPNsNotificationWithError(
+  token: string,
+  payload: PushNotificationPayload,
+  badgeCount: number = 0
+): Promise<{ success: boolean; error?: string }> {
   console.log(`Attempting APNs send to token: ${token.substring(0, 30)}...`);
   
   if (!initializeAPNs() || !apnProvider) {
     console.log('APNs not available - provider not initialized');
-    return false;
+    return { success: false, error: 'APNs provider not initialized' };
   }
 
   try {
@@ -161,20 +170,19 @@ async function sendAPNsNotification(
     
     if (result.failed.length > 0) {
       const failure = result.failed[0];
-      console.error('APNs send failed:', JSON.stringify({
-        device: failure.device,
+      const errorInfo = {
         status: failure.status,
-        response: failure.response,
-        error: failure.error
-      }));
-      return false;
+        reason: (failure.response as any)?.reason || 'Unknown',
+      };
+      console.error('APNs send failed:', JSON.stringify(errorInfo));
+      return { success: false, error: `${errorInfo.status}: ${errorInfo.reason}` };
     }
     
     console.log(`APNs notification sent successfully to ${token.substring(0, 20)}...`);
-    return true;
-  } catch (error) {
+    return { success: true };
+  } catch (error: any) {
     console.error('APNs send error:', error);
-    return false;
+    return { success: false, error: error?.message || 'APNs exception' };
   }
 }
 
@@ -338,7 +346,7 @@ export async function notifyCreditsAdded(
 
 export async function broadcastPushNotification(
   payload: PushNotificationPayload
-): Promise<{ sent: number; failed: number; saved: number }> {
+): Promise<{ sent: number; failed: number; saved: number; errors: string[] }> {
   console.log('=== BROADCAST START ===');
   console.log('Title:', payload.title);
   console.log('Body:', payload.body);
@@ -352,7 +360,7 @@ export async function broadcastPushNotification(
     
     if (allUsers.length === 0) {
       console.log('WARNING: No users found in database for broadcast');
-      return { sent: 0, failed: 0, saved: 0 };
+      return { sent: 0, failed: 0, saved: 0, errors: ['No users found'] };
     }
     
     console.log('User IDs:', allUsers.map(u => u.id).slice(0, 5).join(', ') + (allUsers.length > 5 ? '...' : ''));
@@ -376,9 +384,9 @@ export async function broadcastPushNotification(
     
     saved = saveResults.filter(r => r.success).length;
     console.log(`Broadcast saved to ${saved}/${allUsers.length} user inboxes`);
-  } catch (error) {
+  } catch (error: any) {
     console.error('CRITICAL: Failed to query/save broadcast:', error);
-    return { sent: 0, failed: 0, saved: 0 };
+    return { sent: 0, failed: 0, saved: 0, errors: [error?.message || 'Query failed'] };
   }
 
   let sent = 0;
@@ -389,14 +397,16 @@ export async function broadcastPushNotification(
     
     if (allTokens.length === 0) {
       console.log('No device tokens found for broadcast, returning saved count:', saved);
-      return { sent: 0, failed: 0, saved };
+      return { sent: 0, failed: 0, saved, errors: ['No device tokens found'] };
     }
 
     console.log(`Sending push to ${allTokens.length} devices`);
 
+    const errors: string[] = [];
     const pushResults = await Promise.all(
       allTokens.map(async (token) => {
         if (!token.fcmToken || token.fcmToken.length < 20) {
+          errors.push(`Token ${token.id}: too short or missing`);
           return { success: false, tokenId: token.id, reason: 'invalid_token' };
         }
 
@@ -404,19 +414,22 @@ export async function broadcastPushNotification(
         let success = false;
 
         if (isIOS) {
-          success = await sendAPNsNotification(token.fcmToken, payload, 1);
+          const result = await sendAPNsNotificationWithError(token.fcmToken, payload, 1);
+          success = result.success;
+          if (!success && result.error) {
+            errors.push(`Token ${token.id} (iOS): ${result.error}`);
+          }
         } else {
           success = await sendFirebaseNotification(token.fcmToken, payload, 1);
-        }
-
-        if (!success && token.deviceOs === 'ios') {
-          try {
-            await db.delete(deviceTokens).where(eq(deviceTokens.id, token.id));
-            console.log(`Removed invalid iOS token ${token.id}`);
-          } catch (deleteErr) {
-            console.error(`Failed to delete invalid token ${token.id}:`, deleteErr);
+          if (!success) {
+            errors.push(`Token ${token.id} (Android): Firebase failed`);
           }
         }
+
+        // DISABLED: Don't auto-delete tokens on failure - keep them for debugging
+        // if (!success && token.deviceOs === 'ios') {
+        //   await db.delete(deviceTokens).where(eq(deviceTokens.id, token.id));
+        // }
 
         return { success, tokenId: token.id, os: token.deviceOs };
       })
@@ -427,10 +440,13 @@ export async function broadcastPushNotification(
 
     console.log(`=== BROADCAST COMPLETE ===`);
     console.log(`Saved: ${saved} inboxes, Sent: ${sent} pushes, Failed: ${failed} pushes`);
+    if (errors.length > 0) {
+      console.log('Errors:', errors.join('; '));
+    }
     
-    return { sent, failed, saved };
-  } catch (error) {
+    return { sent, failed, saved, errors };
+  } catch (error: any) {
     console.error('Failed to broadcast push notification:', error);
-    return { sent: 0, failed: 0, saved };
+    return { sent: 0, failed: 0, saved, errors: [error?.message || 'Broadcast failed'] };
   }
 }

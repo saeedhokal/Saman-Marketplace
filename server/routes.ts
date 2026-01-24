@@ -85,7 +85,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.log('[TEST-PUSH] Sending test broadcast notification');
       const result = await broadcastPushNotification({
         title: 'Test Notification',
-        body: 'Push notifications are working! 🎉',
+        body: 'Push notifications are working!',
       });
       console.log('[TEST-PUSH] Result:', result);
       res.json({ 
@@ -93,6 +93,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         sent: result.sent, 
         failed: result.failed,
         saved: result.saved,
+        errors: result.errors || [],
         message: `Test sent to ${result.sent} devices`
       });
     } catch (error: any) {
