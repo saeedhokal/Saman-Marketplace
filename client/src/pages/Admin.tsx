@@ -983,6 +983,38 @@ export default function Admin() {
               </CardContent>
             </Card>
 
+            {/* Database Status Check */}
+            <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#1e293b] to-[#0f172a] p-5 shadow-xl">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
+                    <Settings className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Database Status</h3>
+                    <p className="text-white/60 text-xs">Check production database connection</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={async () => {
+                    try {
+                      const res: any = await apiRequest("GET", "/api/admin/db-status");
+                      toast({
+                        title: `DB Status (${res.version || 'unknown'})`,
+                        description: `Users: ${res.users}, Tokens: ${res.deviceTokens}, Notifications: ${res.notifications}`
+                      });
+                    } catch (err) {
+                      toast({ title: "Error", description: "Failed to check DB status", variant: "destructive" });
+                    }
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  data-testid="button-check-db-status"
+                >
+                  Check Status
+                </Button>
+              </div>
+            </div>
+
             {/* Broadcast Notification - Modern Styled Card */}
             <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#1e293b] to-[#0f172a] p-5 shadow-xl">
               <div className="flex items-center gap-3 mb-4">

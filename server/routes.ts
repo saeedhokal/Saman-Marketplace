@@ -1220,18 +1220,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         tokenPrefix: sql`substring(${deviceTokens.fcmToken}, 1, 30)`,
       }).from(deviceTokens);
       
+      // Get user IDs for debugging
+      const userIds = await db.select({ id: users.id }).from(users).limit(10);
+      
       res.json({
+        version: 'v3',
         users: Number(userCount[0]?.count || 0),
+        userIds: userIds.map(u => u.id.substring(0, 8) + '...'),
         deviceTokens: Number(tokenCount[0]?.count || 0),
         notifications: Number(notifCount[0]?.count || 0),
         tokenDetails: tokens,
         apnsKeyConfigured: !!process.env.APNS_AUTH_KEY,
         apnsKeyLength: process.env.APNS_AUTH_KEY?.length || 0,
+        databaseUrl: process.env.DATABASE_URL ? 'configured' : 'missing',
         databaseConnected: true,
         timestamp: new Date().toISOString()
       });
     } catch (error: any) {
       res.json({
+        version: 'v3',
         databaseConnected: false,
         error: error.message,
         timestamp: new Date().toISOString()
