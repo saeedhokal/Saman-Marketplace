@@ -86,11 +86,15 @@ export default function Subscription() {
   }
 
   const handleSelectPackage = (pkg: SubscriptionPackage) => {
-    // Pass user ID in URL to bypass iOS cookie issues
+    // Store user ID in localStorage BEFORE navigation to survive Capacitor app reloads
     const userId = user?.id || '';
-    console.log('[Subscription] Navigating to checkout, user:', user, 'userId:', userId);
-    const url = `/checkout/${pkg.id}?uid=${userId}`;
-    console.log('[Subscription] URL:', url);
+    console.log('[Subscription] Storing user ID before navigation:', userId);
+    if (userId) {
+      localStorage.setItem('saman_checkout_user_id', userId);
+    }
+    // Navigate without query params to avoid Capacitor reload issues
+    const url = `/checkout/${pkg.id}`;
+    console.log('[Subscription] Navigating to:', url);
     setLocation(url);
   };
 

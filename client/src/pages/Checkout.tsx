@@ -24,17 +24,17 @@ export default function Checkout() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  // Get user ID from URL params or localStorage (for iOS compatibility)
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlUserId = urlParams.get('uid');
+  // Get user ID from localStorage (for iOS Capacitor compatibility)
+  // Priority: session user > checkout-specific localStorage > general auth localStorage
+  const checkoutUserId = localStorage.getItem('saman_checkout_user_id');
   const storedUserId = getStoredUserId();
   
-  // Use session user first, then URL param, then localStorage (iOS cookie workaround)
-  const effectiveUserId = user?.id || urlUserId || storedUserId;
+  // Use session user first, then checkout localStorage, then auth localStorage
+  const effectiveUserId = user?.id || checkoutUserId || storedUserId;
   
   // Debug logging
   console.log('[Checkout] URL:', window.location.href);
-  console.log('[Checkout] urlUserId:', urlUserId);
+  console.log('[Checkout] checkoutUserId:', checkoutUserId);
   console.log('[Checkout] storedUserId:', storedUserId);
   console.log('[Checkout] user:', user);
   console.log('[Checkout] effectiveUserId:', effectiveUserId);
@@ -245,7 +245,7 @@ export default function Checkout() {
           <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">Sign in to continue</h2>
           <p className="text-xs text-muted-foreground mb-4">
-            Debug: URL={window.location.href} | uid={urlUserId || 'none'} | stored={storedUserId || 'none'}
+            Debug: checkout={checkoutUserId || 'none'} | auth={storedUserId || 'none'} | session={user?.id || 'none'}
           </p>
           <Link href="/auth">
             <Button>Sign In</Button>
