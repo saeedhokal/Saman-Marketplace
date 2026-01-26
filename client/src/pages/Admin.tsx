@@ -264,6 +264,9 @@ export default function Admin() {
       setEditingPackage(null);
       toast({ title: "Package updated" });
     },
+    onError: (error: any) => {
+      toast({ title: "Failed to update package", description: error?.message || "Unknown error", variant: "destructive" });
+    },
   });
 
   const deletePackageMutation = useMutation({
@@ -643,40 +646,59 @@ export default function Admin() {
                       {editingPackage?.id === pkg.id ? (
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
-                            <Input
-                              value={editingPackage.name}
-                              onChange={(e) => setEditingPackage({ ...editingPackage, name: e.target.value })}
-                              className="h-8"
-                            />
-                            <Input
-                              type="number"
-                              value={editingPackage.price}
-                              onChange={(e) => setEditingPackage({ ...editingPackage, price: parseInt(e.target.value) || 0 })}
-                              className="h-8"
-                            />
+                            <div>
+                              <label className="text-xs text-muted-foreground">Name</label>
+                              <Input
+                                value={editingPackage.name}
+                                onChange={(e) => setEditingPackage({ ...editingPackage, name: e.target.value })}
+                                className="h-8"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground">Price (AED)</label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={(editingPackage.price / 100).toFixed(2)}
+                                onChange={(e) => setEditingPackage({ ...editingPackage, price: Math.round(parseFloat(e.target.value) * 100) || 0 })}
+                                className="h-8"
+                                placeholder="e.g. 10.00"
+                              />
+                            </div>
                           </div>
                           <div className="grid grid-cols-3 gap-3">
-                            <Input
-                              type="number"
-                              value={editingPackage.credits}
-                              onChange={(e) => setEditingPackage({ ...editingPackage, credits: parseInt(e.target.value) || 1 })}
-                              className="h-8"
-                            />
-                            <Input
-                              type="number"
-                              value={editingPackage.bonusCredits}
-                              onChange={(e) => setEditingPackage({ ...editingPackage, bonusCredits: parseInt(e.target.value) || 0 })}
-                              className="h-8"
-                            />
-                            <Input
-                              type="number"
-                              value={editingPackage.sortOrder}
-                              onChange={(e) => setEditingPackage({ ...editingPackage, sortOrder: parseInt(e.target.value) || 0 })}
-                              className="h-8"
-                            />
+                            <div>
+                              <label className="text-xs text-muted-foreground">Credits</label>
+                              <Input
+                                type="number"
+                                value={editingPackage.credits}
+                                onChange={(e) => setEditingPackage({ ...editingPackage, credits: parseInt(e.target.value) || 1 })}
+                                className="h-8"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground">Bonus</label>
+                              <Input
+                                type="number"
+                                value={editingPackage.bonusCredits}
+                                onChange={(e) => setEditingPackage({ ...editingPackage, bonusCredits: parseInt(e.target.value) || 0 })}
+                                className="h-8"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground">Order</label>
+                              <Input
+                                type="number"
+                                value={editingPackage.sortOrder}
+                                onChange={(e) => setEditingPackage({ ...editingPackage, sortOrder: parseInt(e.target.value) || 0 })}
+                                className="h-8"
+                              />
+                            </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => updatePackageMutation.mutate(editingPackage)}>Save</Button>
+                            <Button size="sm" onClick={() => updatePackageMutation.mutate(editingPackage)} disabled={updatePackageMutation.isPending}>
+                              {updatePackageMutation.isPending ? "Saving..." : "Save"}
+                            </Button>
                             <Button size="sm" variant="outline" onClick={() => setEditingPackage(null)}>Cancel</Button>
                           </div>
                         </div>
@@ -690,7 +712,7 @@ export default function Admin() {
                               </Badge>
                             </div>
                             <div className="text-sm text-muted-foreground mt-1">
-                              <span className="font-medium text-accent">AED {pkg.price}</span>
+                              <span className="font-medium text-accent">{(pkg.price / 100).toFixed(2)} AED</span>
                               {" - "}
                               {pkg.credits} credit{pkg.credits > 1 ? "s" : ""}
                               {pkg.bonusCredits > 0 && <span className="text-green-600"> +{pkg.bonusCredits} free</span>}
