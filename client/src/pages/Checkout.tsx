@@ -1,7 +1,7 @@
 /// <reference types="applepayjs" />
 import { useState, useEffect } from "react";
 import { useRoute, Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth, getStoredUserId } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,12 +24,13 @@ export default function Checkout() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  // Get user ID from URL params (for iOS compatibility)
+  // Get user ID from URL params or localStorage (for iOS compatibility)
   const urlParams = new URLSearchParams(window.location.search);
   const urlUserId = urlParams.get('uid');
+  const storedUserId = getStoredUserId();
   
-  // Use URL user ID if session user is not available (iOS cookie issue)
-  const effectiveUserId = user?.id || urlUserId;
+  // Use session user first, then URL param, then localStorage (iOS cookie workaround)
+  const effectiveUserId = user?.id || urlUserId || storedUserId;
   const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card">("credit_card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [applePayAvailable, setApplePayAvailable] = useState(false);

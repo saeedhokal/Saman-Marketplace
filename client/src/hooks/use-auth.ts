@@ -3,6 +3,21 @@ import { Capacitor } from '@capacitor/core';
 import type { User } from "@shared/models/auth";
 
 const FCM_TOKEN_KEY = 'saman_fcm_token';
+const USER_ID_KEY = 'saman_user_id';
+
+// Store user ID in localStorage for iOS compatibility (session cookies don't work in Capacitor)
+function storeUserId(userId: string | null): void {
+  if (userId) {
+    localStorage.setItem(USER_ID_KEY, userId);
+  } else {
+    localStorage.removeItem(USER_ID_KEY);
+  }
+}
+
+// Get stored user ID from localStorage
+export function getStoredUserId(): string | null {
+  return localStorage.getItem(USER_ID_KEY);
+}
 
 async function unregisterPushToken(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
@@ -29,6 +44,8 @@ async function fetchUser(): Promise<User | null> {
   });
 
   if (response.status === 401) {
+    // Don't clear stored user ID on 401 - iOS Capacitor has cookie issues
+    // The stored ID is still valid even if cookies aren't sent
     return null;
   }
 
@@ -36,11 +53,15 @@ async function fetchUser(): Promise<User | null> {
     throw new Error(`${response.status}: ${response.statusText}`);
   }
 
-  return response.json();
+  const user = await response.json();
+  // Store user ID for iOS compatibility
+  storeUserId(user?.id || null);
+  return user;
 }
 
 async function logoutFn(): Promise<void> {
   await unregisterPushToken();
+  storeUserId(null); // Clear stored user ID
   await fetch("/api/auth/logout", {
     method: "POST",
     credentials: "include",
@@ -72,7 +93,9 @@ async function loginFn(params: LoginParams): Promise<User> {
     throw new Error(error.message || "Login failed");
   }
   
-  return response.json();
+  const user = await response.json();
+  storeUserId(user?.id || null);
+  return user;
 }
 
 async function registerFn(params: RegisterParams): Promise<User> {
@@ -88,7 +111,9 @@ async function registerFn(params: RegisterParams): Promise<User> {
     throw new Error(error.message || "Registration failed");
   }
   
-  return response.json();
+  const user = await response.json();
+  storeUserId(user?.id || null);
+  return user;
 }
 
 export function useAuth() {
