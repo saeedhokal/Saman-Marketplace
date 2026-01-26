@@ -151,3 +151,62 @@ Phone: +971507242111
 ### Credit Card Payments via Redirect
 - These WORK because the user's browser connects directly to Telr
 - Only server-to-server calls (like Apple Pay) are blocked by IP issues
+
+## Important Technical Facts
+
+### Database Architecture
+- **Development and Production databases are SEPARATE**
+- SQL tool only modifies development database
+- To fix production, must deploy code changes and call API endpoints
+- Production database URL is different from development
+
+### Fix Endpoints Created
+- `/api/fix-user-saeed` - One-time endpoint to reset user account
+- Clears all foreign key references and creates fresh admin user
+- Used to fix production database issues
+
+### Apple Pay Merchant Configuration
+- Merchant ID: `merchant.saeed.saman`
+- Certificates stored as secrets: `APPLE_PAY_CERT`, `APPLE_PAY_KEY`
+- Domain verification file at `/.well-known/apple-developer-merchantid-domain-association.txt`
+
+### Push Notifications (APNs)
+- Using direct APNs (NOT Firebase for iOS)
+- Key stored as `APNS_AUTH_KEY`
+- Key ID: Check Apple Developer account
+- Team ID: Check Apple Developer account  
+- Bundle ID: Check Capacitor config
+- User is ALWAYS logged in on iPhone with notifications enabled
+
+### Codemagic Build Process
+- Push code to GitHub via Replit Git panel
+- Codemagic automatically builds iOS app
+- Distributes to TestFlight
+- User tests on iPhone via TestFlight
+- NO Codemagic build needed for server-side changes (just publish from Replit)
+
+### User Testing Setup
+- User does NOT code - all changes made by agent
+- User has NO Mac and has never used Xcode
+- Tests on physical iPhone via TestFlight
+- Communicates via desktop while testing on phone
+- Uses PUBLISHED URL (production), not preview
+
+### Key Files
+- `server/routes.ts` - All API endpoints including Apple Pay
+- `server/storage.ts` - Database operations
+- `client/src/pages/Checkout.tsx` - Payment UI
+- `client/src/pages/Subscription.tsx` - Package selection
+- `server/simpleAuth.ts` - Authentication logic
+
+### What Works
+- User login/registration
+- Product listings
+- Push notifications
+- Credit card payments (via Telr redirect)
+- Admin panel
+- All UI features
+
+### What Doesn't Work (Currently)
+- Native Apple Pay - blocked by Telr IP whitelisting issue
+- Waiting for Telr support to disable IP restriction or whitelist IP range
