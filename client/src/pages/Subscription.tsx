@@ -86,16 +86,8 @@ export default function Subscription() {
   }
 
   const handleSelectPackage = (pkg: SubscriptionPackage) => {
-    // Store user ID in localStorage BEFORE navigation to survive Capacitor app reloads
-    const userId = user?.id || '';
-    console.log('[Subscription] Storing user ID before navigation:', userId);
-    if (userId) {
-      localStorage.setItem('saman_checkout_user_id', userId);
-    }
-    // Navigate without query params to avoid Capacitor reload issues
-    const url = `/checkout/${pkg.id}`;
-    console.log('[Subscription] Navigating to:', url);
-    setLocation(url);
+    // Simple client-side navigation
+    setLocation(`/checkout/${pkg.id}`);
   };
 
   const totalCredits = (pkg: SubscriptionPackage) => pkg.credits + (pkg.bonusCredits || 0);

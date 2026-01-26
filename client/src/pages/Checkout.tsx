@@ -1,7 +1,7 @@
 /// <reference types="applepayjs" />
 import { useState, useEffect } from "react";
 import { useRoute, Link, useLocation } from "wouter";
-import { useAuth, getStoredUserId } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,24 +20,12 @@ declare global {
 export default function Checkout() {
   const [, params] = useRoute("/checkout/:id");
   const packageId = params?.id ? parseInt(params.id) : 0;
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  // Get user ID from localStorage (for iOS Capacitor compatibility)
-  // Priority: session user > checkout-specific localStorage > general auth localStorage
-  const checkoutUserId = localStorage.getItem('saman_checkout_user_id');
-  const storedUserId = getStoredUserId();
-  
-  // Use session user first, then checkout localStorage, then auth localStorage
-  const effectiveUserId = user?.id || checkoutUserId || storedUserId;
-  
-  // Debug logging
-  console.log('[Checkout] URL:', window.location.href);
-  console.log('[Checkout] checkoutUserId:', checkoutUserId);
-  console.log('[Checkout] storedUserId:', storedUserId);
-  console.log('[Checkout] user:', user);
-  console.log('[Checkout] effectiveUserId:', effectiveUserId);
+  // Use session user ID - auth hook handles everything
+  const effectiveUserId = user?.id;
   const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card">("credit_card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [applePayAvailable, setApplePayAvailable] = useState(false);
@@ -237,7 +225,16 @@ export default function Checkout() {
     }
   };
 
-  // Check for either session user or URL user ID (for iOS compatibility)
+  // FIRST: Wait for auth to finish loading before deciding
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  // THEN: Check for either session user or localStorage user ID (for iOS compatibility)
   if (!effectiveUserId) {
     return (
       <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
@@ -245,7 +242,7 @@ export default function Checkout() {
           <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">Sign in to continue</h2>
           <p className="text-xs text-muted-foreground mb-4">
-            Debug: checkout={checkoutUserId || 'none'} | auth={storedUserId || 'none'} | session={user?.id || 'none'}
+            Session not found. Please log in again.
           </p>
           <Link href="/auth">
             <Button>Sign In</Button>
