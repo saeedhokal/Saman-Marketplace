@@ -168,9 +168,11 @@ The Saman Marketplace employs a modern web and mobile application architecture.
 ### Telr Configuration Reference
 
 **Telr Dashboard Settings Required:**
-1. **Hosted Payment Page:** Enable and whitelist BOTH IPs:
-   - 34.96.44.175 (original)
-   - 34.34.233.232 (new - added Jan 26, 2026)
+1. **Hosted Payment Page:** Enable and whitelist ALL IPs:
+   - 34.96.44.175
+   - 34.34.233.232
+   - 34.11.141.31
+   - 34.96.46.88 (added Jan 26, 2026)
 2. **Wallets:** Apple Pay needs to be enabled (contact Telr support)
 3. **Store ID:** 32400
 4. **Minimum Amount:** Likely 1.00 AED (test with 1.00+ to confirm)
