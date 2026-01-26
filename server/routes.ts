@@ -589,6 +589,68 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // Simple payment test page - access from Safari to test
+  app.get("/test-payment", async (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Payment Test</title>
+        <style>
+          body { font-family: -apple-system, sans-serif; padding: 20px; background: #1a1a2e; color: white; }
+          button { padding: 15px 30px; font-size: 18px; background: #f97316; color: white; border: none; border-radius: 8px; margin: 10px 0; width: 100%; }
+          .result { background: #333; padding: 15px; margin: 10px 0; border-radius: 8px; word-break: break-all; }
+          .success { border-left: 4px solid #22c55e; }
+          .error { border-left: 4px solid #ef4444; }
+        </style>
+      </head>
+      <body>
+        <h2>Payment Test Page</h2>
+        <p>Test if payments work from Safari</p>
+        
+        <button onclick="testTelrDirect()">1. Test Telr API (Direct)</button>
+        <button onclick="testCheckoutAPI()">2. Test Checkout API</button>
+        
+        <div id="result"></div>
+        
+        <script>
+          async function testTelrDirect() {
+            document.getElementById('result').innerHTML = '<div class="result">Testing Telr API...</div>';
+            try {
+              const res = await fetch('/api/test-telr');
+              const data = await res.json();
+              document.getElementById('result').innerHTML = '<div class="result success">SUCCESS: ' + JSON.stringify(data, null, 2) + '</div>';
+            } catch (err) {
+              document.getElementById('result').innerHTML = '<div class="result error">ERROR: ' + err.message + '</div>';
+            }
+          }
+          
+          async function testCheckoutAPI() {
+            document.getElementById('result').innerHTML = '<div class="result">Testing Checkout API...</div>';
+            try {
+              const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ packageId: 1, paymentMethod: 'credit_card' })
+              });
+              const text = await res.text();
+              if (res.ok) {
+                document.getElementById('result').innerHTML = '<div class="result success">SUCCESS (' + res.status + '): ' + text + '</div>';
+              } else {
+                document.getElementById('result').innerHTML = '<div class="result error">FAILED (' + res.status + '): ' + text + '</div>';
+              }
+            } catch (err) {
+              document.getElementById('result').innerHTML = '<div class="result error">ERROR: ' + err.message + '</div>';
+            }
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  });
+
   // Test Telr API directly - for debugging
   app.get("/api/test-telr", async (req, res) => {
     console.log("[TEST-TELR] Starting Telr API test...");
