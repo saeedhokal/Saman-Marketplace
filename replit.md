@@ -100,3 +100,9 @@ The Saman Marketplace uses a modern web and mobile application architecture.
 - Store ID: 32400
 - Auth Key: 3SWWK@m9Mz-5GNtS
 - Mode: LIVE (test: 0)
+
+### IMPORTANT: Telr Apple Pay Was Working
+- Apple Pay worked perfectly with the OLD app (on AWS)
+- Telr's side is fully configured for Apple Pay - no setup issues there
+- The problem is NOT Telr configuration
+- The problem is something about how Replit sends the request vs how AWS did
