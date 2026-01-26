@@ -95,3 +95,29 @@ The Saman Marketplace employs a modern web and mobile application architecture.
 - `GET /api/admin/db-status` - Shows user count, token count, notification count
 
 **Published Version:** v3.0.1 (commit 3ee3d57)
+
+## January 26, 2026 - Payment Configuration
+
+### Telr & Apple Pay Connected to Bank Account
+
+**Configuration Added:**
+- **Telr Store ID:** 32400 (from user's existing merchant account)
+- **Telr Auth Key:** Already configured
+- **Apple Pay Merchant ID:** merchant.saeed.saman
+- **Apple Pay Certificates:** APPLE_PAY_CERT and APPLE_PAY_KEY secrets configured
+
+**How Payments Work:**
+1. **Apple Pay:** Native iOS payment using merchant.saeed.saman, validated with TLS certificates, processed via Telr
+2. **Credit Card:** Telr hosted payment page handles card entry, 3D Secure, and processing
+3. Both methods deposit to the same bank account as user's old app
+
+**Payment Flow:**
+1. User selects package → Checkout page
+2. Apple Pay available? Shows Apple Pay option (preferred)
+3. Credit card option always available
+4. Successful payment → Credits added to user account
+5. Transaction recorded in database
+
+**Testing:**
+- Small test purchase recommended after configuration changes
+- Check Telr dashboard for transaction records
