@@ -90,7 +90,7 @@ export default function Subscription() {
   };
 
   const totalCredits = (pkg: SubscriptionPackage) => pkg.credits + (pkg.bonusCredits || 0);
-  const pricePerCredit = (pkg: SubscriptionPackage) => (pkg.price / totalCredits(pkg)).toFixed(0);
+  const pricePerCredit = (pkg: SubscriptionPackage) => ((pkg.price / 100) / totalCredits(pkg)).toFixed(0);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -174,7 +174,7 @@ export default function Subscription() {
                       <div className="flex-1">
                         <h3 className="font-semibold text-base">{pkg.name}</h3>
                         <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-2xl font-bold text-accent">AED {pkg.price}</span>
+                          <span className="text-2xl font-bold text-accent">{(pkg.price / 100).toFixed(2)} AED</span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-sm text-muted-foreground">
