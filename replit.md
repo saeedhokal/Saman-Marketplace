@@ -68,7 +68,7 @@ The Saman Marketplace uses a modern web and mobile application architecture.
 **Problem:** Replit doesn't have static outbound IPs. Every deployment or restart can get a different IP address.
 
 **IPs whitelisted so far:**
-34.96.44.175, 34.34.233.232, 34.11.141.31, 34.96.46.88, 34.96.46.223, 34.96.45.214, 34.96.45.45, 34.96.45.211
+34.96.44.175, 34.34.233.232, 34.11.141.31, 34.96.46.88, 34.96.46.223, 34.96.45.214, 34.96.45.45, 34.96.45.211, 34.96.47.62
 
 **Long-term Solutions:**
 1. Contact Telr support to disable IP whitelisting
