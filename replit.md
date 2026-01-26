@@ -51,3 +51,52 @@ The Saman Marketplace uses a modern web and mobile application architecture.
 - **Codemagic:** CI/CD for iOS builds and TestFlight deployment.
 - **GitHub:** Version control hosting.
 - **Twilio:** (Pending setup) Intended for SMS services.
+
+## CRITICAL: Infrastructure Differences
+
+### Old App (WORKED on AWS)
+- **Hosted on:** AWS (Amazon Web Services)
+- **Static IP:** Yes - AWS provides static outbound IPs
+- **Telr Integration:** Worked because AWS IP was whitelisted once and never changed
+
+### New App (Replit - CURRENT)
+- **Hosted on:** Replit
+- **Static IP:** NO - Replit outbound IPs change frequently (every restart/deploy)
+- **Telr Integration:** Breaks because IP keeps changing
+
+### Telr IP Whitelisting Issue
+**Problem:** Replit doesn't have static outbound IPs. Every deployment or restart can get a different IP address.
+
+**IPs whitelisted so far:**
+34.96.44.175, 34.34.233.232, 34.11.141.31, 34.96.46.88, 34.96.46.223, 34.96.45.214, 34.96.45.45
+
+**Long-term Solutions:**
+1. Contact Telr support to disable IP whitelisting
+2. Ask Telr to whitelist entire 34.0.0.0/8 range
+3. Move to hosting with static IPs (like AWS)
+
+## User Account Details
+- **Phone:** 971507242111 (use 0507242111 or +971507242111 to login)
+- **Password:** 1234
+- **User ID:** aaf09421-ec24-4799-8ae2-4bb88af00aaf
+- **Admin:** Yes
+- **Credits:** 10 Spare Parts / 10 Automotive
+
+## January 27, 2026 - Apple Pay Bug Fix
+
+### CRITICAL BUG FIXED
+**Problem:** Apple Pay was granting credits without verifying payment actually completed.
+
+**Root Cause:** Code was checking `if (telrData.order?.ref && !telrData.error)` which is WRONG because having an `order.ref` doesn't mean payment succeeded.
+
+**Fix Applied:** Now checks `status.code === "3"` (authorized/captured) before granting credits.
+
+**Telr Status Codes:**
+- `2` = Pending (payment processing)
+- `3` = Authorized/Captured (payment successful - ONLY grant credits here)
+- Other = Failed/Declined
+
+### Telr Live Mode Configuration
+- Store ID: 32400
+- Auth Key: 3SWWK@m9Mz-5GNtS
+- Mode: LIVE (test: 0)

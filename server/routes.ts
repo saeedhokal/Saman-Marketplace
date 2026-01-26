@@ -1417,26 +1417,47 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const telrData = await telrResponse.json();
       console.log("[ApplePay] Telr response:", JSON.stringify(telrData));
 
-      if (telrData.order?.ref && !telrData.error) {
-        // Payment successful - add credits immediately
+      // CRITICAL: Must check status.code === "3" (authorized/captured) before granting credits
+      // Just having an order.ref is NOT enough - the payment might still be pending or failed
+      const statusCode = telrData.order?.status?.code;
+      const orderRef = telrData.order?.ref;
+      
+      console.log("[ApplePay] Status code:", statusCode, "Order ref:", orderRef);
+
+      if (statusCode === "3" || statusCode === 3) {
+        // Payment ACTUALLY successful (code 3 = authorized/captured) - add credits
         const category = pkg.category as "Spare Parts" | "Automotive";
         await storage.addCredits(userId, category, totalCredits);
-        await storage.updateTransactionReference(transaction.id, telrData.order.ref);
+        await storage.updateTransactionReference(transaction.id, orderRef);
         await storage.updateTransactionStatus(transaction.id, "completed");
 
         const newCredits = await storage.getUserCredits(userId);
+        console.log("[ApplePay] Payment successful, credits added:", totalCredits, category);
         return res.json({
           success: true,
           message: `${totalCredits} ${category} credits added to your account!`,
           sparePartsCredits: newCredits.sparePartsCredits,
           automotiveCredits: newCredits.automotiveCredits,
         });
+      } else if (statusCode === "2" || statusCode === 2) {
+        // Payment pending - save reference but don't add credits yet
+        console.log("[ApplePay] Payment pending, not adding credits yet");
+        if (orderRef) {
+          await storage.updateTransactionReference(transaction.id, orderRef);
+        }
+        return res.json({
+          success: false,
+          pending: true,
+          message: "Payment is being processed. Credits will be added once confirmed.",
+          orderRef: orderRef,
+        });
       } else {
-        console.error("[ApplePay] Payment failed:", telrData.error);
+        // Payment failed or declined
+        console.error("[ApplePay] Payment failed - status:", statusCode, "error:", telrData.error);
         await storage.updateTransactionStatus(transaction.id, "failed");
         return res.status(400).json({
           success: false,
-          message: telrData.error?.message || "Apple Pay payment failed",
+          message: telrData.error?.message || `Apple Pay payment failed (status: ${statusCode || 'unknown'})`,
         });
       }
     } catch (error) {
