@@ -87,7 +87,11 @@ export default function Subscription() {
 
   const handleSelectPackage = (pkg: SubscriptionPackage) => {
     // Pass user ID in URL to bypass iOS cookie issues
-    setLocation(`/checkout/${pkg.id}?uid=${user?.id || ''}`);
+    const userId = user?.id || '';
+    console.log('[Subscription] Navigating to checkout, user:', user, 'userId:', userId);
+    const url = `/checkout/${pkg.id}?uid=${userId}`;
+    console.log('[Subscription] URL:', url);
+    setLocation(url);
   };
 
   const totalCredits = (pkg: SubscriptionPackage) => pkg.credits + (pkg.bonusCredits || 0);

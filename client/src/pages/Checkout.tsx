@@ -31,6 +31,13 @@ export default function Checkout() {
   
   // Use session user first, then URL param, then localStorage (iOS cookie workaround)
   const effectiveUserId = user?.id || urlUserId || storedUserId;
+  
+  // Debug logging
+  console.log('[Checkout] URL:', window.location.href);
+  console.log('[Checkout] urlUserId:', urlUserId);
+  console.log('[Checkout] storedUserId:', storedUserId);
+  console.log('[Checkout] user:', user);
+  console.log('[Checkout] effectiveUserId:', effectiveUserId);
   const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card">("credit_card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [applePayAvailable, setApplePayAvailable] = useState(false);
@@ -237,6 +244,9 @@ export default function Checkout() {
         <div className="text-center px-4">
           <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">Sign in to continue</h2>
+          <p className="text-xs text-muted-foreground mb-4">
+            Debug: URL={window.location.href} | uid={urlUserId || 'none'} | stored={storedUserId || 'none'}
+          </p>
           <Link href="/auth">
             <Button>Sign In</Button>
           </Link>
