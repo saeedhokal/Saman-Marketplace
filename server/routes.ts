@@ -105,11 +105,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/fix-user-saeed", async (req, res) => {
     try {
       const phone = '971507242111';
+      const phonesToDelete = [phone, phone + '_old', phone + '_alt'];
       
-      // Delete all users with this phone (clean slate)
-      await db.delete(users).where(eq(users.phone, phone));
-      await db.delete(users).where(eq(users.phone, phone + '_old'));
-      await db.delete(users).where(eq(users.phone, phone + '_alt'));
+      // Get user IDs to clean up
+      const usersToDelete = await db.select({ id: users.id }).from(users)
+        .where(sql`${users.phone} IN (${sql.raw(phonesToDelete.map(p => `'${p}'`).join(','))})`);
+      
+      const userIds = usersToDelete.map(u => u.id);
+      
+      if (userIds.length > 0) {
+        // Clean up all foreign key references using raw SQL
+        for (const userId of userIds) {
+          await db.execute(sql`DELETE FROM transactions WHERE user_id = ${userId}`);
+          await db.execute(sql`DELETE FROM user_views WHERE user_id = ${userId}`);
+          await db.execute(sql`DELETE FROM device_tokens WHERE user_id = ${userId}`);
+          await db.execute(sql`DELETE FROM notifications WHERE user_id = ${userId}`);
+          await db.execute(sql`DELETE FROM favorites WHERE user_id = ${userId}`);
+          await db.execute(sql`UPDATE products SET seller_id = 'demo_seller_1' WHERE seller_id = ${userId}`);
+        }
+        
+        // Now delete users
+        for (const p of phonesToDelete) {
+          await db.delete(users).where(eq(users.phone, p));
+        }
+      }
       
       // Create fresh admin user with password "1234"
       const hashedPassword = await bcrypt.hash('1234', 10);
