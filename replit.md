@@ -240,3 +240,16 @@ authkey: "3SWWK@m9Mz-5GNtS",
 - Large file `saman_berepo_1769450727824.zip` (128MB) was blocking Git push
 - Added to .gitignore and removed from tracking
 - Successfully pushed to GitHub
+
+### Test Page Added (Jan 26, 2026):
+- Created `/test-payment` page for debugging payment issues
+- Accessible via Safari on iPhone: `https://saman-market-fixer--saeedhokal.replit.app/test-payment`
+- Contains two test buttons:
+  1. "Test Telr API" - Tests direct server-to-Telr communication
+  2. "Test Checkout API" - Tests the actual /api/checkout endpoint
+- This helps identify whether issues are in iOS app vs server
+
+### Debugging Status:
+- No checkout requests appearing in server logs when user taps Pay in iOS app
+- This suggests the iOS app might not be reaching the server
+- Need to compare test page results to isolate the issue
