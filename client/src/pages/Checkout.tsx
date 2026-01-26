@@ -10,6 +10,7 @@ import { SiApplepay } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SubscriptionPackage } from "@shared/schema";
+import { Capacitor } from "@capacitor/core";
 
 declare global {
   interface Window {
@@ -49,9 +50,19 @@ export default function Checkout() {
       const res = await apiRequest("POST", "/api/checkout", data);
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      console.log("[Checkout] Payment response:", JSON.stringify(data));
       if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
+        console.log("[Checkout] Redirecting to payment URL:", data.paymentUrl);
+        // For Capacitor iOS, use window.location.assign for better compatibility
+        if (Capacitor.isNativePlatform()) {
+          console.log("[Checkout] Using native redirect");
+          // Use location.assign which works better in iOS WebView
+          window.location.assign(data.paymentUrl);
+        } else {
+          window.location.href = data.paymentUrl;
+        }
+        setIsProcessing(false);
       } else {
         queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
         toast({
@@ -62,6 +73,7 @@ export default function Checkout() {
       }
     },
     onError: (error: any) => {
+      console.error("[Checkout] Payment error:", error);
       toast({
         variant: "destructive",
         title: "Payment Failed",
@@ -173,13 +185,19 @@ export default function Checkout() {
   };
 
   const handlePayment = async () => {
-    if (!pkg) return;
+    console.log("[Checkout] handlePayment called, pkg:", pkg?.id, "method:", paymentMethod);
+    if (!pkg) {
+      console.log("[Checkout] No package, returning");
+      return;
+    }
     
     if (paymentMethod === "apple_pay" && applePayAvailable) {
       // Native Apple Pay with Face ID
+      console.log("[Checkout] Using Apple Pay");
       handleApplePay();
     } else {
       // Credit Card goes through Telr's hosted page
+      console.log("[Checkout] Using Credit Card, calling API");
       setIsProcessing(true);
       purchaseMutation.mutate({ packageId: pkg.id, paymentMethod });
     }
