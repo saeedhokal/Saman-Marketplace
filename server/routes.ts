@@ -640,7 +640,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     // Production mode - create Telr payment session
     const cartId = `SAMAN-${userId}-${packageId}-${Date.now()}`;
     const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
-    const baseUrl = process.env.REPLIT_DEPLOYMENT_URL || `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+    // Use the published URL for payment callbacks - this is the iOS app's domain
+    const baseUrl = "https://saman-market-fixer--saeedhokal.replit.app";
     
     // Create pending transaction
     const transaction = await storage.createTransaction({
