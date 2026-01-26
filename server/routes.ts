@@ -656,22 +656,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
     try {
       // Use Telr Hosted Payment Page form-encoded format
+      const amountInAED = (pkg.price / 100).toFixed(2);
+      console.log(`[TELR] Creating order: cart=${cartId}, amount=${amountInAED} AED, store=${telrStoreId}`);
+      
       const telrParams = new URLSearchParams({
         ivp_method: "create",
         ivp_store: telrStoreId,
         ivp_authkey: telrAuthKey,
         ivp_cart: cartId,
         ivp_test: "0", // Live mode
-        ivp_amount: (pkg.price / 100).toFixed(2),
+        ivp_amount: amountInAED,
         ivp_currency: "AED",
         ivp_desc: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
         return_auth: `${baseUrl}/payment/success?cart=${cartId}`,
         return_can: `${baseUrl}/payment/cancelled?cart=${cartId}`,
         return_decl: `${baseUrl}/payment/declined?cart=${cartId}`,
         bill_fname: user?.firstName || "Customer",
-        bill_sname: user?.lastName || "",
-        bill_email: user?.email || "customer@example.com",
-        bill_phone: user?.phone || "",
+        bill_sname: user?.lastName || "User",
+        bill_email: user?.email || "customer@saman.ae",
+        bill_phone: user?.phone || "971500000000",
         bill_addr1: "Dubai",
         bill_city: "Dubai",
         bill_country: "AE",
