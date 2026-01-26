@@ -86,7 +86,8 @@ export default function Subscription() {
   }
 
   const handleSelectPackage = (pkg: SubscriptionPackage) => {
-    setLocation(`/checkout/${pkg.id}`);
+    // Pass user ID in URL to bypass iOS cookie issues
+    setLocation(`/checkout/${pkg.id}?uid=${user?.id || ''}`);
   };
 
   const totalCredits = (pkg: SubscriptionPackage) => pkg.credits + (pkg.bonusCredits || 0);

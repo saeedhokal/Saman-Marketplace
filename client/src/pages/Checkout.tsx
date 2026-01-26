@@ -23,6 +23,13 @@ export default function Checkout() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  
+  // Get user ID from URL params (for iOS compatibility)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlUserId = urlParams.get('uid');
+  
+  // Use URL user ID if session user is not available (iOS cookie issue)
+  const effectiveUserId = user?.id || urlUserId;
   const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card">("credit_card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [applePayAvailable, setApplePayAvailable] = useState(false);
@@ -196,8 +203,11 @@ export default function Checkout() {
       console.log("[Checkout] Starting credit card checkout for package:", pkg.id);
       
       try {
-        // Get a checkout token from the server (this uses the session)
-        const tokenRes = await apiRequest("POST", "/api/checkout-token", { packageId: pkg.id });
+        // Get a checkout token from the server (include user ID for iOS compatibility)
+        const tokenRes = await apiRequest("POST", "/api/checkout-token", { 
+          packageId: pkg.id,
+          userId: effectiveUserId 
+        });
         const tokenData = await tokenRes.json();
         
         if (tokenData.success && tokenData.token) {
@@ -219,7 +229,8 @@ export default function Checkout() {
     }
   };
 
-  if (!user) {
+  // Check for either session user or URL user ID (for iOS compatibility)
+  if (!effectiveUserId) {
     return (
       <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
         <div className="text-center px-4">

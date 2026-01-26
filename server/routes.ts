@@ -687,15 +687,32 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     `);
   });
   
-  // Generate checkout token (authenticated endpoint)
-  app.post("/api/checkout-token", isAuthenticated, async (req, res) => {
-    const userId = getCurrentUserId(req)!;
-    const { packageId } = req.body;
+  // Generate checkout token (accepts userId directly for iOS compatibility)
+  app.post("/api/checkout-token", async (req, res) => {
+    // Try session first, then fall back to userId from body (for iOS)
+    let userId = getCurrentUserId(req);
+    const { packageId, userId: bodyUserId } = req.body;
+    
+    // If no session, use userId from request body (iOS compatibility)
+    if (!userId && bodyUserId) {
+      userId = bodyUserId;
+      console.log(`[CHECKOUT-TOKEN] Using userId from body (iOS mode): ${userId}`);
+    }
     
     console.log(`[CHECKOUT-TOKEN] Generating token for user ${userId}, package ${packageId}`);
     
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Not authenticated" });
+    }
+    
     if (!packageId) {
       return res.status(400).json({ success: false, message: "Missing packageId" });
+    }
+    
+    // Verify user exists
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User not found" });
     }
     
     const token = generateCheckoutToken(userId, packageId);
