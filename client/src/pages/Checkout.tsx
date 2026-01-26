@@ -262,7 +262,7 @@ export default function Checkout() {
             </div>
             <div className="border-t pt-3 flex justify-between items-center">
               <span className="font-semibold">Total</span>
-              <span className="text-xl font-bold text-accent">AED {pkg.price}</span>
+              <span className="text-xl font-bold text-accent">{(pkg.price / 100).toFixed(2)} AED</span>
             </div>
           </CardContent>
         </Card>
@@ -349,7 +349,7 @@ export default function Checkout() {
               ) : (
                 <CreditCard className="h-5 w-5 mr-2" />
               )}
-              Pay AED {pkg.price}
+              Pay {(pkg.price / 100).toFixed(2)} AED
             </>
           )}
         </Button>

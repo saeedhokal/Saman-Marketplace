@@ -168,10 +168,14 @@ The Saman Marketplace employs a modern web and mobile application architecture.
 ### Telr Configuration Reference
 
 **Telr Dashboard Settings Required:**
-1. **Hosted Payment Page:** Enable and whitelist IP 34.96.44.175
+1. **Hosted Payment Page:** Enable and whitelist BOTH IPs:
+   - 34.96.44.175 (original)
+   - 34.34.233.232 (new - added Jan 26, 2026)
 2. **Wallets:** Apple Pay needs to be enabled (contact Telr support)
 3. **Store ID:** 32400
 4. **Minimum Amount:** Likely 1.00 AED (test with 1.00+ to confirm)
+
+**Note:** Replit's outbound IP can change. If you see "Connection from unauthorised IP" errors, add the new IP to Telr's whitelist.
 
 **Payment Endpoints:**
 - `POST /api/checkout/telr` - Creates Telr hosted payment page session
