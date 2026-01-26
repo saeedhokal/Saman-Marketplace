@@ -696,7 +696,16 @@ export default function Admin() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => updatePackageMutation.mutate(editingPackage)} disabled={updatePackageMutation.isPending}>
+                            <Button size="sm" onClick={() => updatePackageMutation.mutate({
+                              id: editingPackage.id,
+                              name: editingPackage.name,
+                              price: editingPackage.price,
+                              credits: editingPackage.credits,
+                              bonusCredits: editingPackage.bonusCredits,
+                              sortOrder: editingPackage.sortOrder,
+                              isActive: editingPackage.isActive,
+                              category: editingPackage.category,
+                            })} disabled={updatePackageMutation.isPending}>
                               {updatePackageMutation.isPending ? "Saving..." : "Save"}
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => setEditingPackage(null)}>Cancel</Button>
