@@ -121,3 +121,9 @@ The Saman Marketplace employs a modern web and mobile application architecture.
 **Testing:**
 - Small test purchase recommended after configuration changes
 - Check Telr dashboard for transaction records
+
+**IMPORTANT - Live Mode Enabled (Jan 26, 2026):**
+- Payments now go through in LIVE mode (not test mode)
+- Credit card payments: `ivp_test: "0"` in checkout endpoint
+- Apple Pay payments: `test: 0` in applepay/process endpoint
+- All transactions will be real charges and deposited to bank account

@@ -661,7 +661,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         ivp_store: telrStoreId,
         ivp_authkey: telrAuthKey,
         ivp_cart: cartId,
-        ivp_test: "1", // Test mode - change to "0" for live
+        ivp_test: "0", // Live mode
         ivp_amount: (pkg.price / 100).toFixed(2),
         ivp_currency: "AED",
         ivp_desc: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
@@ -883,7 +883,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         authkey: telrAuthKey,
         order: {
           cartid: cartId,
-          test: 1, // Change to 0 for production
+          test: 0, // Live production mode
           amount: (pkg.price / 100).toFixed(2),
           currency: "AED",
           description: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
