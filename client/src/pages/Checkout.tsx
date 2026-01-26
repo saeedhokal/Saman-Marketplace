@@ -49,11 +49,8 @@ export default function Checkout() {
       const res = await apiRequest("POST", "/api/checkout", data);
       return res.json();
     },
-    onSuccess: async (data) => {
-      console.log("[Checkout] Payment response:", JSON.stringify(data));
+    onSuccess: (data) => {
       if (data.paymentUrl) {
-        console.log("[Checkout] Redirecting to payment URL:", data.paymentUrl);
-        // Use window.location.href for redirect - works on web and iOS WebView
         window.location.href = data.paymentUrl;
       } else {
         queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
@@ -65,7 +62,6 @@ export default function Checkout() {
       }
     },
     onError: (error: any) => {
-      console.error("[Checkout] Payment error:", error);
       toast({
         variant: "destructive",
         title: "Payment Failed",
@@ -177,19 +173,13 @@ export default function Checkout() {
   };
 
   const handlePayment = async () => {
-    console.log("[Checkout] handlePayment called, pkg:", pkg?.id, "method:", paymentMethod);
-    if (!pkg) {
-      console.log("[Checkout] No package, returning");
-      return;
-    }
+    if (!pkg) return;
     
     if (paymentMethod === "apple_pay" && applePayAvailable) {
       // Native Apple Pay with Face ID
-      console.log("[Checkout] Using Apple Pay");
       handleApplePay();
     } else {
       // Credit Card goes through Telr's hosted page
-      console.log("[Checkout] Using Credit Card, calling API");
       setIsProcessing(true);
       purchaseMutation.mutate({ packageId: pkg.id, paymentMethod });
     }
