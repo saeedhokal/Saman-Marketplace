@@ -416,14 +416,20 @@ export function setupSimpleAuth(app: Express) {
 }
 
 // Middleware to check if user is authenticated
+// Supports both session cookies and X-User-ID header (for iOS Capacitor fallback)
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userId) {
+  const userId = req.session.userId || req.headers['x-user-id'] as string;
+  if (!userId) {
     return res.status(401).json({ message: "Authentication required" });
+  }
+  // Store in session for consistency
+  if (!req.session.userId && userId) {
+    req.session.userId = userId;
   }
   next();
 }
 
-// Helper to get current user ID from session
+// Helper to get current user ID from session or header
 export function getCurrentUserId(req: Request): string | undefined {
-  return req.session.userId;
+  return req.session.userId || req.headers['x-user-id'] as string;
 }
