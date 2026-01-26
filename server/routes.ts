@@ -599,47 +599,62 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         <title>Payment Test</title>
         <style>
           body { font-family: -apple-system, sans-serif; padding: 20px; background: #1a1a2e; color: white; }
-          button { padding: 15px 30px; font-size: 18px; background: #f97316; color: white; border: none; border-radius: 8px; margin: 10px 0; width: 100%; }
-          .result { background: #333; padding: 15px; margin: 10px 0; border-radius: 8px; word-break: break-all; }
+          button { padding: 15px 30px; font-size: 16px; background: #f97316; color: white; border: none; border-radius: 8px; margin: 8px 0; width: 100%; }
+          .result { background: #333; padding: 15px; margin: 10px 0; border-radius: 8px; word-break: break-all; white-space: pre-wrap; font-size: 12px; }
           .success { border-left: 4px solid #22c55e; }
           .error { border-left: 4px solid #ef4444; }
+          .info { border-left: 4px solid #3b82f6; }
         </style>
       </head>
       <body>
         <h2>Payment Test Page</h2>
-        <p>Test if payments work from Safari</p>
         
         <button onclick="testTelrDirect()">1. Test Telr API (Direct)</button>
-        <button onclick="testCheckoutAPI()">2. Test Checkout API</button>
+        <button onclick="testCheckoutNoAuth()">2. Test Checkout (No Login Required)</button>
+        <button onclick="checkLoginStatus()">3. Check Login Status</button>
         
         <div id="result"></div>
         
         <script>
           async function testTelrDirect() {
-            document.getElementById('result').innerHTML = '<div class="result">Testing Telr API...</div>';
+            document.getElementById('result').innerHTML = '<div class="result info">Testing Telr API...</div>';
             try {
               const res = await fetch('/api/test-telr');
               const data = await res.json();
-              document.getElementById('result').innerHTML = '<div class="result success">SUCCESS: ' + JSON.stringify(data, null, 2) + '</div>';
+              if (data.success) {
+                document.getElementById('result').innerHTML = '<div class="result success">TELR API WORKS!\\n\\nPayment URL: ' + data.paymentUrl + '</div>';
+              } else {
+                document.getElementById('result').innerHTML = '<div class="result error">TELR FAILED: ' + JSON.stringify(data) + '</div>';
+              }
             } catch (err) {
               document.getElementById('result').innerHTML = '<div class="result error">ERROR: ' + err.message + '</div>';
             }
           }
           
-          async function testCheckoutAPI() {
-            document.getElementById('result').innerHTML = '<div class="result">Testing Checkout API...</div>';
+          async function testCheckoutNoAuth() {
+            document.getElementById('result').innerHTML = '<div class="result info">Testing Checkout (bypasses login)...</div>';
             try {
-              const res = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ packageId: 1, paymentMethod: 'credit_card' })
-              });
-              const text = await res.text();
-              if (res.ok) {
-                document.getElementById('result').innerHTML = '<div class="result success">SUCCESS (' + res.status + '): ' + text + '</div>';
+              const res = await fetch('/api/test-checkout-full');
+              const data = await res.json();
+              if (data.success) {
+                document.getElementById('result').innerHTML = '<div class="result success">CHECKOUT WORKS!\\n\\nPayment URL: ' + data.paymentUrl + '\\n\\nYou can click this link to test payment.</div>';
               } else {
-                document.getElementById('result').innerHTML = '<div class="result error">FAILED (' + res.status + '): ' + text + '</div>';
+                document.getElementById('result').innerHTML = '<div class="result error">CHECKOUT FAILED: ' + JSON.stringify(data, null, 2) + '</div>';
+              }
+            } catch (err) {
+              document.getElementById('result').innerHTML = '<div class="result error">ERROR: ' + err.message + '</div>';
+            }
+          }
+          
+          async function checkLoginStatus() {
+            document.getElementById('result').innerHTML = '<div class="result info">Checking login status...</div>';
+            try {
+              const res = await fetch('/api/auth/user', { credentials: 'include' });
+              if (res.ok) {
+                const user = await res.json();
+                document.getElementById('result').innerHTML = '<div class="result success">LOGGED IN as: ' + (user.firstName || user.email || user.id) + '</div>';
+              } else {
+                document.getElementById('result').innerHTML = '<div class="result error">NOT LOGGED IN (this is expected in Safari - you are logged in via the iOS app)</div>';
               }
             } catch (err) {
               document.getElementById('result').innerHTML = '<div class="result error">ERROR: ' + err.message + '</div>';
@@ -649,6 +664,85 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       </body>
       </html>
     `);
+  });
+  
+  // Test checkout without authentication - for debugging only
+  app.get("/api/test-checkout-full", async (req, res) => {
+    console.log("[TEST-CHECKOUT] Testing full checkout flow without auth...");
+    
+    try {
+      // Get first active package
+      const pkg = await storage.getPackages();
+      const activePkg = pkg.find(p => p.isActive);
+      
+      if (!activePkg) {
+        return res.status(400).json({ success: false, message: "No active packages found" });
+      }
+      
+      const cartId = `TEST-${Date.now()}`;
+      const amountInAED = (activePkg.price / 100).toFixed(2);
+      const baseUrl = "https://saman-market-fixer--saeedhokal.replit.app";
+      
+      console.log(`[TEST-CHECKOUT] Package: ${activePkg.name}, Amount: ${amountInAED} AED`);
+      
+      const telrData = {
+        method: "create",
+        store: 32400,
+        authkey: "3SWWK@m9Mz-5GNtS",
+        framed: 0,
+        order: {
+          cartid: cartId,
+          test: 1, // Test mode for this endpoint
+          amount: amountInAED,
+          currency: "AED",
+          description: `Test: ${activePkg.name}`,
+        },
+        return: {
+          authorised: `${baseUrl}/payment/success?cart=${cartId}`,
+          declined: `${baseUrl}/payment/declined?cart=${cartId}`,
+          cancelled: `${baseUrl}/payment/cancelled?cart=${cartId}`,
+        },
+        customer: {
+          ref: "test_user",
+          email: "test@saman.ae",
+          name: { title: "Mr", forenames: "Test", surname: "User" },
+          address: { line1: "Dubai", city: "Dubai", state: "Dubai", country: "AE", areacode: "00000" },
+          phone: "971500000000",
+        },
+      };
+
+      console.log("[TEST-CHECKOUT] Sending to Telr...");
+      const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(telrData),
+      });
+
+      const telrResult = await telrResponse.json();
+      console.log("[TEST-CHECKOUT] Telr response:", JSON.stringify(telrResult));
+
+      if (telrResult.order?.url) {
+        res.json({
+          success: true,
+          message: "Checkout works! Payment page ready.",
+          paymentUrl: telrResult.order.url,
+          package: activePkg.name,
+          amount: amountInAED + " AED",
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "Telr rejected the request",
+          error: telrResult.error || telrResult,
+        });
+      }
+    } catch (error: any) {
+      console.error("[TEST-CHECKOUT] Error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
   });
 
   // Test Telr API directly - for debugging
