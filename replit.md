@@ -189,3 +189,44 @@ The Saman Marketplace employs a modern web and mobile application architecture.
 1. Update Basic package price to at least 1.00 AED
 2. Contact Telr support to enable Apple Pay in Wallets
 3. Test credit card payment with 1.00+ AED package
+
+## January 26, 2026 - Payment Debugging Session (Ongoing)
+
+### Problem: "E01:Invalid request" Error from Telr
+
+**User reports:** Payment fails with error `400: {"success":false,"message":"E01:Invalid request"}`
+
+### What Has Been Verified:
+
+1. **Telr API works from server:**
+   - Direct curl test to `https://secure.telr.com/gateway/order.json` SUCCEEDS
+   - Both test mode (test:1) and live mode (test:0) work
+   - Credentials are correct: Store ID 32400, Auth Key "3SWWK@m9Mz-5GNtS"
+   - Current IP (34.11.141.31) is in the whitelist
+
+2. **Code matches old working app:**
+   - JSON format with nested objects (method, store, authkey, order, return, customer)
+   - Same endpoint: `https://secure.telr.com/gateway/order.json`
+   - Same Content-Type: `application/json`
+
+3. **Payment endpoint exists:** `POST /api/checkout` in server/routes.ts line 593
+
+### What's Unknown:
+
+1. **Cannot see payment requests in server logs** - User's requests may not be reaching the server, OR the published deployment has separate logging
+2. **iOS app behavior** - The TestFlight app might have cached old code or there's a network issue
+
+### Key Files:
+- `server/routes.ts` - Line 593-738: Checkout endpoint with Telr integration
+- `client/src/pages/Checkout.tsx` - Frontend checkout page
+- `attached_assets/payment_1769450727822.js` - Old app's working payment code for reference
+
+### Test Endpoints:
+- `GET /api/test-telr` - Direct Telr API test (to be added)
+- `GET /api/debug-checkout` - Shows current checkout configuration
+
+### Hardcoded Values (for debugging):
+```javascript
+store: 32400,
+authkey: "3SWWK@m9Mz-5GNtS",
+```

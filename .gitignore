@@ -7,4 +7,5 @@ vite.config.ts.*
 
 # Sensitive credentials
 attached_assets/*.json
-attached_assets/firebase*.js
+attached_assets/firebase*.jsattached_assets/saman_berepo_1769450727824.zip
+attached_assets/saman_berepo_1769450727824.zip

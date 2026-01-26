@@ -589,12 +589,83 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // Test Telr API directly - for debugging
+  app.get("/api/test-telr", async (req, res) => {
+    console.log("[TEST-TELR] Starting Telr API test...");
+    
+    try {
+      const telrData = {
+        method: "create",
+        store: 32400,
+        authkey: "3SWWK@m9Mz-5GNtS",
+        framed: 0,
+        order: {
+          cartid: `test_${Date.now()}`,
+          test: 1, // Test mode
+          amount: "1.00",
+          currency: "AED",
+          description: "API Test Order",
+        },
+        return: {
+          authorised: "https://saman-market-fixer--saeedhokal.replit.app/payment/success",
+          declined: "https://saman-market-fixer--saeedhokal.replit.app/payment/declined",
+          cancelled: "https://saman-market-fixer--saeedhokal.replit.app/payment/cancelled",
+        },
+        customer: {
+          ref: "test_user",
+          email: "test@saman.ae",
+          name: { title: "Mr", forenames: "Test", surname: "User" },
+          address: { line1: "Dubai", city: "Dubai", state: "Dubai", country: "AE", areacode: "00000" },
+          phone: "971500000000",
+        },
+      };
+
+      console.log("[TEST-TELR] Sending request to Telr...");
+      const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(telrData),
+      });
+
+      const telrResult = await telrResponse.json();
+      console.log("[TEST-TELR] Response:", JSON.stringify(telrResult));
+
+      if (telrResult.order?.url) {
+        res.json({
+          success: true,
+          message: "Telr API is working!",
+          paymentUrl: telrResult.order.url,
+          orderRef: telrResult.order.ref,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "Telr API failed",
+          error: telrResult.error || telrResult,
+        });
+      }
+    } catch (error: any) {
+      console.error("[TEST-TELR] Error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  });
+
   // Checkout - create Telr payment session
   app.post("/api/checkout", isAuthenticated, async (req, res) => {
+    console.log("[CHECKOUT] ========== NEW CHECKOUT REQUEST ==========");
+    console.log("[CHECKOUT] Body:", JSON.stringify(req.body));
+    console.log("[CHECKOUT] User-Agent:", req.headers["user-agent"]);
+    
     const userId = getCurrentUserId(req)!;
+    console.log("[CHECKOUT] User ID:", userId);
+    
     const { packageId, paymentMethod } = req.body;
     
     if (!packageId) {
+      console.log("[CHECKOUT] ERROR: No packageId provided");
       return res.status(400).json({ message: "Package ID is required" });
     }
 
@@ -656,58 +727,76 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     try {
-      // Use Telr Hosted Payment Page form-encoded format
+      // Use Telr JSON format (same as old working app)
       const amountInAED = (pkg.price / 100).toFixed(2);
       console.log(`[TELR] Creating order: cart=${cartId}, amount=${amountInAED} AED, store=${telrStoreId}`);
       
-      const telrParams = new URLSearchParams({
-        ivp_method: "create",
-        ivp_store: telrStoreId,
-        ivp_authkey: telrAuthKey,
-        ivp_cart: cartId,
-        ivp_test: "0", // Live mode
-        ivp_amount: amountInAED,
-        ivp_currency: "AED",
-        ivp_desc: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
-        return_auth: `${baseUrl}/payment/success?cart=${cartId}`,
-        return_can: `${baseUrl}/payment/cancelled?cart=${cartId}`,
-        return_decl: `${baseUrl}/payment/declined?cart=${cartId}`,
-        bill_fname: user?.firstName || "Customer",
-        bill_sname: user?.lastName || "User",
-        bill_email: user?.email || "customer@saman.ae",
-        bill_phone: user?.phone || "971500000000",
-        bill_addr1: "Dubai",
-        bill_city: "Dubai",
-        bill_country: "AE",
-      });
+      // JSON format matching the old working app EXACTLY
+      const telrData = {
+        method: "create",
+        store: 32400,
+        authkey: "3SWWK@m9Mz-5GNtS",
+        framed: 0,
+        order: {
+          cartid: cartId,
+          test: 0,
+          amount: amountInAED,
+          currency: "AED",
+          description: "User created new order",
+        },
+        return: {
+          authorised: `${baseUrl}/payment/success?cart=${cartId}`,
+          declined: `${baseUrl}/payment/declined?cart=${cartId}`,
+          cancelled: `${baseUrl}/payment/cancelled?cart=${cartId}`,
+        },
+        customer: {
+          ref: "saman_user",
+          email: user?.email || "customer@saman.ae",
+          name: {
+            title: "Mr",
+            forenames: user?.firstName || "Customer",
+            surname: user?.lastName || "User",
+          },
+          address: {
+            line1: "Dubai",
+            line2: "UAE",
+            line3: "",
+            city: "Dubai",
+            state: "Dubai",
+            country: "AE",
+            areacode: "00000",
+          },
+          phone: user?.phone || "971500000000",
+        },
+      };
 
-      console.log("[TELR] Sending request:", telrParams.toString());
+      console.log("[TELR] Sending JSON request:", JSON.stringify(telrData));
 
       const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: telrParams.toString(),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(telrData),
       });
 
-      const telrData = await telrResponse.json();
-      console.log("[TELR] Order response:", JSON.stringify(telrData));
+      const telrResult = await telrResponse.json();
+      console.log("[TELR] Order response:", JSON.stringify(telrResult));
 
-      if (telrData.order?.url) {
+      if (telrResult.order?.url) {
         // Update transaction with Telr order reference
-        await storage.updateTransactionReference(transaction.id, telrData.order.ref);
+        await storage.updateTransactionReference(transaction.id, telrResult.order.ref);
         
         return res.json({
           success: true,
-          paymentUrl: telrData.order.url,
-          orderRef: telrData.order.ref,
+          paymentUrl: telrResult.order.url,
+          orderRef: telrResult.order.ref,
           cartId,
         });
       } else {
-        console.error("[TELR] Order creation failed:", telrData.error);
+        console.error("[TELR] Order creation failed:", telrResult.error);
         await storage.updateTransactionStatus(transaction.id, "failed");
         return res.status(400).json({
           success: false,
-          message: telrData.error?.message || "Payment creation failed",
+          message: telrResult.error?.message || "Payment creation failed",
         });
       }
     } catch (error) {
