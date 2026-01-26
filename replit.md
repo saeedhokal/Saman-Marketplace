@@ -106,3 +106,48 @@ The Saman Marketplace uses a modern web and mobile application architecture.
 - Telr's side is fully configured for Apple Pay - no setup issues there
 - The problem is NOT Telr configuration
 - The problem is something about how Replit sends the request vs how AWS did
+
+## January 27, 2026 - Current Status & Next Steps
+
+### What Was Fixed Today
+1. **Apple Pay bug fixed** - Code was granting credits without verifying payment completed. Now checks `status.code === "3"` before granting credits.
+2. **Documentation updated** - All infrastructure differences, IPs, and issues documented.
+
+### Current Blocker: IP Whitelisting
+- Replit production IPs keep changing with every request
+- Can't keep up with manually whitelisting each new IP
+- **Waiting for Telr support response**
+
+### Message Sent to Telr Support
+```
+Subject: Request to Disable IP Whitelisting or Whitelist IP Range - Store ID 32400
+
+Hi Telr Support,
+
+I'm experiencing issues with my payment integration due to IP whitelisting. My application is hosted on a cloud platform (Replit/Google Cloud) that uses dynamic outbound IP addresses. The IP changes frequently - sometimes between requests - which causes "Connection from unauthorised IP" errors.
+
+I've already whitelisted these IPs, but new ones keep appearing:
+- 34.96.44.175, 34.34.233.232, 34.11.141.31, 34.96.46.88, 34.96.46.223, 34.96.45.214, 34.96.45.45, 34.96.45.211, 34.96.47.62
+
+All IPs are in the 34.x.x.x range (Google Cloud).
+
+Could you please either:
+1. Disable IP whitelisting for my account (Store ID: 32400), OR
+2. Whitelist the entire 34.0.0.0/8 IP range
+
+This would allow my integration to work reliably. My previous app on AWS worked perfectly because it had a static IP.
+
+Thank you,
+Saeed Hokal
+Store ID: 32400
+Phone: +971507242111
+```
+
+### When Telr Replies
+- If they disable IP whitelisting: Test Apple Pay immediately
+- If they whitelist the range: Test Apple Pay immediately
+- If they refuse: Consider moving back to AWS or finding another payment provider
+
+### Credit Card Payments via Redirect
+- These WORK because the user's browser connects directly to Telr
+- Only server-to-server calls (like Apple Pay) are blocked by IP issues
