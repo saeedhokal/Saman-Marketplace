@@ -230,3 +230,13 @@ The Saman Marketplace employs a modern web and mobile application architecture.
 store: 32400,
 authkey: "3SWWK@m9Mz-5GNtS",
 ```
+
+### Key Finding (Jan 26, 2026):
+- **Telr API works** when tested directly via `/api/test-telr` endpoint (confirmed in Safari)
+- The issue is likely in how the iOS app's checkout page sends the request, not the server-to-Telr communication
+- Need to investigate client-side request flow
+
+### Git Issue Fixed (Jan 26, 2026):
+- Large file `saman_berepo_1769450727824.zip` (128MB) was blocking Git push
+- Added to .gitignore and removed from tracking
+- Successfully pushed to GitHub
