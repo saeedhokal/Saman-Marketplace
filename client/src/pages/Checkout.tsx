@@ -1,7 +1,7 @@
 /// <reference types="applepayjs" />
 import { useState, useEffect } from "react";
 import { useRoute, Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth, getStoredUserId } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,8 +24,9 @@ export default function Checkout() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  // Use session user ID - auth hook handles everything
-  const effectiveUserId = user?.id;
+  // Use session user first, then fall back to localStorage (for iOS Capacitor)
+  const storedUserId = getStoredUserId();
+  const effectiveUserId = user?.id || storedUserId;
   const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card">("credit_card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [applePayAvailable, setApplePayAvailable] = useState(false);
