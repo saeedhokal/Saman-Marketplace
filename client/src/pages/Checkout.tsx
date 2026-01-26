@@ -191,12 +191,31 @@ export default function Checkout() {
       // Native Apple Pay with Face ID
       handleApplePay();
     } else {
-      // Credit Card - redirect to server-side checkout
+      // Credit Card - get checkout token first, then redirect
       setIsProcessing(true);
       console.log("[Checkout] Starting credit card checkout for package:", pkg.id);
       
-      // Use direct URL approach for better iOS compatibility
-      window.location.href = `/api/checkout-redirect?packageId=${pkg.id}`;
+      try {
+        // Get a checkout token from the server (this uses the session)
+        const tokenRes = await apiRequest("POST", "/api/checkout-token", { packageId: pkg.id });
+        const tokenData = await tokenRes.json();
+        
+        if (tokenData.success && tokenData.token) {
+          console.log("[Checkout] Got token, redirecting...");
+          // Redirect with token (no session needed for this redirect)
+          window.location.href = `/api/checkout-redirect?token=${tokenData.token}`;
+        } else {
+          throw new Error(tokenData.message || "Failed to get checkout token");
+        }
+      } catch (err: any) {
+        console.error("[Checkout] Token error:", err);
+        toast({
+          variant: "destructive",
+          title: "Payment Error",
+          description: err.message || "Could not start checkout. Please try again.",
+        });
+        setIsProcessing(false);
+      }
     }
   };
 

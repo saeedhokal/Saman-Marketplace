@@ -13,7 +13,28 @@ import path from "path";
 import fs from "fs";
 
 // Server version for deployment verification
-const SERVER_VERSION = "v3.0.1";
+const SERVER_VERSION = "v3.0.2";
+
+// Simple checkout tokens for iOS compatibility (short-lived, single-use)
+const checkoutTokens = new Map<string, { userId: string; packageId: number; expires: number }>();
+
+function generateCheckoutToken(userId: string, packageId: number): string {
+  const token = `CHK-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  // Token expires in 5 minutes
+  checkoutTokens.set(token, { userId, packageId, expires: Date.now() + 5 * 60 * 1000 });
+  return token;
+}
+
+function validateAndConsumeCheckoutToken(token: string): { userId: string; packageId: number } | null {
+  const data = checkoutTokens.get(token);
+  if (!data) return null;
+  if (Date.now() > data.expires) {
+    checkoutTokens.delete(token);
+    return null;
+  }
+  checkoutTokens.delete(token); // Single use
+  return { userId: data.userId, packageId: data.packageId };
+}
 import {
   registerDeviceToken,
   unregisterDeviceToken,
@@ -666,15 +687,52 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     `);
   });
   
-  // Checkout redirect - handles checkout server-side for better iOS compatibility
-  app.get("/api/checkout-redirect", isAuthenticated, async (req, res) => {
-    console.log("[CHECKOUT-REDIRECT] Starting...");
-    
+  // Generate checkout token (authenticated endpoint)
+  app.post("/api/checkout-token", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
-    const packageId = parseInt(req.query.packageId as string);
+    const { packageId } = req.body;
+    
+    console.log(`[CHECKOUT-TOKEN] Generating token for user ${userId}, package ${packageId}`);
     
     if (!packageId) {
-      return res.redirect("/profile/subscription?error=missing_package");
+      return res.status(400).json({ success: false, message: "Missing packageId" });
+    }
+    
+    const token = generateCheckoutToken(userId, packageId);
+    console.log(`[CHECKOUT-TOKEN] Generated token: ${token}`);
+    
+    res.json({ success: true, token });
+  });
+
+  // Checkout redirect - uses token for iOS compatibility (no session required)
+  app.get("/api/checkout-redirect", async (req, res) => {
+    console.log("[CHECKOUT-REDIRECT] Starting...");
+    
+    const token = req.query.token as string;
+    const packageIdDirect = req.query.packageId ? parseInt(req.query.packageId as string) : null;
+    
+    let userId: string;
+    let packageId: number;
+    
+    // Try token-based auth first (for iOS)
+    if (token) {
+      const tokenData = validateAndConsumeCheckoutToken(token);
+      if (!tokenData) {
+        console.log("[CHECKOUT-REDIRECT] Invalid or expired token");
+        return res.redirect("/profile/subscription?error=invalid_token");
+      }
+      userId = tokenData.userId;
+      packageId = tokenData.packageId;
+      console.log(`[CHECKOUT-REDIRECT] Token valid for user ${userId}, package ${packageId}`);
+    } 
+    // Fall back to session auth (for browser)
+    else if (packageIdDirect && getCurrentUserId(req)) {
+      userId = getCurrentUserId(req)!;
+      packageId = packageIdDirect;
+    } 
+    else {
+      console.log("[CHECKOUT-REDIRECT] No valid auth method");
+      return res.redirect("/profile/subscription?error=not_authenticated");
     }
     
     try {
