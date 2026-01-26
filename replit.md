@@ -127,3 +127,59 @@ The Saman Marketplace employs a modern web and mobile application architecture.
 - Credit card payments: `ivp_test: "0"` in checkout endpoint
 - Apple Pay payments: `test: 0` in applepay/process endpoint
 - All transactions will be real charges and deposited to bank account
+
+## January 26, 2026 - Payment Issues & Admin Fixes
+
+### Payment Issues Identified
+
+**Telr Error "94 - Terminal limits":**
+- Credit card payment attempt with 0.30 AED failed
+- Telr has a minimum transaction amount requirement (likely 1.00 AED)
+- Solution: Update package prices to at least 1.00 AED minimum
+
+**Apple Pay Status:**
+- Apple Pay shows "Disabled" in Telr Wallets settings (not clickable)
+- User's old app had working Apple Pay with same Telr account
+- **Action Required:** Contact Telr support to enable Apple Pay in Wallets section
+
+### Admin Package Editing - FIXED
+
+**Problems Fixed:**
+1. Prices now display correctly in AED format (e.g., "10.00 AED" instead of raw "1000")
+2. Edit form has clear labels: Name, Price (AED), Credits, Bonus, Order
+3. Price input accepts decimal values (e.g., 1.00) and converts to fils internally
+4. Fixed "toISOString is not a function" error when saving packages
+5. Save button shows loading state and error messages
+
+**Technical Details:**
+- Prices stored in fils (cents) in database - divide by 100 for display
+- Package update now sends only editable fields (not the entire object with dates)
+- Error handling added to show failure messages
+
+**Current Package Structure:**
+- `price`: Stored in fils (30 = 0.30 AED, 100 = 1.00 AED)
+- `credits`: Number of listings allowed
+- `bonusCredits`: Free bonus listings (e.g., "8+2 free")
+- `category`: "Spare Parts" or "Automotive"
+- `sortOrder`: Display order in UI
+
+**Published Version:** e498d5a (commit with package editing fixes)
+
+### Telr Configuration Reference
+
+**Telr Dashboard Settings Required:**
+1. **Hosted Payment Page:** Enable and whitelist IP 34.96.44.175
+2. **Wallets:** Apple Pay needs to be enabled (contact Telr support)
+3. **Store ID:** 32400
+4. **Minimum Amount:** Likely 1.00 AED (test with 1.00+ to confirm)
+
+**Payment Endpoints:**
+- `POST /api/checkout/telr` - Creates Telr hosted payment page session
+- `POST /api/applepay/validate` - Validates Apple Pay merchant session
+- `POST /api/applepay/process` - Processes Apple Pay token via Telr
+- `GET /api/checkout/return` - Handles Telr payment return callback
+
+### Next Steps
+1. Update Basic package price to at least 1.00 AED
+2. Contact Telr support to enable Apple Pay in Wallets
+3. Test credit card payment with 1.00+ AED package
