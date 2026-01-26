@@ -11,6 +11,7 @@ import { users } from "@shared/models/auth";
 import { eq, sql } from "drizzle-orm";
 import path from "path";
 import fs from "fs";
+import bcrypt from "bcryptjs";
 
 // Server version for deployment verification
 const SERVER_VERSION = "v3.0.2";
@@ -97,6 +98,45 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         error: error.message,
         timestamp: new Date().toISOString()
       });
+    }
+  });
+
+  // One-time fix endpoint to reset user 971507242111
+  app.get("/api/fix-user-saeed", async (req, res) => {
+    try {
+      const phone = '971507242111';
+      
+      // Delete all users with this phone (clean slate)
+      await db.delete(users).where(eq(users.phone, phone));
+      await db.delete(users).where(eq(users.phone, phone + '_old'));
+      await db.delete(users).where(eq(users.phone, phone + '_alt'));
+      
+      // Create fresh admin user with password "1234"
+      const hashedPassword = await bcrypt.hash('1234', 10);
+      const [newUser] = await db.insert(users).values({
+        id: crypto.randomUUID(),
+        phone: phone,
+        firstName: 'Saeed',
+        lastName: 'Hokal',
+        password: hashedPassword,
+        isAdmin: true,
+        sparePartsCredits: 10,
+        automotiveCredits: 10,
+      }).returning();
+      
+      res.json({
+        success: true,
+        message: 'User reset successfully',
+        user: {
+          id: newUser.id,
+          phone: newUser.phone,
+          isAdmin: newUser.isAdmin,
+          sparePartsCredits: newUser.sparePartsCredits,
+          automotiveCredits: newUser.automotiveCredits,
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
     }
   });
 
