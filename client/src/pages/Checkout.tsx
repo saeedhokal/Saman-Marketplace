@@ -10,7 +10,6 @@ import { SiApplepay } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SubscriptionPackage } from "@shared/schema";
-import { Capacitor } from "@capacitor/core";
 
 declare global {
   interface Window {
@@ -54,15 +53,8 @@ export default function Checkout() {
       console.log("[Checkout] Payment response:", JSON.stringify(data));
       if (data.paymentUrl) {
         console.log("[Checkout] Redirecting to payment URL:", data.paymentUrl);
-        // For Capacitor iOS, use window.location.assign for better compatibility
-        if (Capacitor.isNativePlatform()) {
-          console.log("[Checkout] Using native redirect");
-          // Use location.assign which works better in iOS WebView
-          window.location.assign(data.paymentUrl);
-        } else {
-          window.location.href = data.paymentUrl;
-        }
-        setIsProcessing(false);
+        // Use window.location.href for redirect - works on web and iOS WebView
+        window.location.href = data.paymentUrl;
       } else {
         queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
         toast({
