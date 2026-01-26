@@ -114,7 +114,9 @@ export function setupSimpleAuth(app: Express) {
       cookie: {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "lax",
+        // Use "none" for iOS Capacitor compatibility (allows cross-origin cookie sending)
+        // This requires secure: true in production
+        sameSite: isProduction ? "none" : "lax",
         maxAge: sessionTtl,
       },
     })
