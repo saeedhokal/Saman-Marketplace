@@ -666,6 +666,122 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     `);
   });
   
+  // Checkout redirect - handles checkout server-side for better iOS compatibility
+  app.get("/api/checkout-redirect", isAuthenticated, async (req, res) => {
+    console.log("[CHECKOUT-REDIRECT] Starting...");
+    
+    const userId = getCurrentUserId(req)!;
+    const packageId = parseInt(req.query.packageId as string);
+    
+    if (!packageId) {
+      return res.redirect("/profile/subscription?error=missing_package");
+    }
+    
+    try {
+      const pkg = await storage.getPackage(packageId);
+      if (!pkg || !pkg.isActive) {
+        return res.redirect("/profile/subscription?error=package_not_found");
+      }
+      
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      
+      const cartId = `SAMAN-${userId}-${packageId}-${Date.now()}`;
+      const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
+      const amountInAED = (pkg.price / 100).toFixed(2);
+      const baseUrl = "https://saman-market-fixer--saeedhokal.replit.app";
+      
+      console.log(`[CHECKOUT-REDIRECT] Creating payment: ${amountInAED} AED for ${pkg.name}`);
+      
+      // Create pending transaction
+      const transaction = await storage.createTransaction({
+        userId,
+        packageId: pkg.id,
+        amount: pkg.price,
+        credits: totalCredits,
+        category: pkg.category,
+        paymentMethod: "credit_card",
+        paymentReference: cartId,
+        status: "pending",
+      });
+      
+      const telrData = {
+        method: "create",
+        store: 32400,
+        authkey: "3SWWK@m9Mz-5GNtS",
+        framed: 0,
+        order: {
+          cartid: cartId,
+          test: 0,
+          amount: amountInAED,
+          currency: "AED",
+          description: `${pkg.name} - ${totalCredits} Credits`,
+        },
+        return: {
+          authorised: `${baseUrl}/payment/success?cart=${cartId}`,
+          declined: `${baseUrl}/payment/declined?cart=${cartId}`,
+          cancelled: `${baseUrl}/payment/cancelled?cart=${cartId}`,
+        },
+        customer: {
+          ref: userId,
+          email: user?.email || "customer@saman.ae",
+          name: {
+            title: "Mr",
+            forenames: user?.firstName || "Customer",
+            surname: user?.lastName || "User",
+          },
+          address: {
+            line1: "Dubai",
+            city: "Dubai",
+            state: "Dubai",
+            country: "AE",
+            areacode: "00000",
+          },
+          phone: user?.phone || "971500000000",
+        },
+      };
+
+      const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(telrData),
+      });
+
+      const telrResult = await telrResponse.json();
+      console.log("[CHECKOUT-REDIRECT] Telr response:", JSON.stringify(telrResult));
+
+      if (telrResult.order?.url) {
+        await storage.updateTransactionReference(transaction.id, telrResult.order.ref);
+        // Redirect directly to Telr payment page
+        return res.redirect(telrResult.order.url);
+      } else {
+        console.error("[CHECKOUT-REDIRECT] Telr failed:", telrResult.error);
+        await storage.updateTransactionStatus(transaction.id, "failed");
+        return res.redirect("/profile/subscription?error=payment_failed");
+      }
+    } catch (error: any) {
+      console.error("[CHECKOUT-REDIRECT] Error:", error);
+      return res.redirect("/profile/subscription?error=server_error");
+    }
+  });
+
+  // Debug endpoint to see what the iOS app sends
+  app.post("/api/debug-checkout", async (req, res) => {
+    console.log("=== DEBUG CHECKOUT REQUEST ===");
+    console.log("Headers:", JSON.stringify(req.headers, null, 2));
+    console.log("Body:", JSON.stringify(req.body, null, 2));
+    console.log("Cookies:", req.headers.cookie);
+    console.log("Session:", req.session);
+    console.log("================================");
+    
+    res.json({
+      received: true,
+      body: req.body,
+      hasCookie: !!req.headers.cookie,
+      hasSession: !!(req.session as any)?.passport?.user,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   // Test checkout without authentication - for debugging only
   app.get("/api/test-checkout-full", async (req, res) => {
     console.log("[TEST-CHECKOUT] Testing full checkout flow without auth...");

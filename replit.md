@@ -249,7 +249,14 @@ authkey: "3SWWK@m9Mz-5GNtS",
   2. "Test Checkout API" - Tests the actual /api/checkout endpoint
 - This helps identify whether issues are in iOS app vs server
 
-### Debugging Status:
-- No checkout requests appearing in server logs when user taps Pay in iOS app
-- This suggests the iOS app might not be reaching the server
-- Need to compare test page results to isolate the issue
+### Debugging Status - BREAKTHROUGH (Jan 26, 2026):
+- **Telr API works** ✓ (confirmed via /api/test-telr)
+- **Checkout API works** ✓ (confirmed via /api/test-checkout-full in Safari)
+- **iOS app payment fails** ✗ (request not reaching server)
+
+**Root Cause Identified:** The iOS app's checkout request never reaches the server. This is a client-side issue in the iOS app, not a server issue.
+
+**Possible causes:**
+1. iOS app might be using a different URL or endpoint
+2. Network/session issue in the iOS Capacitor webview
+3. The Checkout.tsx component might have an issue with how it makes the request
