@@ -1,0 +1,75 @@
+Telr Logo
+Transaction Exception
+ID	3393348
+Date	27 Jan 2026 23:36
+Source	Remote (V2)
+Description	Authentication key mismatch
+store	32400
+authkey	****************
+tran/method	applepay
+tran/type	sale
+tran/class	ecom
+tran/id	-- not set --
+tran/description	Basic - 1 Spare Parts Credits
+tran/test	0
+tran/currency	AED
+tran/amount	1.00
+tran/ref	-- not set --
+customer/ip	-- not set --
+customer/name/title	-- not set --
+customer/name/forenames	Saeed
+customer/name/surname	Hokal
+customer/address/line1	Hor Al Anz Street 13
+customer/address/line2	-- not set --
+customer/address/line3	-- not set --
+customer/address/city	Dubai
+customer/address/state	-- not set --
+customer/address/country	AE
+customer/address/areacode	00000
+customer/email	customer@example.com
+customer/phone	-- not set --
+customer/ref	-- not set --
+applepay/billingContact/familyName	-- not set --
+applepay/billingContact/givenName	-- not set --
+applepay/billingContact/addressLines/1	-- not set --
+applepay/billingContact/addressLines/2	-- not set --
+applepay/billingContact/addressLines/3	-- not set --
+applepay/billingContact/locality	-- not set --
+applepay/billingContact/administrativeArea	-- not set --
+applepay/billingContact/countryCode	-- not set --
+applepay/billingContact/postalCode	-- not set --
+applepay/billingContact/emailAddress	-- not set --
+applepay/billingContact/phoneNumber	-- not set --
+applepay/shippingContact/familyName	-- not set --
+applepay/shippingContact/givenName	-- not set --
+applepay/shippingContact/addressLines/1	-- not set --
+applepay/shippingContact/addressLines/2	-- not set --
+applepay/shippingContact/addressLines/3	-- not set --
+applepay/shippingContact/locality	-- not set --
+applepay/shippingContact/administrativeArea	-- not set --
+applepay/shippingContact/countryCode	-- not set --
+applepay/shippingContact/postalCode	-- not set --
+applepay/shippingContact/emailAddress	-- not set --
+applepay/shippingContact/phoneNumber	-- not set --
+applepay/token/paymentData/version	-- not set --
+applepay/token/paymentData/data	-- not set --
+applepay/token/paymentData/signature	-- not set --
+applepay/token/paymentData/header/ephemeralPublicKey	-- not set --
+applepay/token/paymentData/header/publicKeyHash	-- not set --
+applepay/token/paymentData/header/transactionId	-- not set --
+applepay/token/paymentMethod/displayName	-- not set --
+applepay/token/paymentMethod/network	-- not set --
+applepay/token/paymentMethod/type	-- not set --
+applepay/token/transactionIdentifier	-- not set --
+applepay/networkToken/card/scheme	-- not set --
+applepay/networkToken/card/number	-- not set --
+applepay/networkToken/card/expiry/month	-- not set --
+applepay/networkToken/card/expiry/year	-- not set --
+applepay/networkToken/eci	-- not set --
+applepay/networkToken/cryptogram	-- not set --
+Connection Details
+HTTP Referer	-- not set --
+Content Type	application/json
+User Agent	node
+IP Address	34.96.45.198
+Trace	4000/2934245/697913b4

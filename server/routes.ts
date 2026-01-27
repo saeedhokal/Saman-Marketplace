@@ -1400,15 +1400,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     try {
-      // Extract paymentData from Apple Pay token
-      // The token structure is: { paymentData: {...}, paymentMethod: {...}, transactionIdentifier: "..." }
-      // Telr needs just the paymentData portion
-      const paymentData = applePayToken.paymentData || applePayToken;
-      
-      console.log("[ApplePay] Token structure received:", Object.keys(applePayToken));
-      console.log("[ApplePay] PaymentData keys:", paymentData ? Object.keys(paymentData) : "none");
+      // Log token structure for debugging
+      console.log("[ApplePay] Token structure received:", JSON.stringify(Object.keys(applePayToken)));
+      if (applePayToken.paymentData) {
+        console.log("[ApplePay] PaymentData keys:", JSON.stringify(Object.keys(applePayToken.paymentData)));
+      }
       
       // Send Apple Pay token to Telr Remote API (using correct endpoint: remote.json)
+      // Telr expects the FULL token structure: { paymentData: {...}, paymentMethod: {...}, transactionIdentifier: "..." }
       const telrRequest = {
         store: parseInt(telrStoreId),
         authkey: telrAuthKey,
@@ -1423,8 +1422,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           test: 0, // Live production mode
         },
         applepay: {
-          // Send just the paymentData portion, which contains version, data, signature, header
-          token: paymentData,
+          // Send the FULL token object as Telr expects it
+          token: applePayToken,
         },
         customer: {
           name: {
@@ -1462,7 +1461,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         request: { ...telrRequest, applepay: { token: "[REDACTED for security]" } },
         response: telrData,
         tokenKeys: Object.keys(applePayToken || {}),
-        paymentDataKeys: Object.keys(paymentData || {}),
+        paymentDataKeys: applePayToken?.paymentData ? Object.keys(applePayToken.paymentData) : [],
+        hasPaymentMethod: !!applePayToken?.paymentMethod,
+        hasTransactionId: !!applePayToken?.transactionIdentifier,
       };
 
       // CRITICAL: Must check status.code === "3" (authorized/captured) before granting credits
