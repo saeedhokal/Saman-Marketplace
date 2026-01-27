@@ -1400,19 +1400,24 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     try {
-      // Send Apple Pay token to Telr Remote API
+      // Send Apple Pay token to Telr Remote API (using correct endpoint: remote.json)
       const telrRequest = {
-        method: "create",
-        store: telrStoreId,
+        store: parseInt(telrStoreId),
         authkey: telrAuthKey,
-        order: {
+        tran: {
+          class: "ecom",
+          type: "sale",
+          method: "applepay",
           cartid: cartId,
-          test: 0, // Live production mode
           amount: (pkg.price / 100).toFixed(2),
           currency: "AED",
           description: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
+          test: 0, // Live production mode
         },
-        billing: {
+        applepay: {
+          token: applePayToken, // Send the token object directly, not stringified
+        },
+        customer: {
           name: {
             forenames: billingContact?.givenName || user?.firstName || "Customer",
             surname: billingContact?.familyName || user?.lastName || "",
@@ -1426,16 +1431,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           },
           email: billingContact?.emailAddress || user?.email || "customer@example.com",
         },
-        applepay: {
-          token: JSON.stringify(applePayToken),
-        },
       };
 
-      console.log("[ApplePay] Sending to Telr:", JSON.stringify({ ...telrRequest, applepay: { token: "[REDACTED]" } }));
+      console.log("[ApplePay] Sending to Telr remote.json:", JSON.stringify({ ...telrRequest, applepay: { token: "[REDACTED]" } }));
 
-      const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
+      const telrResponse = await fetch("https://secure.telr.com/gateway/remote.json", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
         body: JSON.stringify(telrRequest),
       });
 
