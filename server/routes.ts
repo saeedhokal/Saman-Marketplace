@@ -1377,11 +1377,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
 
     const telrStoreId = process.env.TELR_STORE_ID;
-    const telrAuthKey = process.env.TELR_AUTH_KEY;
+    // Apple Pay uses Remote API which has a DIFFERENT auth key than Hosted Page
+    const telrAuthKey = process.env.TELR_REMOTE_AUTH_KEY || process.env.TELR_AUTH_KEY;
     
     if (!telrStoreId || !telrAuthKey) {
       return res.status(400).json({ message: "Payment gateway not configured" });
     }
+    
+    console.log("[ApplePay] Using Remote API auth key:", telrAuthKey ? "SET" : "MISSING");
 
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     const cartId = `SAMAN-AP-${userId}-${packageId}-${Date.now()}`;
