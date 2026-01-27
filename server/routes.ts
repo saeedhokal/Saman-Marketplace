@@ -822,7 +822,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const cartId = `SAMAN-${userId}-${packageId}-${Date.now()}`;
       const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
       const amountInAED = (pkg.price / 100).toFixed(2);
-      const baseUrl = "https://saman-market-fixer--saeedhokal.replit.app";
+      const baseUrl = "https://thesamanapp.com";
       
       console.log(`[CHECKOUT-REDIRECT] Creating payment: ${amountInAED} AED for ${pkg.name}`);
       
@@ -931,7 +931,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const cartId = `TEST-${Date.now()}`;
       const amountInAED = (activePkg.price / 100).toFixed(2);
-      const baseUrl = "https://saman-market-fixer--saeedhokal.replit.app";
+      const baseUrl = "https://thesamanapp.com";
       
       console.log(`[TEST-CHECKOUT] Package: ${activePkg.name}, Amount: ${amountInAED} AED`);
       
@@ -1013,9 +1013,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           description: "API Test Order",
         },
         return: {
-          authorised: "https://saman-market-fixer--saeedhokal.replit.app/payment/success",
-          declined: "https://saman-market-fixer--saeedhokal.replit.app/payment/declined",
-          cancelled: "https://saman-market-fixer--saeedhokal.replit.app/payment/cancelled",
+          authorised: "https://thesamanapp.com/payment/success",
+          declined: "https://thesamanapp.com/payment/declined",
+          cancelled: "https://thesamanapp.com/payment/cancelled",
         },
         customer: {
           ref: "test_user",
@@ -1118,7 +1118,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const cartId = `SAMAN-${userId}-${packageId}-${Date.now()}`;
     const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
     // Use the published URL for payment callbacks - this is the iOS app's domain
-    const baseUrl = "https://saman-market-fixer--saeedhokal.replit.app";
+    const baseUrl = "https://thesamanapp.com";
     
     // Create pending transaction
     const transaction = await storage.createTransaction({
@@ -1260,7 +1260,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const merchantId = process.env.APPLE_PAY_MERCHANT_ID;
     const certBase64 = process.env.APPLE_PAY_CERT;
     const keyBase64 = process.env.APPLE_PAY_KEY;
-    const domain = process.env.REPLIT_DEPLOYMENT_URL?.replace("https://", "") || "saman-market-fixer--saeedhokal.replit.app";
+    const domain = process.env.REPLIT_DEPLOYMENT_URL?.replace("https://", "") || "thesamanapp.com";
     
     if (!merchantId || !certBase64 || !keyBase64) {
       console.error("[ApplePay] Missing configuration:", { merchantId: !!merchantId, cert: !!certBase64, key: !!keyBase64 });

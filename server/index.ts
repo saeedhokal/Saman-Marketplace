@@ -9,7 +9,7 @@ const app = express();
 const httpServer = createServer(app);
 
 // Apple Pay domain verification - embedded content for reliable production serving
-// Domain: saman-market-fixer--saeedhokal.replit.app (verified)
+// Domain: thesamanapp.com (primary), saman-market-fixer--saeedhokal.replit.app (backup)
 const APPLE_PAY_VERIFICATION_CONTENT = `MIIQfQYJKoZIhvcNAQcCoIIQbjCCEGoCAQExCzAJBgUrDgMCGgUAMIGLBgkqhkiG9w0BBwGgfgR8
 eyJ0ZWFtSWQiOiJLUTU0MlE5OEgyIiwiZG9tYWluIjoic2FtYW4tbWFya2V0LWZpeGVyLS1zYWVl
 ZGhva2FsLnJlcGxpdC5hcHAiLCJkYXRlQ3JlYXRlZCI6IjIwMjYtMDEtMjEsMDA6MDg6MDAiLCJ2
