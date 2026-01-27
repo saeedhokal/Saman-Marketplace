@@ -243,3 +243,30 @@ Add these records at GoDaddy:
 - **Domain:** thesamanapp.com
 - **Nameservers:** GoDaddy defaults (ns48.domaincontrol.com, ns47.domaincontrol.com)
 - **User email:** saeed.hokal@hotmail.com
+
+## January 27, 2026 - Payment Testing Results
+
+### Telr IP Whitelisting RESOLVED
+- Telr set "Authorised IP" to "Any" - no more IP restrictions!
+- Payment gateway now works from any IP address
+
+### Domain Connection Complete
+- thesamanapp.com connected to Replit
+- DNS Records: A record (34.111.179.208), TXT record (replit-verify)
+- DNS propagating - Replit sees new site, user's location still caching old site
+
+### Apple Pay Test Result
+- **Payment PROCESSED SUCCESSFULLY** via Telr
+- Money was charged from user's bank account
+- Redirect after payment went to old website (DNS not propagated yet)
+- Credits may not have been added due to redirect failure
+
+### Code Changes Made
+- Updated all return URLs from `saman-market-fixer--saeedhokal.replit.app` to `thesamanapp.com`
+- Files modified: server/routes.ts, server/index.ts
+
+### Next Steps
+1. Wait for DNS to fully propagate (can take up to 48 hours)
+2. Verify credits were added to user's account
+3. If credits missing, manually add them via database
+4. Re-test payment flow once DNS propagates
