@@ -210,3 +210,36 @@ Phone: +971507242111
 ### What Doesn't Work (Currently)
 - Native Apple Pay - blocked by Telr IP whitelisting issue
 - Waiting for Telr support to disable IP restriction or whitelist IP range
+
+## January 27, 2026 - Custom Domain Setup (In Progress)
+
+### Telr Support Response
+Telr agreed to remove IP whitelisting but needs the registered domain. The domain registered with Telr is `thesamanapp.com` (from old AWS app).
+
+### Solution: Connect thesamanapp.com to Replit
+Instead of asking Telr to add a new domain (which requires review), we're connecting the existing domain to Replit.
+
+### DNS Records for thesamanapp.com
+Add these records at GoDaddy:
+- **A Record:** @ → 34.111.179.208
+- **TXT Record:** @ → replit-verify=37beca48-a166-43b6-a409-0c34e0662678
+
+### Steps Completed
+1. Telr replied - willing to remove IP whitelisting, needs registered domain
+2. Found that `thesamanapp.com` is already registered with Telr
+3. User owns thesamanapp.com on GoDaddy
+4. Changed nameservers back to GoDaddy defaults (ns48.domaincontrol.com, ns47.domaincontrol.com)
+5. Waiting for nameserver propagation to add DNS records
+
+### Next Steps
+1. Wait for nameserver change to propagate (5-15 minutes)
+2. Add A record and TXT record in GoDaddy DNS
+3. Click "Link" in Replit Domains settings
+4. Wait for domain verification
+5. Test Apple Pay at thesamanapp.com
+
+### Domain Registrar Info
+- **Registrar:** GoDaddy
+- **Domain:** thesamanapp.com
+- **Nameservers:** GoDaddy defaults (ns48.domaincontrol.com, ns47.domaincontrol.com)
+- **User email:** saeed.hokal@hotmail.com
