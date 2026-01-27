@@ -1455,6 +1455,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const telrData = await telrResponse.json();
       console.log("[ApplePay] Telr response:", JSON.stringify(telrData));
+      
+      // Store last Telr response for debugging
+      (global as any).lastTelrApplePayResponse = {
+        timestamp: new Date().toISOString(),
+        request: { ...telrRequest, applepay: { token: "[REDACTED for security]" } },
+        response: telrData,
+        tokenKeys: Object.keys(applePayToken || {}),
+        paymentDataKeys: Object.keys(paymentData || {}),
+      };
 
       // CRITICAL: Must check status.code === "3" (authorized/captured) before granting credits
       // Just having an order.ref is NOT enough - the payment might still be pending or failed
@@ -1901,6 +1910,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/admin/cleanup-expired", isAuthenticated, isAdmin, async (req, res) => {
     const count = await storage.deleteExpiredProducts();
     res.json({ deletedCount: count });
+  });
+
+  // Admin: Apple Pay debug endpoint
+  app.get("/api/admin/applepay-debug", isAuthenticated, isAdmin, async (req, res) => {
+    res.json({
+      lastResponse: (global as any).lastTelrApplePayResponse || "No Apple Pay attempts yet",
+      telrConfigured: !!(process.env.TELR_STORE_ID && process.env.TELR_AUTH_KEY),
+    });
   });
 
   // Admin: Database diagnostic endpoint
