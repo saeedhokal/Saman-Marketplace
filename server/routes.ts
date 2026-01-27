@@ -159,6 +159,31 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // One-time endpoint to add missing credit from failed redirect
+  app.get("/api/add-missing-credit-jan27", async (req, res) => {
+    try {
+      const phone = '971507242111';
+      const result = await db.execute(sql`
+        UPDATE users 
+        SET spare_parts_credits = spare_parts_credits + 1 
+        WHERE phone = ${phone}
+        RETURNING id, phone, spare_parts_credits, automotive_credits
+      `);
+      
+      if (result.rows && result.rows.length > 0) {
+        res.json({
+          success: true,
+          message: 'Added 1 Spare Parts credit for failed payment redirect on Jan 27',
+          user: result.rows[0]
+        });
+      } else {
+        res.status(404).json({ success: false, error: 'User not found' });
+      }
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // Debug endpoint to check APNs configuration
   app.get("/api/debug-apns", async (req, res) => {
     const apnsKey = process.env.APNS_AUTH_KEY;
