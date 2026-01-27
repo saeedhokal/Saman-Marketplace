@@ -1400,6 +1400,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     try {
+      // Extract paymentData from Apple Pay token
+      // The token structure is: { paymentData: {...}, paymentMethod: {...}, transactionIdentifier: "..." }
+      // Telr needs just the paymentData portion
+      const paymentData = applePayToken.paymentData || applePayToken;
+      
+      console.log("[ApplePay] Token structure received:", Object.keys(applePayToken));
+      console.log("[ApplePay] PaymentData keys:", paymentData ? Object.keys(paymentData) : "none");
+      
       // Send Apple Pay token to Telr Remote API (using correct endpoint: remote.json)
       const telrRequest = {
         store: parseInt(telrStoreId),
@@ -1415,7 +1423,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           test: 0, // Live production mode
         },
         applepay: {
-          token: applePayToken, // Send the token object directly, not stringified
+          // Send just the paymentData portion, which contains version, data, signature, header
+          token: paymentData,
         },
         customer: {
           name: {
