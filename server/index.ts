@@ -96,6 +96,24 @@ const serveApplePayVerification = (_req: express.Request, res: express.Response)
 app.get("/.well-known/apple-developer-merchantid-domain-association", serveApplePayVerification);
 app.get("/.well-known/apple-developer-merchantid-domain-association.txt", serveApplePayVerification);
 
+// Serve certificate files for download (temporary - for sending to Telr)
+app.get("/downloads/apple_pay_new.cer", (_req, res) => {
+  const filePath = path.join(process.cwd(), "certs", "apple_pay_new.cer");
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send("File not found");
+  }
+});
+app.get("/downloads/apple_pay_key.p12", (_req, res) => {
+  const filePath = path.join(process.cwd(), "certs", "apple_pay_key.p12");
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send("File not found");
+  }
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
