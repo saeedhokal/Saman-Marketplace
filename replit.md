@@ -1,51 +1,69 @@
 # Saman Marketplace - Spare Parts & Automotive Marketplace
 
 ## Overview
-Saman Marketplace is an automotive spare parts and vehicles marketplace for the UAE, operating with AED. It provides a platform for users to buy and sell spare parts and automotive items, incorporating listing management, user authentication, in-app notifications, and payment processing. The project aims to establish a robust platform within the UAE's automotive sector, with a current focus on refining the iOS push notification system and integrating Apple Pay.
+Saman Marketplace is an automotive spare parts and vehicles marketplace for the UAE, operating with AED currency. It enables users to buy and sell spare parts and automotive items, offering features like listing management, phone authentication, in-app notifications, and payment processing via Telr and Apple Pay. The project aims to be the leading platform for automotive classifieds in the UAE.
 
 ## User Preferences
 - **Communication style:** Simple, everyday language (non-technical)
 - **Region:** UAE
-- **Currency:** AED
-- **Testing:** TestFlight iOS app (no Mac available, never used Xcode)
+- **Currency:** AED (United Arab Emirates Dirham)
+- **Testing:** TestFlight iOS app only
 - **Build workflow:** Codemagic for iOS builds, GitHub via Replit Git panel
 - **Important:** User does NOT code - all changes must be made by agent
 - **IMPORTANT:** User is ALWAYS logged in on their iPhone, using the PUBLISHED URL (not preview), and has notifications enabled. Do not ask about this again.
+- **User has NO Mac** and has never used Xcode
+- **Tests on physical iPhone** via TestFlight
+- **Communicates via desktop** while testing on phone
 
 ## System Architecture
 
-The Saman Marketplace employs a modern web and mobile application architecture.
+### General
+- **Project Type:** Automotive spare parts and vehicles marketplace.
+- **UI Theme:** Orange (#f97316) accent, dark gradient cards, rounded corners.
+- **iOS Application:** Wrapped with Capacitor v7, supporting safe areas and direct APNs integration.
 
-**Frontend:**
-- Built with React 18, TypeScript, and Vite.
-- Uses TanStack Query for data fetching, Tailwind CSS and shadcn/ui for styling, Framer Motion for animations, and Wouter for client-side routing.
-- The UI features an orange (`#f97316`) accent, dark gradient cards, and rounded corners.
-- iOS safe area handling is implemented for proper display and notification positioning.
+### Frontend
+- **Framework:** React 18, TypeScript, Vite
+- **Data fetching:** TanStack Query v5
+- **Styling:** Tailwind CSS, shadcn/ui components
+- **Animations:** Framer Motion
+- **Routing:** Wouter (client-side)
 
-**Backend:**
-- Developed with Express.js and TypeScript.
-- Drizzle ORM manages PostgreSQL database interactions.
-- Session-based authentication is provided by `connect-pg-simple`.
-- Google Cloud Storage is used for image assets.
-- iOS push notifications are handled directly via Apple Push Notification service (APNs) using `@parse/node-apn`, bypassing Firebase for iOS.
+### Backend
+- **Framework:** Express.js, TypeScript
+- **ORM:** Drizzle ORM with PostgreSQL
+- **Sessions:** connect-pg-simple (session-based authentication)
+- **Image Storage:** Google Cloud Storage
+- **Push Notifications:** Direct APNs via @parse/node-apn (not Firebase)
 
-**iOS Application:**
-- Wrapped using Capacitor v7 for native functionality.
-- Direct APNs integration for push notifications, configured with production entitlements and background modes.
-- Native Apple Pay integration is included.
-- The build process involves GitHub, Codemagic for builds, and TestFlight for distribution.
+### Database Schema
+- **Key Tables:** `users`, `products`, `favorites`, `banners`, `subscriptionPackages`, `transactions`, `userViews`, `notifications`, `deviceTokens`, `otpCodes`, `appSettings`.
+- **Main Categories:** "Spare Parts" and "Automotive", with various subcategories for specific brands and types.
 
-**Core Features:**
-- **Admin Panel:** Supports broadcast notifications (immediate, delayed, scheduled), listing moderation, and revenue tracking.
-- **Push Notifications:** Manages device token registration, storage, and APNs delivery for iOS devices.
-- **Payment Processing:** Integration with Telr for various payment methods.
+### Key Features
+- **Phone Authentication:** OTP-based login/registration.
+- **Product Listings:** Create, view, edit, delete listings with image uploads.
+- **Credit System:** Users purchase credits to create listings, categorized for 'Spare Parts' or 'Automotive'.
+- **Payment Processing:** Integration with Telr for credit card payments and Apple Pay.
+- **Push Notifications:** Direct APNs for timely updates and admin broadcasts.
+- **Admin Panel:** Tools for listing moderation, credit management, and user notifications.
+- **Favorites:** Users can save preferred listings.
+- **In-app Notifications:** An inbox for user notifications.
+- **Listing Expiration:** Listings expire after one month but can be reposted.
 
 ## External Dependencies
-- **PostgreSQL:** Main database for application data.
-- **Google Cloud Storage:** For image storage.
-- **Apple Push Notification service (APNs):** Direct push notifications to iOS devices.
-- **Telr Payment Gateway:** For credit card processing and Apple Pay.
-- **Apple Pay:** Native iOS payment integration using `merchant.saeed.saman` and associated certificates.
+
+- **Telr Payment Gateway:** For credit card and hosted Apple Pay transactions.
+  - **Store ID:** 32400
+  - **Auth Key:** 3SWWK@m9Mz-5GNtS
+  - **Mode:** LIVE
+- **Apple Pay:** Native integration via Capacitor for iOS, requiring specific merchant ID and certificates for processing.
+  - **Merchant ID:** merchant.saeed.saman
+  - **Private Key Password:** saman123
+- **APNs (Apple Push Notification service):** Direct integration using `@parse/node-apn` for push notifications.
+  - **Secret:** `APNS_AUTH_KEY` (contains .p8 key content)
+- **Google Cloud Storage:** Used for storing product images.
+  - **Credentials:** `FIREBASE_ADMIN_CREDENTIALS` secret
 - **Codemagic:** CI/CD for iOS builds and TestFlight deployment.
-- **GitHub:** Version control hosting.
-- **Twilio:** (Pending setup) Intended for SMS services.
+- **PostgreSQL:** Primary database.
+- **GoDaddy:** Domain registrar for `thesamanapp.com`.
