@@ -1446,11 +1446,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       console.log("[ApplePay] Sending to Telr remote.json:", JSON.stringify({ ...telrRequest, applepay: { token: "[REDACTED]" } }));
 
+      // Create Basic Auth header (some Telr APIs require this in addition to body auth)
+      const basicAuth = Buffer.from(`${telrStoreId}:${telrAuthKey}`).toString('base64');
+      
       const telrResponse = await fetch("https://secure.telr.com/gateway/remote.json", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Accept": "application/json",
+          "Authorization": `Basic ${basicAuth}`,
         },
         body: JSON.stringify(telrRequest),
       });
