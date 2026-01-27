@@ -162,6 +162,8 @@ export default function Checkout() {
           setLocation("/profile/subscription");
         } else {
           session.completePayment(ApplePaySession.STATUS_FAILURE);
+          // Log debug info for troubleshooting
+          console.error("[ApplePay] Payment failed:", JSON.stringify(result));
           toast({
             variant: "destructive",
             title: "Payment Failed",

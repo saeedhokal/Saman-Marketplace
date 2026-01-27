@@ -1478,11 +1478,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         });
       } else {
         // Payment failed or declined
-        console.error("[ApplePay] Payment failed - status:", statusCode, "error:", telrData.error);
+        console.error("[ApplePay] Payment failed - status:", statusCode, "error:", telrData.error, "full response:", JSON.stringify(telrData));
         await storage.updateTransactionStatus(transaction.id, "failed");
+        
+        // Build detailed error message for debugging
+        let errorDetail = "";
+        if (telrData.error?.message) {
+          errorDetail = telrData.error.message;
+        } else if (telrData.error?.note) {
+          errorDetail = telrData.error.note;
+        } else if (telrData.message) {
+          errorDetail = telrData.message;
+        } else {
+          errorDetail = `Apple Pay failed (status: ${statusCode || 'unknown'})`;
+        }
+        
         return res.status(400).json({
           success: false,
-          message: telrData.error?.message || `Apple Pay payment failed (status: ${statusCode || 'unknown'})`,
+          message: errorDetail,
+          debug: { statusCode, orderRef, error: telrData.error, raw: telrData },
         });
       }
     } catch (error) {
