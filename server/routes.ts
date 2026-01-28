@@ -1448,12 +1448,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         console.log("[ApplePay] PaymentData keys:", JSON.stringify(Object.keys(applePayToken.paymentData)));
       }
       
-      // Base64 encode the paymentData as Telr expects
-      // Telr requires paymentData to be base64 encoded JSON string
-      const paymentDataBase64 = Buffer.from(JSON.stringify(applePayToken.paymentData)).toString('base64');
+      // Extract the paymentData which contains the Apple Pay token fields
+      // Format: { version, data, signature, header: { ephemeralPublicKey, publicKeyHash, transactionId } }
+      const paymentData = applePayToken.paymentData;
       
       // Send Apple Pay token to Telr Remote API (using correct endpoint: remote.json)
-      // Format according to Telr docs: https://docs.telr.com/reference/post_remote_applepay
+      // Format according to Telr docs: applepay object should contain the raw token fields directly
       const telrRequest = {
         store: parseInt(telrStoreId),
         authkey: telrAuthKey,
@@ -1468,11 +1468,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           test: 0, // Live production mode
         },
         applepay: {
-          // Telr expects base64 encoded paymentData
-          paymentData: paymentDataBase64,
-          // Also include the payment method info
-          paymentMethod: applePayToken.paymentMethod,
-          transactionIdentifier: applePayToken.transactionIdentifier,
+          // Send the raw Apple Pay token structure as Telr expects
+          // This includes: version, data, signature, and header object
+          version: paymentData.version,
+          data: paymentData.data,
+          signature: paymentData.signature,
+          header: paymentData.header,
         },
         customer: {
           name: {
@@ -1492,7 +1493,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       console.log("[ApplePay] Sending to Telr remote.json:", JSON.stringify({ 
         ...telrRequest, 
-        applepay: { paymentData: "[BASE64_REDACTED]", paymentMethod: telrRequest.applepay.paymentMethod } 
+        applepay: { version: paymentData.version, data: "[ENCRYPTED]", signature: "[REDACTED]", header: "[REDACTED]" } 
       }));
 
       // Create Basic Auth header (some Telr APIs require this in addition to body auth)
