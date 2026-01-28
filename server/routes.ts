@@ -1377,9 +1377,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
     }
 
-    // Decode certificates from base64
-    const cert = Buffer.from(certBase64, 'base64').toString('utf-8');
-    const key = Buffer.from(keyBase64, 'base64').toString('utf-8');
+    // Use certificates directly (they're stored as PEM format, not base64)
+    const cert = certBase64;
+    const key = keyBase64;
     
     // Log request details for debugging
     logApplePaySession("SENDING_TO_APPLE", { 
