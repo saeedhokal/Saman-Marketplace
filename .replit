@@ -51,6 +51,6 @@ integrations = ["javascript_log_in_with_replit:2.0.0", "javascript_object_storag
 TELR_AUTH_KEY = "3SWWK@m9Mz-5GNtS"
 APPLE_PAY_MERCHANT_ID = "merchant.saeed.saman"
 TELR_STORE_ID = "32400"
-REPLIT_DEPLOYMENT_URL = "https://saman-market-fixer--saeedhokal.replit.app"
+REPLIT_DEPLOYMENT_URL = "https://thesamanapp.com"
 TELR_REMOTE_AUTH_KEY = "DdkLr~C8Nph^cpfK"
 TELR_WALLETS_AUTH_KEY = "spRZ^QWJ5P~MWJpV"
