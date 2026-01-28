@@ -80,6 +80,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerObjectStorageRoutes(app);
 
   // Public health check endpoint (no auth required) for deployment verification
+  // In-memory log for Apple Pay session debugging (stores last 10 attempts)
+  const applePaySessionLogs: Array<{timestamp: string, step: string, data: any}> = [];
+  function logApplePaySession(step: string, data: any) {
+    applePaySessionLogs.push({ timestamp: new Date().toISOString(), step, data });
+    if (applePaySessionLogs.length > 50) applePaySessionLogs.shift();
+  }
+  
   // Debug endpoint to check Apple Pay config (no auth required - just checks presence not values)
   app.get("/api/debug/applepay-config", (req, res) => {
     const certBase64 = process.env.APPLE_PAY_CERT;
@@ -94,6 +101,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       keyLength: keyBase64?.length || 0,
       certStart: certBase64 ? Buffer.from(certBase64, 'base64').toString('utf-8').substring(0, 27) : "N/A",
       keyStart: keyBase64 ? Buffer.from(keyBase64, 'base64').toString('utf-8').substring(0, 27) : "N/A",
+    });
+  });
+  
+  // Debug endpoint to view Apple Pay session logs
+  app.get("/api/debug/applepay-logs", (req, res) => {
+    res.json({
+      count: applePaySessionLogs.length,
+      logs: applePaySessionLogs.slice(-20)
     });
   });
 
@@ -1290,6 +1305,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Apple Pay: Validate merchant session with Apple using TLS client certificates
   app.post("/api/applepay/session", isAuthenticated, async (req, res) => {
+    logApplePaySession("REQUEST_RECEIVED", { 
+      userId: req.session?.userId, 
+      headers: { 'x-user-id': req.headers['x-user-id'] },
+      body: req.body 
+    });
     console.log("[ApplePay Session] === REQUEST RECEIVED ===");
     console.log("[ApplePay Session] User ID:", req.session?.userId);
     console.log("[ApplePay Session] Body:", JSON.stringify(req.body));
@@ -1297,6 +1317,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const { validationURL } = req.body;
     
     if (!validationURL) {
+      logApplePaySession("ERROR_NO_URL", { message: "No validation URL" });
       console.log("[ApplePay Session] ERROR: No validation URL");
       return res.status(400).json({ message: "Validation URL is required" });
     }
@@ -1342,6 +1363,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const domain = "thesamanapp.com";
     
     if (!merchantId || !certBase64 || !keyBase64) {
+      logApplePaySession("ERROR_MISSING_CONFIG", { merchantId: !!merchantId, cert: !!certBase64, key: !!keyBase64 });
       console.error("[ApplePay] Missing configuration:", { merchantId: !!merchantId, cert: !!certBase64, key: !!keyBase64 });
       return res.status(400).json({ 
         message: "Apple Pay not fully configured. Certificate and key required.",
@@ -1413,9 +1435,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         request.end();
       });
 
+      logApplePaySession("SUCCESS", { sessionKeys: Object.keys(merchantSession) });
       console.log("[ApplePay] Session validated successfully");
       res.json(merchantSession);
     } catch (error: any) {
+      logApplePaySession("ERROR_APPLE_VALIDATION", { message: error.message });
       console.error("[ApplePay] Session error:", error.message);
       res.status(500).json({ 
         message: "Apple Pay session validation failed: " + error.message,
