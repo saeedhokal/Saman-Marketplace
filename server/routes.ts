@@ -1375,6 +1375,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const cert = Buffer.from(certBase64, 'base64').toString('utf-8');
     const key = Buffer.from(keyBase64, 'base64').toString('utf-8');
     
+    // Log request details for debugging
+    logApplePaySession("SENDING_TO_APPLE", { 
+      merchantId,
+      domain,
+      validationHost: parsedUrl.hostname,
+      certLength: cert.length,
+      keyLength: key.length
+    });
+    
     console.log("[ApplePay Session] Cert loaded, starts with:", cert.substring(0, 30));
     console.log("[ApplePay Session] Key loaded, starts with:", key.substring(0, 30));
     console.log("[ApplePay Session] Merchant ID:", merchantId);
