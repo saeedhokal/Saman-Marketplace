@@ -175,3 +175,51 @@ users, products, favorites, banners, subscriptionPackages, transactions, userVie
 ## Build Process
 - **Server changes:** Just publish from Replit (no Codemagic needed)
 - **iOS app changes:** Push to GitHub → Codemagic builds → TestFlight
+
+---
+
+## Important Lessons Learned (January 28, 2026)
+
+### Apple Pay Fix - Critical Details
+
+**Problem:** Apple Pay was processing successfully on Telr but showing "Payment Failed (status: unknown)" in the app.
+
+**Root Causes Found & Fixed:**
+
+1. **Telr Auth Key Typo** - The Wallets auth key had an asterisk (*) but should have a caret (^):
+   - WRONG: `spRZ*QWJ5P~MWJpV`
+   - CORRECT: `spRZ^QWJ5P~MWJpV`
+
+2. **Telr Response Format Mismatch** - Telr's Remote API v2 returns a different format than the Hosted Page:
+   - **Remote API v2 (Apple Pay):** `transaction.status = "A"` means Authorized
+   - **Hosted Page:** `order.status.code = "3"` means Authorized
+   - The code was only checking for the old format, so successful payments were marked as failed
+
+**How Apple Pay Works Now:**
+1. User taps Apple Pay button in iOS app
+2. Native Capacitor plugin shows Face ID/Touch ID
+3. Apple returns encrypted payment token
+4. Server decrypts with merchant certificates (merchant_identity.pem + .key)
+5. Server sends to Telr Remote API v2 with Wallets auth key
+6. Telr returns `transaction.status = "A"` for success
+7. Credits are added, transaction marked complete
+
+**Debug Endpoint:** `/api/applepay-debug-public` shows the last Apple Pay request/response for troubleshooting
+
+### Native vs Web Apple Pay
+
+The app uses **native Apple Pay** (NOT web ApplePaySession):
+- **Plugin:** `@jackobo/capacitor-apple-pay@7.0.0`
+- **Why native:** Web ApplePaySession doesn't work in WKWebView (Capacitor apps)
+- **Event handlers:** Uses `validateMerchant`, `authorizePayment`, `cancel` events
+- **iOS entitlements:** Configured with `com.apple.developer.in-app-payments` capability
+
+### Certificate Files Reference
+- `certs/merchant_identity.pem` - For merchant validation (decrypting Apple token)
+- `certs/merchant_identity_new.key` - Private key for merchant_identity.pem
+- `certs/apple_pay_key.p12` - PKCS12 format (password: saman123)
+- `certs/apple_pay_new.cer` - Certificate file
+
+### Telr API Keys (DO NOT CONFUSE)
+- **Regular Auth Key:** `3SWWK@m9Mz-5GNtS` - For hosted page/credit cards
+- **Wallets Auth Key:** `spRZ^QWJ5P~MWJpV` - For Apple Pay Remote API (note the caret ^)
