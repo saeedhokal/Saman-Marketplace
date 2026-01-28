@@ -1442,11 +1442,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     try {
-      // Log token structure for debugging
-      console.log("[ApplePay] Token structure received:", JSON.stringify(Object.keys(applePayToken)));
+      // Log FULL token structure for debugging - need to see what we're receiving
+      console.log("[ApplePay] FULL token received:", JSON.stringify(applePayToken, null, 2));
+      console.log("[ApplePay] Token top-level keys:", JSON.stringify(Object.keys(applePayToken || {})));
       if (applePayToken.paymentData) {
         console.log("[ApplePay] PaymentData keys:", JSON.stringify(Object.keys(applePayToken.paymentData)));
+        console.log("[ApplePay] PaymentData.header keys:", JSON.stringify(Object.keys(applePayToken.paymentData?.header || {})));
       }
+      if (applePayToken.paymentMethod) {
+        console.log("[ApplePay] PaymentMethod:", JSON.stringify(applePayToken.paymentMethod));
+      }
+      console.log("[ApplePay] TransactionIdentifier:", applePayToken.transactionIdentifier);
       
       // Send Apple Pay token to Telr Remote API
       // Based on Telr exception report, the EXACT structure must be:
