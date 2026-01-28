@@ -1,0 +1,273 @@
+Telr
+Need help?
+Reference
+Changelog
+
+Search
+CTRL-K
+JUMP TO
+CTRL-/
+GENERAL
+Integration methods
+Admin system
+EMV® 3-D Secure
+Webhook
+Supported currencies
+Test cards
+Response codes
+Website checklist
+wallets
+ApplePay Integration
+
+Samsung Pay Integration
+
+Hosted Payment Page
+Introduction to Hosted Payment Page
+How it works
+Create session
+post
+Check status
+post
+Additional features
+
+Card Filter
+SEAMLESS
+Introduction to Seamless
+Sample application
+Quicklinks
+Introduction to QuickLinks
+Configuration
+Create QuickLink
+post
+Extra data fields in Quicklink API
+E-Invoicing
+Introduction to E-Invoicing
+Configuration
+Customisation
+Create Invoice
+Remote creation of invoices
+Subscriptions (Recurring Payments)
+Accounts API
+Introduction to Accounts API
+Get accounts information
+get
+Get account payouts
+get
+Get payout transaction details
+get
+Get pending payouts
+get
+Get pending transaction details
+get
+Mobile API
+Introduction to Mobile API
+Security
+Request and response
+
+Additional features
+
+SERVICE API
+Introduction to Service API
+API configuration
+Authentication
+Requests and responses
+
+Remote API
+Introduction to Remote API
+Security
+Request and response
+
+Additional features
+
+Clicktopay
+Introduction
+Seamless JS SDK
+Remote API
+SPLIT PAYMENTS
+Introduction to Split Payments
+Onboarding Sub-Merchants
+Split in Payment API
+Quicklink and E-Invoice
+Debit account
+post
+Credit account
+post
+Get split applications by merchant
+get
+Get split application by ID
+get
+Get split applications by store ID
+get
+SDKs
+Introduction to SDKs
+Android
+iOS
+Flutter
+React Native
+Create order
+post
+Get order details
+get
+shopping cart plugins
+Introduction To Shopping Carts
+Magento
+OpenCart
+PrestaShop
+Shopify
+ZOHO
+WooCommerce
+ECWID
+Odoo
+WHMCS
+Powered by 
+
+Response codes
+Status	Code	Message
+A	Set by issuer	Authorised
+H	Set by issuer	Authorised but placed on hold. Manual inspection required
+E	1	Invalid request
+E	2	Transaction cost or currency not supplied
+E	3	Cart ID not set
+E	4	Invalid store ID
+E	5	Transaction cost or currency not valid
+E	6	Invalid transaction mode
+E	7	Card expiry not supplied
+E	8	Card start date not supplied
+E	9	Card issue number not supplied
+E	10	Card number not supplied
+E	11	Invalid card number
+E	12	Card expired
+E		
+E	14	Card type mismatch
+E	15	Invalid card security code (CVV)
+E	16	Card security code (CVV) not supplied
+E	17	Name not valid/not supplied
+E	18	Address not valid/not supplied
+E	19	Country not valid/not supplied
+E	20	IP address not valid/not supplied
+E	21	Card/Currency/Class combination not supported
+E	22	Invalid transaction reference
+E	23	Amount differs from original
+E	24	Currency differs from original
+E	25	Original transaction not authorised
+E	26	Original transaction already voided
+E	27	Original transaction mismatch
+E	28	Invalid start date
+E	29	Amount greater than available balance
+E	30	Card details differ from original
+D	31	Not authorised
+D	32	Original transaction cannot be voided
+C	33	Cancelled
+D	34	No response
+E	35	Unable to refund
+E	36	Previous transaction is on hold
+D	37	Blocked by acquirer
+E	38	Invalid expiry date
+E	39	Invalid transaction class
+E	40	Invalid transaction type
+D	41	Insufficient funds
+D	42	Card security code (CVV) mismatch
+E	43	Email not valid/not supplied
+E	44	Phone number not valid/not supplied
+E	45	Transaction mode differs from original
+D	46	3DSecure authentication not available for this card
+D	47	3DSecure authentication rejected
+E	48	Description not set
+D	49	Sold out
+E	50	Card is for ATM use only
+E	52	Invalid Transaction Method
+X	53	Authorisation expired
+E	54	Transaction part not specified
+E	55	Unable to access transaction part
+E	56	Duplicate transaction
+D	57	Continuous authority not available on referenced transaction
+E	58	Error connecting to service provider
+E	59	Request aborted
+E	60	Verification failed
+D	61	Refer to card issuer
+D	62	Do not honor
+D	63	Address verification (AVS) mismatch
+D	64	Card security code (CVV) and address (AVS) mismatch
+D	65	Card is not enabled for e-commerce
+D	66	Card cancelled
+D	67	Transaction not permitted by issuer
+D	68	No/invalid account
+E	69	Refund needs to be completed manually by the bank
+E	70	Currently refund cannot be processed, please reach out to client experience
+D	71	Invalid Terminal configurations
+E	72	Invalid value for split parameter
+E	73	Split Payment not enabled for the store
+E	74	Card token validation failed
+E	75	STCPay order creation failed
+E	76	Paypal order creation failed
+D	77	Problem with Cybersource configurations
+E	78	Timeout at payment processor
+D	90	Anti-fraud pre-auth
+D	91	Fraud detected by issuer
+D	92	Anti-fraud post-auth
+D	93	Card limits exceeded
+D	94	Terminal limits
+D	95	Not authorised
+D	96	Fraud detected by acquirer
+D	97	Multiple email used with same card
+E	98	Internal system error
+E	99	Unknown error
+E	100	Invalid end date
+E	101	Limit value should be less than or equal to 4000
+E	102	The date range exceeds seven days
+E	103	Invalid or Less parameters in URL
+E	104	From date can not be greater than to date
+E	105	Transaction is already captured
+E	106	Invalid path parameter
+D	107	Acquirer system error
+D	108	Invalid merchant
+D	109	Invalid transaction
+D	110	Invalid issuer
+D	111	Restricted
+D	112	Closed card/account
+D	113	Authorisation revoked
+D	114	Fraud suspected by issuer
+D	115	Fraud suspected by scheme
+D	116	No/invalid pin
+D	117	Scheme lifecycle/policy
+D	118	Unable to route
+D	119	No/invalid OTP
+D	120	OTP limit exceeded
+D	121	Inactive account
+D	122	Already paid
+D	123	Payment expired
+D	124	Account limit exceeded
+
+Retry guidelines for VISA cards in recurring transactions
+Transactions with response codes 11, 66, 67, 91, 109, 110, 112, and 113 must not be retried. VISA may impose a fee for each retry attempt following the first decline.
+
+All other response codes can be retried up to 15 times within 30 days after the first decline.
+
+
+Retry guidelines for Mastercard cards in recurring transactions
+Transactions with response codes 11, 12, 66, 91, and 110 must not be retried, as Mastercard may consider such attempts non-compliant and could impose fines.
+
+
+Response code 01 (Invalid Request)
+This data is not used as part of the transaction processing, but a record of the data is kept with the transaction. This can be of use should a customer dispute a transaction, providing additional details of where the device was when the transaction was processed.
+
+There are many possible causes of the ‘Invalid Request’ response. In order to help maintain system security the exact cause is not contained with the response. For example the reason could be that the request has been received from an un-authorised IP address, or that the password used is not correct. This information is not divulged as part of the response data, you will need to view the exception report to see the full details.
+
+A common cause of this error is attempting to use the mobile API without first requesting that it is added to your account. You must first request that the mobile API is added to your account before you start to use it – this is not enabled by default. As part of the activation process you will be supplied with the authentication key.
+
+The results will show the order status, and if applicable the transaction status. Order status codes are as follows:
+
+Order Status	Description
+1	Pending
+2	Authorised (Transaction not captured, such as an AUTH transaction or a SALE transaction, which has been placed on hold)
+3	Paid (Transaction captured, SALE transaction, not placed on hold)
+4	Payment Requested
+-1	Expired
+-2	Cancelled
+-3	Declined
+-4	Replaced
+Updated 4 months ago
+
+Test cards
+Website checklist
+Did this page help you?

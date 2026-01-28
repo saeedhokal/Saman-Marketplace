@@ -1,0 +1,149 @@
+Capabilities
+Configure Apple Pay on the web
+Apple Pay on the web allows users to purchase goods and services within your web app.
+
+First create a merchant identifier in your developer account that uniquely identifies you to Apple Pay as a merchant who is able to accept payments. You can use the same merchant identifier for multiple apps. The merchant identifier never expires.
+
+Next create a payment processing certificate that’s associated with your merchant identifier and used to encrypt payment information. The payment processing certificate expires every 25 months and can be revoked. When that happens, just re-create the payment processing certificate.
+
+Then register the merchant domains in your organization that will process the Apple Pay transactions and create a merchant identity certificate that you’ll use to authenticate communication with the Apple Pay servers.
+
+Required role: Account Holder or Admin.
+
+Register a merchant domain
+In Certificates, Identifiers & Profiles, click Identifiers in the sidebar, then select Merchant IDs from the pop-up menu on the top right.
+
+On the right, select your merchant identifier.
+
+Under Merchant Domains, click Add Domain.
+
+Enter the fully qualified domain name, then click Save.
+
+Click Download, place the downloaded file in the specified location, then click Verify.
+
+Click Done.
+
+Remove a merchant domain
+In Certificates, Identifiers & Profiles, click Identifiers in the sidebar, then select Merchant IDs from the pop-up menu on the top right.
+
+On the right, select your merchant identifier.
+
+Under Merchant Domains, click Remove next to the domain, then follow the instructions.
+
+Verify a merchant domain
+In Certificates, Identifiers & Profiles, click Identifiers in the sidebar, then select Merchant IDs from the pop-up menu on the top right.
+
+On the right, select your merchant identifier.
+
+Under Merchant Domains, click Verify next to the domain, then follow the instructions.
+
+Create a merchant identity certificate
+In Certificates, Identifiers & Profiles, click Identifiers in the sidebar, then select Merchant IDs from the pop-up menu on the top right.
+
+On the right, select your merchant identifier.
+
+Under Apple Pay Merchant Identity Certificate, click Create Certificate.
+
+Create a certificate signing request on your Mac, then click Continue.
+
+Click Choose File.
+
+In the dialog that appears, select the certificate request file (a file with a .certSigningRequest file extension), then click Choose.
+
+Click Continue.
+
+Click Download.
+
+The certificate file (a file with a .cer file extension) appears in your Downloads folder.
+
+To learn more about Apple Pay on the web, visit Apple Pay JS Documentation.
+
+Submit your
+feedback
+
+Ask questions on the forums
+
+Contact Apple Developer Support
+
+Developer Footer
+
+Apple
+DeveloperHelpAccountCapabilitiesConfigure Apple Pay on the web
+Platforms
+iOS
+iPadOS
+macOS
+tvOS
+visionOS
+watchOS
+Tools
+Swift
+SwiftUI
+Swift Playground
+TestFlight
+Xcode
+Xcode Cloud
+Icon Composer
+SF Symbols
+Topics & Technologies
+Accessibility
+Accessories
+Apple Intelligence
+App Store
+Audio & Video
+Augmented Reality
+Business
+Design
+Distribution
+Education
+Fonts
+Games
+Health & Fitness
+In-App Purchase
+Localization
+Maps & Location
+Machine Learning & AI
+Open Source
+Security
+Safari & Web
+Resources
+Documentation
+Sample Code
+Tutorials
+Downloads
+Forums
+Videos
+Support
+Support Articles
+Contact Us
+Bug Reporting
+System Status
+Account
+Apple Developer
+App Store Connect
+Certificates, IDs, & Profiles
+Feedback Assistant
+Programs
+Apple Developer Program
+Apple Developer Enterprise Program
+App Store Small Business Program
+MFi Program
+Mini Apps Partner Program
+News Partner Program
+Video Partner Program
+Security Bounty Program
+Security Research Device Program
+Events
+Meet with Apple
+Apple Developer Centers
+App Store Awards
+Apple Design Awards
+Apple Developer Academies
+WWDC
+Get the Apple Developer app.
+Light
+Dark
+Auto
+
+English
+Copyright © 2026 Apple Inc. All rights reserved.Terms of Use Privacy Policy Agreements and Guidelines

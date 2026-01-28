@@ -1,0 +1,219 @@
+
+Reference
+Changelog
+
+Search
+CTRL-K
+JUMP TO
+CTRL-/
+GENERAL
+Integration methods
+Admin system
+EMV® 3-D Secure
+Webhook
+Supported currencies
+Test cards
+Response codes
+Website checklist
+wallets
+ApplePay Integration
+
+Apple Pay on Hosted Payment Page
+Apple Pay using Remote JSON API
+
+Make an ApplePay transaction.
+post
+Samsung Pay Integration
+
+Hosted Payment Page
+Introduction to Hosted Payment Page
+How it works
+Create session
+post
+Check status
+post
+Additional features
+
+Card Filter
+SEAMLESS
+Introduction to Seamless
+Sample application
+Quicklinks
+Introduction to QuickLinks
+Configuration
+Create QuickLink
+post
+Extra data fields in Quicklink API
+E-Invoicing
+Introduction to E-Invoicing
+Configuration
+Customisation
+Create Invoice
+Remote creation of invoices
+Subscriptions (Recurring Payments)
+Accounts API
+Introduction to Accounts API
+Get accounts information
+get
+Get account payouts
+get
+Get payout transaction details
+get
+Get pending payouts
+get
+Get pending transaction details
+get
+Mobile API
+Introduction to Mobile API
+Security
+Request and response
+
+Additional features
+
+SERVICE API
+Introduction to Service API
+API configuration
+Authentication
+Requests and responses
+
+Remote API
+Introduction to Remote API
+Security
+Request and response
+
+Additional features
+
+Clicktopay
+Introduction
+Seamless JS SDK
+Remote API
+SPLIT PAYMENTS
+Introduction to Split Payments
+Onboarding Sub-Merchants
+Split in Payment API
+Quicklink and E-Invoice
+Debit account
+post
+Credit account
+post
+Get split applications by merchant
+get
+Get split application by ID
+get
+Get split applications by store ID
+get
+SDKs
+Introduction to SDKs
+Android
+iOS
+Flutter
+React Native
+Create order
+post
+Get order details
+get
+shopping cart plugins
+Introduction To Shopping Carts
+Magento
+OpenCart
+PrestaShop
+Shopify
+ZOHO
+WooCommerce
+ECWID
+Odoo
+WHMCS
+Powered by 
+
+Make an ApplePay transaction.
+post
+https://secure.telr.com/gateway/remote.json
+
+Body Params
+store
+integer
+required
+Your store ID.
+
+authkey
+string
+required
+Your authentication key.
+
+tran
+object
+required
+Transaction details.
+
+
+tran object
+applepay
+object
+required
+Use ApplePayToken schema when sending encrypted Apple Pay payloads. Use NetworkToken schema for sending decrypted Apple Pay payloads.
+
+
+ApplePayToken
+
+NetworkToken
+customer
+object
+required
+Customer specific details.
+
+
+customer object
+Response
+
+200
+Response
+
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+1
+curl --request POST \
+2
+     --url https://secure.telr.com/gateway/remote.json \
+3
+     --header 'accept: application/json' \
+4
+     --header 'content-type: application/json' \
+5
+     --data '
+6
+{
+7
+  "tran": {
+8
+    "class": "ecom",
+9
+    "type": "sale",
+10
+    "method": "applepay"
+11
+  }
+12
+}
+13
+'
+
+Try It!
+Response
+Click Try It! to start a request and see the response here! Or choose an example:
+application/json
+
+200
+Updated 9 months ago
+
+Apple Pay using Remote JSON API
+Samsung Pay Integration
+Did this page help you?
