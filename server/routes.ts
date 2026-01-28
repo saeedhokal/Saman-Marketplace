@@ -288,6 +288,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Download endpoints for Apple Pay PEM files (for Telr)
+  app.get("/download/certPem.pem", (req, res) => {
+    const filePath = path.resolve(process.cwd(), "certs", "certPem.pem");
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, "certPem.pem");
+    } else {
+      res.status(404).send("Certificate not found");
+    }
+  });
+
+  app.get("/download/privatePem.pem", (req, res) => {
+    const filePath = path.resolve(process.cwd(), "certs", "privatePem.pem");
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, "privatePem.pem");
+    } else {
+      res.status(404).send("Private key not found");
+    }
+  });
+
   // Helper to add cache-busting timestamp to profile image URLs
   function addCacheBuster(url: string | null): string | null {
     if (!url) return null;
