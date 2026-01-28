@@ -1377,9 +1377,37 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
     }
 
-    // Use certificates directly (they're stored as PEM format, not base64)
-    const cert = certBase64;
-    const key = keyBase64;
+    // Handle both base64-encoded and raw PEM formats
+    // Also fix newlines that may have been converted to spaces
+    let cert = certBase64;
+    let key = keyBase64;
+    
+    // Detect if cert is base64 encoded (doesn't start with -----BEGIN)
+    if (!cert.startsWith('-----BEGIN')) {
+      try {
+        cert = Buffer.from(cert, 'base64').toString('utf-8');
+      } catch (e) {
+        console.error("[ApplePay] Failed to decode cert from base64:", e);
+      }
+    }
+    
+    // Detect if key is base64 encoded (doesn't start with -----BEGIN)
+    if (!key.startsWith('-----BEGIN')) {
+      try {
+        key = Buffer.from(key, 'base64').toString('utf-8');
+      } catch (e) {
+        console.error("[ApplePay] Failed to decode key from base64:", e);
+      }
+    }
+    
+    // Fix newlines: sometimes spaces get inserted instead of newlines
+    // The PEM format requires proper line breaks
+    cert = cert.replace(/-----BEGIN CERTIFICATE----- /g, '-----BEGIN CERTIFICATE-----\n')
+               .replace(/ -----END CERTIFICATE-----/g, '\n-----END CERTIFICATE-----')
+               .replace(/([A-Za-z0-9+/=]{64}) /g, '$1\n');
+    key = key.replace(/-----BEGIN PRIVATE KEY----- /g, '-----BEGIN PRIVATE KEY-----\n')
+             .replace(/ -----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----')
+             .replace(/([A-Za-z0-9+/=]{64}) /g, '$1\n');
     
     // Log request details for debugging
     logApplePaySession("SENDING_TO_APPLE", { 
