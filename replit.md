@@ -40,7 +40,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - Image uploads to Google Cloud Storage
 - Push notifications (APNs)
 - Credit card payments (Telr redirect)
-- Apple Pay on Telr hosted page
+- **Native iOS Apple Pay (Face ID + Telr Remote API v2)** - FULLY WORKING!
 - Admin panel (moderation, credits, broadcast)
 - Favorites/saved items
 - Notification inbox
@@ -49,41 +49,31 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - All UI features
 
 ### What's WAITING
-- **Native iOS Apple Pay** - waiting for Telr to update certificates
+- Nothing currently blocked!
 
 ---
 
-## BLOCKING ISSUE: Native Apple Pay
+## Apple Pay Integration (WORKING)
 
-### Problem
-"Authentication key mismatch" error when trying native Apple Pay via Telr Remote API
+### Implementation Details
+- **Plugin:** @jackobo/capacitor-apple-pay@7.0.0 (native Capacitor plugin)
+- **Merchant ID:** merchant.saeed.saman
+- **Telr API:** Remote API v2 with Wallets auth key
+- **Response Format:** transaction.status = "A" for authorized payments
 
-### Root Cause
-- Telr has OLD certificates on their end
-- We have NEW certificates (Payment Processing, expires 2028)
-- Certificate mismatch causes authentication failure
+### Key Files
+- `client/src/pages/Checkout.tsx` - Native Apple Pay handler with event listeners
+- `server/routes.ts` - /api/applepay/process endpoint with Telr Remote API v2
 
-### Certificate Details
-- **New Certificate:** Payment Processing (expires 2028)
-- **.p12 File:** `certs/apple_pay_key.p12` (password: saman123)
-- **.cer File:** `certs/apple_pay_new.cer`
-- **Status:** Sent to Telr, waiting for them to update
+### Telr Configuration
+- **Store ID:** 32400
+- **Wallets Auth Key:** spRZ^QWJ5P~MWJpV (note: caret ^ not asterisk)
+- **Mode:** LIVE (test: 0)
 
-### Certificate Download Endpoints (for Telr)
-- `/download/apple-pay-cert` - Downloads apple_pay_new.cer
-- `/download/apple-pay-p12` - Downloads apple_pay_key.p12
-
-### What Works vs What's Blocked
-| Feature | Status |
-|---------|--------|
-| Apple Pay on Telr Hosted Page | WORKS |
-| Credit Card Redirect Payments | WORKS |
-| Native iOS Apple Pay (Remote API) | BLOCKED - waiting for Telr |
-
-### Next Steps When Telr Replies
-1. Telr updates their system with new certificates
-2. Test native Apple Pay immediately
-3. Should work once certificates match
+### Certificate Files (for reference)
+- `certs/merchant_identity.pem` - Merchant identity certificate
+- `certs/merchant_identity_new.key` - Merchant identity private key
+- `certs/apple_pay_key.p12` (password: saman123)
 
 ---
 
