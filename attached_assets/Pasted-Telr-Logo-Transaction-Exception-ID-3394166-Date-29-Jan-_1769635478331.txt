@@ -1,0 +1,77 @@
+Telr Logo
+Transaction Exception
+ID	3394166
+Date	29 Jan 2026 01:23
+Source	Remote (V2)
+Description	Authentication key mismatch
+store	32400
+authkey	****************
+tran/method	applepay
+tran/type	sale
+tran/class	ecom
+tran/id	SAMAN-AP-aaf09421-ec24-4799-8ae2-4bb88af00aaf-1-1769635403860
+tran/description	Basic - 1 Spare Parts Credits
+tran/test	0
+tran/currency	AED
+tran/amount	1.00
+tran/ref	-- not set --
+customer/ip	-- not set --
+customer/name/title	-- not set --
+customer/name/forenames	Saeed
+customer/name/surname	Hokal
+customer/address/line1	Dubai
+customer/address/line2	-- not set --
+customer/address/line3	-- not set --
+customer/address/city	Dubai
+customer/address/state	-- not set --
+customer/address/country	AE
+customer/address/areacode	00000
+customer/email	customer@example.com
+customer/phone	-- not set --
+customer/ref	-- not set --
+applepay/billingContact/familyName	-- not set --
+applepay/billingContact/givenName	-- not set --
+applepay/billingContact/addressLines/1	-- not set --
+applepay/billingContact/addressLines/2	-- not set --
+applepay/billingContact/addressLines/3	-- not set --
+applepay/billingContact/locality	-- not set --
+applepay/billingContact/administrativeArea	-- not set --
+applepay/billingContact/countryCode	-- not set --
+applepay/billingContact/postalCode	-- not set --
+applepay/billingContact/emailAddress	-- not set --
+applepay/billingContact/phoneNumber	-- not set --
+applepay/shippingContact/familyName	-- not set --
+applepay/shippingContact/givenName	-- not set --
+applepay/shippingContact/addressLines/1	-- not set --
+applepay/shippingContact/addressLines/2	-- not set --
+applepay/shippingContact/addressLines/3	-- not set --
+applepay/shippingContact/locality	-- not set --
+applepay/shippingContact/administrativeArea	-- not set --
+applepay/shippingContact/countryCode	-- not set --
+applepay/shippingContact/postalCode	-- not set --
+applepay/shippingContact/emailAddress	-- not set --
+applepay/shippingContact/phoneNumber	-- not set --
+applepay/token/paymentData/version	EC_v1
+applepay/token/paymentData/data	Set - length 428
+applepay/token/paymentData/signature	Set - length 2948
+applepay/token/paymentData/header/ephemeralPublicKey	Set - length 124
+applepay/token/paymentData/header/publicKeyHash	Set - length 44
+applepay/token/paymentData/header/transactionId	3df2747c0872830171b89531403506a39e2943d8f0cb7231c59a0eadeead874f
+applepay/token/paymentMethod/displayName	Visa 3705
+applepay/token/paymentMethod/network	Visa
+applepay/token/paymentMethod/type	1
+applepay/token/transactionIdentifier	3df2747c0872830171b89531403506a39e2943d8f0cb7231c59a0eadeead874f
+applepay/networkToken/card/scheme	-- not set --
+applepay/networkToken/card/number	-- not set --
+applepay/networkToken/card/expiry/month	-- not set --
+applepay/networkToken/card/expiry/year	-- not set --
+applepay/networkToken/eci	-- not set --
+applepay/networkToken/cryptogram	-- not set --
+Connection Details
+HTTP Referer	-- not set --
+Content Type	application/json
+User Agent	node
+IP Address	34.34.233.242
+Trace	4000/3647396/697a7e4c
+Please do not reply to this email.
+For support questions, please use the support ticket pages within the Merchant Administration System.
