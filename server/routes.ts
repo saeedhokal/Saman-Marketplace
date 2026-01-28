@@ -1448,8 +1448,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         console.log("[ApplePay] PaymentData keys:", JSON.stringify(Object.keys(applePayToken.paymentData)));
       }
       
+      // Base64 encode the paymentData as Telr expects
+      // Telr requires paymentData to be base64 encoded JSON string
+      const paymentDataBase64 = Buffer.from(JSON.stringify(applePayToken.paymentData)).toString('base64');
+      
       // Send Apple Pay token to Telr Remote API (using correct endpoint: remote.json)
-      // Telr expects the FULL token structure: { paymentData: {...}, paymentMethod: {...}, transactionIdentifier: "..." }
+      // Format according to Telr docs: https://docs.telr.com/reference/post_remote_applepay
       const telrRequest = {
         store: parseInt(telrStoreId),
         authkey: telrAuthKey,
@@ -1464,8 +1468,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           test: 0, // Live production mode
         },
         applepay: {
-          // Send the FULL token object as Telr expects it
-          token: applePayToken,
+          // Telr expects base64 encoded paymentData
+          paymentData: paymentDataBase64,
+          // Also include the payment method info
+          paymentMethod: applePayToken.paymentMethod,
+          transactionIdentifier: applePayToken.transactionIdentifier,
         },
         customer: {
           name: {
@@ -1483,7 +1490,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         },
       };
 
-      console.log("[ApplePay] Sending to Telr remote.json:", JSON.stringify({ ...telrRequest, applepay: { token: "[REDACTED]" } }));
+      console.log("[ApplePay] Sending to Telr remote.json:", JSON.stringify({ 
+        ...telrRequest, 
+        applepay: { paymentData: "[BASE64_REDACTED]", paymentMethod: telrRequest.applepay.paymentMethod } 
+      }));
 
       // Create Basic Auth header (some Telr APIs require this in addition to body auth)
       const basicAuth = Buffer.from(`${telrStoreId}:${telrAuthKey}`).toString('base64');
