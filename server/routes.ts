@@ -2033,6 +2033,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // TEMPORARY: Public Apple Pay debug endpoint for troubleshooting
+  // This will be removed after Apple Pay is working
+  app.get("/api/applepay-debug-public", (req, res) => {
+    const lastResponse = (global as any).lastTelrApplePayResponse;
+    res.json({
+      timestamp: new Date().toISOString(),
+      hasAttempt: !!lastResponse,
+      lastAttempt: lastResponse || "No Apple Pay attempts recorded on this server instance",
+      serverUptime: process.uptime(),
+    });
+  });
+
   // Admin: Database diagnostic endpoint
   app.get("/api/admin/db-status", isAuthenticated, isAdmin, async (req, res) => {
     try {
