@@ -110,6 +110,7 @@ export default function Checkout() {
     const session = new ApplePaySession(3, paymentRequest);
 
     session.onvalidatemerchant = async (event) => {
+      console.log("[ApplePay Client] onvalidatemerchant called, validationURL:", event.validationURL);
       try {
         const response = await fetch("/api/applepay/session", {
           method: "POST",
@@ -118,21 +119,26 @@ export default function Checkout() {
           body: JSON.stringify({ validationURL: event.validationURL }),
         });
 
+        console.log("[ApplePay Client] Response status:", response.status);
+        
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || "Merchant validation failed");
+          const errorText = await response.text();
+          console.error("[ApplePay Client] Error response:", errorText);
+          throw new Error(errorText || "Merchant validation failed");
         }
 
         const merchantSession = await response.json();
+        console.log("[ApplePay Client] Merchant session received, keys:", Object.keys(merchantSession));
         session.completeMerchantValidation(merchantSession);
-      } catch (error) {
-        console.error("Merchant validation failed:", error);
+        console.log("[ApplePay Client] completeMerchantValidation called successfully");
+      } catch (error: any) {
+        console.error("[ApplePay Client] Merchant validation failed:", error?.message || error);
         session.abort();
         setIsProcessing(false);
         toast({
           variant: "destructive",
           title: "Apple Pay Error",
-          description: "Merchant validation failed. Please try again or use card payment.",
+          description: `Merchant validation failed: ${error?.message || 'Unknown error'}. Please try card payment.`,
         });
       }
     };
