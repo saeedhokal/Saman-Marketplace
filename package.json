@@ -18,6 +18,7 @@
     "@capacitor/splash-screen": "^7.0.4",
     "@google-cloud/storage": "^7.18.0",
     "@hookform/resolvers": "^3.10.0",
+    "@jackobo/capacitor-apple-pay": "^7.0.0",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@parse/node-apn": "^7.0.1",
     "@radix-ui/react-accordion": "^1.2.4",

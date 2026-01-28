@@ -1,5 +1,5 @@
 /// <reference types="applepayjs" />
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { useAuth, getStoredUserId } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -10,6 +10,18 @@ import { SiApplepay } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SubscriptionPackage } from "@shared/schema";
+import { Capacitor } from "@capacitor/core";
+
+// Import the native Apple Pay plugin
+let CapacitorApplePay: any = null;
+if (Capacitor.isNativePlatform()) {
+  import("@jackobo/capacitor-apple-pay").then((module) => {
+    CapacitorApplePay = module.CapacitorApplePay;
+    console.log("[ApplePay] Native plugin loaded");
+  }).catch((err) => {
+    console.log("[ApplePay] Native plugin not available:", err);
+  });
+}
 
 declare global {
   interface Window {
@@ -30,12 +42,37 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card">("credit_card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [applePayAvailable, setApplePayAvailable] = useState(false);
+  const [useNativeApplePay, setUseNativeApplePay] = useState(false);
+  const listenersRef = useRef<any[]>([]);
 
   useEffect(() => {
-    if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
-      setApplePayAvailable(true);
-      setPaymentMethod("apple_pay");
-    }
+    const checkApplePay = async () => {
+      // Check native Capacitor Apple Pay first (works properly on iOS)
+      if (Capacitor.isNativePlatform() && CapacitorApplePay) {
+        try {
+          const result = await CapacitorApplePay.canMakePayments();
+          if (result.canMakePayments) {
+            console.log("[ApplePay] Native Apple Pay available");
+            setApplePayAvailable(true);
+            setUseNativeApplePay(true);
+            setPaymentMethod("apple_pay");
+            return;
+          }
+        } catch (err) {
+          console.log("[ApplePay] Native check failed:", err);
+        }
+      }
+      
+      // Fall back to web API check (for browser testing)
+      if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+        console.log("[ApplePay] Web Apple Pay detected (limited functionality in WKWebView)");
+        setApplePayAvailable(true);
+        setPaymentMethod("apple_pay");
+      }
+    };
+    
+    // Small delay to allow dynamic import to complete
+    setTimeout(checkApplePay, 100);
   }, []);
 
   const { data: pkg, isLoading } = useQuery<SubscriptionPackage>({
@@ -87,7 +124,184 @@ export default function Checkout() {
     },
   });
 
-  const handleApplePay = async () => {
+  // Native Capacitor Apple Pay handler (for iOS app)
+  const handleNativeApplePay = async () => {
+    if (!pkg || !CapacitorApplePay) return;
+    
+    setIsProcessing(true);
+    const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
+    const amount = (pkg.price / 100).toFixed(2);
+    
+    console.log("[ApplePay Native] Starting native Apple Pay");
+    fetch("/api/debug/applepay-client-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ step: "NATIVE_APPLEPAY_START", amount, packageId: pkg.id })
+    }).catch(() => {});
+
+    try {
+      // Remove any existing listeners
+      await CapacitorApplePay.removeAllListeners();
+      
+      // Set up event listeners
+      const validateListener = await CapacitorApplePay.addListener(
+        'validateMerchant',
+        async (event: { validationURL: string }) => {
+          console.log("[ApplePay Native] validateMerchant event:", event.validationURL);
+          fetch("/api/debug/applepay-client-log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ step: "NATIVE_VALIDATE_MERCHANT", url: event.validationURL })
+          }).catch(() => {});
+          
+          try {
+            const response = await fetch("/api/applepay/session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ validationURL: event.validationURL }),
+            });
+            
+            if (!response.ok) {
+              throw new Error("Merchant validation failed");
+            }
+            
+            const merchantSession = await response.json();
+            console.log("[ApplePay Native] Got merchant session");
+            
+            // Complete validation with the native plugin
+            await CapacitorApplePay.completeMerchantValidation({
+              merchantSession: JSON.stringify(merchantSession)
+            });
+            
+            fetch("/api/debug/applepay-client-log", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ step: "NATIVE_VALIDATION_COMPLETE" })
+            }).catch(() => {});
+          } catch (err: any) {
+            console.error("[ApplePay Native] Validation error:", err);
+            await CapacitorApplePay.paymentAuthorizationFail();
+            setIsProcessing(false);
+            toast({
+              variant: "destructive",
+              title: "Apple Pay Error",
+              description: err.message || "Merchant validation failed",
+            });
+          }
+        }
+      );
+      
+      const authorizeListener = await CapacitorApplePay.addListener(
+        'authorizePayment',
+        async (event: { payment: any }) => {
+          console.log("[ApplePay Native] authorizePayment event - Face ID completed");
+          fetch("/api/debug/applepay-client-log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              step: "NATIVE_PAYMENT_AUTHORIZED",
+              hasPayment: !!event.payment,
+              paymentKeys: event.payment ? Object.keys(event.payment) : []
+            })
+          }).catch(() => {});
+          
+          try {
+            // Process payment with Telr
+            const response = await fetch("/api/applepay/process", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({
+                packageId: pkg.id,
+                applePayToken: event.payment.token,
+                billingContact: event.payment.billingContact,
+              }),
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              await CapacitorApplePay.paymentAuthorizationSuccess();
+              queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
+              toast({
+                title: "Payment Successful!",
+                description: result.message,
+              });
+              setLocation("/profile/subscription");
+            } else {
+              await CapacitorApplePay.paymentAuthorizationFail();
+              console.error("[ApplePay Native] Payment failed:", result);
+              toast({
+                variant: "destructive",
+                title: "Payment Failed",
+                description: result.message || "Please try again",
+              });
+            }
+          } catch (err: any) {
+            console.error("[ApplePay Native] Process error:", err);
+            await CapacitorApplePay.paymentAuthorizationFail();
+            toast({
+              variant: "destructive",
+              title: "Payment Failed",
+              description: "Payment processing failed. Please try again.",
+            });
+          } finally {
+            setIsProcessing(false);
+            await CapacitorApplePay.removeAllListeners();
+          }
+        }
+      );
+      
+      const cancelListener = await CapacitorApplePay.addListener(
+        'cancel',
+        () => {
+          console.log("[ApplePay Native] Payment cancelled by user");
+          fetch("/api/debug/applepay-client-log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ step: "NATIVE_PAYMENT_CANCELLED" })
+          }).catch(() => {});
+          setIsProcessing(false);
+          CapacitorApplePay.removeAllListeners();
+        }
+      );
+      
+      // Store listeners for cleanup
+      listenersRef.current = [validateListener, authorizeListener, cancelListener];
+      
+      // Start the payment
+      await CapacitorApplePay.startPayment({
+        merchantId: "merchant.saeed.saman",
+        countryCode: "AE",
+        currencyCode: "AED",
+        supportedNetworks: ["visa", "masterCard", "amex"] as any,
+        merchantCapabilities: ["supports3DS"] as any,
+        total: {
+          label: `${pkg.name} - ${totalCredits} Credits`,
+          amount: amount,
+          type: "final",
+        },
+      });
+      
+    } catch (err: any) {
+      console.error("[ApplePay Native] Error:", err);
+      fetch("/api/debug/applepay-client-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ step: "NATIVE_ERROR", error: err?.message || String(err) })
+      }).catch(() => {});
+      setIsProcessing(false);
+      toast({
+        variant: "destructive",
+        title: "Apple Pay Error",
+        description: err.message || "Could not start Apple Pay",
+      });
+    }
+  };
+
+  // Web Apple Pay handler (fallback for testing in browser)
+  const handleWebApplePay = async () => {
     if (!pkg || !window.ApplePaySession) return;
     
     setIsProcessing(true);
@@ -110,7 +324,7 @@ export default function Checkout() {
     const session = new ApplePaySession(3, paymentRequest);
 
     session.onvalidatemerchant = async (event) => {
-      console.log("[ApplePay Client] onvalidatemerchant called, validationURL:", event.validationURL);
+      console.log("[ApplePay Web] onvalidatemerchant called");
       try {
         const response = await fetch("/api/applepay/session", {
           method: "POST",
@@ -119,93 +333,32 @@ export default function Checkout() {
           body: JSON.stringify({ validationURL: event.validationURL }),
         });
 
-        console.log("[ApplePay Client] Response status:", response.status);
-        
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error("[ApplePay Client] Error response:", errorText);
-          throw new Error(errorText || "Merchant validation failed");
+          throw new Error("Merchant validation failed");
         }
 
         const merchantSession = await response.json();
-        console.log("[ApplePay Client] Merchant session received, keys:", Object.keys(merchantSession));
+        session.completeMerchantValidation(merchantSession);
         
-        // Log to server for debugging
         fetch("/api/debug/applepay-client-log", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            step: "SESSION_RECEIVED",
-            keys: Object.keys(merchantSession),
-            domainName: merchantSession.domainName,
-            displayName: merchantSession.displayName,
-            merchantId: merchantSession.merchantIdentifier?.substring(0, 20),
-          })
+          body: JSON.stringify({ step: "WEB_VALIDATION_SUCCESS" })
         }).catch(() => {});
-        
-        try {
-          session.completeMerchantValidation(merchantSession);
-          console.log("[ApplePay Client] completeMerchantValidation called successfully");
-          fetch("/api/debug/applepay-client-log", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ step: "COMPLETE_VALIDATION_SUCCESS" })
-          }).catch(() => {});
-        } catch (validationError: any) {
-          console.error("[ApplePay Client] completeMerchantValidation THREW:", validationError);
-          fetch("/api/debug/applepay-client-log", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ step: "COMPLETE_VALIDATION_ERROR", error: validationError?.message || String(validationError) })
-          }).catch(() => {});
-          throw validationError;
-        }
       } catch (error: any) {
-        console.error("[ApplePay Client] Merchant validation failed:", error?.message || error);
-        fetch("/api/debug/applepay-client-log", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ step: "VALIDATION_FAILED", error: error?.message || String(error) })
-        }).catch(() => {});
+        console.error("[ApplePay Web] Validation failed:", error);
         session.abort();
         setIsProcessing(false);
         toast({
           variant: "destructive",
           title: "Apple Pay Error",
-          description: `Merchant validation failed: ${error?.message || 'Unknown error'}. Please try card payment.`,
+          description: "Merchant validation failed. Please try card payment.",
         });
       }
     };
 
-    // Log when payment method is selected (user picks a card)
-    session.onpaymentmethodselected = (event) => {
-      console.log("[ApplePay Client] onpaymentmethodselected called");
-      fetch("/api/debug/applepay-client-log", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          step: "PAYMENT_METHOD_SELECTED",
-          paymentMethod: event.paymentMethod 
-        })
-      }).catch(() => {});
-      // Must call completePaymentMethodSelection with the current total
-      session.completePaymentMethodSelection({
-        newTotal: paymentRequest.total,
-      });
-    };
-
     session.onpaymentauthorized = async (event) => {
-      console.log("[ApplePay Client] onpaymentauthorized called - Face ID completed");
-      fetch("/api/debug/applepay-client-log", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          step: "PAYMENT_AUTHORIZED",
-          hasToken: !!event.payment?.token,
-          tokenKeys: event.payment?.token ? Object.keys(event.payment.token) : [],
-        })
-      }).catch(() => {});
-      
+      console.log("[ApplePay Web] onpaymentauthorized called");
       try {
         const response = await fetch("/api/applepay/process", {
           method: "POST",
@@ -223,15 +376,10 @@ export default function Checkout() {
         if (result.success) {
           session.completePayment(ApplePaySession.STATUS_SUCCESS);
           queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
-          toast({
-            title: "Payment Successful!",
-            description: result.message,
-          });
+          toast({ title: "Payment Successful!", description: result.message });
           setLocation("/profile/subscription");
         } else {
           session.completePayment(ApplePaySession.STATUS_FAILURE);
-          // Log debug info for troubleshooting
-          console.error("[ApplePay] Payment failed:", JSON.stringify(result));
           toast({
             variant: "destructive",
             title: "Payment Failed",
@@ -239,7 +387,6 @@ export default function Checkout() {
           });
         }
       } catch (error) {
-        console.error("Payment processing failed:", error);
         session.completePayment(ApplePaySession.STATUS_FAILURE);
         toast({
           variant: "destructive",
@@ -251,20 +398,20 @@ export default function Checkout() {
       }
     };
 
-    session.oncancel = (event) => {
-      console.log("[ApplePay Client] oncancel called - Payment cancelled");
-      fetch("/api/debug/applepay-client-log", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          step: "PAYMENT_CANCELLED",
-          event: event ? String(event) : "no event details"
-        })
-      }).catch(() => {});
+    session.oncancel = () => {
       setIsProcessing(false);
     };
 
     session.begin();
+  };
+
+  // Main Apple Pay handler - uses native when available
+  const handleApplePay = async () => {
+    if (useNativeApplePay && CapacitorApplePay) {
+      await handleNativeApplePay();
+    } else {
+      await handleWebApplePay();
+    }
   };
 
   const handlePayment = async () => {
