@@ -1505,6 +1505,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         store: parseInt(telrStoreId),
         authkey: telrAuthKey,
         tran: {
+          id: cartId, // Telr requires "id" for Cart ID in Remote API
           class: "ecom",
           type: "sale",
           method: "applepay",
