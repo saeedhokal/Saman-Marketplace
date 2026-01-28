@@ -122,6 +122,17 @@ app.get("/downloads/merchant.certSigningRequest", (_req, res) => {
   }
 });
 
+app.get("/downloads/cert_base64.txt", (_req, res) => {
+  const filePath = path.join(process.cwd(), "certs", "merchant_identity.pem");
+  if (fs.existsSync(filePath)) {
+    const cert = fs.readFileSync(filePath, 'utf-8');
+    const base64 = Buffer.from(cert).toString('base64');
+    res.type('text/plain').send(base64);
+  } else {
+    res.status(404).send("File not found");
+  }
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
