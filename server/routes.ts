@@ -1442,23 +1442,65 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     try {
-      // Log FULL token structure for debugging - need to see what we're receiving
+      // COMPREHENSIVE DEBUG: Log the FULL token structure to understand what Apple Pay is sending
+      console.log("[ApplePay] === COMPLETE TOKEN ANALYSIS ===");
+      console.log("[ApplePay] Raw token type:", typeof applePayToken);
       console.log("[ApplePay] FULL token received:", JSON.stringify(applePayToken, null, 2));
       console.log("[ApplePay] Token top-level keys:", JSON.stringify(Object.keys(applePayToken || {})));
-      if (applePayToken.paymentData) {
-        console.log("[ApplePay] PaymentData keys:", JSON.stringify(Object.keys(applePayToken.paymentData)));
-        console.log("[ApplePay] PaymentData.header keys:", JSON.stringify(Object.keys(applePayToken.paymentData?.header || {})));
+      
+      // Handle paymentData - it might be a string (UTF-8 serialized JSON) or an object
+      let paymentData = applePayToken.paymentData;
+      if (typeof paymentData === 'string') {
+        console.log("[ApplePay] paymentData is a STRING - parsing it");
+        try {
+          paymentData = JSON.parse(paymentData);
+        } catch (e) {
+          console.log("[ApplePay] Failed to parse paymentData string:", e);
+        }
       }
+      
+      if (paymentData) {
+        console.log("[ApplePay] PaymentData type:", typeof paymentData);
+        console.log("[ApplePay] PaymentData keys:", JSON.stringify(Object.keys(paymentData)));
+        console.log("[ApplePay] PaymentData.version:", paymentData.version);
+        console.log("[ApplePay] PaymentData.data (first 50 chars):", paymentData.data?.substring?.(0, 50));
+        console.log("[ApplePay] PaymentData.signature exists:", !!paymentData.signature);
+        if (paymentData.header) {
+          console.log("[ApplePay] PaymentData.header keys:", JSON.stringify(Object.keys(paymentData.header)));
+          console.log("[ApplePay] Header.ephemeralPublicKey exists:", !!paymentData.header.ephemeralPublicKey);
+          console.log("[ApplePay] Header.publicKeyHash exists:", !!paymentData.header.publicKeyHash);
+          console.log("[ApplePay] Header.transactionId exists:", !!paymentData.header.transactionId);
+        }
+      } else {
+        console.log("[ApplePay] WARNING: paymentData is EMPTY or UNDEFINED!");
+      }
+      
       if (applePayToken.paymentMethod) {
         console.log("[ApplePay] PaymentMethod:", JSON.stringify(applePayToken.paymentMethod));
+      } else {
+        console.log("[ApplePay] WARNING: paymentMethod is EMPTY or UNDEFINED!");
       }
       console.log("[ApplePay] TransactionIdentifier:", applePayToken.transactionIdentifier);
+      console.log("[ApplePay] === END TOKEN ANALYSIS ===");
       
-      // Send Apple Pay token to Telr Remote API
-      // Based on Telr exception report, the EXACT structure must be:
-      // applepay/token/paymentData/version, applepay/token/paymentData/data, etc.
-      // applepay/token/paymentMethod/displayName, applepay/token/paymentMethod/network, etc.
-      // applepay/token/transactionIdentifier
+      // Validate required fields before sending to Telr
+      if (!paymentData || !paymentData.version || !paymentData.data) {
+        console.log("[ApplePay] ERROR: Missing required paymentData fields");
+        console.log("[ApplePay] paymentData:", JSON.stringify(paymentData));
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Apple Pay token: missing paymentData fields",
+          debug: {
+            hasPaymentData: !!paymentData,
+            hasVersion: !!paymentData?.version,
+            hasData: !!paymentData?.data,
+          }
+        });
+      }
+      
+      // Telr Remote API for Apple Pay
+      // Based on exception report format: applepay/token/paymentData/version, etc.
+      // The token structure should be the FULL Apple Pay token from the device
       const telrRequest = {
         store: parseInt(telrStoreId),
         authkey: telrAuthKey,
@@ -1473,23 +1515,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           test: 0, // Live production mode
         },
         applepay: {
-          // The FULL Apple Pay token structure - nested under "token"
+          // Token contains the complete Apple Pay payment token
           token: {
-            paymentData: applePayToken.paymentData,
+            // paymentData contains: version, data, signature, header
+            paymentData: paymentData,
+            // paymentMethod contains: displayName, network, type
             paymentMethod: applePayToken.paymentMethod,
+            // Transaction identifier from Apple
             transactionIdentifier: applePayToken.transactionIdentifier,
-          },
-          // Also include billing contact info
-          billingContact: {
-            givenName: billingContact?.givenName || user?.firstName || "",
-            familyName: billingContact?.familyName || user?.lastName || "",
-            addressLines: billingContact?.addressLines || ["Dubai"],
-            locality: billingContact?.locality || "Dubai",
-            administrativeArea: billingContact?.administrativeArea || "Dubai",
-            countryCode: billingContact?.countryCode || "AE",
-            postalCode: billingContact?.postalCode || "00000",
-            emailAddress: billingContact?.emailAddress || user?.email || "",
-            phoneNumber: billingContact?.phoneNumber || user?.phone || "",
           },
         },
         customer: {
@@ -1508,26 +1541,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         },
       };
 
-      console.log("[ApplePay] Sending to Telr remote.json with token structure:", JSON.stringify({ 
-        ...telrRequest, 
-        applepay: { 
-          token: { 
-            paymentData: { version: applePayToken.paymentData?.version, data: "[ENCRYPTED]" },
-            paymentMethod: applePayToken.paymentMethod,
-            transactionIdentifier: applePayToken.transactionIdentifier ? "[SET]" : "[MISSING]"
-          }
-        } 
-      }));
-
-      // Create Basic Auth header (some Telr APIs require this in addition to body auth)
-      const basicAuth = Buffer.from(`${telrStoreId}:${telrAuthKey}`).toString('base64');
+      // Log what we're about to send (redacted for security)
+      console.log("[ApplePay] === TELR REQUEST STRUCTURE ===");
+      console.log("[ApplePay] store:", telrRequest.store);
+      console.log("[ApplePay] authkey (first 4 chars):", telrAuthKey?.substring(0, 4) + "...");
+      console.log("[ApplePay] tran:", JSON.stringify(telrRequest.tran));
+      console.log("[ApplePay] applepay.token.paymentData.version:", paymentData.version);
+      console.log("[ApplePay] applepay.token.paymentData.data length:", paymentData.data?.length);
+      console.log("[ApplePay] applepay.token.paymentData.signature exists:", !!paymentData.signature);
+      console.log("[ApplePay] applepay.token.paymentData.header:", paymentData.header ? JSON.stringify(Object.keys(paymentData.header)) : "MISSING");
+      console.log("[ApplePay] applepay.token.paymentMethod:", JSON.stringify(applePayToken.paymentMethod));
+      console.log("[ApplePay] applepay.token.transactionIdentifier:", applePayToken.transactionIdentifier ? "[SET]" : "[MISSING]");
+      console.log("[ApplePay] customer:", JSON.stringify(telrRequest.customer));
+      console.log("[ApplePay] === END TELR REQUEST ===");
       
       const telrResponse = await fetch("https://secure.telr.com/gateway/remote.json", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Accept": "application/json",
-          "Authorization": `Basic ${basicAuth}`,
         },
         body: JSON.stringify(telrRequest),
       });
