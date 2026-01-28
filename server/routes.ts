@@ -1668,43 +1668,60 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         hasTransactionId: !!applePayToken?.transactionIdentifier,
       };
 
-      // CRITICAL: Must check status.code === "3" (authorized/captured) before granting credits
-      // Just having an order.ref is NOT enough - the payment might still be pending or failed
-      const statusCode = telrData.order?.status?.code;
+      // Telr Remote API v2 returns different format than Hosted Page
+      // Remote API: transaction.status = "A" (Authorised), transaction.ref = "xxx"
+      // Hosted Page: order.status.code = "3", order.ref = "xxx"
+      const transactionStatus = telrData.transaction?.status;
+      const transactionRef = telrData.transaction?.ref;
+      const transactionMessage = telrData.transaction?.message;
+      
+      // Also check old format for backwards compatibility
+      const orderStatusCode = telrData.order?.status?.code;
       const orderRef = telrData.order?.ref;
       
-      console.log("[ApplePay] Status code:", statusCode, "Order ref:", orderRef);
+      console.log("[ApplePay] Telr response - transaction.status:", transactionStatus, 
+                  "transaction.ref:", transactionRef, "transaction.message:", transactionMessage,
+                  "order.status.code:", orderStatusCode, "order.ref:", orderRef);
 
-      if (statusCode === "3" || statusCode === 3) {
-        // Payment ACTUALLY successful (code 3 = authorized/captured) - add credits
+      // Check for success: Remote API v2 uses transaction.status = "A" for Authorised
+      const isAuthorised = transactionStatus === "A" || 
+                           transactionMessage === "Authorised" ||
+                           orderStatusCode === "3" || 
+                           orderStatusCode === 3;
+      
+      const finalRef = transactionRef || orderRef;
+
+      if (isAuthorised && finalRef) {
+        // Payment successful - add credits
         const category = pkg.category as "Spare Parts" | "Automotive";
         await storage.addCredits(userId, category, totalCredits);
-        await storage.updateTransactionReference(transaction.id, orderRef);
+        await storage.updateTransactionReference(transaction.id, finalRef);
         await storage.updateTransactionStatus(transaction.id, "completed");
 
         const newCredits = await storage.getUserCredits(userId);
-        console.log("[ApplePay] Payment successful, credits added:", totalCredits, category);
+        console.log("[ApplePay] Payment successful, credits added:", totalCredits, category, "ref:", finalRef);
         return res.json({
           success: true,
           message: `${totalCredits} ${category} credits added to your account!`,
           sparePartsCredits: newCredits.sparePartsCredits,
           automotiveCredits: newCredits.automotiveCredits,
         });
-      } else if (statusCode === "2" || statusCode === 2) {
-        // Payment pending - save reference but don't add credits yet
+      } else if (orderStatusCode === "2" || orderStatusCode === 2) {
+        // Payment pending (hosted page format)
         console.log("[ApplePay] Payment pending, not adding credits yet");
-        if (orderRef) {
-          await storage.updateTransactionReference(transaction.id, orderRef);
+        if (finalRef) {
+          await storage.updateTransactionReference(transaction.id, finalRef);
         }
         return res.json({
           success: false,
           pending: true,
           message: "Payment is being processed. Credits will be added once confirmed.",
-          orderRef: orderRef,
+          orderRef: finalRef,
         });
       } else {
         // Payment failed or declined
-        console.error("[ApplePay] Payment failed - status:", statusCode, "error:", telrData.error, "full response:", JSON.stringify(telrData));
+        console.error("[ApplePay] Payment failed - transaction:", JSON.stringify(telrData.transaction), 
+                      "order:", JSON.stringify(telrData.order), "error:", telrData.error);
         await storage.updateTransactionStatus(transaction.id, "failed");
         
         // Build detailed error message for debugging
@@ -1713,16 +1730,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           errorDetail = telrData.error.message;
         } else if (telrData.error?.note) {
           errorDetail = telrData.error.note;
+        } else if (transactionMessage) {
+          errorDetail = transactionMessage;
         } else if (telrData.message) {
           errorDetail = telrData.message;
         } else {
-          errorDetail = `Apple Pay failed (status: ${statusCode || 'unknown'})`;
+          errorDetail = `Apple Pay failed (status: ${transactionStatus || orderStatusCode || 'unknown'})`;
         }
         
         return res.status(400).json({
           success: false,
           message: errorDetail,
-          debug: { statusCode, orderRef, error: telrData.error, raw: telrData },
+          debug: { transactionStatus, transactionRef, orderStatusCode, orderRef, error: telrData.error },
         });
       }
     } catch (error) {
