@@ -1377,8 +1377,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
                 reject(new Error('Invalid JSON response from Apple'));
               }
             } else {
-              console.error("[ApplePay] Apple response:", response.statusCode, data);
-              reject(new Error(`Apple validation failed: ${response.statusCode}`));
+              console.error("[ApplePay] Apple response status:", response.statusCode);
+              console.error("[ApplePay] Apple response body:", data);
+              reject(new Error(`Apple validation failed: ${response.statusCode} - ${data}`));
             }
           });
         });
