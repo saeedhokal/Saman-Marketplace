@@ -307,6 +307,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // PKCS8 format private key (alternative format some processors need)
+  app.get("/download/privatePem_pkcs8.pem", (req, res) => {
+    const filePath = path.resolve(process.cwd(), "certs", "privatePem_pkcs8.pem");
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, "privatePem_pkcs8.pem");
+    } else {
+      res.status(404).send("Private key not found");
+    }
+  });
+
+  // Original .p12 file (contains both cert and key)
+  app.get("/download/apple_pay_key.p12", (req, res) => {
+    const filePath = path.resolve(process.cwd(), "certs", "apple_pay_key.p12");
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, "apple_pay_key.p12");
+    } else {
+      res.status(404).send("P12 file not found");
+    }
+  });
+
   // Helper to add cache-busting timestamp to profile image URLs
   function addCacheBuster(url: string | null): string | null {
     if (!url) return null;
