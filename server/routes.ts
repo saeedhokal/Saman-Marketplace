@@ -1363,36 +1363,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
 
     const merchantId = process.env.APPLE_PAY_MERCHANT_ID || "merchant.saeed.saman";
+    const certBase64 = process.env.APPLE_PAY_CERT;
+    const keyBase64 = process.env.APPLE_PAY_KEY;
     // Always use thesamanapp.com - this is the domain registered with Apple Pay
     const domain = "thesamanapp.com";
     
-    // Read certificate and key from files (using new certificate created Jan 28 2026)
-    const fs = await import('fs');
-    const path = await import('path');
-    
-    let cert: string;
-    let key: string;
-    
-    try {
-      cert = fs.readFileSync(path.join(process.cwd(), 'certs/new_cert.pem'), 'utf-8');
-      key = fs.readFileSync(path.join(process.cwd(), 'certs/merchant_identity_key.pem'), 'utf-8');
-    } catch (fileErr: any) {
-      logApplePaySession("ERROR_READING_CERT_FILES", { error: fileErr.message });
-      console.error("[ApplePay] Error reading cert files:", fileErr.message);
-      return res.status(500).json({ 
-        message: "Apple Pay certificate files not found.",
-        setupRequired: true
-      });
-    }
-    
-    if (!cert || !key) {
-      logApplePaySession("ERROR_MISSING_CONFIG", { cert: !!cert, key: !!key });
-      console.error("[ApplePay] Missing certificate or key");
+    if (!certBase64 || !keyBase64) {
+      logApplePaySession("ERROR_MISSING_CONFIG", { merchantId: !!merchantId, cert: !!certBase64, key: !!keyBase64 });
+      console.error("[ApplePay] Missing configuration:", { merchantId: !!merchantId, cert: !!certBase64, key: !!keyBase64 });
       return res.status(400).json({ 
         message: "Apple Pay not fully configured. Certificate and key required.",
         setupRequired: true
       });
     }
+
+    // Decode certificates from base64
+    const cert = Buffer.from(certBase64, 'base64').toString('utf-8');
+    const key = Buffer.from(keyBase64, 'base64').toString('utf-8');
     
     // Log request details for debugging
     logApplePaySession("SENDING_TO_APPLE", { 
