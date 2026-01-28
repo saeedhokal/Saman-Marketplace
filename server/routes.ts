@@ -1416,8 +1416,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
 
     const telrStoreId = process.env.TELR_STORE_ID;
-    // Apple Pay uses Remote API which has a DIFFERENT auth key than Hosted Page
-    const telrAuthKey = process.env.TELR_REMOTE_AUTH_KEY || process.env.TELR_AUTH_KEY;
+    // Apple Pay (Wallets) uses a DIFFERENT auth key than Hosted Page or Remote API
+    const telrAuthKey = process.env.TELR_WALLETS_AUTH_KEY || process.env.TELR_REMOTE_AUTH_KEY || process.env.TELR_AUTH_KEY;
     
     if (!telrStoreId || !telrAuthKey) {
       return res.status(400).json({ message: "Payment gateway not configured" });
