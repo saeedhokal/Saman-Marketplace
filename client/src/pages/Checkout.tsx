@@ -177,7 +177,35 @@ export default function Checkout() {
       }
     };
 
+    // Log when payment method is selected (user picks a card)
+    session.onpaymentmethodselected = (event) => {
+      console.log("[ApplePay Client] onpaymentmethodselected called");
+      fetch("/api/debug/applepay-client-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          step: "PAYMENT_METHOD_SELECTED",
+          paymentMethod: event.paymentMethod 
+        })
+      }).catch(() => {});
+      // Must call completePaymentMethodSelection with the current total
+      session.completePaymentMethodSelection({
+        newTotal: paymentRequest.total,
+      });
+    };
+
     session.onpaymentauthorized = async (event) => {
+      console.log("[ApplePay Client] onpaymentauthorized called - Face ID completed");
+      fetch("/api/debug/applepay-client-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          step: "PAYMENT_AUTHORIZED",
+          hasToken: !!event.payment?.token,
+          tokenKeys: event.payment?.token ? Object.keys(event.payment.token) : [],
+        })
+      }).catch(() => {});
+      
       try {
         const response = await fetch("/api/applepay/process", {
           method: "POST",
@@ -223,7 +251,16 @@ export default function Checkout() {
       }
     };
 
-    session.oncancel = () => {
+    session.oncancel = (event) => {
+      console.log("[ApplePay Client] oncancel called - Payment cancelled");
+      fetch("/api/debug/applepay-client-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          step: "PAYMENT_CANCELLED",
+          event: event ? String(event) : "no event details"
+        })
+      }).catch(() => {});
       setIsProcessing(false);
     };
 
