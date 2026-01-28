@@ -111,6 +111,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       logs: applePaySessionLogs.slice(-20)
     });
   });
+  
+  // Endpoint for client to report Apple Pay status (for debugging iOS app)
+  app.post("/api/debug/applepay-client-log", (req, res) => {
+    logApplePaySession("CLIENT_LOG", req.body);
+    res.json({ ok: true });
+  });
 
   app.get("/api/health", async (req, res) => {
     try {

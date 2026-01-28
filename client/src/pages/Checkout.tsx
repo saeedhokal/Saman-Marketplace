@@ -129,10 +129,44 @@ export default function Checkout() {
 
         const merchantSession = await response.json();
         console.log("[ApplePay Client] Merchant session received, keys:", Object.keys(merchantSession));
-        session.completeMerchantValidation(merchantSession);
-        console.log("[ApplePay Client] completeMerchantValidation called successfully");
+        
+        // Log to server for debugging
+        fetch("/api/debug/applepay-client-log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            step: "SESSION_RECEIVED",
+            keys: Object.keys(merchantSession),
+            domainName: merchantSession.domainName,
+            displayName: merchantSession.displayName,
+            merchantId: merchantSession.merchantIdentifier?.substring(0, 20),
+          })
+        }).catch(() => {});
+        
+        try {
+          session.completeMerchantValidation(merchantSession);
+          console.log("[ApplePay Client] completeMerchantValidation called successfully");
+          fetch("/api/debug/applepay-client-log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ step: "COMPLETE_VALIDATION_SUCCESS" })
+          }).catch(() => {});
+        } catch (validationError: any) {
+          console.error("[ApplePay Client] completeMerchantValidation THREW:", validationError);
+          fetch("/api/debug/applepay-client-log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ step: "COMPLETE_VALIDATION_ERROR", error: validationError?.message || String(validationError) })
+          }).catch(() => {});
+          throw validationError;
+        }
       } catch (error: any) {
         console.error("[ApplePay Client] Merchant validation failed:", error?.message || error);
+        fetch("/api/debug/applepay-client-log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ step: "VALIDATION_FAILED", error: error?.message || String(error) })
+        }).catch(() => {});
         session.abort();
         setIsProcessing(false);
         toast({
