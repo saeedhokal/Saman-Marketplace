@@ -1,0 +1,109 @@
+Dear Saeed,
+For Direct Applepay integration the key differs, Kindly use the below indicated and retry.
+
+Best Regards,
+Rahul Upadhayay
+UAE +971 4314 6999 IND +91 22-25777914 Ext: 6800
+TECHNICAL SUPPORT & INTEGRATION
+
+	
+saeed hokal
+
+Jan 28, 2026, 3:28 PM GMT+4
+
+"Hi Rahul,
+I tested Apple Pay and received 'Authentication key mismatch' (Exception ID: 3393812).
+As you can see in the exception log, the Apple Pay token is complete:
+paymentData/version: EC_v1
+paymentData/data: 428 characters
+paymentData/signature: 2948 characters
+All header fields present
+paymentMethod: Visa 3705
+This means Apple successfully encrypted the payment. The 'Authentication key mismatch' error means Telr's system cannot decrypt it.
+Please verify that both certificate files are correctly configured for Store ID 32400:
+Certificate: https://thesamanapp.com/download/certPem.pem
+Private Key: https://thesamanapp.com/download/privatePem.pem
+These files match (I verified the public key hash). The issue is in how they're configured on your system.
+Thank you"
+Saeed
+	
+Rahul Upadhayay (Telr)
+
+Jan 28, 2026, 1:43 PM GMT+4
+
+Dear Saeed,
+Thank you for sharing the applepay certificate; it seems fine, and we have uploaded the same for your Store ID: 32400. Please note that since we enabled the Apple certificate setup hence the Applepay option from Telr hosted payment page has been disabled now.
+ 
+Please refer to the details below for implementing the Direct Apple Pay on your website checkout:-
+  
+For your reference, please find the Apple side API and Telr Apple payload sample.
+Apple Pay on the Web setup:
+https://developer.apple.com/help/account/capabilities/configure-apple-pay-on-the-web
+Sending Apple Pay transactions to Telr:
+https://docs.telr.com/reference/post_remote_applepay
+Telr authorisation response codes:
+https://docs.telr.com/reference/authorisation-response-codes
+  
+If you face any difficulty during the setup, please let us know and we can connect on a quick call to assist.
+Best Regards,
+Rahul Upadhayay
+UAE +971 4314 6999 IND +91 22-25777914 Ext: 6800
+TECHNICAL SUPPORT & INTEGRATION
+
+	
+saeed hokal
+
+Jan 28, 2026, 1:30 PM GMT+4
+
+Hello Rahul,
+I've attached the required files
+​certPem.pem​
+
+i've attached one is one drive.
+ let me know if u need anything else.
+Saeed
+Attachment(s)
+privatePem.pem
+
+	
+Rahul Upadhayay (Telr)
+
+Jan 28, 2026, 9:11 AM GMT+4
+
+Dear Saeed,
+We need the key and the payment processing certificate in ".PEM" format, as indicated in the image below.
+
+ 
+The provided certificate and key file must be in a readable format, like below.
+
+ 
+Kindly convert them and share.
+Best Regards,
+Rahul Upadhayay
+UAE +971 4314 6999 IND +91 22-25777914 Ext: 6800
+TECHNICAL SUPPORT & INTEGRATION
+
+	
+saeed hokal
+
+Jan 28, 2026, 12:54 AM GMT+4
+
+Hi Telr Support,
+Please update my Apple Pay certificate for Store ID 32400.
+I'm attaching the new certificate files:
+apple_pay_new.cer (certificate)
+apple_pay_key.p12 (private key, password: saman123)
+These are for Merchant ID: merchant.saeed.saman
+After updating, please confirm so I can test the Apple Pay integration.
+Thank you,
+Saeed Hokal
+Store ID: 32400
+​​​apple_pay_new.cer​
+
+PS One is uploaded to one drive because .cer cannot be attIchment while key .p12 is attached
+my issue is native apple pay keeps failing on the new app i am making but it worked previously on the AWS one.
+Attachment(s)
+apple_pay_key.p12
+
+This email is a service from Telr.
+[YG2KGN-6MD02]
