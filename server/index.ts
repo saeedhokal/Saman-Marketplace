@@ -113,6 +113,15 @@ app.get("/downloads/apple_pay_key.p12", (_req, res) => {
   }
 });
 
+app.get("/downloads/merchant.certSigningRequest", (_req, res) => {
+  const filePath = path.join(process.cwd(), "certs", "merchant_identity.csr");
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, "merchant.certSigningRequest");
+  } else {
+    res.status(404).send("File not found");
+  }
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
