@@ -278,15 +278,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Serve Apple Pay domain verification file
-  app.get("/.well-known/apple-developer-merchantid-domain-association.txt", (req, res) => {
-    const filePath = path.resolve(process.cwd(), ".well-known", "apple-developer-merchantid-domain-association.txt");
-    if (fs.existsSync(filePath)) {
-      res.type("text/plain").send(fs.readFileSync(filePath, "utf8"));
-    } else {
-      res.status(404).send("Not found");
-    }
-  });
+  // Apple Pay domain verification is handled in server/index.ts with embedded content
 
   // Download endpoints for Apple Pay PEM files (for Telr)
   app.get("/download/certPem.pem", (req, res) => {
