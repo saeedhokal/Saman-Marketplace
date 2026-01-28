@@ -1,0 +1,124 @@
+Got it — this one is very clear 👍
+This is an Apple Pay domain validation error, not a card or app bug.
+
+What the error actually means
+
+“merchantId … not registered for domain = thesamanapp.com”
+
+Apple is saying:
+➡️ Your Apple Pay Merchant ID is NOT authorized to be used on thesamanapp.com
+
+So when your app tries to create an Apple Pay session, Apple rejects it at validation step.
+
+Why this happens (common causes)
+
+One (or more) of these is missing or wrong:
+
+Domain not added in Apple Developer
+
+Your Merchant ID exists
+
+But thesamanapp.com is not registered under it
+
+Apple Pay verification file missing or wrong
+
+File not uploaded
+
+Wrong path
+
+HTTPS issue
+
+Wrong content
+
+Mismatch between backend + Apple Merchant ID
+
+Backend uses one Merchant ID
+
+Apple Developer dashboard has another
+
+Exact fix (step-by-step, do this carefully)
+1️⃣ Go to Apple Developer
+
+https://developer.apple.com
+
+Certificates, IDs & Profiles
+
+Merchant IDs
+
+Select:
+
+merchant.com.YOURNAME (the one used by Telr)
+
+2️⃣ Add your domain
+
+Click Apple Pay
+
+Under Merchant Domains
+
+Add:
+
+thesamanapp.com
+
+
+⚠️ Must be exact, no www unless your backend uses it
+
+3️⃣ Upload the Apple verification file
+
+Apple gives you a file named:
+
+apple-developer-merchantid-domain-association
+
+
+Upload it exactly here:
+
+https://thesamanapp.com/.well-known/apple-developer-merchantid-domain-association
+
+
+✅ No extension
+✅ No redirect
+✅ HTTPS required
+✅ Publicly accessible
+
+Test it in browser — it must download or show raw text.
+
+4️⃣ If you’re using Telr (important)
+
+Since you mentioned Telr before:
+
+Telr must be configured with the same Merchant ID
+
+Telr backend calls Apple on your behalf
+
+If Telr has a different merchantId → validation fails
+
+👉 Ask Telr support to re-confirm Apple Pay merchant + domain
+
+Why card payments work but Apple Pay fails
+
+Because:
+
+Cards = Telr only
+
+Apple Pay = Apple + Telr + your domain
+
+Apple is stricter.
+
+Quick checklist ✅
+
+ Merchant ID correct
+
+ Domain added in Apple Developer
+
+ .well-known file accessible
+
+ HTTPS valid
+
+ Telr using same Merchant ID
+
+If you want, tell me:
+
+Are you using web Apple Pay, in-app (iOS), or both?
+
+Is Telr handling Apple Pay server-side?
+
+I’ll pinpoint exactly which step is failing so you don’t go back and forth with Telr or Apple.
