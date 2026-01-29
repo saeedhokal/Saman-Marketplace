@@ -35,9 +35,9 @@ export const translations = {
     spareParts: "Spare Parts",
     forYou: "For you",
     recentPosts: "Recent Posts",
-    buyAndSell: "Buy & Sell",
-    sparePartsAndCars: "Spare Parts & Cars",
-    uaeMarketplace: "UAE's Marketplace",
+    buyAndSell: "Your Next Ride",
+    sparePartsAndCars: "Starts Here",
+    uaeMarketplace: "UAE'S MARKETPLACE",
     startSelling: "Start Selling",
     
     // Auth
@@ -179,8 +179,8 @@ export const translations = {
     spareParts: "قطع غيار",
     forYou: "لك",
     recentPosts: "أحدث الإعلانات",
-    buyAndSell: "بيع واشتري",
-    sparePartsAndCars: "قطع غيار وسيارات",
+    buyAndSell: "سيارتك القادمة",
+    sparePartsAndCars: "تبدأ هنا",
     uaeMarketplace: "سوق الإمارات",
     startSelling: "ابدأ البيع",
     
