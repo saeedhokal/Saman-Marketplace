@@ -11,7 +11,6 @@ import { PullToRefresh } from "@/components/PullToRefresh";
 import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 import dubaiSkylineBanner from "@/assets/images/dubai-skyline-banner.jpg";
-import samanLogo from "@/assets/images/saman-logo.jpg";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -49,16 +48,12 @@ export default function Landing() {
   return (
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
       <div className="container mx-auto px-4 pt-3">
-        <div className="flex items-center justify-between mb-4 relative">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-muted-foreground text-sm">
               {user ? `${t('hey')}, ${user.firstName || 'there'}` : `${t('hey')}, ${t('guest')}`}
             </p>
             <h1 className="text-xl font-bold text-foreground">{t('welcome')}</h1>
-          </div>
-          {/* Logo - centered in header */}
-          <div className="flex-1 flex items-center justify-center">
-            <img src={samanLogo} alt="Saman" className="h-10 w-auto max-w-[120px] object-contain" />
           </div>
           <div className="flex items-center gap-3">
             <button 
