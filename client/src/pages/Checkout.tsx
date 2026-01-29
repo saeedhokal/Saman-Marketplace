@@ -130,7 +130,7 @@ export default function Checkout() {
     
     setIsProcessing(true);
     const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
-    const amount = (pkg.price / 100).toFixed(2);
+    const amount = pkg.price.toString(); // Price is already in AED
     
     console.log("[ApplePay Native] Starting native Apple Pay");
     fetch("/api/debug/applepay-client-log", {
@@ -306,7 +306,7 @@ export default function Checkout() {
     
     setIsProcessing(true);
     const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
-    const amount = (pkg.price / 100).toFixed(2);
+    const amount = pkg.price.toString(); // Price is already in AED
 
     const paymentRequest: ApplePayJS.ApplePayPaymentRequest = {
       countryCode: "AE",
@@ -542,7 +542,7 @@ export default function Checkout() {
             </div>
             <div className="border-t pt-3 flex justify-between items-center">
               <span className="font-semibold">Total</span>
-              <span className="text-xl font-bold text-accent">{(pkg.price / 100).toFixed(2)} AED</span>
+              <span className="text-xl font-bold text-accent">{pkg.price} AED</span>
             </div>
           </CardContent>
         </Card>
@@ -629,7 +629,7 @@ export default function Checkout() {
               ) : (
                 <CreditCard className="h-5 w-5 mr-2" />
               )}
-              Pay {(pkg.price / 100).toFixed(2)} AED
+              Pay {pkg.price} AED
             </>
           )}
         </Button>

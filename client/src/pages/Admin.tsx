@@ -658,11 +658,11 @@ export default function Admin() {
                               <label className="text-xs text-muted-foreground">Price (AED)</label>
                               <Input
                                 type="number"
-                                step="0.01"
-                                value={(editingPackage.price / 100).toFixed(2)}
-                                onChange={(e) => setEditingPackage({ ...editingPackage, price: Math.round(parseFloat(e.target.value) * 100) || 0 })}
+                                step="1"
+                                value={editingPackage.price}
+                                onChange={(e) => setEditingPackage({ ...editingPackage, price: parseInt(e.target.value) || 0 })}
                                 className="h-8"
-                                placeholder="e.g. 10.00"
+                                placeholder="e.g. 30"
                               />
                             </div>
                           </div>
@@ -721,7 +721,7 @@ export default function Admin() {
                               </Badge>
                             </div>
                             <div className="text-sm text-muted-foreground mt-1">
-                              <span className="font-medium text-accent">{(pkg.price / 100).toFixed(2)} AED</span>
+                              <span className="font-medium text-accent">{pkg.price} AED</span>
                               {" - "}
                               {pkg.credits} credit{pkg.credits > 1 ? "s" : ""}
                               {pkg.bonusCredits > 0 && <span className="text-green-600"> +{pkg.bonusCredits} free</span>}
@@ -1342,7 +1342,7 @@ function ListingCard({
                 </p>
                 {listing.price && (
                   <p className="text-sm font-bold text-accent mt-0.5">
-                    AED {(listing.price / 100).toLocaleString()}
+                    AED {Math.floor(listing.price / 100)}
                   </p>
                 )}
               </div>

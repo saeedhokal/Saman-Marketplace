@@ -915,7 +915,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const cartId = `SAMAN-${userId}-${packageId}-${Date.now()}`;
       const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
-      const amountInAED = (pkg.price / 100).toFixed(2);
+      const amountInAED = pkg.price.toString(); // Price is already in AED
       const baseUrl = "https://thesamanapp.com";
       
       console.log(`[CHECKOUT-REDIRECT] Creating payment: ${amountInAED} AED for ${pkg.name}`);
@@ -1024,7 +1024,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       
       const cartId = `TEST-${Date.now()}`;
-      const amountInAED = (activePkg.price / 100).toFixed(2);
+      const amountInAED = activePkg.price.toString(); // Price is already in AED
       const baseUrl = "https://thesamanapp.com";
       
       console.log(`[TEST-CHECKOUT] Package: ${activePkg.name}, Amount: ${amountInAED} AED`);
@@ -1228,7 +1228,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
     try {
       // Use Telr JSON format (same as old working app)
-      const amountInAED = (pkg.price / 100).toFixed(2);
+      const amountInAED = pkg.price.toString(); // Price is already in AED
       console.log(`[TELR] Creating order: cart=${cartId}, amount=${amountInAED} AED, store=${telrStoreId}`);
       
       // JSON format matching the old working app EXACTLY
@@ -1599,7 +1599,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           type: "sale",
           method: "applepay",
           cartid: cartId,
-          amount: (pkg.price / 100).toFixed(2),
+          amount: pkg.price.toString(), // Price is already in AED
           currency: "AED",
           description: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
           test: 0, // Live production mode
