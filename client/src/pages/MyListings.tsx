@@ -135,7 +135,7 @@ export default function MyListings() {
   }, []);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20 safe-area-top">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">
