@@ -56,9 +56,9 @@ export default function Landing() {
             </p>
             <h1 className="text-xl font-bold text-foreground">{t('welcome')}</h1>
           </div>
-          {/* Logo - visible on larger screens */}
-          <div className="hidden sm:flex items-center justify-center flex-1">
-            <img src={samanLogo} alt="Saman" className="h-10 object-contain" />
+          {/* Logo - centered in header */}
+          <div className="flex-1 flex items-center justify-center">
+            <img src={samanLogo} alt="Saman" className="h-10 w-auto max-w-[120px] object-contain" />
           </div>
           <div className="flex items-center gap-3">
             <button 
