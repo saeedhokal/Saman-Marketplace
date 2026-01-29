@@ -47,6 +47,12 @@
         <true/>
         <key>ITSAppUsesNonExemptEncryption</key>
         <false/>
+        <key>NSCameraUsageDescription</key>
+        <string>Saman Marketplace needs camera access to take photos for your listings</string>
+        <key>NSPhotoLibraryUsageDescription</key>
+        <string>Saman Marketplace needs photo library access to upload images for your listings</string>
+        <key>NSPhotoLibraryAddUsageDescription</key>
+        <string>Saman Marketplace needs permission to save photos to your library</string>
         <key>UIBackgroundModes</key>
         <array>
                 <string>remote-notification</string>
