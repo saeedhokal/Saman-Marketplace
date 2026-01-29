@@ -193,6 +193,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProductsBySeller(sellerIds: string[]): Promise<number> {
+    // First, get all product IDs that will be deleted
+    const productsToDelete = await db.select({ id: products.id })
+      .from(products)
+      .where(or(...sellerIds.map(id => eq(products.sellerId, id))));
+    
+    const productIds = productsToDelete.map(p => p.id);
+    
+    if (productIds.length === 0) {
+      return 0;
+    }
+    
+    // Delete related records from userViews and favorites first
+    await db.delete(userViews).where(or(...productIds.map(id => eq(userViews.productId, id))));
+    await db.delete(favorites).where(or(...productIds.map(id => eq(favorites.productId, id))));
+    
+    // Now delete the products
     const result = await db.delete(products)
       .where(or(...sellerIds.map(id => eq(products.sellerId, id))))
       .returning();

@@ -2196,25 +2196,65 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Admin: Broadcast push notification to all users
   app.post("/api/admin/broadcast", isAuthenticated, isAdmin, async (req, res) => {
-    const { title, body } = req.body;
+    const { title, body, scheduleType, delayMinutes, scheduledDate, scheduledTime } = req.body;
     
     if (!title || !body) {
       return res.status(400).json({ message: "Title and body are required" });
     }
     
     try {
-      console.log('[BROADCAST] Starting broadcast:', { title, body });
-      const result = await broadcastPushNotification({ title, body });
-      console.log('[BROADCAST] Result:', result);
+      // Calculate delay in milliseconds based on schedule type
+      let delayMs = 0;
+      let scheduledFor: Date | null = null;
       
-      res.json({ 
-        success: true, 
-        sent: result.sent, 
-        failed: result.failed,
-        savedCount: result.saved,
-        message: `Saved to ${result.saved} inboxes, sent to ${result.sent} devices`,
-        version: SERVER_VERSION
-      });
+      if (scheduleType === "delay" && delayMinutes > 0) {
+        delayMs = delayMinutes * 60 * 1000;
+        scheduledFor = new Date(Date.now() + delayMs);
+        console.log(`[BROADCAST] Scheduling with ${delayMinutes} minute delay, will send at:`, scheduledFor);
+      } else if (scheduleType === "scheduled" && scheduledDate && scheduledTime) {
+        const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+        delayMs = scheduledDateTime.getTime() - Date.now();
+        if (delayMs < 0) {
+          return res.status(400).json({ message: "Scheduled time must be in the future" });
+        }
+        scheduledFor = scheduledDateTime;
+        console.log(`[BROADCAST] Scheduling for specific time:`, scheduledFor);
+      }
+      
+      if (delayMs > 0) {
+        // Schedule the broadcast for later
+        setTimeout(async () => {
+          try {
+            console.log('[BROADCAST] Executing scheduled broadcast:', { title, body });
+            const result = await broadcastPushNotification({ title, body });
+            console.log('[BROADCAST] Scheduled broadcast result:', result);
+          } catch (error) {
+            console.error('[BROADCAST] Scheduled broadcast error:', error);
+          }
+        }, delayMs);
+        
+        res.json({ 
+          success: true, 
+          scheduled: true,
+          scheduledFor: scheduledFor?.toISOString(),
+          message: `Notification scheduled for ${scheduledFor?.toLocaleString()}`,
+          version: SERVER_VERSION
+        });
+      } else {
+        // Send immediately
+        console.log('[BROADCAST] Starting broadcast:', { title, body });
+        const result = await broadcastPushNotification({ title, body });
+        console.log('[BROADCAST] Result:', result);
+        
+        res.json({ 
+          success: true, 
+          sent: result.sent, 
+          failed: result.failed,
+          savedCount: result.saved,
+          message: `Saved to ${result.saved} inboxes, sent to ${result.sent} devices`,
+          version: SERVER_VERSION
+        });
+      }
     } catch (error) {
       console.error('[BROADCAST] Error:', error);
       res.status(500).json({ 
