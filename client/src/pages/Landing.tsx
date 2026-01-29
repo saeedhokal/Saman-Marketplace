@@ -45,7 +45,7 @@ export default function Landing() {
   }, [refetchRecent, refetchRecommended]);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20 safe-area-top">
       <div className="container mx-auto px-4 pt-3">
         <div className="flex items-center justify-between mb-4">
           <div>

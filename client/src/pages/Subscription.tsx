@@ -94,7 +94,7 @@ export default function Subscription() {
   const pricePerCredit = (pkg: SubscriptionPackage) => ((pkg.price / 100) / totalCredits(pkg)).toFixed(0);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 safe-area-top">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">

@@ -159,7 +159,7 @@ export default function Home() {
   };
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20 safe-area-top">
       <div className="container mx-auto px-4 pt-4">
         <div className="flex items-center border border-border rounded-full px-4 py-2 mb-4">
           <Search className="h-5 w-5 text-foreground/70 mr-3" />
