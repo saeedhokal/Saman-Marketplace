@@ -1,0 +1,50 @@
+
+> Task :capacitor-splash-screen:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :jackobo-capacitor-apple-pay:extractDeepLinksDebug
+> Task :capacitor-splash-screen:processDebugManifest
+> Task :capacitor-push-notifications:processDebugManifest
+> Task :capacitor-android:processDebugManifest
+> Task :capacitor-cordova-android-plugins:processDebugManifest
+> Task :jackobo-capacitor-apple-pay:processDebugManifest
+> Task :capacitor-android:compileDebugLibraryResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :capacitor-android:parseDebugLocalResources
+> Task :capacitor-cordova-android-plugins:compileDebugLibraryResources
+> Task :capacitor-cordova-android-plugins:parseDebugLocalResources
+> Task :capacitor-push-notifications:compileDebugLibraryResources
+> Task :capacitor-cordova-android-plugins:generateDebugRFile
+> Task :capacitor-splash-screen:compileDebugLibraryResources
+> Task :capacitor-push-notifications:parseDebugLocalResources
+> Task :capacitor-android:generateDebugRFile
+> Task :capacitor-splash-screen:parseDebugLocalResources
+> Task :jackobo-capacitor-apple-pay:compileDebugLibraryResources
+> Task :capacitor-push-notifications:generateDebugRFile
+> Task :capacitor-splash-screen:generateDebugRFile
+> Task :capacitor-android:javaPreCompileDebug
+> Task :jackobo-capacitor-apple-pay:parseDebugLocalResources
+> Task :capacitor-cordova-android-plugins:javaPreCompileDebug
+> Task :jackobo-capacitor-apple-pay:generateDebugRFile
+> Task :capacitor-android:compileDebugJavaWithJavac FAILED
+[Incubating] Problems report is available at: file:///Users/builder/clone/android/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':capacitor-android:compileDebugJavaWithJavac'.
+> error: invalid source release: 21
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 10m 24s
+62 actionable tasks: 62 executed
+
+
+Build failed :|
+Step 6 script `Build Android Debug APK` exited with status code 1

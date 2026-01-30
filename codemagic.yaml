@@ -101,7 +101,7 @@ workflows:
     environment:
       vars:
         PACKAGE_NAME: "com.saeed.saman"
-      java: 17
+      java: 21
       node: 20
     
     triggering:
