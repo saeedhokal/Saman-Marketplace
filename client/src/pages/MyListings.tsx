@@ -292,7 +292,7 @@ export default function MyListings() {
         )}
       </div>
 
-      <div className="fixed bottom-20 left-0 right-0 p-4 pointer-events-none">
+      <div className="fixed left-0 right-0 p-4 pointer-events-none" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
         <Link href="/sell" className="pointer-events-auto">
           <Button className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-medium rounded-full shadow-lg" data-testid="button-add-listing">
             Add Listing
