@@ -88,7 +88,7 @@ export default function Landing() {
 
         {/* Dubai Skyline Hero Banner */}
         <div className="mb-6">
-          <div className="relative rounded-2xl overflow-hidden">
+          <div className="relative rounded-2xl overflow-hidden border-2 border-slate-600/40">
             {/* Background Image */}
             <img 
               src={dubaiSkylineBanner} 
@@ -96,7 +96,7 @@ export default function Landing() {
               className="absolute inset-0 w-full h-full object-cover"
             />
             {/* Dark Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
             
             {/* Content */}
             <div className="relative h-44 sm:h-52">
@@ -126,11 +126,12 @@ export default function Landing() {
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Link href="/categories?tab=automotive">
             <div 
-              className="relative h-28 rounded-xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 gradient-dark-blue border border-slate-500/40 hover:border-slate-400/60 transition-colors"
+              className="relative h-24 rounded-2xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-slate-500/50 hover:border-slate-400/70 transition-all"
+              style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #0f2744 50%, #1a3550 100%)' }}
               data-testid="card-automotive"
             >
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 bg-orange-500">
-                <Car className="h-6 w-6 text-white" />
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-2 bg-orange-500">
+                <Car className="h-5 w-5 text-white" />
               </div>
               <span className="text-white font-bold text-sm">{t('automotive')}</span>
             </div>
@@ -138,11 +139,12 @@ export default function Landing() {
 
           <Link href="/categories?tab=spare-parts">
             <div 
-              className="relative h-28 rounded-xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 gradient-orange border border-orange-400/40 hover:border-orange-300/60 transition-colors shadow-lg shadow-orange-500/20"
+              className="relative h-24 rounded-2xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-orange-400/60 hover:border-orange-300/80 transition-all shadow-lg shadow-orange-500/30"
+              style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #fb923c 100%)' }}
               data-testid="card-spare-parts"
             >
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 bg-white/20">
-                <Wrench className="h-6 w-6 text-white" />
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-2 bg-white/25 backdrop-blur-sm">
+                <Wrench className="h-5 w-5 text-white" />
               </div>
               <span className="text-white font-bold text-sm">{t('spareParts')}</span>
             </div>

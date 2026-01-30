@@ -177,11 +177,12 @@ export default function Home() {
           <button
             onClick={() => handleCategoryChange("automotive")}
             data-testid="tab-automotive"
-            className={`flex-1 py-4 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 border ${
+            className={`flex-1 py-4 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border-2 ${
               activeCategory === "automotive" 
-                ? "gradient-dark-blue border-slate-500/50 text-white shadow-lg" 
-                : "bg-slate-800/40 border-slate-600/30 text-slate-300"
+                ? "border-slate-500/60 text-white shadow-lg" 
+                : "bg-slate-800/30 border-slate-600/30 text-slate-400"
             }`}
+            style={activeCategory === "automotive" ? { background: 'linear-gradient(135deg, #1e3a5f 0%, #0f2744 50%, #1a3550 100%)' } : {}}
           >
             <Car className="h-5 w-5" />
             Automotive
@@ -190,11 +191,12 @@ export default function Home() {
           <button
             onClick={() => handleCategoryChange("spare-parts")}
             data-testid="tab-spare-parts"
-            className={`flex-1 py-4 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 border ${
+            className={`flex-1 py-4 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border-2 ${
               activeCategory === "spare-parts" 
-                ? "gradient-orange border-orange-400/50 text-white shadow-lg shadow-orange-500/30" 
-                : "bg-slate-800/40 border-slate-600/30 text-slate-300"
+                ? "border-orange-400/60 text-white shadow-lg shadow-orange-500/30" 
+                : "bg-slate-800/30 border-slate-600/30 text-slate-400"
             }`}
+            style={activeCategory === "spare-parts" ? { background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #fb923c 100%)' } : {}}
           >
             <Wrench className="h-5 w-5" />
             Spare Parts
