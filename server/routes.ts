@@ -2087,7 +2087,34 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Delete a listing (admin)
   app.delete("/api/admin/listings/:id", isAuthenticated, isAdmin, async (req, res) => {
     const id = Number(req.params.id);
-    await storage.deleteProduct(id);
+    const { reason } = req.body || {};
+    
+    // Get the product first to notify the seller
+    const product = await storage.getProduct(id);
+    if (product) {
+      // Delete the product
+      await storage.deleteProduct(id);
+      
+      // Send notification to the seller
+      const message = reason 
+        ? `Your listing "${product.title}" has been removed. Reason: ${reason}`
+        : `Your listing "${product.title}" has been removed by admin.`;
+      
+      await storage.createNotification({
+        userId: product.sellerId,
+        title: "Listing Removed",
+        message,
+        type: "listing_removed",
+      });
+      
+      // Also send push notification
+      try {
+        await notifyListingRejected(product.sellerId, product.title, reason || "Removed by admin");
+      } catch (e) {
+        console.log("Push notification failed:", e);
+      }
+    }
+    
     res.sendStatus(204);
   });
 

@@ -183,11 +183,12 @@ export default function Admin() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/admin/listings/${id}`),
+    mutationFn: ({ id, reason }: { id: number; reason?: string }) => 
+      apiRequest("DELETE", `/api/admin/listings/${id}`, { reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/listings/pending"] });
-      toast({ title: "Listing deleted" });
+      toast({ title: "Listing removed", description: "The seller has been notified." });
     },
   });
 
@@ -504,7 +505,7 @@ export default function Admin() {
                   listing={listing}
                   onApprove={() => approveMutation.mutate(listing.id)}
                   onReject={(reason) => rejectMutation.mutate({ id: listing.id, reason })}
-                  onDelete={() => deleteMutation.mutate(listing.id)}
+                  onDelete={(reason) => deleteMutation.mutate({ id: listing.id, reason })}
                   showActions
                   getStatusBadge={getStatusBadge}
                   isSelected={selectedListings.has(listing.id)}
@@ -531,8 +532,9 @@ export default function Admin() {
                   listing={listing}
                   onApprove={() => approveMutation.mutate(listing.id)}
                   onReject={(reason) => rejectMutation.mutate({ id: listing.id, reason })}
-                  onDelete={() => deleteMutation.mutate(listing.id)}
+                  onDelete={(reason) => deleteMutation.mutate({ id: listing.id, reason })}
                   showActions={listing.status === "pending"}
+                  showRemoveButton={true}
                   getStatusBadge={getStatusBadge}
                 />
               ))
@@ -1297,6 +1299,7 @@ function ListingCard({
   onReject,
   onDelete,
   showActions,
+  showRemoveButton = false,
   getStatusBadge,
   isSelected = false,
   onToggleSelect,
@@ -1305,8 +1308,9 @@ function ListingCard({
   listing: Product;
   onApprove: () => void;
   onReject: (reason: string) => void;
-  onDelete: () => void;
+  onDelete: (reason?: string) => void;
   showActions: boolean;
+  showRemoveButton?: boolean;
   getStatusBadge: (status: string) => JSX.Element;
   isSelected?: boolean;
   onToggleSelect?: () => void;
@@ -1314,6 +1318,8 @@ function ListingCard({
 }) {
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [removeReason, setRemoveReason] = useState("");
+  const [showRemoveForm, setShowRemoveForm] = useState(false);
 
   return (
     <Card className={isSelected ? "ring-2 ring-primary" : ""}>
@@ -1358,8 +1364,22 @@ function ListingCard({
                 <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowRejectForm(!showRejectForm)}>
                   <X className="h-3 w-3 mr-1" /> Reject
                 </Button>
-                <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={onDelete}>
+                <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => onDelete()}>
                   <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+
+            {showRemoveButton && !showActions && (
+              <div className="flex gap-2 mt-3">
+                <Button 
+                  size="sm" 
+                  variant="destructive" 
+                  className="h-7 text-xs" 
+                  onClick={() => setShowRemoveForm(!showRemoveForm)}
+                  data-testid={`button-remove-listing-${listing.id}`}
+                >
+                  <Trash2 className="h-3 w-3 mr-1" /> Remove
                 </Button>
               </div>
             )}
@@ -1380,6 +1400,31 @@ function ListingCard({
                     onReject(rejectReason);
                     setShowRejectForm(false);
                     setRejectReason("");
+                  }}
+                >
+                  OK
+                </Button>
+              </div>
+            )}
+
+            {showRemoveForm && (
+              <div className="mt-3 flex gap-2">
+                <Textarea
+                  placeholder="Reason for removal (optional)..."
+                  value={removeReason}
+                  onChange={(e) => setRemoveReason(e.target.value)}
+                  className="h-16 text-xs"
+                  data-testid={`input-remove-reason-${listing.id}`}
+                />
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-16"
+                  data-testid={`button-confirm-remove-${listing.id}`}
+                  onClick={() => {
+                    onDelete(removeReason);
+                    setShowRemoveForm(false);
+                    setRemoveReason("");
                   }}
                 >
                   OK
