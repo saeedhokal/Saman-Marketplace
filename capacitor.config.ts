@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Saman Marketplace',
   webDir: 'dist/public',
   server: {
-    url: 'https://saman-market-fixer--saeedhokal.replit.app',
+    url: 'https://thesamanapp.com',
     cleartext: false,
   },
   ios: {
@@ -14,6 +14,12 @@ const config: CapacitorConfig = {
     backgroundColor: '#F5F6F8',
     scrollEnabled: true,
     allowsLinkPreview: false,
+  },
+  android: {
+    backgroundColor: '#F5F6F8',
+    allowMixedContent: false,
+    captureInput: true,
+    webContentsDebuggingEnabled: false,
   },
   plugins: {
     SplashScreen: {
