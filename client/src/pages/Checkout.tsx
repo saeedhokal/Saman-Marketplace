@@ -43,10 +43,21 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [applePayAvailable, setApplePayAvailable] = useState(false);
   const [useNativeApplePay, setUseNativeApplePay] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const listenersRef = useRef<any[]>([]);
 
   useEffect(() => {
     const checkApplePay = async () => {
+      const platform = Capacitor.getPlatform();
+      
+      // Detect Android platform
+      if (platform === 'android') {
+        console.log("[ApplePay] Android detected - Apple Pay not available");
+        setIsAndroid(true);
+        setPaymentMethod("credit_card");
+        return;
+      }
+      
       // Check native Capacitor Apple Pay first (works properly on iOS)
       if (Capacitor.isNativePlatform() && CapacitorApplePay) {
         try {
@@ -552,40 +563,42 @@ export default function Checkout() {
             <CardTitle className="text-lg">Payment Method</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {applePayAvailable ? (
-              <button
-                onClick={() => setPaymentMethod("apple_pay")}
-                className={`w-full p-4 rounded-lg border-2 transition-colors flex items-center gap-3 ${
-                  paymentMethod === "apple_pay" 
-                    ? "border-accent bg-accent/5" 
-                    : "border-border hover:border-accent/50"
-                }`}
-                data-testid="button-apple-pay"
-              >
-                <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
-                  <SiApplepay className="h-6 w-6 text-white" />
+            {!isAndroid && (
+              applePayAvailable ? (
+                <button
+                  onClick={() => setPaymentMethod("apple_pay")}
+                  className={`w-full p-4 rounded-lg border-2 transition-colors flex items-center gap-3 ${
+                    paymentMethod === "apple_pay" 
+                      ? "border-accent bg-accent/5" 
+                      : "border-border hover:border-accent/50"
+                  }`}
+                  data-testid="button-apple-pay"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                    <SiApplepay className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium">Apple Pay</p>
+                    <p className="text-xs text-muted-foreground">Pay with Face ID or Touch ID</p>
+                  </div>
+                  {paymentMethod === "apple_pay" && (
+                    <Check className="h-5 w-5 text-accent" />
+                  )}
+                </button>
+              ) : (
+                <div className="w-full p-4 rounded-lg border-2 border-border bg-muted/50 flex items-center gap-3 opacity-60">
+                  <div className="w-10 h-10 rounded-lg bg-black/50 flex items-center justify-center">
+                    <SiApplepay className="h-6 w-6 text-white/70" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-muted-foreground">Apple Pay</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Use Safari on iPhone/Mac
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium">Apple Pay</p>
-                  <p className="text-xs text-muted-foreground">Pay with Face ID or Touch ID</p>
-                </div>
-                {paymentMethod === "apple_pay" && (
-                  <Check className="h-5 w-5 text-accent" />
-                )}
-              </button>
-            ) : (
-              <div className="w-full p-4 rounded-lg border-2 border-border bg-muted/50 flex items-center gap-3 opacity-60">
-                <div className="w-10 h-10 rounded-lg bg-black/50 flex items-center justify-center">
-                  <SiApplepay className="h-6 w-6 text-white/70" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-muted-foreground">Apple Pay</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Use Safari on iPhone/Mac
-                  </p>
-                </div>
-              </div>
+              )
             )}
 
             <button
