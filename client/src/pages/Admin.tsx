@@ -859,24 +859,6 @@ export default function Admin() {
                   <span className="text-muted-foreground">Automotive Revenue</span>
                   <span className="font-medium">AED {revenueStats?.automotiveRevenue || 0}</span>
                 </div>
-                <div className="pt-4 border-t mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-red-500 border-red-500"
-                    data-testid="button-reset-transactions"
-                    onClick={async () => {
-                      if (confirm("Reset all transactions?")) {
-                        await fetch("/api/admin/transactions/reset", { method: "DELETE", credentials: "include" });
-                        toast({ title: "Done! Transactions reset." });
-                        queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue"] });
-                        queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue/detailed"] });
-                      }
-                    }}
-                  >
-                    Reset Transactions (One-Time)
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
