@@ -105,6 +105,15 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Apple Pay:** Native integration via Capacitor
 - **Build Process:** GitHub → Codemagic → TestFlight
 
+### Android Application
+- **Wrapper:** Capacitor v7
+- **Package Name:** com.saeed.saman
+- **App Name:** Saman Marketplace
+- **Push Notifications:** Firebase Cloud Messaging (FCM)
+- **Firebase Project:** saman-car-spare-parts
+- **Config File:** android/app/google-services.json
+- **Build Process:** GitHub → Codemagic → Google Play / APK
+
 ---
 
 ## External Services

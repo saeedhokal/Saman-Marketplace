@@ -1,0 +1,97 @@
+{
+  "project_info": {
+    "project_number": "968293545131",
+    "project_id": "saman-car-spare-parts",
+    "storage_bucket": "saman-car-spare-parts.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:968293545131:android:2b20f890199d475e9ab3ee",
+        "android_client_info": {
+          "package_name": "com.saeed.saman"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "968293545131-93l03tt20f5koica8m32qam34ouaeg48.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ3yxWoX8AgxDtjZIbJtM3Zjt1gSAcN90"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "968293545131-93l03tt20f5koica8m32qam34ouaeg48.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:968293545131:android:a66791b3d42333ae9ab3ee",
+        "android_client_info": {
+          "package_name": "com.saman"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "968293545131-93l03tt20f5koica8m32qam34ouaeg48.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ3yxWoX8AgxDtjZIbJtM3Zjt1gSAcN90"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "968293545131-93l03tt20f5koica8m32qam34ouaeg48.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:968293545131:android:e9149fe13b22890a9ab3ee",
+        "android_client_info": {
+          "package_name": "com.saman.marketplace"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "968293545131-93l03tt20f5koica8m32qam34ouaeg48.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ3yxWoX8AgxDtjZIbJtM3Zjt1gSAcN90"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "968293545131-93l03tt20f5koica8m32qam34ouaeg48.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
