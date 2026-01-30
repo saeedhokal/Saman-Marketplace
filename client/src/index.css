@@ -5,38 +5,38 @@
 @tailwind utilities;
 
 :root {
-  /* Saman Marketplace Palette - Orange & Nardo Grey */
-  /* Primary: Nardo Grey (dark grey with slight blue tint) */
-  --primary: 220 10% 28%;
+  /* Saman Marketplace Dark Dubai Theme */
+  /* Primary: Dark blue-grey */
+  --primary: 220 20% 18%;
   --primary-foreground: 0 0% 98%;
 
-  /* Secondary: Light grey for structure */
-  --secondary: 220 10% 94%;
-  --secondary-foreground: 220 10% 28%;
+  /* Secondary: Darker for cards/structure */
+  --secondary: 220 20% 12%;
+  --secondary-foreground: 0 0% 90%;
 
   /* Accent: Saman Orange (vibrant orange from logo) */
   --accent: 24 95% 50%;
   --accent-foreground: 0 0% 100%;
 
-  /* Backgrounds */
-  --background: 220 15% 97%;
-  --foreground: 220 10% 20%;
+  /* Backgrounds - Dark theme */
+  --background: 220 25% 8%;
+  --foreground: 0 0% 95%;
   
-  --card: 0 0% 100%;
-  --card-foreground: 220 10% 20%;
+  --card: 220 20% 14%;
+  --card-foreground: 0 0% 95%;
   
-  --popover: 0 0% 100%;
-  --popover-foreground: 220 10% 20%;
+  --popover: 220 20% 14%;
+  --popover-foreground: 0 0% 95%;
 
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
+  --muted: 220 15% 20%;
+  --muted-foreground: 220 10% 60%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 220 10% 88%;
-  --input: 220 10% 88%;
-  --ring: 220 10% 28%;
+  --border: 220 15% 25%;
+  --input: 220 15% 25%;
+  --ring: 24 95% 50%;
 
   --radius: 0.75rem;
 
@@ -67,7 +67,7 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    @apply font-bold tracking-tight text-primary;
+    @apply font-bold tracking-tight text-foreground;
   }
 }
 
@@ -77,15 +77,27 @@
   }
   
   .glass-panel {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+    @apply bg-white/10 backdrop-blur-md border border-white/10 shadow-xl;
+  }
+  
+  .glass-card {
+    @apply bg-slate-800/60 backdrop-blur-md border border-slate-600/30 shadow-xl;
   }
   
   .card-hover {
-    @apply transition-all duration-300 hover:translate-y-[-4px] hover:shadow-xl hover:shadow-primary/5;
+    @apply transition-all duration-300 hover:translate-y-[-4px] hover:shadow-xl hover:shadow-accent/10;
+  }
+  
+  .gradient-orange {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  }
+  
+  .gradient-dark-blue {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Dark theme */
 ::-webkit-scrollbar {
   width: 10px;
 }

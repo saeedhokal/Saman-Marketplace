@@ -161,7 +161,7 @@ export default function Home() {
   return (
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
       <div className="container mx-auto px-4 pt-4">
-        <div className="flex items-center border border-border rounded-full px-4 py-2 mb-4">
+        <div className="flex items-center glass-card rounded-full px-4 py-2 mb-4">
           <Search className="h-5 w-5 text-foreground/70 mr-3" />
           <Input
             type="text"
@@ -177,10 +177,11 @@ export default function Home() {
           <button
             onClick={() => handleCategoryChange("automotive")}
             data-testid="tab-automotive"
-            className="flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2"
-            style={activeCategory === "automotive" 
-              ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
-              : { backgroundColor: '#fed7aa', color: '#9a3412' }}
+            className={`flex-1 py-4 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 border ${
+              activeCategory === "automotive" 
+                ? "gradient-dark-blue border-slate-500/50 text-white shadow-lg" 
+                : "bg-slate-800/40 border-slate-600/30 text-slate-300"
+            }`}
           >
             <Car className="h-5 w-5" />
             Automotive
@@ -189,10 +190,11 @@ export default function Home() {
           <button
             onClick={() => handleCategoryChange("spare-parts")}
             data-testid="tab-spare-parts"
-            className="flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2"
-            style={activeCategory === "spare-parts" 
-              ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
-              : { backgroundColor: '#fed7aa', color: '#9a3412' }}
+            className={`flex-1 py-4 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 border ${
+              activeCategory === "spare-parts" 
+                ? "gradient-orange border-orange-400/50 text-white shadow-lg shadow-orange-500/30" 
+                : "bg-slate-800/40 border-slate-600/30 text-slate-300"
+            }`}
           >
             <Wrench className="h-5 w-5" />
             Spare Parts

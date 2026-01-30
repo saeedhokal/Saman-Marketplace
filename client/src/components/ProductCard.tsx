@@ -19,7 +19,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
     style: "currency",
     currency: "AED",
     maximumFractionDigits: 0,
-  }).format((product.price || 0) / 100);
+  }).format(product.price || 0);
 
   const formattedDate = product.createdAt 
     ? format(new Date(product.createdAt), 'MMM d')
@@ -32,8 +32,8 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
       transition={{ duration: 0.3 }}
     >
       <Link href={`/product/${product.id}`}>
-        <Card className="group h-full overflow-hidden border-border/50 bg-card hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 cursor-pointer rounded-2xl">
-          <div className="relative aspect-[4/3] md:aspect-square overflow-hidden bg-secondary/30">
+        <Card className="group h-full overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl">
+          <div className="relative aspect-[4/3] md:aspect-square overflow-hidden bg-slate-700/30">
             {product.imageUrl && !imageError ? (
               <img
                 src={product.imageUrl}
@@ -75,7 +75,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
           </CardContent>
 
           <CardFooter className="p-3 sm:p-4 pt-0 mt-auto">
-            <p className="font-display text-base sm:text-lg font-bold text-primary">
+            <p className="font-display text-base sm:text-lg font-bold text-orange-500">
               {formattedPrice}
             </p>
           </CardFooter>
