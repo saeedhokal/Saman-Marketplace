@@ -10,7 +10,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
-import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.jpg";
+import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
 
 export default function Landing() {
   const { user } = useAuth();
