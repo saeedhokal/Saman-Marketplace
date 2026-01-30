@@ -11,12 +11,12 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
-    backgroundColor: '#F5F6F8',
+    backgroundColor: '#0f1318',
     scrollEnabled: true,
     allowsLinkPreview: false,
   },
   android: {
-    backgroundColor: '#F5F6F8',
+    backgroundColor: '#0f1318',
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
@@ -25,7 +25,7 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 2000,
       launchAutoHide: true,
-      backgroundColor: '#454f5f',
+      backgroundColor: '#0f1318',
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,

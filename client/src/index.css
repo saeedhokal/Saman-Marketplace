@@ -47,6 +47,12 @@
 @layer base {
   html, body {
     background-color: hsl(var(--background));
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  html {
+    background-color: #0f1318;
   }
   
   body {
