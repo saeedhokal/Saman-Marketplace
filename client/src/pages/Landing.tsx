@@ -80,7 +80,7 @@ export default function Landing() {
         </div>
 
         <Link href="/categories">
-          <div className={`flex items-center border border-border rounded-full px-4 py-2 mb-4 hover:bg-secondary/50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center glass-card rounded-full px-4 py-2 mb-4 hover:border-accent/40 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Search className={`h-5 w-5 text-muted-foreground ${isRTL ? 'ml-3' : 'mr-3'}`} />
             <span className="text-muted-foreground">{t('search')}</span>
           </div>
@@ -126,14 +126,10 @@ export default function Landing() {
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Link href="/categories?tab=automotive">
             <div 
-              className="relative h-28 rounded-xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4"
-              style={{ backgroundColor: '#3a4553' }}
+              className="relative h-28 rounded-xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 gradient-dark-blue border border-slate-500/40 hover:border-slate-400/60 transition-colors"
               data-testid="card-automotive"
             >
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center mb-2"
-                style={{ backgroundColor: '#f97316' }}
-              >
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 bg-orange-500">
                 <Car className="h-6 w-6 text-white" />
               </div>
               <span className="text-white font-bold text-sm">{t('automotive')}</span>
@@ -142,14 +138,10 @@ export default function Landing() {
 
           <Link href="/categories?tab=spare-parts">
             <div 
-              className="relative h-28 rounded-xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4"
-              style={{ backgroundColor: '#f97316' }}
+              className="relative h-28 rounded-xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 gradient-orange border border-orange-400/40 hover:border-orange-300/60 transition-colors shadow-lg shadow-orange-500/20"
               data-testid="card-spare-parts"
             >
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center mb-2"
-                style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-              >
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 bg-white/20">
                 <Wrench className="h-6 w-6 text-white" />
               </div>
               <span className="text-white font-bold text-sm">{t('spareParts')}</span>
@@ -158,7 +150,7 @@ export default function Landing() {
         </div>
 
         {recommendedProducts.length > 0 && (
-          <div className="mb-4 -mx-4 px-4 py-4 bg-secondary/30">
+          <div className="mb-4 -mx-4 px-4 py-4 bg-slate-800/30">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-foreground">{t('forYou')}</h2>
               <Link href="/categories">
