@@ -11,7 +11,6 @@ import { PullToRefresh } from "@/components/PullToRefresh";
 import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 import dubaiSkylineBanner from "@/assets/images/dubai-skyline-banner.jpg";
-import dubaiNightBg from "@/assets/images/dubai-night-bg.png";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -47,15 +46,7 @@ export default function Landing() {
   }, [refetchRecent, refetchRecommended]);
 
   return (
-    <div className="min-h-screen pb-20 relative">
-      {/* Full page Dubai skyline background */}
-      <div 
-        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${dubaiNightBg})` }}
-      />
-      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
-      
-      <PullToRefresh onRefresh={handleRefresh} className="relative z-10">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen pb-20 bg-[#1a1f2e]">
       <div className="container mx-auto px-4 pt-3">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -202,7 +193,6 @@ export default function Landing() {
           </div>
         )}
       </div>
-      </PullToRefresh>
-    </div>
+    </PullToRefresh>
   );
 }
