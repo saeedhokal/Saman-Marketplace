@@ -32,7 +32,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 ---
 
-## Current Status (January 28, 2026)
+## Current Status (January 30, 2026)
 
 ### What's WORKING
 - User login/registration (phone + OTP)
@@ -41,12 +41,15 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - Push notifications (APNs)
 - Credit card payments (Telr redirect)
 - **Native iOS Apple Pay (Face ID + Telr Remote API v2)** - FULLY WORKING!
-- Admin panel (moderation, credits, broadcast)
+- Admin panel (moderation, credits, broadcast, listing removal with notification)
 - Favorites/saved items
 - Notification inbox
 - Domain thesamanapp.com connected
 - Splash screen (fullscreen, edge-to-edge with SAMAN logo + Dubai skyline)
 - All UI features
+- **Automatic cleanup system** - Rejected listings deleted after 7 days, expired after 30 days
+- **Listing renewal** - Users can renew expiring listings for 30 more days (costs 1 credit)
+- **Expiration notifications** - Push + in-app notification 1 day before expiry
 
 ### What's WAITING
 - Nothing currently blocked!

@@ -44,6 +44,7 @@ import {
   notifyListingRejected,
   notifyCreditsAdded,
   sendPushToAdmins,
+  sendPushNotification,
   broadcastPushNotification,
 } from "./pushNotifications";
 
@@ -2698,6 +2699,112 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     await storage.deleteUserNotifications(userId);
     res.sendStatus(204);
   });
+
+  // ==================== REPOST/RENEW LISTING ====================
+  
+  // Renew an expiring listing (uses 1 credit)
+  app.post("/api/listings/:id/renew", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req);
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+    
+    const listingId = Number(req.params.id);
+    
+    // Get the product to check ownership and category
+    const product = await storage.getProduct(listingId);
+    if (!product) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    
+    // Check ownership
+    if (product.sellerId !== userId) {
+      return res.status(403).json({ message: "You can only renew your own listings" });
+    }
+    
+    // Check if subscription is enabled
+    const subscriptionEnabled = await storage.isSubscriptionEnabled();
+    if (subscriptionEnabled) {
+      const category = product.mainCategory as "Spare Parts" | "Automotive";
+      
+      // Try to use a credit
+      const creditUsed = await storage.useCredit(userId, category);
+      if (!creditUsed) {
+        return res.status(402).json({ 
+          message: "Insufficient credits", 
+          needsCredits: true,
+          category 
+        });
+      }
+    }
+    
+    // Renew the product (extend by 30 days)
+    const renewedProduct = await storage.renewProduct(listingId);
+    
+    res.json({ 
+      message: "Listing renewed for 30 days", 
+      product: renewedProduct 
+    });
+  });
+
+  // ==================== SCHEDULED TASKS ====================
+  
+  // Run cleanup and notification tasks
+  async function runScheduledTasks() {
+    try {
+      console.log("[SCHEDULER] Running scheduled tasks...");
+      
+      // 1. Delete rejected posts older than 7 days
+      const deletedRejected = await storage.deleteOldRejectedProducts();
+      if (deletedRejected > 0) {
+        console.log(`[SCHEDULER] Deleted ${deletedRejected} old rejected listings`);
+      }
+      
+      // 2. Delete expired posts
+      const deletedExpired = await storage.deleteExpiredProducts();
+      if (deletedExpired > 0) {
+        console.log(`[SCHEDULER] Deleted ${deletedExpired} expired listings`);
+      }
+      
+      // 3. Send expiration notifications (1 day before)
+      const expiringProducts = await storage.getProductsExpiringTomorrow();
+      for (const product of expiringProducts) {
+        // Send in-app notification
+        await storage.createNotification({
+          userId: product.sellerId,
+          title: "Listing Expiring Soon",
+          message: `Your listing "${product.title}" expires tomorrow. Tap to renew it for another 30 days (uses 1 credit).`,
+          type: "listing_expiring",
+          relatedId: product.id,
+        });
+        
+        // Mark as notified
+        await storage.markExpirationNotified(product.id);
+        
+        // Send push notification
+        try {
+          const tokens = await db.select().from(deviceTokens).where(eq(deviceTokens.userId, product.sellerId));
+          for (const tokenRecord of tokens) {
+            await sendPushNotification(tokenRecord.fcmToken, {
+              title: "Listing Expiring Tomorrow",
+              body: `"${product.title}" expires tomorrow. Renew to keep it active!`,
+              data: { type: "listing_expiring", listingId: String(product.id) }
+            });
+          }
+        } catch (e) {
+          console.log("[SCHEDULER] Push notification failed:", e);
+        }
+        
+        console.log(`[SCHEDULER] Sent expiration notification for listing ${product.id}`);
+      }
+      
+      console.log("[SCHEDULER] Scheduled tasks completed");
+    } catch (error) {
+      console.error("[SCHEDULER] Error running scheduled tasks:", error);
+    }
+  }
+  
+  // Run tasks on startup and every hour
+  runScheduledTasks();
+  setInterval(runScheduledTasks, 60 * 60 * 1000); // Run every hour
 
   return httpServer;
 }

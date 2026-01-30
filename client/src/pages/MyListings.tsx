@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
   Search, ArrowLeft, Loader2, Package, Plus, MoreVertical,
-  Pencil, Trash2, CheckCircle, Clock, Timer
+  Pencil, Trash2, CheckCircle, Clock, Timer, RefreshCw
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -38,6 +38,7 @@ export default function MyListings() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [renewId, setRenewId] = useState<number | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   const handleEdit = useCallback((id: number) => {
@@ -79,6 +80,32 @@ export default function MyListings() {
     },
     onError: () => {
       toast({ variant: "destructive", title: "Failed to update listing" });
+    },
+  });
+
+  const renewMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("POST", `/api/listings/${id}/renew`);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      toast({ title: "Listing renewed for 30 days" });
+      setRenewId(null);
+    },
+    onError: (error: any) => {
+      setRenewId(null);
+      if (error?.message?.includes("credit") || error?.message?.includes("insufficient")) {
+        toast({ 
+          variant: "destructive", 
+          title: "Not enough credits",
+          description: "You need 1 credit to renew. Tap here to buy credits.",
+          action: <Button size="sm" variant="outline" onClick={() => setLocation("/subscription")}>Buy Credits</Button>
+        });
+      } else {
+        toast({ variant: "destructive", title: error?.message || "Failed to renew listing" });
+      }
     },
   });
 
@@ -128,6 +155,13 @@ export default function MyListings() {
     } else {
       return <span className="text-xs text-muted-foreground flex items-center gap-1"><Timer className="h-3 w-3" />{daysLeft} days left</span>;
     }
+  };
+
+  const canRenew = (listing: ListingWithStatus) => {
+    if (listing.status !== "approved" || !listing.expiresAt) return false;
+    const expiresAt = new Date(listing.expiresAt);
+    const daysLeft = differenceInDays(expiresAt, new Date());
+    return daysLeft <= 7 && daysLeft >= -7;
   };
 
   const handleRefresh = useCallback(async () => {
@@ -201,6 +235,18 @@ export default function MyListings() {
                           <Pencil className="h-5 w-5 mr-3" />
                           Edit
                         </DropdownMenuItem>
+                        {canRenew(listing) && (
+                          <DropdownMenuItem 
+                            onSelect={() => {
+                              setOpenMenuId(null);
+                              setRenewId(listing.id);
+                            }}
+                            className="py-3 text-base cursor-pointer text-orange-600 dark:text-orange-400"
+                          >
+                            <RefreshCw className="h-5 w-5 mr-3" />
+                            Renew Listing
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           onSelect={() => {
                             setOpenMenuId(null);
@@ -266,9 +312,37 @@ export default function MyListings() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && deleteMutation.mutate(deleteId)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={renewId !== null} onOpenChange={() => setRenewId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Renew listing?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will extend your listing for another 30 days and use 1 credit from your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => renewId && renewMutation.mutate(renewId)}
+              className="bg-accent text-white"
+              disabled={renewMutation.isPending}
+            >
+              {renewMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Renewing...
+                </>
+              ) : (
+                "Renew (1 Credit)"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

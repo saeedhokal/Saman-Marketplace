@@ -22,6 +22,10 @@ export interface IStorage {
   rejectProduct(id: number, reason: string): Promise<Product | undefined>;
   updateProduct(id: number, data: Partial<Product>): Promise<Product | undefined>;
   deleteExpiredProducts(): Promise<number>;
+  deleteOldRejectedProducts(): Promise<number>;
+  getProductsExpiringTomorrow(): Promise<Product[]>;
+  renewProduct(id: number): Promise<Product | undefined>;
+  markExpirationNotified(id: number): Promise<void>;
   
   // Credits (category-specific)
   getUserCredits(userId: string): Promise<{ sparePartsCredits: number; automotiveCredits: number }>;
@@ -240,7 +244,7 @@ export class DatabaseStorage implements IStorage {
 
   async rejectProduct(id: number, reason: string): Promise<Product | undefined> {
     const [product] = await db.update(products)
-      .set({ status: "rejected", rejectionReason: reason })
+      .set({ status: "rejected", rejectionReason: reason, rejectedAt: new Date() })
       .where(eq(products.id, id))
       .returning();
     return product;
@@ -262,6 +266,50 @@ export class DatabaseStorage implements IStorage {
       ))
       .returning();
     return result.length;
+  }
+
+  async deleteOldRejectedProducts(): Promise<number> {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const result = await db.delete(products)
+      .where(and(
+        eq(products.status, "rejected"),
+        sql`${products.rejectedAt} IS NOT NULL`,
+        lt(products.rejectedAt, sevenDaysAgo)
+      ))
+      .returning();
+    return result.length;
+  }
+
+  async getProductsExpiringTomorrow(): Promise<Product[]> {
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const result = await db.select().from(products)
+      .where(and(
+        eq(products.status, "approved"),
+        sql`${products.expiresAt} IS NOT NULL`,
+        sql`${products.expiresAt} > ${now}`,
+        sql`${products.expiresAt} <= ${tomorrow}`,
+        sql`${products.expirationNotified} IS NOT TRUE`
+      ));
+    return result;
+  }
+
+  async renewProduct(id: number): Promise<Product | undefined> {
+    const newExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const [product] = await db.update(products)
+      .set({ 
+        expiresAt: newExpiresAt, 
+        expirationNotified: false
+      })
+      .where(eq(products.id, id))
+      .returning();
+    return product;
+  }
+
+  async markExpirationNotified(id: number): Promise<void> {
+    await db.update(products)
+      .set({ expirationNotified: true })
+      .where(eq(products.id, id));
   }
 
   // Credit methods (category-specific)

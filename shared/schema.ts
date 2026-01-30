@@ -295,7 +295,9 @@ export const products = pgTable("products", {
   year: integer("year"), // manufacture year
   status: text("status").default("pending").notNull(), // pending, approved, rejected
   rejectionReason: text("rejection_reason"),
+  rejectedAt: timestamp("rejected_at"), // Timestamp when rejected (for 7-day cleanup)
   expiresAt: timestamp("expires_at"), // Set to 1 month after approval
+  expirationNotified: boolean("expiration_notified").default(false), // Track if expiry notification sent
   createdAt: timestamp("created_at").defaultNow(),
 });
 
