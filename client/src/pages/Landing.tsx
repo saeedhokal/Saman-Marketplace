@@ -47,13 +47,16 @@ export default function Landing() {
   }, [refetchRecent, refetchRecommended]);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen pb-20 relative">
+    <div className="min-h-screen pb-20 relative">
+      {/* Full page Dubai skyline background */}
       <div 
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
+        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${dubaiNightBg})` }}
       />
-      <div className="fixed inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60 -z-10" />
-      <div className="container mx-auto px-4 pt-3 relative z-10">
+      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
+      
+      <PullToRefresh onRefresh={handleRefresh} className="relative z-10">
+      <div className="container mx-auto px-4 pt-3">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-muted-foreground text-sm">
@@ -199,6 +202,7 @@ export default function Landing() {
           </div>
         )}
       </div>
-    </PullToRefresh>
+      </PullToRefresh>
+    </div>
   );
 }
