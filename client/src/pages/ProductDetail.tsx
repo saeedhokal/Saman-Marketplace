@@ -1,10 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useProduct } from "@/hooks/use-products";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight } from "lucide-react";
+import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ import { type Product } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { ImageGallery } from "@/components/ImageGallery";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -24,6 +25,19 @@ export default function ProductDetail() {
   const addFavorite = useAddFavorite();
   const removeFavorite = useRemoveFavorite();
   const { toast } = useToast();
+  
+  // Translation state
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
+  const [translatedDescription, setTranslatedDescription] = useState<string | null>(null);
+  const { isTranslating, error: translationError, translateListing, detectLanguage, getTargetLanguage } = useTranslation();
+  
+  // Reset translation state when product changes
+  useEffect(() => {
+    setShowTranslation(false);
+    setTranslatedTitle(null);
+    setTranslatedDescription(null);
+  }, [id]);
 
   const { data: sellerProducts } = useQuery<Product[]>({
     queryKey: ['/api/sellers', product?.sellerId, 'products'],
@@ -93,6 +107,60 @@ export default function ProductDetail() {
     return images;
   }, [product]);
 
+  // Handle translation toggle
+  const handleTranslate = async () => {
+    if (!product) return;
+    
+    if (showTranslation) {
+      // Toggle back to original
+      setShowTranslation(false);
+      return;
+    }
+    
+    // Check if already translated
+    if (translatedTitle) {
+      setShowTranslation(true);
+      return;
+    }
+    
+    // Translate
+    const targetLang = getTargetLanguage(product.title);
+    const result = await translateListing(
+      product.title,
+      product.description || "",
+      targetLang
+    );
+    
+    // Check if translation actually happened (content changed or API succeeded)
+    if (result.isTranslated && (result.translatedTitle !== product.title || result.translatedDescription !== (product.description || ""))) {
+      setTranslatedTitle(result.translatedTitle);
+      setTranslatedDescription(result.translatedDescription);
+      setShowTranslation(true);
+    } else if (!result.isTranslated) {
+      toast({ 
+        variant: "destructive", 
+        title: "Translation failed", 
+        description: "Please try again later" 
+      });
+    } else {
+      // Translation returned same text (possibly already in target language or unsupported content)
+      toast({ 
+        title: "No translation needed", 
+        description: "The content is already in the selected language or cannot be translated" 
+      });
+    }
+  };
+  
+  // Get the language label for the button
+  const getTranslationButtonLabel = () => {
+    if (!product) return "";
+    const sourceLang = detectLanguage(product.title);
+    if (showTranslation) {
+      return sourceLang === "arabic" ? "Show Arabic" : "Show English";
+    }
+    return sourceLang === "arabic" ? "Translate to English" : "ترجم للعربية";
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12 max-w-7xl">
@@ -128,7 +196,7 @@ export default function ProductDetail() {
         style: "currency",
         currency: "AED",
         maximumFractionDigits: 0,
-      }).format(product.price / 100)
+      }).format(product.price)
     : null;
 
   return (
@@ -165,9 +233,28 @@ export default function ProductDetail() {
 
           <div className="flex flex-col justify-center">
             <div className="space-y-3 mb-6">
-              <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight">
-                {product.title}
-              </h1>
+              <div className="flex items-start justify-between gap-2">
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight flex-1">
+                  {showTranslation && translatedTitle ? translatedTitle : product.title}
+                </h1>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleTranslate}
+                  disabled={isTranslating}
+                  className="shrink-0"
+                  data-testid="button-translate"
+                >
+                  {isTranslating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Languages className="h-4 w-4 mr-1" />
+                      <span className="text-xs">{getTranslationButtonLabel()}</span>
+                    </>
+                  )}
+                </Button>
+              </div>
 
               <div className="font-display text-3xl font-bold text-primary">
                 {formattedPrice}
@@ -182,7 +269,9 @@ export default function ProductDetail() {
             </div>
 
             <div className="prose prose-slate max-w-none text-muted-foreground mb-6">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{product.description}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                {showTranslation && translatedDescription ? translatedDescription : product.description}
+              </p>
             </div>
 
             <div className="flex items-center gap-3 mb-6">
@@ -270,7 +359,7 @@ export default function ProductDetail() {
                     style: "currency",
                     currency: "AED",
                     maximumFractionDigits: 0,
-                  }).format((p.price || 0) / 100);
+                  }).format(p.price || 0);
                   return (
                     <Link key={p.id} href={`/product/${p.id}`}>
                       <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow rounded-xl" data-testid={`card-product-${p.id}`}>

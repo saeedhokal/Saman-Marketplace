@@ -12,6 +12,7 @@ import { eq, sql } from "drizzle-orm";
 import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
+import { translateText, translateListing, detectLanguage, containsArabic } from "./translation";
 
 // Server version for deployment verification
 const SERVER_VERSION = "v3.0.2";
@@ -448,6 +449,181 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     
     const products = await storage.getProductsBySeller(sellerId);
     res.json(products);
+  });
+
+  // ========================
+  // TRANSLATION API ENDPOINTS
+  // ========================
+  
+  // Simple rate limiter for translation (IP-based, 30 requests per minute)
+  const translationRateLimiter = new Map<string, { count: number; resetTime: number }>();
+  const TRANSLATION_RATE_LIMIT = 30; // requests per minute
+  const TRANSLATION_RATE_WINDOW = 60 * 1000; // 1 minute
+  
+  function checkTranslationRateLimit(ip: string): boolean {
+    const now = Date.now();
+    const entry = translationRateLimiter.get(ip);
+    
+    if (!entry || now > entry.resetTime) {
+      translationRateLimiter.set(ip, { count: 1, resetTime: now + TRANSLATION_RATE_WINDOW });
+      return true;
+    }
+    
+    if (entry.count >= TRANSLATION_RATE_LIMIT) {
+      return false;
+    }
+    
+    entry.count++;
+    return true;
+  }
+  
+  // Translate a single text field (rate limited)
+  app.post("/api/translate", async (req, res) => {
+    try {
+      const ip = req.ip || req.socket.remoteAddress || 'unknown';
+      if (!checkTranslationRateLimit(ip)) {
+        return res.status(429).json({ message: "Too many translation requests. Please wait a minute." });
+      }
+      
+      const { text, targetLanguage } = req.body;
+      
+      if (!text || !targetLanguage) {
+        return res.status(400).json({ message: "Text and targetLanguage are required" });
+      }
+      
+      if (targetLanguage !== "arabic" && targetLanguage !== "english") {
+        return res.status(400).json({ message: "targetLanguage must be 'arabic' or 'english'" });
+      }
+      
+      // Limit text length to prevent abuse
+      if (text.length > 5000) {
+        return res.status(400).json({ message: "Text too long. Maximum 5000 characters." });
+      }
+      
+      const translatedText = await translateText(text, targetLanguage);
+      res.json({ 
+        original: text, 
+        translated: translatedText,
+        targetLanguage 
+      });
+    } catch (error) {
+      console.error("Translation error:", error);
+      res.status(500).json({ message: "Translation failed" });
+    }
+  });
+  
+  // Translate a listing (title + description) - rate limited
+  app.post("/api/translate/listing", async (req, res) => {
+    try {
+      const ip = req.ip || req.socket.remoteAddress || 'unknown';
+      if (!checkTranslationRateLimit(ip)) {
+        return res.status(429).json({ message: "Too many translation requests. Please wait a minute." });
+      }
+      
+      const { title, description, targetLanguage } = req.body;
+      
+      if (!title || !targetLanguage) {
+        return res.status(400).json({ message: "Title and targetLanguage are required" });
+      }
+      
+      if (targetLanguage !== "arabic" && targetLanguage !== "english") {
+        return res.status(400).json({ message: "targetLanguage must be 'arabic' or 'english'" });
+      }
+      
+      // Limit text length
+      if (title.length > 500 || (description && description.length > 5000)) {
+        return res.status(400).json({ message: "Text too long. Title max 500, description max 5000 characters." });
+      }
+      
+      const result = await translateListing(
+        title, 
+        description || "", 
+        targetLanguage
+      );
+      
+      res.json({
+        originalTitle: title,
+        originalDescription: description || "",
+        translatedTitle: result.title,
+        translatedDescription: result.description,
+        targetLanguage
+      });
+    } catch (error) {
+      console.error("Listing translation error:", error);
+      res.status(500).json({ message: "Translation failed" });
+    }
+  });
+  
+  // Get product with translation - rate limited
+  app.get("/api/products/:id/translated", async (req, res) => {
+    try {
+      const ip = req.ip || req.socket.remoteAddress || 'unknown';
+      if (!checkTranslationRateLimit(ip)) {
+        return res.status(429).json({ message: "Too many translation requests. Please wait a minute." });
+      }
+      
+      const id = Number(req.params.id);
+      const targetLanguage = req.query.lang as "arabic" | "english";
+      
+      if (!targetLanguage || (targetLanguage !== "arabic" && targetLanguage !== "english")) {
+        return res.status(400).json({ message: "Query param 'lang' must be 'arabic' or 'english'" });
+      }
+      
+      const product = await storage.getProduct(id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      // Check if translation is needed
+      const sourceLanguage = detectLanguage(product.title);
+      if (
+        (sourceLanguage === "arabic" && targetLanguage === "arabic") ||
+        (sourceLanguage === "english" && targetLanguage === "english")
+      ) {
+        // Already in target language
+        return res.json({
+          ...product,
+          translatedTitle: product.title,
+          translatedDescription: product.description,
+          isTranslated: false
+        });
+      }
+      
+      // Translate
+      const translation = await translateListing(
+        product.title,
+        product.description || "",
+        targetLanguage
+      );
+      
+      res.json({
+        ...product,
+        translatedTitle: translation.title,
+        translatedDescription: translation.description,
+        isTranslated: true
+      });
+    } catch (error) {
+      console.error("Product translation error:", error);
+      res.status(500).json({ message: "Translation failed" });
+    }
+  });
+  
+  // Detect language of text (no rate limit - just local processing)
+  app.post("/api/detect-language", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+      
+      const language = detectLanguage(text);
+      const hasArabic = containsArabic(text);
+      
+      res.json({ language, hasArabic });
+    } catch (error) {
+      console.error("Language detection error:", error);
+      res.status(500).json({ message: "Detection failed" });
+    }
   });
 
   // Get seller profile info

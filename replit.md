@@ -38,7 +38,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - User login/registration (phone + OTP)
 - Product listings (create, view, edit, delete)
 - Image uploads to Google Cloud Storage
-- Push notifications (APNs)
+- Push notifications (APNs for iOS, FCM for Android)
 - Credit card payments (Telr redirect)
 - **Native iOS Apple Pay (Face ID + Telr Remote API v2)** - FULLY WORKING!
 - Admin panel (moderation, credits, broadcast, listing removal with notification)
@@ -48,6 +48,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - Splash screen (fullscreen, edge-to-edge with SAMAN logo + Dubai skyline)
 - All UI features
 - **Automatic cleanup system** - Rejected listings deleted after 7 days, expired after 30 days
+- **Arabic ↔ English Translation** - Bidirectional translation for all listings (works on web, iOS, Android)
 - **Listing renewal** - Users can renew expiring listings for 30 more days (costs 1 credit)
 - **Expiration notifications** - Push + in-app notification 1 day before expiry
 
@@ -291,6 +292,44 @@ In `server/storage.ts`:
 - Admin can remove listings with optional reason
 - If reason provided, seller receives push + in-app notification with reason
 - Sets `rejectedAt` timestamp for automatic cleanup after 7 days
+
+---
+
+## Arabic ↔ English Translation System (January 30, 2026)
+
+### Overview
+Bidirectional translation for all user-generated content (listings) using Replit AI Integrations (OpenAI). Works on web, iOS, and Android.
+
+### How It Works
+1. User views a listing
+2. System detects the language (Arabic, English, or mixed)
+3. User taps "Translate" button to see translation
+4. Toggle back to original with same button
+
+### Key Files
+- `server/translation.ts` - Translation service using OpenAI gpt-5-mini
+- `client/src/hooks/useTranslation.ts` - Frontend translation hook
+- `client/src/pages/ProductDetail.tsx` - Translation button on listing view
+
+### API Endpoints
+- `POST /api/translate` - Translate single text
+- `POST /api/translate/listing` - Translate title + description together
+- `GET /api/products/:id/translated?lang=arabic|english` - Get product with translation
+- `POST /api/detect-language` - Detect language of text
+
+### Cost
+Uses gpt-5-mini model (most cost-effective for translation):
+- ~0.001-0.002 credits per listing translation
+- Translations are not cached (on-demand)
+
+### Rate Limiting
+- 30 requests per minute per IP address
+- Text length limits: Title max 500 chars, description max 5000 chars
+- Returns 429 status if rate limit exceeded
+
+### OpenAI API Notes
+- Uses `max_completion_tokens` parameter (NOT `max_tokens`)
+- gpt-5-mini does NOT support the `temperature` parameter - omit it
 
 ---
 
