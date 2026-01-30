@@ -92,3 +92,56 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+
+  android-release:
+    name: Android Release Build
+    max_build_duration: 60
+    instance_type: linux_x2
+    
+    environment:
+      vars:
+        PACKAGE_NAME: "com.saeed.saman"
+      java: 17
+      node: 20
+    
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      
+      - name: Build web app
+        script: |
+          npm run build
+      
+      - name: Add Android platform
+        script: |
+          npx cap add android || true
+      
+      - name: Capacitor sync
+        script: |
+          npx cap sync android
+      
+      - name: Build Android Debug APK
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+    
+    artifacts:
+      - android/app/build/outputs/**/*.apk
+    
+    publishing:
+      email:
+        recipients:
+          - saeed.hokal@hotmail.com
+        notify:
+          success: true
+          failure: true
