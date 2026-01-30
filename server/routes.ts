@@ -2430,6 +2430,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(transactions);
   });
 
+  // Admin: Reset all transactions (clear revenue data)
+  app.delete("/api/admin/transactions/reset", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await db.execute(sql`DELETE FROM transactions`);
+      res.json({ message: "All transactions have been reset", success: true });
+    } catch (error) {
+      console.error("Error resetting transactions:", error);
+      res.status(500).json({ message: "Failed to reset transactions" });
+    }
+  });
+
   // Admin: Seed demo listings for production review
   app.post("/api/admin/seed-demo", isAuthenticated, isAdmin, async (req, res) => {
     try {

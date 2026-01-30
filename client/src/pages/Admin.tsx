@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link } from "wouter";
@@ -858,6 +858,34 @@ export default function Admin() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Automotive Revenue</span>
                   <span className="font-medium">AED {revenueStats?.automotiveRevenue || 0}</span>
+                </div>
+                <div className="pt-4 border-t mt-4">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    data-testid="button-reset-transactions"
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to reset ALL transactions? This will clear all revenue data and cannot be undone.")) {
+                        try {
+                          const response = await fetch("/api/admin/transactions/reset", {
+                            method: "DELETE",
+                            credentials: "include"
+                          });
+                          if (response.ok) {
+                            toast({ title: "Transactions reset successfully" });
+                            queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue-stats"] });
+                          } else {
+                            toast({ title: "Failed to reset transactions", variant: "destructive" });
+                          }
+                        } catch (error) {
+                          toast({ title: "Error resetting transactions", variant: "destructive" });
+                        }
+                      }
+                    }}
+                  >
+                    Reset All Transactions
+                  </Button>
                 </div>
               </CardContent>
             </Card>
