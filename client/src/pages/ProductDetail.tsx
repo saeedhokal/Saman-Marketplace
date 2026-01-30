@@ -233,28 +233,9 @@ export default function ProductDetail() {
 
           <div className="flex flex-col justify-center">
             <div className="space-y-3 mb-6">
-              <div className="flex items-start justify-between gap-2">
-                <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight flex-1">
-                  {showTranslation && translatedTitle ? translatedTitle : product.title}
-                </h1>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleTranslate}
-                  disabled={isTranslating}
-                  className="shrink-0"
-                  data-testid="button-translate"
-                >
-                  {isTranslating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Languages className="h-4 w-4 mr-1" />
-                      <span className="text-xs">{getTranslationButtonLabel()}</span>
-                    </>
-                  )}
-                </Button>
-              </div>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight">
+                {showTranslation && translatedTitle ? translatedTitle : product.title}
+              </h1>
 
               <div className="font-display text-3xl font-bold text-primary">
                 {formattedPrice}
@@ -268,8 +249,28 @@ export default function ProductDetail() {
               )}
             </div>
 
-            <div className="prose prose-slate max-w-none text-muted-foreground mb-6">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-muted-foreground">Description</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleTranslate}
+                  disabled={isTranslating}
+                  className="h-7 px-2 text-muted-foreground"
+                  data-testid="button-translate"
+                >
+                  {isTranslating ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <Languages className="h-3 w-3 mr-1" />
+                      <span className="text-xs">{getTranslationButtonLabel()}</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
                 {showTranslation && translatedDescription ? translatedDescription : product.description}
               </p>
             </div>
