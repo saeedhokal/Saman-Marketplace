@@ -226,3 +226,68 @@ The app uses **native Apple Pay** (NOT web ApplePaySession):
 ### Telr API Keys (DO NOT CONFUSE)
 - **Regular Auth Key:** `3SWWK@m9Mz-5GNtS` - For hosted page/credit cards
 - **Wallets Auth Key:** `spRZ^QWJ5P~MWJpV` - For Apple Pay Remote API (note the caret ^)
+
+---
+
+## Automatic Cleanup & Listing Renewal System (January 30, 2026)
+
+### Overview
+The system automatically manages listing lifecycle including expiration notifications, renewals, and cleanup of old/rejected listings.
+
+### Scheduled Tasks (Runs Every Hour)
+Located in `server/routes.ts` at the bottom - runs via `setInterval` on server startup:
+
+1. **Delete Old Rejected Listings** - `deleteOldRejectedProducts()`
+   - Listings rejected by admin are deleted after 7 days
+   - Uses `rejectedAt` timestamp field
+
+2. **Delete Expired Listings** - `deleteExpiredProducts()`
+   - All listings expire 30 days after approval
+   - Expired listings deleted 30 days after expiration (60 days total from approval)
+   - Uses `expiresAt` timestamp field
+
+3. **Send Expiration Notifications** - `getProductsExpiringTomorrow()`
+   - Sends push + in-app notification 1 day before expiry
+   - Uses `expirationNotified` boolean to prevent duplicate notifications
+
+### Listing Renewal Feature
+**Endpoint:** `POST /api/listings/:id/renew`
+
+- Users can renew listings within 7 days before OR 7 days after expiration
+- Costs 1 credit (deducted from appropriate category: spare parts or automotive)
+- Extends listing for 30 more days from current date
+- Resets `expirationNotified` flag to allow future notifications
+
+**Frontend:** `client/src/pages/MyListings.tsx`
+- "Renew Listing" option appears in dropdown menu for expiring listings
+- Shows confirmation dialog explaining 1 credit cost
+- If insufficient credits, shows toast with "Buy Credits" button linking to subscription page
+
+### Database Schema Additions
+In `shared/schema.ts` - products table:
+- `rejectedAt` (timestamp) - When listing was rejected by admin
+- `expirationNotified` (boolean) - Whether expiration notification was sent
+- `expiresAt` (timestamp) - When listing expires (30 days after approval)
+
+### Storage Methods
+In `server/storage.ts`:
+- `deleteOldRejectedProducts()` - Delete rejected listings older than 7 days
+- `deleteExpiredProducts()` - Delete expired listings older than 30 days past expiration
+- `getProductsExpiringTomorrow()` - Get listings expiring in 1 day (for notifications)
+- `markExpirationNotified(productId)` - Mark listing as notified
+- `renewListing(productId)` - Extend listing by 30 days
+
+### Admin Listing Removal
+**Endpoint:** `DELETE /api/admin/products/:id`
+- Admin can remove listings with optional reason
+- If reason provided, seller receives push + in-app notification with reason
+- Sets `rejectedAt` timestamp for automatic cleanup after 7 days
+
+---
+
+## Price Display (IMPORTANT)
+
+**All prices are stored and displayed in AED (whole numbers)**
+- Prices are stored directly in AED in the database (e.g., 150 = 150 AED)
+- NO division by 100 anywhere in the codebase
+- Format: `price.toLocaleString() + " AED"` (e.g., "1,500 AED")
