@@ -861,30 +861,19 @@ export default function Admin() {
                 </div>
                 <div className="pt-4 border-t mt-4">
                   <Button
-                    variant="destructive"
+                    variant="outline"
                     size="sm"
-                    className="w-full"
+                    className="w-full text-red-500 border-red-500"
                     data-testid="button-reset-transactions"
                     onClick={async () => {
-                      if (confirm("Are you sure you want to reset ALL transactions? This will clear all revenue data and cannot be undone.")) {
-                        try {
-                          const response = await fetch("/api/admin/transactions/reset", {
-                            method: "DELETE",
-                            credentials: "include"
-                          });
-                          if (response.ok) {
-                            toast({ title: "Transactions reset successfully" });
-                            queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue-stats"] });
-                          } else {
-                            toast({ title: "Failed to reset transactions", variant: "destructive" });
-                          }
-                        } catch (error) {
-                          toast({ title: "Error resetting transactions", variant: "destructive" });
-                        }
+                      if (confirm("Reset all transactions?")) {
+                        await fetch("/api/admin/transactions/reset", { method: "DELETE", credentials: "include" });
+                        toast({ title: "Done! Transactions reset." });
+                        queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue-stats"] });
                       }
                     }}
                   >
-                    Reset All Transactions
+                    Reset Transactions (One-Time)
                   </Button>
                 </div>
               </CardContent>
