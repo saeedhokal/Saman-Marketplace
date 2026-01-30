@@ -869,7 +869,8 @@ export default function Admin() {
                       if (confirm("Reset all transactions?")) {
                         await fetch("/api/admin/transactions/reset", { method: "DELETE", credentials: "include" });
                         toast({ title: "Done! Transactions reset." });
-                        queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue-stats"] });
+                        queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue"] });
+                        queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue/detailed"] });
                       }
                     }}
                   >
