@@ -2090,8 +2090,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const id = Number(req.params.id);
     const { reason } = req.body || {};
     
+    console.log(`[Admin] Delete listing request for id: ${id}, reason: ${reason}`);
+    
     // Get the product first to notify the seller
     const product = await storage.getProduct(id);
+    console.log(`[Admin] Product found:`, product ? `${product.title} (seller: ${product.sellerId})` : 'NOT FOUND');
     if (product) {
       // Delete the product
       await storage.deleteProduct(id);

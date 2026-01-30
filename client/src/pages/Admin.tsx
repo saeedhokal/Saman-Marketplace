@@ -190,6 +190,10 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/listings/pending"] });
       toast({ title: "Listing removed", description: "The seller has been notified." });
     },
+    onError: (error: any) => {
+      console.error("Delete error:", error);
+      toast({ variant: "destructive", title: "Failed to remove listing", description: error?.message || "Please try again" });
+    },
   });
 
   const updateSettingsMutation = useMutation({
