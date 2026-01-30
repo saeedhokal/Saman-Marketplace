@@ -43,7 +43,7 @@ import NotFound from "@/pages/not-found";
 function Router() {
   return (
     <>
-      <div className="flex flex-col min-h-screen pb-20">
+      <div className="flex flex-col min-h-screen pb-20 bg-[#0f1318]">
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/categories" component={Categories} />
