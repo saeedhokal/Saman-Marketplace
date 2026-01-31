@@ -58,7 +58,7 @@ export function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0f1318] backdrop-blur-md border-t border-slate-700/50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0f1318] backdrop-blur-md border-t border-slate-700/50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', transform: 'translate3d(0,0,0)', WebkitTransform: 'translate3d(0,0,0)' }}>
         <div className="flex items-center justify-around h-16 px-2">
           {navItems.map((item) => {
             const isActive = location === item.href;
