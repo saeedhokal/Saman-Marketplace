@@ -66,7 +66,7 @@ workflows:
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-build-number "$APP_ID" --platform IOS 2>/dev/null || echo "20")
           NEW_BUILD=$((LATEST_BUILD_NUMBER + 1))
           # Ensure build number is higher than any previously used
-          if [ $NEW_BUILD -lt 89 ]; then NEW_BUILD=89; fi
+          if [ $NEW_BUILD -lt 90 ]; then NEW_BUILD=90; fi
           echo "Setting build number to $NEW_BUILD"
           agvtool new-version -all $NEW_BUILD
       
