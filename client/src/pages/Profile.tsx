@@ -143,10 +143,12 @@ export default function Profile() {
           </div>
         )}
 
-        {/* Push Notification Diagnostics - for debugging */}
-        <div className="mt-4">
-          <PushDiagnostics />
-        </div>
+        {/* Push Notification Diagnostics - admin only */}
+        {userInfo?.isAdmin && (
+          <div className="mt-4">
+            <PushDiagnostics />
+          </div>
+        )}
 
         <div className="mt-4 pt-4">
           <Button 
