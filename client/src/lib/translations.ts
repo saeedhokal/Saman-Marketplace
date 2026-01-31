@@ -144,6 +144,27 @@ export const translations = {
     reject: "Reject",
     managePackages: "Manage Packages",
     revenue: "Revenue",
+    
+    // Profile Page
+    account: "Account",
+    myProfile: "My Profile",
+    savedListings: "Saved Listings",
+    notification: "Notification",
+    purchaseSubscription: "Purchase Subscription",
+    aboutUs: "About Us",
+    termsConditions: "Terms & Conditions",
+    privacyPolicy: "Privacy Policy",
+    cookiePolicy: "Cookie Policy",
+    contactUs: "Contact Us",
+    refundPolicy: "Return, Refund & Cancellation Policy",
+    helpSupport: "Help & Support",
+    signIn: "Sign In",
+    signInToView: "Sign in to view your profile",
+    
+    // No Credits Dialog
+    noCreditsAvailable: "No Credits Available",
+    noCreditsMessage: "You have 0 Spare Parts credits and 0 Automotive credits. You need at least 1 credit to post a listing.",
+    purchaseCredits: "Purchase Credits",
   },
   ar: {
     // Common
@@ -288,6 +309,27 @@ export const translations = {
     reject: "رفض",
     managePackages: "إدارة الباقات",
     revenue: "الإيرادات",
+    
+    // Profile Page
+    account: "الحساب",
+    myProfile: "ملفي الشخصي",
+    savedListings: "الإعلانات المحفوظة",
+    notification: "الإشعارات",
+    purchaseSubscription: "شراء اشتراك",
+    aboutUs: "عن سامان",
+    termsConditions: "الشروط والأحكام",
+    privacyPolicy: "سياسة الخصوصية",
+    cookiePolicy: "سياسة ملفات تعريف الارتباط",
+    contactUs: "اتصل بنا",
+    refundPolicy: "سياسة الإرجاع والاسترداد والإلغاء",
+    helpSupport: "المساعدة والدعم",
+    signIn: "تسجيل الدخول",
+    signInToView: "سجل دخولك لعرض ملفك الشخصي",
+    
+    // No Credits Dialog
+    noCreditsAvailable: "لا يوجد رصيد متاح",
+    noCreditsMessage: "لديك 0 رصيد قطع غيار و 0 رصيد سيارات. تحتاج على الأقل 1 رصيد لنشر إعلان.",
+    purchaseCredits: "شراء رصيد",
   }
 };
 

@@ -100,11 +100,10 @@ export function BottomNav() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-accent" />
-              No Credits Available
+              {t('noCreditsAvailable')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-left">
-              You have 0 Spare Parts credits and 0 Automotive credits. 
-              You need at least 1 credit to post a listing.
+              {t('noCreditsMessage')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
@@ -112,10 +111,10 @@ export function BottomNav() {
               onClick={() => setLocation("/profile/subscription")}
               className="w-full bg-accent hover:bg-accent/90"
             >
-              Purchase Credits
+              {t('purchaseCredits')}
             </AlertDialogAction>
             <AlertDialogCancel className="w-full">
-              Cancel
+              {t('cancel')}
             </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
