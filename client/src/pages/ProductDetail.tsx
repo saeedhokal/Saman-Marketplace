@@ -270,7 +270,7 @@ export default function ProductDetail() {
                   )}
                 </Button>
               </div>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/80">
                 {showTranslation && translatedDescription ? translatedDescription : product.description}
               </p>
             </div>
