@@ -254,10 +254,10 @@ export default function ProductDetail() {
                 <span className="text-sm font-medium text-muted-foreground">Description</span>
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={handleTranslate}
                   disabled={isTranslating}
-                  className="h-8 px-3 border-sky-400/60 bg-sky-500/15 text-sky-300 hover:bg-sky-500/25 hover:border-sky-400"
+                  className="h-8 px-3"
                   data-testid="button-translate"
                 >
                   {isTranslating ? (
