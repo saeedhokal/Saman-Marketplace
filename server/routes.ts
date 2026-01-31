@@ -890,7 +890,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Update user profile
   app.put("/api/user/profile", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
-    const { displayName, firstName, lastName, profileImageUrl } = req.body;
+    const { displayName, firstName, lastName, profileImageUrl, email } = req.body;
     
     const updateData: Record<string, any> = { updatedAt: new Date() };
     
@@ -898,6 +898,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (firstName !== undefined) updateData.firstName = firstName || null;
     if (lastName !== undefined) updateData.lastName = lastName || null;
     if (profileImageUrl !== undefined) updateData.profileImageUrl = profileImageUrl || null;
+    if (email !== undefined) updateData.email = email || null;
     
     await db.update(users)
       .set(updateData)

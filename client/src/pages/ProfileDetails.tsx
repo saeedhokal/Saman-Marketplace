@@ -30,6 +30,7 @@ export default function ProfileDetails() {
     displayName: "",
     firstName: "",
     lastName: "",
+    email: "",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,7 +73,7 @@ export default function ProfileDetails() {
   };
 
   const updateProfile = useMutation({
-    mutationFn: async (data: { displayName?: string; firstName?: string; lastName?: string }) => {
+    mutationFn: async (data: { displayName?: string; firstName?: string; lastName?: string; email?: string }) => {
       return apiRequest("PUT", "/api/user/profile", data);
     },
     onSuccess: () => {
@@ -90,6 +91,7 @@ export default function ProfileDetails() {
       displayName: profile?.displayName || "",
       firstName: profile?.firstName || "",
       lastName: profile?.lastName || "",
+      email: profile?.email || "",
     });
     setIsEditing(true);
   };
@@ -206,6 +208,18 @@ export default function ProfileDetails() {
                       data-testid="input-last-name"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    data-testid="input-email"
+                  />
                 </div>
 
                 <div className="flex gap-3 pt-4">
