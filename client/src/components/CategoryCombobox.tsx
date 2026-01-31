@@ -76,7 +76,7 @@ export function CategoryCombobox({
                       <Wrench className="h-4 w-4 text-white" />
                     )}
                   </span>
-                  <span className="text-foreground">{mainCategory}</span>
+                  <span className="text-orange-900 dark:text-orange-100 font-semibold">{mainCategory}</span>
                 </span>
               ) : (
                 <span className="flex items-center gap-3 text-muted-foreground">
@@ -164,7 +164,7 @@ export function CategoryCombobox({
                   >
                     {subCategory.charAt(0)}
                   </span>
-                  <span className="text-foreground">{subCategory}</span>
+                  <span className="text-orange-900 dark:text-orange-100 font-semibold">{subCategory}</span>
                 </span>
               ) : (
                 <span className="text-muted-foreground">
