@@ -254,18 +254,18 @@ export default function ProductDetail() {
                 <span className="text-sm font-medium text-muted-foreground">Description</span>
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="outline"
                   onClick={handleTranslate}
                   disabled={isTranslating}
-                  className="h-7 px-2 text-muted-foreground"
+                  className="h-8 px-3 border-orange-500/50 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 hover:text-orange-300"
                   data-testid="button-translate"
                 >
                   {isTranslating ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      <Languages className="h-3 w-3 mr-1" />
-                      <span className="text-xs">{getTranslationButtonLabel()}</span>
+                      <Languages className="h-4 w-4 mr-1.5" />
+                      <span className="text-sm font-medium">{getTranslationButtonLabel()}</span>
                     </>
                   )}
                 </Button>
