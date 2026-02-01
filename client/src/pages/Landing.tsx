@@ -17,17 +17,29 @@ export default function Landing() {
   const { t, isRTL } = useLanguage();
   const [, navigate] = useLocation();
 
-  const { data: recentProducts = [], refetch: refetchRecent } = useQuery<Product[]>({
+  const { data: recentProducts = [], refetch: refetchRecent, isLoading: isLoadingRecent } = useQuery<Product[]>({
     queryKey: ["/api/products/recent"],
     refetchOnWindowFocus: true,
     staleTime: 30000,
   });
 
-  const { data: recommendedProducts = [], refetch: refetchRecommended } = useQuery<Product[]>({
+  const { data: recommendedProducts = [], refetch: refetchRecommended, isLoading: isLoadingRecommended } = useQuery<Product[]>({
     queryKey: ["/api/products/recommended"],
     refetchOnWindowFocus: true,
     staleTime: 30000,
   });
+
+  // Skeleton card component for loading state
+  const SkeletonCard = () => (
+    <div className="rounded-xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 animate-pulse">
+      <div className="aspect-square bg-white/5" />
+      <div className="p-3 space-y-2">
+        <div className="h-4 bg-white/10 rounded w-3/4" />
+        <div className="h-3 bg-white/10 rounded w-1/2" />
+        <div className="h-4 bg-orange-500/20 rounded w-1/3" />
+      </div>
+    </div>
+  );
 
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
@@ -145,7 +157,8 @@ export default function Landing() {
             </Link>
           </div>
 
-        {recommendedProducts.length > 0 && (
+        {/* For You Section - show skeleton while loading */}
+        {(isLoadingRecommended || recommendedProducts.length > 0) && (
           <div className="mb-4 -mx-4 px-4 py-4 bg-black/30 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-white">{t('forYou')}</h2>
@@ -154,19 +167,29 @@ export default function Landing() {
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {recommendedProducts.slice(0, 6).map((product) => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product}
-                  sellerImageUrl={(product as any).sellerProfileImageUrl}
-                  showDate
-                />
-              ))}
+              {isLoadingRecommended ? (
+                <>
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                </>
+              ) : (
+                recommendedProducts.slice(0, 6).map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product}
+                    sellerImageUrl={(product as any).sellerProfileImageUrl}
+                    showDate
+                  />
+                ))
+              )}
             </div>
           </div>
         )}
 
-        {recentProducts.length > 0 && (
+        {/* Recent Posts Section - show skeleton while loading */}
+        {(isLoadingRecent || recentProducts.length > 0) && (
           <div className="mb-4 -mx-4 px-4 py-4">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-white">{t('recentPosts')}</h2>
@@ -175,14 +198,23 @@ export default function Landing() {
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {recentProducts.slice(0, 6).map((product) => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product}
-                  sellerImageUrl={(product as any).sellerProfileImageUrl}
-                  showDate
-                />
-              ))}
+              {isLoadingRecent ? (
+                <>
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                </>
+              ) : (
+                recentProducts.slice(0, 6).map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product}
+                    sellerImageUrl={(product as any).sellerProfileImageUrl}
+                    showDate
+                  />
+                ))
+              )}
             </div>
           </div>
         )}
