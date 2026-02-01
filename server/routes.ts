@@ -1110,6 +1110,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         status: "pending",
       });
       
+      // Get customer IP for 3D Secure
+      const forwardedFor = req.headers["x-forwarded-for"];
+      const customerIp = typeof forwardedFor === 'string' ? forwardedFor.split(',')[0].trim() : (req.ip || "127.0.0.1");
+      
+      // Format phone number for Telr (remove leading zero if present)
+      let customerPhone = user?.phone || "971500000000";
+      if (customerPhone.startsWith("0")) {
+        customerPhone = "971" + customerPhone.substring(1);
+      }
+      
       const telrData = {
         method: "create",
         store: 32400,
@@ -1120,7 +1130,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           test: 0,
           amount: amountInAED,
           currency: "AED",
-          description: `${pkg.name} - ${totalCredits} Credits`,
+          description: `Saman Marketplace - ${pkg.name}`,
         },
         return: {
           authorised: `${baseUrl}/payment/success?cart=${cartId}`,
@@ -1131,7 +1141,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           ref: userId,
           email: user?.email || "customer@saman.ae",
           name: {
-            title: "Mr",
+            title: "",
             forenames: user?.firstName || "Customer",
             surname: user?.lastName || "User",
           },
@@ -1142,8 +1152,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             country: "AE",
             areacode: "00000",
           },
-          phone: user?.phone || "971500000000",
-          ip: req.ip || req.headers["x-forwarded-for"] || "0.0.0.0",
+          phone: customerPhone,
+          ip: customerIp,
         },
       };
 
@@ -1410,6 +1420,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const amountInAED = pkg.price.toString(); // Price is already in AED
       console.log(`[TELR] Creating order: cart=${cartId}, amount=${amountInAED} AED, store=${telrStoreId}`);
       
+      // Get customer IP for 3D Secure
+      const forwardedFor = req.headers["x-forwarded-for"];
+      const customerIp = typeof forwardedFor === 'string' ? forwardedFor.split(',')[0].trim() : (req.ip || "127.0.0.1");
+      
+      // Format phone number for Telr (remove leading zero if present)
+      let customerPhone = user?.phone || "971500000000";
+      if (customerPhone.startsWith("0")) {
+        customerPhone = "971" + customerPhone.substring(1);
+      }
+      
       // JSON format matching the old working app EXACTLY
       const telrData = {
         method: "create",
@@ -1421,7 +1441,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           test: 0,
           amount: amountInAED,
           currency: "AED",
-          description: "User created new order",
+          description: `Saman Marketplace - ${pkg.name}`,
         },
         return: {
           authorised: `${baseUrl}/payment/success?cart=${cartId}`,
@@ -1432,21 +1452,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           ref: userId,
           email: user?.email || "customer@saman.ae",
           name: {
-            title: "Mr",
+            title: "",
             forenames: user?.firstName || "Customer",
             surname: user?.lastName || "User",
           },
           address: {
             line1: "Dubai",
-            line2: "UAE",
-            line3: "",
             city: "Dubai",
             state: "Dubai",
             country: "AE",
             areacode: "00000",
           },
-          phone: user?.phone || "971500000000",
-          ip: req.ip || req.headers["x-forwarded-for"] || "0.0.0.0",
+          phone: customerPhone,
+          ip: customerIp,
         },
       };
 
