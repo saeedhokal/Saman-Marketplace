@@ -166,7 +166,7 @@ export default function Home() {
           <Input
             type="text"
             placeholder="Search for category..."
-            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-foreground/60 placeholder:font-semibold"
+            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-white/80 placeholder:font-semibold"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search"
