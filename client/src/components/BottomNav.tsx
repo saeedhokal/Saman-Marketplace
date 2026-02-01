@@ -106,14 +106,14 @@ export function BottomNav() {
               {t('noCreditsMessage')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
             <AlertDialogAction
               onClick={() => setLocation("/profile/subscription")}
               className="w-full bg-accent hover:bg-accent/90"
             >
               {t('purchaseCredits')}
             </AlertDialogAction>
-            <AlertDialogCancel className="w-full">
+            <AlertDialogCancel className="w-full mt-0">
               {t('cancel')}
             </AlertDialogCancel>
           </AlertDialogFooter>
