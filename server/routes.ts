@@ -2362,6 +2362,54 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // TEMPORARY: Force sync subscription packages (for fixing production duplicates)
+  app.get("/api/fix-packages", async (req, res) => {
+    try {
+      console.log("[FIX-PACKAGES] Manually triggered package sync...");
+      
+      // Define the correct packages
+      const correctPackages = [
+        { name: "Spare Part Basic", price: 30, credits: 1, bonusCredits: 0, category: "Spare Parts", sortOrder: 1 },
+        { name: "Spare Part Standard", price: 150, credits: 5, bonusCredits: 1, category: "Spare Parts", sortOrder: 2 },
+        { name: "Spare Part Advanced", price: 600, credits: 20, bonusCredits: 7, category: "Spare Parts", sortOrder: 3 },
+        { name: "Automotive Basic", price: 75, credits: 1, bonusCredits: 0, category: "Automotive", sortOrder: 4 },
+        { name: "Automotive Standard", price: 210, credits: 3, bonusCredits: 0, category: "Automotive", sortOrder: 5 },
+        { name: "Automotive Premium", price: 420, credits: 6, bonusCredits: 2, category: "Automotive", sortOrder: 6 },
+      ];
+      
+      // Get current packages
+      const currentPackages = await storage.getPackages();
+      console.log(`[FIX-PACKAGES] Found ${currentPackages.length} existing packages`);
+      
+      // Delete all existing packages
+      for (const pkg of currentPackages) {
+        await storage.deletePackage(pkg.id);
+      }
+      console.log("[FIX-PACKAGES] Deleted all existing packages");
+      
+      // Create the correct packages
+      for (const pkg of correctPackages) {
+        await storage.createPackage({
+          ...pkg,
+          isActive: true,
+        });
+      }
+      console.log("[FIX-PACKAGES] Created 6 correct packages");
+      
+      // Verify
+      const newPackages = await storage.getPackages();
+      
+      res.json({
+        success: true,
+        message: `Fixed! Deleted ${currentPackages.length} old packages, created ${newPackages.length} correct packages`,
+        packages: newPackages.map(p => ({ name: p.name, price: p.price, category: p.category })),
+      });
+    } catch (error) {
+      console.error("[FIX-PACKAGES] Error:", error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Admin: Database diagnostic endpoint
   app.get("/api/admin/db-status", isAuthenticated, isAdmin, async (req, res) => {
     try {
