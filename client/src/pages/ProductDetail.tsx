@@ -237,7 +237,7 @@ export default function ProductDetail() {
                 {showTranslation && translatedTitle ? translatedTitle : product.title}
               </h1>
 
-              <div className="font-display text-3xl font-bold text-orange-400">
+              <div className="font-display text-3xl font-bold text-orange-500">
                 {formattedPrice}
               </div>
 
