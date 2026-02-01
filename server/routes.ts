@@ -5,7 +5,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products, deviceTokens, notifications } from "@shared/schema";
+import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products, deviceTokens, notifications, transactions } from "@shared/schema";
 import { db } from "./db";
 import { users } from "@shared/models/auth";
 import { eq, sql } from "drizzle-orm";
@@ -2380,6 +2380,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Get current packages
       const currentPackages = await storage.getPackages();
       console.log(`[FIX-PACKAGES] Found ${currentPackages.length} existing packages`);
+      
+      // First, unlink all transactions from packages (set package_id to null)
+      await db.update(transactions).set({ packageId: null });
+      console.log("[FIX-PACKAGES] Unlinked transactions from packages");
       
       // Delete all existing packages
       for (const pkg of currentPackages) {
