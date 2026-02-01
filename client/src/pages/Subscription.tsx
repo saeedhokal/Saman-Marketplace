@@ -109,6 +109,8 @@ export default function Subscription() {
       </div>
 
       <div className="container mx-auto px-4 py-4 space-y-4">
+        {/* Constrain width on desktop for better appearance */}
+        <div className="lg:max-w-md lg:mx-auto space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <Card className="border-accent/30 bg-accent/5">
             <CardContent className="p-3 text-center">
@@ -217,6 +219,7 @@ export default function Subscription() {
           Credits are used to post listings in the {activeTab} category.
           Each listing requires 1 credit. Credits can be purchased multiple times.
         </p>
+        </div>
       </div>
     </div>
   );
