@@ -15,7 +15,7 @@ export default function PaymentDeclined() {
         </p>
         
         <div className="space-y-3 pt-4">
-          <Link href="/buy-credits">
+          <Link href="/profile/subscription">
             <Button className="w-full" data-testid="button-try-again">
               Try Again
             </Button>
