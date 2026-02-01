@@ -2356,6 +2356,34 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(user);
   });
 
+  // Admin: Update user email (for fixing 3D Secure issues)
+  app.post("/api/admin/user/:userId/email", isAuthenticated, isAdmin, async (req, res) => {
+    const targetUserId = req.params.userId as string;
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    
+    await db.update(users)
+      .set({ email, updatedAt: new Date() })
+      .where(sql`id = ${targetUserId}`);
+    
+    const [updated] = await db.select({
+      id: users.id,
+      phone: users.phone,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+    }).from(users).where(sql`id = ${targetUserId}`);
+    
+    if (!updated) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.json({ message: "Email updated", user: updated });
+  });
+
   // Cleanup expired listings (can be called periodically)
   app.post("/api/admin/cleanup-expired", isAuthenticated, isAdmin, async (req, res) => {
     const count = await storage.deleteExpiredProducts();
