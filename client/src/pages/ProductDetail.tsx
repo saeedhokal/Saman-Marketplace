@@ -237,7 +237,7 @@ export default function ProductDetail() {
                 {showTranslation && translatedTitle ? translatedTitle : product.title}
               </h1>
 
-              <div className="font-display text-3xl font-bold text-orange-600">
+              <div className="font-display text-3xl font-bold text-orange-700">
                 {formattedPrice}
               </div>
 
@@ -373,7 +373,7 @@ export default function ProductDetail() {
                         </div>
                         <div className="p-3">
                           <p className="text-sm font-medium line-clamp-1">{p.title}</p>
-                          <p className="text-sm font-bold text-orange-500">{price}</p>
+                          <p className="text-sm font-bold text-orange-700">{price}</p>
                         </div>
                       </Card>
                     </Link>

@@ -75,7 +75,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
           </CardContent>
 
           <CardFooter className="p-3 sm:p-4 pt-0 mt-auto">
-            <p className="font-display text-base sm:text-lg font-bold text-orange-500">
+            <p className="font-display text-base sm:text-lg font-bold text-orange-700">
               {formattedPrice}
             </p>
           </CardFooter>
