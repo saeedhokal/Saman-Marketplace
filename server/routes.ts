@@ -2925,6 +2925,59 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // ==================== SYNC SUBSCRIPTION PACKAGES ====================
+  
+  // Ensure correct subscription packages exist (runs on startup)
+  async function syncSubscriptionPackages() {
+    try {
+      console.log("[SYNC] Checking subscription packages...");
+      
+      // Define the correct packages
+      const correctPackages = [
+        { name: "Spare Part Basic", price: 30, credits: 1, bonusCredits: 0, category: "Spare Parts", sortOrder: 1 },
+        { name: "Spare Part Standard", price: 150, credits: 5, bonusCredits: 1, category: "Spare Parts", sortOrder: 2 },
+        { name: "Spare Part Advanced", price: 600, credits: 20, bonusCredits: 7, category: "Spare Parts", sortOrder: 3 },
+        { name: "Automotive Basic", price: 75, credits: 1, bonusCredits: 0, category: "Automotive", sortOrder: 4 },
+        { name: "Automotive Standard", price: 210, credits: 3, bonusCredits: 0, category: "Automotive", sortOrder: 5 },
+        { name: "Automotive Premium", price: 420, credits: 6, bonusCredits: 2, category: "Automotive", sortOrder: 6 },
+      ];
+      
+      // Get current packages
+      const currentPackages = await storage.getPackages();
+      
+      // Check if packages need to be reset (more than 6 or incorrect pricing)
+      const needsReset = currentPackages.length !== 6 || 
+        !currentPackages.some(p => p.name === "Spare Part Basic" && p.price === 30) ||
+        !currentPackages.some(p => p.name === "Automotive Basic" && p.price === 75);
+      
+      if (needsReset) {
+        console.log(`[SYNC] Found ${currentPackages.length} packages, resetting to correct 6 packages...`);
+        
+        // Delete all existing packages
+        for (const pkg of currentPackages) {
+          await storage.deletePackage(pkg.id);
+        }
+        
+        // Create the correct packages
+        for (const pkg of correctPackages) {
+          await storage.createPackage({
+            ...pkg,
+            isActive: true,
+          });
+        }
+        
+        console.log("[SYNC] Subscription packages reset successfully");
+      } else {
+        console.log("[SYNC] Subscription packages are correct");
+      }
+    } catch (error) {
+      console.error("[SYNC] Error syncing subscription packages:", error);
+    }
+  }
+  
+  // Run package sync on startup
+  syncSubscriptionPackages();
+
   // ==================== SCHEDULED TASKS ====================
   
   // Run cleanup and notification tasks
