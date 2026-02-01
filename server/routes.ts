@@ -1143,6 +1143,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             areacode: "00000",
           },
           phone: user?.phone || "971500000000",
+          ip: req.ip || req.headers["x-forwarded-for"] || "0.0.0.0",
         },
       };
 
@@ -1428,7 +1429,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           cancelled: `${baseUrl}/payment/cancelled?cart=${cartId}`,
         },
         customer: {
-          ref: "saman_user",
+          ref: userId,
           email: user?.email || "customer@saman.ae",
           name: {
             title: "Mr",
@@ -1445,6 +1446,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             areacode: "00000",
           },
           phone: user?.phone || "971500000000",
+          ip: req.ip || req.headers["x-forwarded-for"] || "0.0.0.0",
         },
       };
 
