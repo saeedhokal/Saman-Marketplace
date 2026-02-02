@@ -5,7 +5,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products, deviceTokens, notifications, transactions, favorites, users } from "@shared/schema";
+import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products, deviceTokens, notifications, transactions, favorites, users, userViews } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 import path from "path";
@@ -2404,13 +2404,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // 3. Delete favorites
       await db.delete(favorites).where(sql`user_id = ${targetUserId}`);
       
-      // 4. Delete transactions
+      // 4. Delete user views
+      await db.delete(userViews).where(sql`user_id = ${targetUserId}`);
+      
+      // 5. Delete transactions
       await db.delete(transactions).where(sql`user_id = ${targetUserId}`);
       
-      // 5. Delete user's products
+      // 6. Delete user's products
       await db.delete(products).where(sql`seller_id = ${targetUserId}`);
       
-      // 6. Delete the user
+      // 7. Delete the user
       await db.delete(users).where(sql`id = ${targetUserId}`);
       
       res.json({ 
