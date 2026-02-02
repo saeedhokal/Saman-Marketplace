@@ -129,25 +129,14 @@ workflows:
         script: |
           npx cap sync android
       
-      - name: Generate signing keystore
+      - name: Set up signing keystore
         script: |
-          # Generate a new keystore for signing
-          keytool -genkeypair -v \
-            -keystore $CM_BUILD_DIR/android/app/release.keystore \
-            -alias saman \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass saman2024 \
-            -keypass saman2024 \
-            -dname "CN=Saman Marketplace, OU=Mobile, O=Saman, L=Dubai, ST=Dubai, C=AE"
-          
-          # Create key.properties file
+          # Use the upload keystore included in the repo
           cat > $CM_BUILD_DIR/android/key.properties <<EOF
           storePassword=saman2024
           keyPassword=saman2024
-          keyAlias=saman
-          storeFile=$CM_BUILD_DIR/android/app/release.keystore
+          keyAlias=upload
+          storeFile=$CM_BUILD_DIR/android/app/upload-key.keystore
           EOF
       
       - name: Build Android Release AAB
