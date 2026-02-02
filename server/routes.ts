@@ -2383,6 +2383,45 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ message: "Email updated", user: updated });
   });
 
+  // Bootstrap: Make the owner admin (one-time use for setup)
+  app.post("/api/bootstrap/make-owner-admin", async (req, res) => {
+    const ownerPhone = "971507242111";
+    
+    const [user] = await db.select().from(users).where(sql`phone = ${ownerPhone} OR phone = ${'+' + ownerPhone}`);
+    
+    if (!user) {
+      return res.status(404).json({ message: "Owner account not found" });
+    }
+    
+    await db.update(users)
+      .set({ isAdmin: true, updatedAt: new Date() })
+      .where(sql`id = ${user.id}`);
+    
+    res.json({ message: "Owner is now admin", userId: user.id, phone: user.phone });
+  });
+
+  // Admin: Make a user admin
+  app.post("/api/admin/user/:userId/make-admin", isAuthenticated, isAdmin, async (req, res) => {
+    const targetUserId = req.params.userId as string;
+    
+    await db.update(users)
+      .set({ isAdmin: true, updatedAt: new Date() })
+      .where(sql`id = ${targetUserId}`);
+    
+    const [updated] = await db.select({
+      id: users.id,
+      phone: users.phone,
+      firstName: users.firstName,
+      isAdmin: users.isAdmin,
+    }).from(users).where(sql`id = ${targetUserId}`);
+    
+    if (!updated) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.json({ message: "User is now admin", user: updated });
+  });
+
   // Admin: Reset user account (delete user and all related data for fresh start)
   app.delete("/api/admin/user/:userId/reset", isAuthenticated, isAdmin, async (req, res) => {
     const targetUserId = req.params.userId as string;
