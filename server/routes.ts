@@ -2383,6 +2383,40 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ message: "Email updated", user: updated });
   });
 
+  // Bootstrap: Clean up and delete all accounts with owner phone number
+  app.delete("/api/bootstrap/cleanup-owner-accounts", async (req, res) => {
+    const ownerPhone = "971507242111";
+    
+    // Find all accounts with this phone (any format)
+    const accounts = await db.select().from(users).where(
+      sql`phone LIKE ${'%' + ownerPhone}`
+    );
+    
+    if (accounts.length === 0) {
+      return res.json({ message: "No accounts found to delete" });
+    }
+    
+    const deletedIds: string[] = [];
+    
+    for (const account of accounts) {
+      // Delete all related data
+      await db.delete(deviceTokens).where(sql`user_id = ${account.id}`);
+      await db.delete(notifications).where(sql`user_id = ${account.id}`);
+      await db.delete(favorites).where(sql`user_id = ${account.id}`);
+      await db.delete(userViews).where(sql`user_id = ${account.id}`);
+      await db.delete(transactions).where(sql`user_id = ${account.id}`);
+      await db.delete(products).where(sql`seller_id = ${account.id}`);
+      await db.delete(users).where(sql`id = ${account.id}`);
+      deletedIds.push(account.id);
+    }
+    
+    res.json({ 
+      message: `Deleted ${accounts.length} account(s)`, 
+      deletedIds,
+      phones: accounts.map(a => a.phone)
+    });
+  });
+
   // Bootstrap: Make the owner admin (one-time use for setup)
   app.post("/api/bootstrap/make-owner-admin", async (req, res) => {
     const ownerPhone = "971507242111";
