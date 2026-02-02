@@ -30,7 +30,7 @@ export const AUTOMOTIVE_SUBCATEGORIES = [
   "Haval", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lamborghini",
   "Land Rover", "Lexus", "Li Auto", "Maserati", "Mazda", "Mercedes", "MG",
   "Mitsubishi", "Motorcycles", "NIO", "Nissan", "OFFROAD", "Other", "Polaris",
-  "Porsche", "Rolls Royce", "Subaru", "Toyota", "Volkswagen", "XPeng"
+  "Porsche", "Rolls Royce", "Rox", "Subaru", "Toyota", "Volkswagen", "XPeng"
 ] as const;
 
 // Car models by brand (for Automotive filtering)
