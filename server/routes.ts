@@ -2445,6 +2445,48 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ message: "Owner credits restored to 10/10", userId: user.id, sparePartsCredits: 10, automotiveCredits: 10 });
   });
 
+  // Bootstrap: Create Apple Review demo account
+  app.post("/api/bootstrap/create-apple-review-account", async (req, res) => {
+    const demoPhone = "971500000001";
+    const demoPassword = "AppleReview2024";
+    
+    // Check if account already exists
+    const [existing] = await db.select().from(users).where(sql`phone = ${demoPhone}`);
+    
+    if (existing) {
+      return res.json({ 
+        message: "Apple review account already exists", 
+        phone: demoPhone, 
+        password: demoPassword,
+        note: "Use phone: 0500000001 or +971500000001"
+      });
+    }
+    
+    // Create the demo account
+    const hashedPassword = await bcrypt.hash(demoPassword, 10);
+    const [newUser] = await db.insert(users).values({
+      id: crypto.randomUUID(),
+      phone: demoPhone,
+      password: hashedPassword,
+      firstName: "Apple",
+      lastName: "Reviewer",
+      email: "demo@apple-review.com",
+      sparePartsCredits: 10,
+      automotiveCredits: 10,
+      isAdmin: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    
+    res.json({ 
+      message: "Apple review account created", 
+      phone: demoPhone, 
+      password: demoPassword,
+      note: "Use phone: 0500000001 or +971500000001",
+      userId: newUser.id
+    });
+  });
+
   // Admin: Make a user admin
   app.post("/api/admin/user/:userId/make-admin", isAuthenticated, isAdmin, async (req, res) => {
     const targetUserId = req.params.userId as string;
