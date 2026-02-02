@@ -59,9 +59,6 @@ function isValidCategoryPair(mainCategory: string, subCategory: string): boolean
   return !!validSubs && (validSubs as readonly string[]).includes(subCategory);
 }
 
-// Owner phone - normalized format (without + or leading 0)
-const OWNER_PHONES = ["971507242111"];
-
 // Middleware to check if user is admin
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const userId = getCurrentUserId(req);
@@ -69,8 +66,7 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   const [user] = await db.select().from(users).where(eq(users.id, userId));
-  // Allow if user is admin OR is one of the owner phone numbers
-  if (!user?.isAdmin && !OWNER_PHONES.includes(user?.phone || "")) {
+  if (!user?.isAdmin) {
     return res.status(403).json({ message: "Admin access required" });
   }
   next();
@@ -857,12 +853,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const credits = await storage.getUserCredits(userId);
     const subscriptionEnabled = await storage.isSubscriptionEnabled();
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    // Owner phone number is always admin
-    const isOwnerAdmin = OWNER_PHONES.includes(user?.phone || "");
     res.json({ 
       sparePartsCredits: credits.sparePartsCredits,
       automotiveCredits: credits.automotiveCredits,
-      isAdmin: user?.isAdmin || isOwnerAdmin, 
+      isAdmin: user?.isAdmin || false, 
       subscriptionEnabled 
     });
   });

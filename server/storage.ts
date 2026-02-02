@@ -676,17 +676,11 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getAdminUsers(): Promise<{ id: string; phone: string | null }[]> {
-    // Get users with isAdmin=true OR who are in the owner phones list
-    const OWNER_PHONES = ["971507242111"];
+    // Get users with isAdmin=true only
     const adminUsers = await db.select({
       id: users.id,
       phone: users.phone,
-    }).from(users).where(
-      or(
-        eq(users.isAdmin, true),
-        inArray(users.phone, OWNER_PHONES)
-      )
-    );
+    }).from(users).where(eq(users.isAdmin, true));
     return adminUsers;
   }
 
