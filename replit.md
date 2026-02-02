@@ -101,7 +101,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 ---
 
-## Current Status (February 1, 2026)
+## Current Status (February 2, 2026)
 
 ### What's WORKING
 - User login/registration (phone + OTP)
@@ -116,13 +116,38 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - Skeleton loading cards on Landing page
 - Desktop-optimized Subscription page layout
 
-### ACTIVE ISSUE - 3D Secure (February 1, 2026)
-Credit card payments failing with **Status 47 - 3DSecure authentication rejected**
+### App Store Submissions Status
 
-**Root cause:** Production user has NO EMAIL set in database. Uses placeholder "customer@saman.ae" which causes 3D Secure verification to fail.
+#### iOS App - In Review
+- **Status:** Submitted to App Store, in 48-hour review period
+- **Version:** 2.0.0
+- **Bundle ID:** com.saeed.saman
 
-### FIX REQUIRED
-After publishing, run this in browser console at thesamanapp.com while logged in:
+#### Android App - Pending Upload Key Reset
+- **Status:** Upload key reset requested on February 2, 2026
+- **Google Play Version:** 1.1.1 (live with 25 installs)
+- **New Version Ready:** 1.1.2 (versionCode 13)
+- **Package Name:** com.saeed.saman
+
+**Android Upload Key Details:**
+- **New upload keystore:** `android/app/upload-key.keystore`
+- **Alias:** upload
+- **Password:** saman2024
+- **New SHA1:** `E0:94:63:3C:74:75:5F:7B:D9:56:0B:F4:14:01:6E:E6:7F:2A:E1:8A`
+- **PEM file:** `android/app/upload_certificate.pem` (uploaded to Google Play)
+- **Expected approval:** 2-3 business days from February 2, 2026
+
+**After Google approves upload key reset:**
+1. Push code to GitHub from Replit
+2. Go to Codemagic → Start new build → Select "android-release"
+3. Download signed AAB from artifacts
+4. Upload AAB to Google Play Console → Create new release
+
+### KNOWN ISSUE - Credit Card Payments (Status 90)
+Credit card payments fail with Status 90 (Telr merchant configuration issue). This is NOT a code issue - Telr needs to fix their merchant configuration. Apple Pay works fine.
+
+### Previous 3D Secure Issue (Resolved)
+Production user email was missing. Added admin endpoint to update email:
 ```javascript
 fetch('/api/admin/user/aaf09421-ec24-4799-8ae2-4bb88af00aaf/email', {
   method: 'POST',
