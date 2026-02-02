@@ -99,6 +99,8 @@ workflows:
     instance_type: mac_mini_m2
     
     environment:
+      android_signing:
+        - saman_keystore
       vars:
         PACKAGE_NAME: "com.saeed.saman"
       java: 21
@@ -128,6 +130,16 @@ workflows:
       - name: Capacitor sync
         script: |
           npx cap sync android
+      
+      - name: Set up Android signing
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > $CM_BUILD_DIR/android/app/keystore.jks
+          cat > $CM_BUILD_DIR/android/key.properties <<EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=$CM_BUILD_DIR/android/app/keystore.jks
+          EOF
       
       - name: Build Android Release AAB
         script: |
