@@ -2428,6 +2428,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ message: "Owner is now admin", userId: user.id, phone: user.phone });
   });
 
+  // Bootstrap: Restore owner credits (one-time use for setup)
+  app.post("/api/bootstrap/restore-owner-credits", async (req, res) => {
+    const ownerPhone = "971507242111";
+    
+    const [user] = await db.select().from(users).where(sql`phone = ${ownerPhone} OR phone = ${'+' + ownerPhone}`);
+    
+    if (!user) {
+      return res.status(404).json({ message: "Owner account not found" });
+    }
+    
+    await db.update(users)
+      .set({ sparePartsCredits: 10, automotiveCredits: 10, updatedAt: new Date() })
+      .where(sql`id = ${user.id}`);
+    
+    res.json({ message: "Owner credits restored to 10/10", userId: user.id, sparePartsCredits: 10, automotiveCredits: 10 });
+  });
+
   // Admin: Make a user admin
   app.post("/api/admin/user/:userId/make-admin", isAuthenticated, isAdmin, async (req, res) => {
     const targetUserId = req.params.userId as string;
