@@ -9,37 +9,25 @@ export const MAIN_CATEGORIES = ["Spare Parts", "Automotive"] as const;
 export type MainCategory = typeof MAIN_CATEGORIES[number];
 
 // Sub-categories for Spare Parts (car brands - no Chinese + universal parts)
+// "Other" first, then alphabetical
 export const SPARE_PARTS_SUBCATEGORIES = [
-  // Part Types (shown first in dropdown)
-  "Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other",
-  // Car brands (no Chinese)
-  "Toyota", "Honda", "Nissan", "Ford", "Chevrolet", "BMW", "Mercedes", "Audi",
-  "Volkswagen", "Hyundai", "Kia", "Mazda", "Mitsubishi", "Lexus", "Infiniti",
-  "Land Rover", "Jeep", "Dodge", "GMC", "Porsche", "Ferrari", "Lamborghini",
-  // Off-road / ATV brands
-  "CAN-AM", "Polaris", "OFFROAD"
+  "Other",
+  "Audi", "BMW", "CAN-AM", "Chevrolet", "Dodge", "Ferrari", "Ford", "GMC",
+  "Honda", "Hyundai", "Infiniti", "Jeep", "Kia", "Lamborghini", "Land Rover",
+  "Lexus", "Lights", "Mazda", "Mercedes", "Mitsubishi", "Nissan", "OFFROAD",
+  "Polaris", "Porsche", "Rims", "Tires", "Toyota", "Turbos & Superchargers",
+  "Universal", "Volkswagen"
 ] as const;
 
 // Sub-categories for Automotive (vehicles for sale - includes Chinese brands)
+// Alphabetical order
 export const AUTOMOTIVE_SUBCATEGORIES = [
-  // Japanese brands
-  "Toyota", "Honda", "Nissan", "Mazda", "Mitsubishi", "Lexus", "Infiniti", "Subaru",
-  // American brands
-  "Ford", "Chevrolet", "Dodge", "Jeep", "GMC", "Cadillac",
-  // German brands
-  "BMW", "Mercedes", "Audi", "Volkswagen", "Porsche",
-  // Korean brands
-  "Hyundai", "Kia", "Genesis",
-  // British brands
-  "Land Rover", "Jaguar", "Bentley", "Rolls Royce",
-  // Italian brands
-  "Ferrari", "Lamborghini", "Maserati", "Alfa Romeo",
-  // Chinese brands
-  "BYD", "Chery", "Geely", "Great Wall", "MG", "NIO", "XPeng", "Li Auto", "Haval",
-  // Off-road / ATV brands
-  "CAN-AM", "Polaris", "OFFROAD",
-  // Other
-  "Motorcycles", "Other"
+  "Alfa Romeo", "Audi", "Bentley", "BMW", "BYD", "Cadillac", "CAN-AM", "Chery",
+  "Chevrolet", "Dodge", "Ferrari", "Ford", "Geely", "Genesis", "GMC", "Great Wall",
+  "Haval", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lamborghini",
+  "Land Rover", "Lexus", "Li Auto", "Maserati", "Mazda", "Mercedes", "MG",
+  "Mitsubishi", "Motorcycles", "NIO", "Nissan", "OFFROAD", "Other", "Polaris",
+  "Porsche", "Rolls Royce", "Subaru", "Toyota", "Volkswagen", "XPeng"
 ] as const;
 
 // Car models by brand (for Automotive filtering)
