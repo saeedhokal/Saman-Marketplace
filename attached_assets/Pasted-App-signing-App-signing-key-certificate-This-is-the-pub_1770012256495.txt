@@ -1,0 +1,37 @@
+App signing
+
+App signing key certificate
+This is the public certificate for the app signing key that Google uses to sign each of your releases. Use it to register your key with API providers. The app signing key itself is not accessible, and is kept on a secure Google server.
+MD5 certificate fingerprint
+FA:3E:BE:65:C3:AC:F6:29:82:6C:70:17:4C:31:58:4E
+SHA-1 certificate fingerprint
+EF:9B:D8:17:96:95:BF:76:E2:91:97:BA:3B:7F:62:CD:B9:7E:FE:D5
+SHA-256 certificate fingerprint
+6C:E7:B6:A4:DF:29:48:A4:AA:E2:98:9F:FF:54:25:01:B4:BB:36:E2:57:31:E3:D4:CB:E3:03:44:87:73:49:63
+Upgrade your app signing key
+Your current app signing key's encryption strength meets or exceeds Google Play's recommended minimum standard
+You can upgrade your app signing key once a year to move your users to a new key. Learn more
+
+Upload key certificate
+This is the public certificate for your private upload key. Use your upload key to sign each release so that Google knows that updates are from you. Use the certificate below to register your upload key with API providers.
+MD5 certificate fingerprint
+87:3E:FA:A6:F0:D2:C8:16:62:1C:49:1E:91:D8:93:71
+SHA-1 certificate fingerprint
+05:18:6F:50:D5:2A:35:EF:B1:45:31:42:41:AF:E0:E0:5E:AC:7C:67
+SHA-256 certificate fingerprint
+7F:2F:13:8F:69:36:84:3C:5A:D7:33:33:79:98:D9:A2:37:E1:36:62:A3:CA:2C:EF:B3:B9:31:DC:83:48:E2:8A
+Request upload key reset
+To start using a new upload certificate, request an upload key reset
+Digital Asset Links JSON
+To associate your app with a website domain, copy and paste this snippet into your Digital Asset Links JSON file. If you already have a non-empty JSON file, merge this snippet with the existing statements according to documentation. Digital Asset Links JSON file is required if you want to use Android App Links to direct mobile web users to your app. Learn more
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.saman.marketplace",
+      "sha256_cert_fingerprints":
+        ["6C:E7:B6:A4:DF:29:48:A4:AA:E2:98:9F:FF:54:25:01:B4:BB:36:E2:57:31:E3:D4:CB:E3:03:44:87:73:49:63"]
+    }
+  }
+]
