@@ -5,9 +5,8 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products, deviceTokens, notifications, transactions } from "@shared/schema";
+import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products, deviceTokens, notifications, transactions, favorites, users } from "@shared/schema";
 import { db } from "./db";
-import { users } from "@shared/models/auth";
 import { eq, sql } from "drizzle-orm";
 import path from "path";
 import fs from "fs";
@@ -2382,6 +2381,50 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
     
     res.json({ message: "Email updated", user: updated });
+  });
+
+  // Admin: Reset user account (delete user and all related data for fresh start)
+  app.delete("/api/admin/user/:userId/reset", isAuthenticated, isAdmin, async (req, res) => {
+    const targetUserId = req.params.userId as string;
+    
+    try {
+      // Get user info before deletion
+      const [userToDelete] = await db.select().from(users).where(sql`id = ${targetUserId}`);
+      if (!userToDelete) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Delete in order (respecting foreign key constraints)
+      // 1. Delete device tokens
+      await db.delete(deviceTokens).where(sql`user_id = ${targetUserId}`);
+      
+      // 2. Delete notifications
+      await db.delete(notifications).where(sql`user_id = ${targetUserId}`);
+      
+      // 3. Delete favorites
+      await db.delete(favorites).where(sql`user_id = ${targetUserId}`);
+      
+      // 4. Delete transactions
+      await db.delete(transactions).where(sql`user_id = ${targetUserId}`);
+      
+      // 5. Delete user's products
+      await db.delete(products).where(sql`seller_id = ${targetUserId}`);
+      
+      // 6. Delete the user
+      await db.delete(users).where(sql`id = ${targetUserId}`);
+      
+      res.json({ 
+        message: "User account reset successfully", 
+        deletedUser: {
+          id: userToDelete.id,
+          phone: userToDelete.phone,
+          email: userToDelete.email,
+        }
+      });
+    } catch (error) {
+      console.error("[Admin] Error resetting user:", error);
+      res.status(500).json({ message: "Failed to reset user account" });
+    }
   });
 
   // Cleanup expired listings (can be called periodically)
