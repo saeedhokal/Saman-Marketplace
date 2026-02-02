@@ -9,14 +9,17 @@ export const MAIN_CATEGORIES = ["Spare Parts", "Automotive"] as const;
 export type MainCategory = typeof MAIN_CATEGORIES[number];
 
 // Sub-categories for Spare Parts (car brands - no Chinese + universal parts)
-// "Other" first, then alphabetical
+// Part types first, then "Other", then car brands alphabetically
 export const SPARE_PARTS_SUBCATEGORIES = [
+  // Part Types (shown first)
+  "Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights",
+  // Other
   "Other",
+  // Car brands alphabetically
   "Audi", "BMW", "CAN-AM", "Chevrolet", "Dodge", "Ferrari", "Ford", "GMC",
   "Honda", "Hyundai", "Infiniti", "Jeep", "Kia", "Lamborghini", "Land Rover",
-  "Lexus", "Lights", "Mazda", "Mercedes", "Mitsubishi", "Nissan", "OFFROAD",
-  "Polaris", "Porsche", "Rims", "Tires", "Toyota", "Turbos & Superchargers",
-  "Universal", "Volkswagen"
+  "Lexus", "Mazda", "Mercedes", "Mitsubishi", "Nissan", "OFFROAD", "Polaris",
+  "Porsche", "Toyota", "Volkswagen"
 ] as const;
 
 // Sub-categories for Automotive (vehicles for sale - includes Chinese brands)
