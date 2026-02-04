@@ -200,6 +200,14 @@ export const translations = {
     noCreditsAvailable: "No Credits Available",
     noCreditsMessage: "You have 0 Spare Parts credits and 0 Automotive credits. You need at least 1 credit to post a listing.",
     purchaseCredits: "Purchase Credits",
+    
+    // Package Names
+    sparePartBasic: "Spare Part Basic",
+    sparePartStandard: "Spare Part Standard",
+    sparePartAdvanced: "Spare Part Advanced",
+    automotiveBasic: "Automotive Basic",
+    automotiveStandard: "Automotive Standard",
+    automotivePremium: "Automotive Premium",
   },
   ar: {
     // Common
@@ -400,6 +408,14 @@ export const translations = {
     noCreditsAvailable: "لا يوجد رصيد متاح",
     noCreditsMessage: "لديك 0 رصيد قطع غيار و 0 رصيد سيارات. تحتاج على الأقل 1 رصيد لنشر إعلان.",
     purchaseCredits: "شراء رصيد",
+    
+    // Package Names
+    sparePartBasic: "باقة قطع غيار أساسية",
+    sparePartStandard: "باقة قطع غيار قياسية",
+    sparePartAdvanced: "باقة قطع غيار متقدمة",
+    automotiveBasic: "باقة سيارات أساسية",
+    automotiveStandard: "باقة سيارات قياسية",
+    automotivePremium: "باقة سيارات مميزة",
   }
 };
 

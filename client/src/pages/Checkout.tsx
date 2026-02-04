@@ -12,6 +12,16 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SubscriptionPackage } from "@shared/schema";
 import { Capacitor } from "@capacitor/core";
 import { useLanguage } from "@/hooks/use-language";
+import { type TranslationKey } from "@/lib/translations";
+
+const packageNameMap: Record<string, TranslationKey> = {
+  "Spare Part Basic": "sparePartBasic",
+  "Spare Part Standard": "sparePartStandard", 
+  "Spare Part Advanced": "sparePartAdvanced",
+  "Automotive Basic": "automotiveBasic",
+  "Automotive Standard": "automotiveStandard",
+  "Automotive Premium": "automotivePremium",
+};
 
 // Import the native Apple Pay plugin
 let CapacitorApplePay: any = null;

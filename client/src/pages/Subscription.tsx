@@ -7,6 +7,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Package, Car, Loader2, Check, Sparkles } from "lucide-react";
 import { type SubscriptionPackage } from "@shared/schema";
 import { useLanguage } from "@/hooks/use-language";
+import { type TranslationKey } from "@/lib/translations";
+
+const packageNameMap: Record<string, TranslationKey> = {
+  "Spare Part Basic": "sparePartBasic",
+  "Spare Part Standard": "sparePartStandard", 
+  "Spare Part Advanced": "sparePartAdvanced",
+  "Automotive Basic": "automotiveBasic",
+  "Automotive Standard": "automotiveStandard",
+  "Automotive Premium": "automotivePremium",
+};
 
 interface CreditsInfo {
   sparePartsCredits: number;
@@ -178,7 +188,7 @@ export default function Subscription() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-base">{pkg.name}</h3>
+                        <h3 className="font-semibold text-base">{packageNameMap[pkg.name] ? t(packageNameMap[pkg.name]) : pkg.name}</h3>
                         <div className="flex items-baseline gap-2 mt-1">
                           <span className="text-2xl font-bold text-accent">{isRTL ? `${pkg.price} د.إ` : `AED ${pkg.price}`}</span>
                         </div>
