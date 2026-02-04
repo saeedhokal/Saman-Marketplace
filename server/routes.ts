@@ -1103,15 +1103,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         status: "pending",
       });
       
-      // Format phone number for Telr (must include + prefix)
+      // Format phone number for Telr (remove leading zero if present)
       let customerPhone = user?.phone || "971500000000";
       if (customerPhone.startsWith("0")) {
-        customerPhone = "+971" + customerPhone.substring(1);
-      } else if (!customerPhone.startsWith("+")) {
-        customerPhone = "+" + customerPhone;
+        customerPhone = "971" + customerPhone.substring(1);
       }
       
-      // Regular auth key for Hosted Payment Page (NOT Wallets key - that's only for Remote API)
       const telrData = {
         method: "create",
         store: 32400,
