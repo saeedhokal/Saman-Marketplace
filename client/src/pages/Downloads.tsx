@@ -1,5 +1,5 @@
 import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
-import samanLogo from "@/assets/saman-logo.jpg";
+import samanLogo from "@assets/0b846dc6-8068-4fa9-b7a5-f5cbba6c1d1d_1770203862100.jpg";
 import { SiApple, SiGoogleplay } from "react-icons/si";
 
 export default function Downloads() {
@@ -15,11 +15,11 @@ export default function Downloads() {
       <div className="fixed inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
       
       <div className="relative z-10 w-full max-w-md mx-auto px-6 py-12 text-center">
-        <div className="mb-8">
+        <div className="mb-6 bg-white rounded-2xl p-4 mx-auto w-fit shadow-2xl">
           <img 
             src={samanLogo} 
             alt="Saman Marketplace" 
-            className="w-32 h-32 mx-auto rounded-2xl shadow-2xl"
+            className="w-56 mx-auto"
           />
         </div>
         
