@@ -448,6 +448,17 @@ export default function Checkout() {
       setIsProcessing(true);
       console.log("[Checkout] Starting credit card checkout for package:", pkg.id);
       
+      // Debug log to server (fire and forget)
+      fetch("/api/debug/checkout-click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          packageId: pkg.id, 
+          userId: effectiveUserId,
+          timestamp: Date.now() 
+        })
+      }).catch(() => {});
+      
       try {
         // Get a checkout token from the server (include user ID for iOS compatibility)
         const tokenRes = await apiRequest("POST", "/api/checkout-token", { 
