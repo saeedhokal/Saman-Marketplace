@@ -70,13 +70,13 @@ export default function Profile() {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
-          <div className="flex items-center h-14">
-            <Link href="/">
-              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
+          <div className="relative flex items-center justify-center h-14">
+            <Link href="/" className={`absolute ${isRTL ? 'right-0' : 'left-0'}`}>
+              <button className="p-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
+                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
             </Link>
-            <h1 className="flex-1 text-center font-semibold text-lg pr-8">{t('account')}</h1>
+            <h1 className="font-semibold text-lg">{t('account')}</h1>
           </div>
         </div>
       </div>

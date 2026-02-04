@@ -171,16 +171,17 @@ export default function MyListings() {
   }, []);
 
   return (
+    <>
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
-          <div className={`flex items-center h-14 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Link href="/">
-              <button className={`p-2 rounded-lg hover:bg-secondary transition-colors ${isRTL ? '-mr-2' : '-ml-2'}`} data-testid="button-back">
+          <div className="relative flex items-center justify-center h-14">
+            <Link href="/" className={`absolute ${isRTL ? 'right-0' : 'left-0'}`}>
+              <button className="p-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
                 <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
             </Link>
-            <h1 className={`flex-1 text-center font-semibold text-lg ${isRTL ? 'pl-8' : 'pr-8'}`}>{t('myListings')}</h1>
+            <h1 className="font-semibold text-lg">{t('myListings')}</h1>
           </div>
         </div>
       </div>
@@ -293,8 +294,10 @@ export default function MyListings() {
           </div>
         )}
       </div>
+    </PullToRefresh>
 
-      <div className="fixed left-0 right-0 p-4 pointer-events-none" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+      {/* Fixed button outside PullToRefresh to prevent jumping */}
+      <div className="fixed left-0 right-0 p-4 pointer-events-none z-50" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
         <Link href="/sell" className="pointer-events-auto">
           <Button className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-medium rounded-full shadow-lg" data-testid="button-add-listing">
             {t('addListing')}
@@ -349,6 +352,6 @@ export default function MyListings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </PullToRefresh>
+    </>
   );
 }
