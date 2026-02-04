@@ -1086,7 +1086,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const cartId = `SAMAN-${userId}-${packageId}-${Date.now()}`;
       const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
-      const amountInAED = pkg.price.toString(); // Price is already in AED
+      const amountInAED = Number(pkg.price).toFixed(2); // Must be decimal format like "5.00"
       const baseUrl = "https://thesamanapp.com";
       
       console.log(`[CHECKOUT-REDIRECT] Creating payment: ${amountInAED} AED for ${pkg.name}`);
@@ -1793,7 +1793,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           type: "sale",
           method: "applepay",
           cartid: cartId,
-          amount: pkg.price.toString(), // Price is already in AED
+          amount: Number(pkg.price).toFixed(2), // Must be decimal format like "5.00"
           currency: "AED",
           description: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
           test: 0, // Live production mode
