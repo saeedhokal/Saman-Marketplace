@@ -134,27 +134,27 @@ export default function Subscription() {
         <div className="flex gap-2 p-1.5 bg-secondary/80 rounded-xl">
           <button
             onClick={() => setActiveTab("Spare Parts")}
-            className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
+            className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
               activeTab === "Spare Parts"
                 ? "bg-accent text-accent-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
             data-testid="tab-spare-parts"
           >
-            <Package className={`h-4 w-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-            {t("spareParts")}
+            <Package className="h-4 w-4 shrink-0" />
+            <span>{t("spareParts")}</span>
           </button>
           <button
             onClick={() => setActiveTab("Automotive")}
-            className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
+            className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
               activeTab === "Automotive"
                 ? "bg-accent text-accent-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
             data-testid="tab-automotive"
           >
-            <Car className={`h-4 w-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-            {t("automotive")}
+            <Car className="h-4 w-4 shrink-0" />
+            <span>{t("automotive")}</span>
           </button>
         </div>
 
