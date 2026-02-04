@@ -15,13 +15,12 @@ export default function Downloads() {
       <div className="fixed inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
       
       <div className="relative z-10 w-full max-w-md mx-auto px-6 py-12 text-center">
-        <div className="mb-6 relative mx-auto w-fit">
-          <div className="absolute inset-0 bg-white rounded-lg" />
+        <div className="mb-6 mx-auto w-fit" style={{ mixBlendMode: 'screen' }}>
           <img 
             src={samanLogo} 
             alt="Saman Marketplace" 
-            className="w-64 mx-auto relative"
-            style={{ mixBlendMode: 'multiply' }}
+            className="w-64 mx-auto"
+            style={{ filter: 'invert(1)' }}
           />
         </div>
         
