@@ -114,12 +114,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     logApplePaySession("CLIENT_LOG", req.body);
     res.json({ ok: true });
   });
-  
-  // Debug endpoint for checkout button clicks
-  app.post("/api/debug/checkout-click", (req, res) => {
-    console.log("[DEBUG] Checkout button clicked:", JSON.stringify(req.body));
-    res.json({ ok: true });
-  });
 
   app.get("/api/health", async (req, res) => {
     try {
