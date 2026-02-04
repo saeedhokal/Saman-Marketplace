@@ -151,22 +151,6 @@ export default function Admin() {
     },
   });
 
-  const addCreditsMutation = useMutation({
-    mutationFn: ({ userId, category, amount }: { userId: string; category: "Spare Parts" | "Automotive"; amount: number }) => 
-      apiRequest("POST", `/api/admin/users/${userId}/credits`, { category, amount }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({ title: "Credits added", description: "Credits have been added to the user's account." });
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: "Failed to add credits", 
-        description: error.message || "Could not add credits",
-        variant: "destructive"
-      });
-    },
-  });
-
   const approveMutation = useMutation({
     mutationFn: (id: number) => apiRequest("POST", `/api/admin/listings/${id}/approve`),
     onSuccess: () => {
@@ -945,38 +929,6 @@ export default function Admin() {
                                 {new Date(user.createdAt).toLocaleDateString()}
                               </span>
                             )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-xs h-7"
-                              onClick={() => {
-                                const amount = prompt("How many Spare Parts credits to add?", "1");
-                                if (amount && parseInt(amount) > 0) {
-                                  addCreditsMutation.mutate({ userId: user.id, category: "Spare Parts", amount: parseInt(amount) });
-                                }
-                              }}
-                              data-testid={`button-add-parts-credits-${user.id}`}
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Parts
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-xs h-7"
-                              onClick={() => {
-                                const amount = prompt("How many Automotive credits to add?", "1");
-                                if (amount && parseInt(amount) > 0) {
-                                  addCreditsMutation.mutate({ userId: user.id, category: "Automotive", amount: parseInt(amount) });
-                                }
-                              }}
-                              data-testid={`button-add-auto-credits-${user.id}`}
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Auto
-                            </Button>
                           </div>
                         </div>
                         {!user.isAdmin && (

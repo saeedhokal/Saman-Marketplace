@@ -1160,8 +1160,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.log("[CHECKOUT-REDIRECT] Telr response:", JSON.stringify(telrResult));
 
       if (telrResult.order?.url) {
-        // Store Telr's order ref separately (don't overwrite paymentReference which has our cartId)
-        await storage.updateTransactionTelrRef(transaction.id, telrResult.order.ref);
+        await storage.updateTransactionReference(transaction.id, telrResult.order.ref);
         // Redirect directly to Telr payment page
         return res.redirect(telrResult.order.url);
       } else {
@@ -1172,71 +1171,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     } catch (error: any) {
       console.error("[CHECKOUT-REDIRECT] Error:", error);
       return res.redirect("/profile/subscription?error=server_error");
-    }
-  });
-
-  // Mark payment as declined and get reason from Telr
-  app.post("/api/payment/mark-declined", async (req, res) => {
-    try {
-      const { cartId } = req.body;
-      if (!cartId) {
-        return res.json({ success: false, reason: "Missing cart ID" });
-      }
-
-      // Find transaction by cartId
-      const transaction = await storage.getTransactionByReference(cartId);
-      if (!transaction) {
-        console.log("[MARK-DECLINED] Transaction not found for cart:", cartId);
-        return res.json({ success: false, reason: "Transaction not found" });
-      }
-
-      // Query Telr for the actual status and reason
-      const telrRef = transaction.telrRef;
-      let declineReason = "Payment was declined by your bank";
-
-      if (telrRef) {
-        try {
-          const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              method: "check",
-              store: 32400,
-              authkey: "3SWWK@m9Mz-5GNtS",
-              order: { ref: telrRef },
-            }),
-          });
-          const telrData = await telrResponse.json();
-          console.log("[MARK-DECLINED] Telr status for", telrRef, ":", JSON.stringify(telrData));
-
-          // Extract decline reason
-          const statusCode = telrData.order?.status?.code;
-          const statusText = telrData.order?.status?.text;
-          const transactionStatus = telrData.transaction?.status;
-          const transactionMessage = telrData.transaction?.message;
-
-          if (statusCode === "D47" || statusText?.includes("47")) {
-            declineReason = "3D Secure verification was rejected. Please complete verification next time.";
-          } else if (statusCode === "D46" || statusText?.includes("46")) {
-            declineReason = "3D Secure not available for this card.";
-          } else if (transactionMessage) {
-            declineReason = transactionMessage;
-          } else if (statusText) {
-            declineReason = statusText;
-          }
-        } catch (e) {
-          console.error("[MARK-DECLINED] Error querying Telr:", e);
-        }
-      }
-
-      // Update transaction status to failed
-      await storage.updateTransactionStatus(transaction.id, "failed");
-      console.log("[MARK-DECLINED] Transaction", transaction.id, "marked as failed. Reason:", declineReason);
-
-      return res.json({ success: true, reason: declineReason });
-    } catch (error: any) {
-      console.error("[MARK-DECLINED] Error:", error);
-      return res.json({ success: false, reason: "Error processing decline" });
     }
   });
 
@@ -1539,8 +1473,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.log("[TELR] Order response:", JSON.stringify(telrResult));
 
       if (telrResult.order?.url) {
-        // Store Telr's order ref separately (don't overwrite paymentReference)
-        await storage.updateTransactionTelrRef(transaction.id, telrResult.order.ref);
+        // Update transaction with Telr order reference
+        await storage.updateTransactionReference(transaction.id, telrResult.order.ref);
         
         return res.json({
           success: true,
@@ -1952,8 +1886,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         // Payment successful - add credits
         const category = pkg.category as "Spare Parts" | "Automotive";
         await storage.addCredits(userId, category, totalCredits);
-        // Store Telr's ref separately (keep our cartId in paymentReference)
-        await storage.updateTransactionTelrRef(transaction.id, finalRef);
+        await storage.updateTransactionReference(transaction.id, finalRef);
         await storage.updateTransactionStatus(transaction.id, "completed");
 
         const newCredits = await storage.getUserCredits(userId);
@@ -1968,8 +1901,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         // Payment pending (hosted page format)
         console.log("[ApplePay] Payment pending, not adding credits yet");
         if (finalRef) {
-          // Store Telr's ref separately (keep our cartId in paymentReference)
-          await storage.updateTransactionTelrRef(transaction.id, finalRef);
+          await storage.updateTransactionReference(transaction.id, finalRef);
         }
         return res.json({
           success: false,
@@ -2030,33 +1962,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
 
     try {
-      // Find the pending transaction first (using our cartId)
-      const transaction = await storage.getTransactionByReference(cart);
-      if (!transaction) {
-        console.error("[TELR] Transaction not found for cart:", cart);
-        return res.status(404).json({ message: "Transaction not found" });
-      }
-
-      if (transaction.userId !== userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      // Use the stored Telr order ref for the verification API
-      const telrOrderRef = transaction.telrRef;
-      if (!telrOrderRef) {
-        console.error("[TELR] No Telr order ref stored for transaction:", transaction.id);
-        return res.status(400).json({ message: "Payment reference not found" });
-      }
-
-      // Check order status with Telr using their order ref
+      // Check order status with Telr
       const telrParams = new URLSearchParams({
         ivp_method: "check",
         ivp_store: telrStoreId,
         ivp_authkey: telrAuthKey,
-        order_ref: telrOrderRef,
+        order_ref: cart,
       });
-
-      console.log("[TELR] Checking order with ref:", telrOrderRef);
 
       const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
         method: "POST",
@@ -2066,6 +1978,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const telrData = await telrResponse.json();
       console.log("[TELR] Check response:", JSON.stringify(telrData));
+
+      // Find the pending transaction
+      const transaction = await storage.getTransactionByReference(cart);
+      if (!transaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+
+      if (transaction.userId !== userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
       // Check if payment was successful (status code 3 = authorized/captured)
       if (telrData.order?.status?.code === "3" || telrData.order?.status?.code === 3) {

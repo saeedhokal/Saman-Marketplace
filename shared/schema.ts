@@ -335,8 +335,7 @@ export const transactions = pgTable("transactions", {
   credits: integer("credits").notNull(), // Total credits given (including bonus)
   category: text("category").notNull(), // "Spare Parts" or "Automotive"
   paymentMethod: text("payment_method"), // "apple_pay", "credit_card"
-  paymentReference: text("payment_reference"), // Our cart ID for finding transaction
-  telrRef: text("telr_ref"), // Telr's order.ref for verification API
+  paymentReference: text("payment_reference"), // Telr transaction reference
   status: text("status").default("completed").notNull(), // "pending", "completed", "failed"
   createdAt: timestamp("created_at").defaultNow(),
 });
