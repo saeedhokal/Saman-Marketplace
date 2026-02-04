@@ -23,7 +23,7 @@ export default function Downloads() {
           />
         </div>
         
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-2xl">
           <h2 className="text-xl font-semibold text-white mb-2">
             Download the App
           </h2>
