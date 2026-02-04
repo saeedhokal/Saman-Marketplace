@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SubscriptionPackage } from "@shared/schema";
 import { Capacitor } from "@capacitor/core";
+import { useLanguage } from "@/hooks/use-language";
 
 // Import the native Apple Pay plugin
 let CapacitorApplePay: any = null;
@@ -35,6 +36,7 @@ export default function Checkout() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { t, isRTL } = useLanguage();
   
   // Use session user first, then fall back to localStorage (for iOS Capacitor)
   const storedUserId = getStoredUserId();
@@ -500,11 +502,11 @@ export default function Checkout() {
 
   if (!pkg) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
+      <div className="min-h-screen bg-background pb-20 flex items-center justify-center" dir={isRTL ? "rtl" : "ltr"}>
         <div className="text-center px-4">
-          <h2 className="text-lg font-semibold mb-2">Package not found</h2>
+          <h2 className="text-lg font-semibold mb-2">{t("packageNotFound")}</h2>
           <Link href="/profile/subscription">
-            <Button variant="outline">Back to Packages</Button>
+            <Button variant="outline">{t("back")}</Button>
           </Link>
         </div>
       </div>
@@ -514,16 +516,16 @@ export default function Checkout() {
   const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20" dir={isRTL ? "rtl" : "ltr"}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">
             <Link href="/profile/subscription">
-              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
+              <button className={`p-2 ${isRTL ? '-mr-2' : '-ml-2'} rounded-lg hover:bg-secondary transition-colors`} data-testid="button-back">
+                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
             </Link>
-            <h1 className="flex-1 text-center font-semibold text-lg pr-8">Checkout</h1>
+            <h1 className={`flex-1 text-center font-semibold text-lg ${isRTL ? 'pl-8' : 'pr-8'}`}>{t("checkout")}</h1>
           </div>
         </div>
       </div>
@@ -531,36 +533,36 @@ export default function Checkout() {
       <div className="container mx-auto px-4 py-6 max-w-md space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Order Summary</CardTitle>
+            <CardTitle className="text-lg">{t("orderSummary")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Package</span>
+              <span className="text-muted-foreground">{t("package")}</span>
               <span className="font-medium">{pkg.name}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Category</span>
-              <span>{pkg.category}</span>
+              <span className="text-muted-foreground">{t("category")}</span>
+              <span>{pkg.category === "Spare Parts" ? t("spareParts") : t("automotive")}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Credits</span>
+              <span className="text-muted-foreground">{t("credits")}</span>
               <span>
                 {pkg.credits}
                 {pkg.bonusCredits > 0 && (
-                  <span className="text-green-600 ml-1">+{pkg.bonusCredits} free</span>
+                  <span className={`text-green-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>+{pkg.bonusCredits} {t("free")}</span>
                 )}
               </span>
             </div>
             <div className="border-t pt-3 flex justify-between items-center">
-              <span className="font-semibold">Total</span>
-              <span className="text-xl font-bold text-accent">{pkg.price} AED</span>
+              <span className="font-semibold">{t("total")}</span>
+              <span className="text-xl font-bold text-accent">{isRTL ? `${pkg.price} د.إ` : `${pkg.price} AED`}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Payment Method</CardTitle>
+            <CardTitle className="text-lg">{t("paymentMethod")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {!isAndroid && (
@@ -577,9 +579,9 @@ export default function Checkout() {
                   <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
                     <SiApplepay className="h-6 w-6 text-white" />
                   </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium">Apple Pay</p>
-                    <p className="text-xs text-muted-foreground">Pay with Face ID or Touch ID</p>
+                  <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <p className="font-medium">{t("applePay")}</p>
+                    <p className="text-xs text-muted-foreground">{t("applePayDesc")}</p>
                   </div>
                   {paymentMethod === "apple_pay" && (
                     <Check className="h-5 w-5 text-accent" />
@@ -590,11 +592,11 @@ export default function Checkout() {
                   <div className="w-10 h-10 rounded-lg bg-black/50 flex items-center justify-center">
                     <SiApplepay className="h-6 w-6 text-white/70" />
                   </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-muted-foreground">Apple Pay</p>
+                  <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <p className="font-medium text-muted-foreground">{t("applePay")}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      Use Safari on iPhone/Mac
+                      {t("applePayNotAvailable")}
                     </p>
                   </div>
                 </div>
@@ -613,9 +615,9 @@ export default function Checkout() {
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <CreditCard className="h-5 w-5 text-white" />
               </div>
-              <div className="flex-1 text-left">
-                <p className="font-medium">Credit / Debit Card</p>
-                <p className="text-xs text-muted-foreground">Visa, Mastercard</p>
+              <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <p className="font-medium">{t("creditCard")}</p>
+                <p className="text-xs text-muted-foreground">{t("creditCardDesc")}</p>
               </div>
               {paymentMethod === "credit_card" && (
                 <Check className="h-5 w-5 text-accent" />
@@ -632,26 +634,23 @@ export default function Checkout() {
         >
           {isProcessing ? (
             <>
-              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-              Processing...
+              <Loader2 className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+              {t("processing")}
             </>
           ) : (
             <>
               {paymentMethod === "apple_pay" ? (
-                <SiApplepay className="h-5 w-5 mr-2" />
+                <SiApplepay className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               ) : (
-                <CreditCard className="h-5 w-5 mr-2" />
+                <CreditCard className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               )}
-              Pay {pkg.price} AED
+              {isRTL ? `${pkg.price} د.إ` : `Pay ${pkg.price} AED`}
             </>
           )}
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          {paymentMethod === "apple_pay" && applePayAvailable
-            ? "Use Face ID or Touch ID to confirm payment instantly."
-            : "You'll be redirected to our secure payment page."}
-          {" "}By completing this purchase, you agree to our terms of service.
+          {t("creditCardDesc")}
         </p>
       </div>
     </div>

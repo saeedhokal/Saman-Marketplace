@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Package, Car, Loader2, Check, Sparkles } from "lucide-react";
 import { type SubscriptionPackage } from "@shared/schema";
+import { useLanguage } from "@/hooks/use-language";
 
 interface CreditsInfo {
   sparePartsCredits: number;
@@ -18,6 +19,7 @@ export default function Subscription() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"Spare Parts" | "Automotive">("Spare Parts");
+  const { t, isRTL } = useLanguage();
 
   const { data: creditsInfo, isLoading: creditsLoading } = useQuery<CreditsInfo>({
     queryKey: ["/api/user/credits"],
@@ -34,12 +36,12 @@ export default function Subscription() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
+      <div className="min-h-screen bg-background pb-20 flex items-center justify-center" dir={isRTL ? "rtl" : "ltr"}>
         <div className="text-center px-4">
           <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h2 className="text-lg font-semibold mb-2">Sign in to purchase credits</h2>
+          <h2 className="text-lg font-semibold mb-2">{t("signInToPurchase")}</h2>
           <Link href="/auth">
-            <Button>Sign In</Button>
+            <Button>{t("signIn")}</Button>
           </Link>
         </div>
       </div>
@@ -58,27 +60,27 @@ export default function Subscription() {
 
   if (!creditsInfo?.subscriptionEnabled) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="min-h-screen bg-background pb-20" dir={isRTL ? "rtl" : "ltr"}>
         <div className="sticky top-0 z-40 bg-background border-b border-border">
           <div className="container mx-auto px-4">
             <div className="flex items-center h-14">
               <Link href="/profile">
-                <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                  <ArrowLeft className="h-5 w-5" />
+                <button className={`p-2 ${isRTL ? '-mr-2' : '-ml-2'} rounded-lg hover:bg-secondary transition-colors`} data-testid="button-back">
+                  <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
                 </button>
               </Link>
-              <h1 className="flex-1 text-center font-semibold text-lg pr-8">Purchase Credits</h1>
+              <h1 className={`flex-1 text-center font-semibold text-lg ${isRTL ? 'pl-8' : 'pr-8'}`}>{t("purchaseCreditsTitle")}</h1>
             </div>
           </div>
         </div>
         <div className="container mx-auto px-4 py-8 text-center">
           <Check className="h-16 w-16 mx-auto text-green-500 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Free Posting Enabled</h2>
+          <h2 className="text-xl font-semibold mb-2">{t("freePostingEnabled")}</h2>
           <p className="text-muted-foreground">
-            Credits are not currently required to post listings. You can post for free!
+            {t("creditsNotRequired")}
           </p>
           <Link href="/sell">
-            <Button className="mt-6">Post a Listing</Button>
+            <Button className="mt-6">{t("postAListing")}</Button>
           </Link>
         </div>
       </div>
@@ -93,37 +95,38 @@ export default function Subscription() {
   const totalCredits = (pkg: SubscriptionPackage) => pkg.credits + (pkg.bonusCredits || 0);
   const pricePerCredit = (pkg: SubscriptionPackage) => (pkg.price / totalCredits(pkg)).toFixed(0);
 
+  const tabLabel = activeTab === "Spare Parts" ? t("spareParts") : t("automotive");
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20" dir={isRTL ? "rtl" : "ltr"}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">
             <Link href="/profile">
-              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
+              <button className={`p-2 ${isRTL ? '-mr-2' : '-ml-2'} rounded-lg hover:bg-secondary transition-colors`} data-testid="button-back">
+                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
             </Link>
-            <h1 className="flex-1 text-center font-semibold text-lg pr-8">Purchase Credits</h1>
+            <h1 className={`flex-1 text-center font-semibold text-lg ${isRTL ? 'pl-8' : 'pr-8'}`}>{t("purchaseCreditsTitle")}</h1>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-4 space-y-4">
-        {/* Constrain width on desktop for better appearance */}
         <div className="lg:max-w-md lg:mx-auto space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <Card className="border-accent/30 bg-accent/5">
             <CardContent className="p-3 text-center">
               <Package className="h-6 w-6 mx-auto text-accent mb-1" />
               <p className="text-xl font-bold">{creditsInfo?.sparePartsCredits || 0}</p>
-              <p className="text-xs text-muted-foreground">Parts Credits</p>
+              <p className="text-xs text-muted-foreground">{t("partsCredits")}</p>
             </CardContent>
           </Card>
           <Card className="border-accent/30 bg-accent/5">
             <CardContent className="p-3 text-center">
               <Car className="h-6 w-6 mx-auto text-accent mb-1" />
               <p className="text-xl font-bold">{creditsInfo?.automotiveCredits || 0}</p>
-              <p className="text-xs text-muted-foreground">Auto Credits</p>
+              <p className="text-xs text-muted-foreground">{t("autoCredits")}</p>
             </CardContent>
           </Card>
         </div>
@@ -138,8 +141,8 @@ export default function Subscription() {
             }`}
             data-testid="tab-spare-parts"
           >
-            <Package className="h-4 w-4 inline mr-2" />
-            Spare Parts
+            <Package className={`h-4 w-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            {t("spareParts")}
           </button>
           <button
             onClick={() => setActiveTab("Automotive")}
@@ -150,8 +153,8 @@ export default function Subscription() {
             }`}
             data-testid="tab-automotive"
           >
-            <Car className="h-4 w-4 inline mr-2" />
-            Automotive
+            <Car className={`h-4 w-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            {t("automotive")}
           </button>
         </div>
 
@@ -167,30 +170,30 @@ export default function Subscription() {
                   className={`relative overflow-hidden ${isPopular ? 'border-accent border-2' : ''}`}
                 >
                   {isPopular && (
-                    <div className="absolute top-0 right-0 bg-accent text-white text-xs px-3 py-1 rounded-bl-lg font-medium">
-                      <Sparkles className="h-3 w-3 inline mr-1" />
-                      Popular
+                    <div className={`absolute top-0 ${isRTL ? 'left-0 rounded-br-lg' : 'right-0 rounded-bl-lg'} bg-accent text-white text-xs px-3 py-1 font-medium`}>
+                      <Sparkles className={`h-3 w-3 inline ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      {t("popular")}
                     </div>
                   )}
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-4">
                       <div className="flex-1">
                         <h3 className="font-semibold text-base">{pkg.name}</h3>
                         <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-2xl font-bold text-accent">{pkg.price} AED</span>
+                          <span className="text-2xl font-bold text-accent">{isRTL ? `${pkg.price} د.إ` : `AED ${pkg.price}`}</span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-sm text-muted-foreground">
-                            {pkg.credits} Credit{pkg.credits > 1 ? 's' : ''}
+                            {pkg.credits} {t("credit")}{pkg.credits > 1 && !isRTL ? 's' : ''}
                             {hasBonusCredits && (
-                              <span className="text-green-600 font-medium ml-1">
-                                +{pkg.bonusCredits} FREE
+                              <span className={`text-green-600 font-medium ${isRTL ? 'mr-1' : 'ml-1'}`}>
+                                +{pkg.bonusCredits} {t("free")}
                               </span>
                             )}
                           </span>
                           {pkg.credits > 1 && (
                             <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                              AED {pricePerCredit(pkg)}/credit
+                              {isRTL ? `${pricePerCredit(pkg)} د.إ${t("perCredit")}` : `AED ${pricePerCredit(pkg)}${t("perCredit")}`}
                             </span>
                           )}
                         </div>
@@ -200,7 +203,7 @@ export default function Subscription() {
                         className={isPopular ? '' : 'bg-secondary text-foreground hover:bg-secondary/80'}
                         data-testid={`button-select-package-${pkg.id}`}
                       >
-                        Select
+                        {t("select")}
                       </Button>
                     </div>
                   </CardContent>
@@ -210,14 +213,14 @@ export default function Subscription() {
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No packages available for {activeTab}</p>
+              <p>{t("noPackagesAvailable")} {tabLabel}</p>
             </div>
           )}
         </div>
 
         <p className="text-xs text-center text-muted-foreground pt-2">
-          Credits are used to post listings in the {activeTab} category.
-          Each listing requires 1 credit. Credits can be purchased multiple times.
+          {t("creditsUsedToPost")} {tabLabel} {t("categoryText")}
+          {t("eachListingRequires")}
         </p>
         </div>
       </div>
