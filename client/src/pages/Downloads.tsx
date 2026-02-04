@@ -3,8 +3,8 @@ import samanLogo from "@assets/ChatGPT_Image_Feb_4,_2026,_03_33_07_PM_1770204799
 import { SiApple, SiGoogleplay } from "react-icons/si";
 
 export default function Downloads() {
-  const appStoreUrl = "https://apps.apple.com/app/saman-marketplace/id6740083575";
-  const playStoreUrl = "https://play.google.com/store/apps/details?id=com.saeed.saman";
+  const appStoreUrl = "https://apps.apple.com/kh/app/saman-marketplace/id6744526430";
+  const playStoreUrl = "https://play.google.com/store/apps/details?id=com.saman.marketplace";
 
   return (
     <div className="min-h-screen relative flex items-center justify-center">
