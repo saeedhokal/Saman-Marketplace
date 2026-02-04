@@ -41,6 +41,7 @@ import Help from "@/pages/Help";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentCancelled from "@/pages/PaymentCancelled";
 import PaymentDeclined from "@/pages/PaymentDeclined";
+import Downloads from "@/pages/Downloads";
 import NotFound from "@/pages/not-found";
 
 function ScrollToTop() {
@@ -88,12 +89,21 @@ function Router() {
           <Route path="/payment/success" component={PaymentSuccess} />
           <Route path="/payment/cancelled" component={PaymentCancelled} />
           <Route path="/payment/declined" component={PaymentDeclined} />
+          <Route path="/downloads" component={Downloads} />
           <Route component={NotFound} />
         </Switch>
       </div>
-      <BottomNav />
+      <BottomNavWrapper />
     </>
   );
+}
+
+function BottomNavWrapper() {
+  const [location] = useLocation();
+  const hideBottomNav = location === '/downloads';
+  
+  if (hideBottomNav) return null;
+  return <BottomNav />;
 }
 
 function DeepLinkHandler() {
