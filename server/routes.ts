@@ -1793,7 +1793,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           type: "sale",
           method: "applepay",
           cartid: cartId,
-          amount: Number(pkg.price).toFixed(2), // Must be decimal format like "5.00"
+          amount: pkg.price.toString(), // Price is already in AED
           currency: "AED",
           description: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
           test: 0, // Live production mode
