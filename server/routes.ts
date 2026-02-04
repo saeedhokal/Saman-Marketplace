@@ -1175,6 +1175,71 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Mark payment as declined and get reason from Telr
+  app.post("/api/payment/mark-declined", async (req, res) => {
+    try {
+      const { cartId } = req.body;
+      if (!cartId) {
+        return res.json({ success: false, reason: "Missing cart ID" });
+      }
+
+      // Find transaction by cartId
+      const transaction = await storage.getTransactionByReference(cartId);
+      if (!transaction) {
+        console.log("[MARK-DECLINED] Transaction not found for cart:", cartId);
+        return res.json({ success: false, reason: "Transaction not found" });
+      }
+
+      // Query Telr for the actual status and reason
+      const telrRef = transaction.telrRef;
+      let declineReason = "Payment was declined by your bank";
+
+      if (telrRef) {
+        try {
+          const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              method: "check",
+              store: 32400,
+              authkey: "3SWWK@m9Mz-5GNtS",
+              order: { ref: telrRef },
+            }),
+          });
+          const telrData = await telrResponse.json();
+          console.log("[MARK-DECLINED] Telr status for", telrRef, ":", JSON.stringify(telrData));
+
+          // Extract decline reason
+          const statusCode = telrData.order?.status?.code;
+          const statusText = telrData.order?.status?.text;
+          const transactionStatus = telrData.transaction?.status;
+          const transactionMessage = telrData.transaction?.message;
+
+          if (statusCode === "D47" || statusText?.includes("47")) {
+            declineReason = "3D Secure verification was rejected. Please complete verification next time.";
+          } else if (statusCode === "D46" || statusText?.includes("46")) {
+            declineReason = "3D Secure not available for this card.";
+          } else if (transactionMessage) {
+            declineReason = transactionMessage;
+          } else if (statusText) {
+            declineReason = statusText;
+          }
+        } catch (e) {
+          console.error("[MARK-DECLINED] Error querying Telr:", e);
+        }
+      }
+
+      // Update transaction status to failed
+      await storage.updateTransactionStatus(transaction.id, "failed");
+      console.log("[MARK-DECLINED] Transaction", transaction.id, "marked as failed. Reason:", declineReason);
+
+      return res.json({ success: true, reason: declineReason });
+    } catch (error: any) {
+      console.error("[MARK-DECLINED] Error:", error);
+      return res.json({ success: false, reason: "Error processing decline" });
+    }
+  });
+
   // Debug endpoint to see what the iOS app sends
   app.post("/api/debug-checkout", async (req, res) => {
     console.log("=== DEBUG CHECKOUT REQUEST ===");
