@@ -94,7 +94,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Phone:** 971507242111 (use 0507242111 or +971507242111 to login)
 - **Password:** 1234
 - **Email:** saeed.hokal@hotmail.com (IMPORTANT: Must be set in production for 3D Secure!)
-- **Production User ID:** aaf09421-ec24-4799-8ae2-4bb88af00aaf
+- **Production User ID:** 4da27671-5543-481f-8f33-eab5336aae41
 - **Development User ID:** a899957f-130f-45a4-a5b0-e4c0ef1f809c
 - **Admin:** Yes
 - **Spare Parts Credits:** 10
