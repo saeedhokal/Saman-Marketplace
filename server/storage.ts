@@ -70,6 +70,7 @@ export interface IStorage {
   getTransactionByReference(reference: string): Promise<Transaction | undefined>;
   updateTransactionStatus(id: number, status: string): Promise<void>;
   updateTransactionReference(id: number, reference: string): Promise<void>;
+  updateTransactionTelrRef(id: number, telrRef: string): Promise<void>;
   getRevenueStats(): Promise<{ totalRevenue: number; sparePartsRevenue: number; automotiveRevenue: number; transactionCount: number }>;
   
   // Account deletion
@@ -595,6 +596,12 @@ export class DatabaseStorage implements IStorage {
   async updateTransactionReference(id: number, reference: string): Promise<void> {
     await db.update(transactions)
       .set({ paymentReference: reference })
+      .where(eq(transactions.id, id));
+  }
+
+  async updateTransactionTelrRef(id: number, telrRef: string): Promise<void> {
+    await db.update(transactions)
+      .set({ telrRef })
       .where(eq(transactions.id, id));
   }
 

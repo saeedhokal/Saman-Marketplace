@@ -1473,8 +1473,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.log("[TELR] Order response:", JSON.stringify(telrResult));
 
       if (telrResult.order?.url) {
-        // Update transaction with Telr order reference
-        await storage.updateTransactionReference(transaction.id, telrResult.order.ref);
+        // Store Telr's order ref separately (don't overwrite paymentReference)
+        await storage.updateTransactionTelrRef(transaction.id, telrResult.order.ref);
         
         return res.json({
           success: true,
@@ -1962,13 +1962,33 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
 
     try {
-      // Check order status with Telr
+      // Find the pending transaction first (using our cartId)
+      const transaction = await storage.getTransactionByReference(cart);
+      if (!transaction) {
+        console.error("[TELR] Transaction not found for cart:", cart);
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+
+      if (transaction.userId !== userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Use the stored Telr order ref for the verification API
+      const telrOrderRef = transaction.telrRef;
+      if (!telrOrderRef) {
+        console.error("[TELR] No Telr order ref stored for transaction:", transaction.id);
+        return res.status(400).json({ message: "Payment reference not found" });
+      }
+
+      // Check order status with Telr using their order ref
       const telrParams = new URLSearchParams({
         ivp_method: "check",
         ivp_store: telrStoreId,
         ivp_authkey: telrAuthKey,
-        order_ref: cart,
+        order_ref: telrOrderRef,
       });
+
+      console.log("[TELR] Checking order with ref:", telrOrderRef);
 
       const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
         method: "POST",
@@ -1978,16 +1998,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const telrData = await telrResponse.json();
       console.log("[TELR] Check response:", JSON.stringify(telrData));
-
-      // Find the pending transaction
-      const transaction = await storage.getTransactionByReference(cart);
-      if (!transaction) {
-        return res.status(404).json({ message: "Transaction not found" });
-      }
-
-      if (transaction.userId !== userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
 
       // Check if payment was successful (status code 3 = authorized/captured)
       if (telrData.order?.status?.code === "3" || telrData.order?.status?.code === 3) {
