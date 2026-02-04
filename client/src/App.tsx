@@ -43,10 +43,21 @@ import PaymentCancelled from "@/pages/PaymentCancelled";
 import PaymentDeclined from "@/pages/PaymentDeclined";
 import NotFound from "@/pages/not-found";
 
+function ScrollToTop() {
+  const [location] = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+  
+  return null;
+}
+
 function Router() {
   return (
     <>
-      <div className="flex flex-col min-h-screen pb-20 bg-[#0f1318]">
+      <ScrollToTop />
+      <div className="min-h-screen bg-[#0f1318]">
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/categories" component={Categories} />
