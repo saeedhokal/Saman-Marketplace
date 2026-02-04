@@ -1409,8 +1409,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     try {
-      // Use Telr JSON format (same as old working app)
-      const amountInAED = pkg.price.toString(); // Price is already in AED
+      // Use Telr JSON format - amount MUST be decimal with 2 places (e.g. "5.00" not "5")
+      const amountInAED = Number(pkg.price).toFixed(2);
       console.log(`[TELR] Creating order: cart=${cartId}, amount=${amountInAED} AED, store=${telrStoreId}`);
       
       // Get customer IP for 3D Secure
@@ -1423,11 +1423,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         customerPhone = "971" + customerPhone.substring(1);
       }
       
-      // JSON format matching the old working app EXACTLY
+      // Use environment variables for credentials
+      const storeId = parseInt(telrStoreId, 10);
+      
+      // JSON format matching Telr API requirements
       const telrData = {
         method: "create",
-        store: 32400,
-        authkey: "3SWWK@m9Mz-5GNtS",
+        store: storeId,
+        authkey: telrAuthKey,
         framed: 0,
         order: {
           cartid: cartId,
