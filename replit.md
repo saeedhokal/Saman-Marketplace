@@ -143,7 +143,23 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - Google approved upload key reset on February 4, 2026
 
 ### KNOWN ISSUE - Credit Card Payments (Status 90)
-Credit card payments fail with Status 90 (Telr merchant configuration issue). This is NOT a code issue - Telr needs to fix their merchant configuration. Apple Pay works fine.
+Credit card payments fail with Status 90 (Telr anti-fraud blocks). This is a Telr merchant configuration issue, NOT a code issue. Apple Pay works fine (100% success rate).
+
+**Key Findings (February 5, 2026):**
+- Apple Pay uses **Remote API** with Wallets auth key → Source shows "Admin" in Telr → **WORKS**
+- Credit cards use **Hosted Payment Page** with regular auth key → Source shows "Payment Page" in Telr → **BLOCKED (Status 90)**
+- Attempted using Wallets auth key for Hosted Page → "Authentication key mismatch" error
+- Each auth key is locked to its specific API - cannot be swapped
+
+**Confirmed Auth Key Separation:**
+- `3SWWK@m9Mz-5GNtS` = ONLY for Hosted Payment Page (credit cards)
+- `spRZ^QWJ5P~MWJpV` = ONLY for Remote API (Apple Pay, wallets)
+
+**Action Required from Telr:**
+Contact Telr support and ask them to:
+1. Check why "Payment Page" integration has stricter fraud rules than "Admin" (Remote API)
+2. Review/adjust anti-fraud settings for credit card payments on your merchant account
+3. Specifically mention Status 90 blocks on valid cards that pass 3D Secure
 
 ### Previous 3D Secure Issue (Resolved)
 Production user email was missing. Added admin endpoint to update email:

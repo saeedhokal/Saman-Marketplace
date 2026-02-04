@@ -1111,13 +1111,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         customerPhone = "+" + customerPhone;
       }
       
-      // Use the Wallets auth key (same as Apple Pay which works)
-      const telrAuthKey = process.env.TELR_WALLETS_AUTH_KEY || "spRZ^QWJ5P~MWJpV";
-      
+      // Regular auth key for Hosted Payment Page (NOT Wallets key - that's only for Remote API)
       const telrData = {
         method: "create",
         store: 32400,
-        authkey: telrAuthKey,
+        authkey: "3SWWK@m9Mz-5GNtS",
         framed: 0,
         order: {
           cartid: cartId,
@@ -1150,7 +1148,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         },
       };
       
-      console.log("[CHECKOUT-REDIRECT] Using Wallets auth key:", telrAuthKey ? "SET" : "MISSING");
       console.log("[CHECKOUT-REDIRECT] Request data:", JSON.stringify(telrData, null, 2));
 
       const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
