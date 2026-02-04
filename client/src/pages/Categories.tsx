@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useProducts } from "@/hooks/use-products";
+import { useLanguage } from "@/hooks/use-language";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Search, Car, Wrench, Loader2, ArrowLeft, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
@@ -36,6 +37,7 @@ type SortOption = "newest" | "oldest" | "price-low" | "price-high";
 
 export default function Categories() {
   const [location] = useLocation();
+  const { t, isRTL } = useLanguage();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<MainCategory>("automotive");
   const [activeSubCategory, setActiveSubCategory] = useState("All");
@@ -134,10 +136,10 @@ export default function Categories() {
 
   const getSortLabel = () => {
     switch (sortBy) {
-      case "newest": return "Newest";
-      case "oldest": return "Oldest";
-      case "price-low": return "Price ↑";
-      case "price-high": return "Price ↓";
+      case "newest": return t('newest');
+      case "oldest": return t('oldest');
+      case "price-low": return t('priceUp');
+      case "price-high": return t('priceDown');
     }
   };
 
@@ -176,65 +178,65 @@ export default function Categories() {
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
-          <div className="flex items-center h-14">
+          <div className={`flex items-center h-14 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Link href="/">
-              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
+              <button className={`p-2 rounded-lg hover:bg-secondary transition-colors ${isRTL ? '-mr-2' : '-ml-2'}`} data-testid="button-back">
+                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
             </Link>
-            <h1 className="flex-1 text-center font-semibold text-lg pr-8">Categories</h1>
+            <h1 className={`flex-1 text-center font-semibold text-lg ${isRTL ? 'pl-8' : 'pr-8'}`}>{t('categories')}</h1>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pt-4">
-        <div className="flex items-center border border-border rounded-full px-4 py-2 mb-4">
-          <Search className="h-5 w-5 text-foreground/70 mr-3" />
+      <div className={`container mx-auto px-4 pt-4 ${isRTL ? 'text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`flex items-center border border-border rounded-full px-4 py-2 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Search className={`h-5 w-5 text-foreground/70 ${isRTL ? 'ml-3' : 'mr-3'}`} />
           <Input
             type="text"
-            placeholder="Search for category..."
-            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-white/80 placeholder:font-semibold"
+            placeholder={t('searchCategory')}
+            className={`border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-white/80 placeholder:font-semibold ${isRTL ? 'text-right' : ''}`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search"
           />
         </div>
 
-        <div className="flex gap-3 mb-4">
+        <div className={`flex gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <button
             onClick={() => handleCategoryChange("automotive")}
             data-testid="tab-automotive"
-            className="flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2"
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
             style={activeCategory === "automotive" 
               ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
               : { backgroundColor: '#fed7aa', color: '#9a3412' }}
           >
             <Car className="h-5 w-5" />
-            Automotive
+            {t('automotive')}
           </button>
           
           <button
             onClick={() => handleCategoryChange("spare-parts")}
             data-testid="tab-spare-parts"
-            className="flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2"
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
             style={activeCategory === "spare-parts" 
               ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
               : { backgroundColor: '#fed7aa', color: '#9a3412' }}
           >
             <Wrench className="h-5 w-5" />
-            Spare Parts
+            {t('spareParts')}
           </button>
         </div>
 
-        <div className="mb-3 flex gap-2">
+        <div className={`mb-3 flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
             <SelectTrigger className="flex-1 font-semibold text-foreground" data-testid="select-category">
-              <SelectValue placeholder="All Brands" />
+              <SelectValue placeholder={t('allBrands')} />
             </SelectTrigger>
             <SelectContent>
               {getSubcategories().map((cat) => (
                 <SelectItem key={cat} value={cat} data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {cat === "All" ? (activeCategory === "automotive" ? "All Brands" : "All Categories") : cat}
+                  {cat === "All" ? (activeCategory === "automotive" ? t('allBrands') : t('allCategories')) : cat}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -243,10 +245,10 @@ export default function Categories() {
           {activeCategory === "automotive" && activeSubCategory !== "All" && getModelsForBrand().length > 0 && (
             <Select value={activeModel} onValueChange={setActiveModel}>
               <SelectTrigger className="flex-1 font-semibold text-foreground" data-testid="select-model">
-                <SelectValue placeholder="All Models" />
+                <SelectValue placeholder={t('allModels')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="All">All Models</SelectItem>
+                <SelectItem value="All">{t('allModels')}</SelectItem>
                 {getModelsForBrand().map((model) => (
                   <SelectItem key={model} value={model} data-testid={`option-model-${model.toLowerCase().replace(/\s+/g, '-')}`}>
                     {model}

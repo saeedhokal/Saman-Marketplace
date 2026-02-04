@@ -105,13 +105,23 @@ export const translations = {
     // Categories Page
     allBrands: "All Brands",
     allModels: "All Models",
+    allCategories: "All Categories",
     newestToOldest: "Newest to Oldest",
     oldestToNewest: "Oldest to Newest",
     priceLowToHigh: "Price: Low to High",
     priceHighToLow: "Price: High to Low",
+    newest: "Newest",
+    oldest: "Oldest",
+    priceUp: "Price ↑",
+    priceDown: "Price ↓",
     noListingsYet: "No listings yet",
     beFirstToList: "Be the first to list in this category",
     failedToLoad: "Failed to load products",
+    searchCategory: "Search for category...",
+    
+    // Hero Banner
+    yourNextRide: "Your Next Ride",
+    startsHere: "Starts Here",
     
     // Subscription
     buyCredits: "Buy Credits",
@@ -313,13 +323,23 @@ export const translations = {
     // Categories Page
     allBrands: "جميع العلامات",
     allModels: "جميع الموديلات",
+    allCategories: "جميع الفئات",
     newestToOldest: "الأحدث إلى الأقدم",
     oldestToNewest: "الأقدم إلى الأحدث",
     priceLowToHigh: "السعر: من الأقل للأعلى",
     priceHighToLow: "السعر: من الأعلى للأقل",
+    newest: "الأحدث",
+    oldest: "الأقدم",
+    priceUp: "السعر ↑",
+    priceDown: "السعر ↓",
     noListingsYet: "لا توجد إعلانات حتى الآن",
     beFirstToList: "كن أول من ينشر في هذه الفئة",
     failedToLoad: "فشل في تحميل المنتجات",
+    searchCategory: "ابحث عن فئة...",
+    
+    // Hero Banner
+    yourNextRide: "سيارتك القادمة",
+    startsHere: "تبدأ هنا",
     
     // Subscription
     buyCredits: "شراء رصيد",

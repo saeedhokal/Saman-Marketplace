@@ -109,8 +109,8 @@ export default function Landing() {
                 <div className={`relative z-10 p-6 h-full flex items-center ${isRTL ? 'justify-end' : 'justify-start'}`}>
                   <div className={`flex flex-col justify-center ${isRTL ? 'items-end text-right' : ''}`}>
                     <p className="text-orange-400 text-xs uppercase tracking-widest mb-2 font-medium">{t('uaeMarketplace')}</p>
-                    <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">Your Next Ride</h2>
-                    <p className="text-white text-2xl sm:text-3xl font-bold leading-tight">Starts Here</p>
+                    <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">{t('yourNextRide')}</h2>
+                    <p className="text-white text-2xl sm:text-3xl font-bold leading-tight">{t('startsHere')}</p>
                     <Link href="/sell">
                       <Button 
                         size="sm" 
