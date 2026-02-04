@@ -142,8 +142,8 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **SHA1:** `E0:94:63:3C:74:75:5F:7B:D9:56:0B:F4:14:01:6E:E6:7F:2A:E1:8A`
 - Google approved upload key reset on February 4, 2026
 
-### KNOWN ISSUE - Credit Card Payments (Status 90)
-Credit card payments fail with Status 90 (Telr merchant configuration issue). This is NOT a code issue - Telr needs to fix their merchant configuration. Apple Pay works fine.
+### Credit Card Payment Fix (February 4, 2026)
+Fixed issue where credit card payments failed after 3D Secure verification. The bug was that we were overwriting `paymentReference` (our cart ID) with Telr's `order.ref`, which broke transaction lookup on return. Fixed by adding a separate `telrRef` column to store Telr's reference independently. Both Apple Pay and credit card payments now work.
 
 ### Previous 3D Secure Issue (Resolved)
 Production user email was missing. Added admin endpoint to update email:
