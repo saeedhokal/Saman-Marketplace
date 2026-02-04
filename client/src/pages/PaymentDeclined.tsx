@@ -1,8 +1,23 @@
+import { useEffect } from "react";
 import { Link } from "wouter";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Capacitor } from "@capacitor/core";
 
 export default function PaymentDeclined() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cart = params.get("cart");
+    
+    // If we're in a mobile browser (not in the app), try to redirect to the app
+    if (!Capacitor.isNativePlatform()) {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.location.href = `saman://payment/declined${cart ? `?cart=${cart}` : ''}`;
+      }
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="text-center space-y-6 max-w-md">

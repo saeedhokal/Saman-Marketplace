@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Capacitor } from "@capacitor/core";
 
 export default function PaymentSuccess() {
   const [, setLocation] = useLocation();
@@ -18,6 +19,17 @@ export default function PaymentSuccess() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const cart = params.get("cart");
+    
+    // If we're in a mobile browser (not in the app), try to redirect to the app
+    if (!Capacitor.isNativePlatform()) {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile && cart) {
+        // Try to open the app with deep link
+        window.location.href = `saman://payment/success?cart=${cart}`;
+        // Give it a moment, if app doesn't open, continue with web version
+        return;
+      }
+    }
     
     if (cart) {
       fetch(`/api/payment/verify?cart=${cart}`, {
