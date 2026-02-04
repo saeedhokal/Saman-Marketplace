@@ -1160,7 +1160,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.log("[CHECKOUT-REDIRECT] Telr response:", JSON.stringify(telrResult));
 
       if (telrResult.order?.url) {
-        await storage.updateTransactionReference(transaction.id, telrResult.order.ref);
+        // Store Telr's order ref separately (don't overwrite paymentReference which has our cartId)
+        await storage.updateTransactionTelrRef(transaction.id, telrResult.order.ref);
         // Redirect directly to Telr payment page
         return res.redirect(telrResult.order.url);
       } else {
@@ -1886,7 +1887,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         // Payment successful - add credits
         const category = pkg.category as "Spare Parts" | "Automotive";
         await storage.addCredits(userId, category, totalCredits);
-        await storage.updateTransactionReference(transaction.id, finalRef);
+        // Store Telr's ref separately (keep our cartId in paymentReference)
+        await storage.updateTransactionTelrRef(transaction.id, finalRef);
         await storage.updateTransactionStatus(transaction.id, "completed");
 
         const newCredits = await storage.getUserCredits(userId);
@@ -1901,7 +1903,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         // Payment pending (hosted page format)
         console.log("[ApplePay] Payment pending, not adding credits yet");
         if (finalRef) {
-          await storage.updateTransactionReference(transaction.id, finalRef);
+          // Store Telr's ref separately (keep our cartId in paymentReference)
+          await storage.updateTransactionTelrRef(transaction.id, finalRef);
         }
         return res.json({
           success: false,
