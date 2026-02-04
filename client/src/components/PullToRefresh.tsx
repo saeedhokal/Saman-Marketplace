@@ -10,6 +10,7 @@ interface PullToRefreshProps {
 export function PullToRefresh({ onRefresh, children, className = "" }: PullToRefreshProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
   const pulling = useRef(false);
@@ -55,6 +56,7 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
       // Only activate if still at top and pulling down
       if (diff > 0 && scrollTop <= 1) {
         pulling.current = true;
+        setIsPulling(true);
         const distance = Math.min(diff * 0.4, MAX_PULL);
         setPullDistance(distance);
         
@@ -66,6 +68,7 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
         // User scrolled or pulled up - cancel
         if (pulling.current) {
           pulling.current = false;
+          setIsPulling(false);
           setPullDistance(0);
         }
         canPull.current = false;
@@ -75,12 +78,14 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
     const onTouchEnd = async () => {
       if (!pulling.current) {
         canPull.current = false;
+        setIsPulling(false);
         return;
       }
       
       const distance = pullDistance;
       pulling.current = false;
       canPull.current = false;
+      setIsPulling(false);
       
       if (distance >= PULL_THRESHOLD && !isRefreshing) {
         setIsRefreshing(true);
@@ -115,13 +120,16 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
 
   const pullProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);
 
+  // Only show indicator if actively pulling (distance > threshold to be visible)
+  const showIndicator = (isPulling || isRefreshing) && pullDistance > 10;
+
   return (
     <div
       ref={containerRef}
       className={`relative ${className}`}
     >
-      {/* Pull indicator */}
-      {pullDistance > 0 && (
+      {/* Pull indicator - only show when actively pulling */}
+      {showIndicator && (
         <div
           className="fixed left-1/2 z-[9999] pointer-events-none"
           style={{
