@@ -20,18 +20,8 @@ export default function PaymentSuccess() {
     const params = new URLSearchParams(window.location.search);
     const cart = params.get("cart");
     
-    // If we're in a mobile browser (not in the app), try to redirect to the app
-    // with a fallback to continue verification if app doesn't open
-    if (!Capacitor.isNativePlatform()) {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile && cart) {
-        // Try to open the app with deep link
-        window.location.href = `saman://payment/success?cart=${cart}`;
-        // If app opens, user will leave this page. If not, continue after 2 seconds
-      }
-    }
-    
     if (cart) {
+      // First verify the payment and add credits
       fetch(`/api/payment/verify?cart=${cart}`, {
         credentials: "include",
       })
@@ -44,6 +34,17 @@ export default function PaymentSuccess() {
               title: "Payment Successful!",
               description: data.message,
             });
+          }
+          
+          // After verification completes, try to redirect to app (mobile browser only)
+          if (!Capacitor.isNativePlatform()) {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+              // Small delay to ensure user sees the success message
+              setTimeout(() => {
+                window.location.href = `saman://payment/success?verified=true`;
+              }, 1500);
+            }
           }
         })
         .catch(() => {
