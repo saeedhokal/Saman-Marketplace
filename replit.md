@@ -102,7 +102,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 ---
 
-## Current Status (February 4, 2026)
+## Current Status (February 5, 2026)
 
 ### What's WORKING
 - User login/registration (phone + OTP)
@@ -146,8 +146,16 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 Credit card payments fail with Status 90 (Telr anti-fraud blocks). This is a Telr merchant configuration issue, NOT a code issue. Apple Pay works fine (100% success rate).
 
 **Key Findings (February 5, 2026):**
-- Apple Pay uses **Remote API** with Wallets auth key → Source shows "Admin" in Telr → **WORKS**
-- Credit cards use **Hosted Payment Page** with regular auth key → Source shows "Payment Page" in Telr → **BLOCKED (Status 90)**
+
+| Transaction | Amount | Integration | IP Shown | Result |
+|------------|--------|-------------|----------|--------|
+| Apple Pay | 30 AED | Remote (V2) | Yes (server IP) | ✅ Works |
+| Credit Card | 5 AED | **Admin** | **No** | ✅ Works |
+| Credit Card | 30 AED | Payment Page | Yes | ❌ Status 90 |
+
+- Apple Pay uses **Remote API** with Wallets auth key → Integration shows "Remote (V2)" → **WORKS**
+- One credit card transaction mysteriously went through **Admin** integration → **WORKED**
+- Most credit cards use **Hosted Payment Page** → Integration shows "Payment Page" → **BLOCKED (Status 90)**
 - Attempted using Wallets auth key for Hosted Page → "Authentication key mismatch" error
 - Each auth key is locked to its specific API - cannot be swapped
 
@@ -155,11 +163,14 @@ Credit card payments fail with Status 90 (Telr anti-fraud blocks). This is a Tel
 - `3SWWK@m9Mz-5GNtS` = ONLY for Hosted Payment Page (credit cards)
 - `spRZ^QWJ5P~MWJpV` = ONLY for Remote API (Apple Pay, wallets)
 
-**Action Required from Telr:**
+**Mystery:** User completed a 5 AED credit card payment through the app normally, but it went through "Admin" integration instead of "Payment Page" - and it worked! Other identical attempts go through "Payment Page" and fail.
+
+**Action Required from Telr (WAITING FOR RESPONSE):**
 Contact Telr support and ask them to:
-1. Check why "Payment Page" integration has stricter fraud rules than "Admin" (Remote API)
-2. Review/adjust anti-fraud settings for credit card payments on your merchant account
-3. Specifically mention Status 90 blocks on valid cards that pass 3D Secure
+1. Check why some transactions route through "Admin" while others route through "Payment Page"
+2. Check why "Payment Page" integration has stricter fraud rules than "Admin"
+3. Review/adjust anti-fraud settings for credit card payments on merchant account (Store ID: 32400)
+4. Specifically mention Status 90 blocks on valid cards that pass 3D Secure
 
 ### Previous 3D Secure Issue (Resolved)
 Production user email was missing. Added admin endpoint to update email:
