@@ -1,5 +1,5 @@
 import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
-import samanLogo from "@assets/0b846dc6-8068-4fa9-b7a5-f5cbba6c1d1d_1770204378631.png";
+import samanLogo from "@assets/ChatGPT_Image_Feb_4,_2026,_03_33_07_PM_1770204799107.png";
 import { SiApple, SiGoogleplay } from "react-icons/si";
 
 export default function Downloads() {
