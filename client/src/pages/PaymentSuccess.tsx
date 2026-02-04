@@ -21,13 +21,13 @@ export default function PaymentSuccess() {
     const cart = params.get("cart");
     
     // If we're in a mobile browser (not in the app), try to redirect to the app
+    // with a fallback to continue verification if app doesn't open
     if (!Capacitor.isNativePlatform()) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile && cart) {
         // Try to open the app with deep link
         window.location.href = `saman://payment/success?cart=${cart}`;
-        // Give it a moment, if app doesn't open, continue with web version
-        return;
+        // If app opens, user will leave this page. If not, continue after 2 seconds
       }
     }
     

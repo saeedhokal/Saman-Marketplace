@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
+import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,6 +8,8 @@ import { BottomNav } from "@/components/BottomNav";
 import { LanguageProvider, useLanguage } from "@/hooks/use-language";
 import { PushNotificationProvider } from "@/components/PushNotificationProvider";
 import { InAppNotificationBanner } from "@/components/InAppNotificationBanner";
+import { App as CapApp } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 
 import Landing from "@/pages/Landing";
 import LanguageSelect from "@/pages/LanguageSelect";
@@ -82,6 +85,43 @@ function Router() {
   );
 }
 
+function DeepLinkHandler() {
+  const [, setLocation] = useLocation();
+  
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    
+    // Handle deep links when app is opened via URL
+    const handleAppUrlOpen = (event: { url: string }) => {
+      const url = event.url;
+      console.log("[DeepLink] Received URL:", url);
+      
+      // Parse saman:// URLs
+      if (url.startsWith("saman://")) {
+        const path = url.replace("saman://", "/");
+        console.log("[DeepLink] Navigating to:", path);
+        setLocation(path);
+      }
+    };
+    
+    // Listen for deep links
+    const listener = CapApp.addListener("appUrlOpen", handleAppUrlOpen);
+    
+    // Check if app was opened with a URL
+    CapApp.getLaunchUrl().then((result: { url?: string } | undefined) => {
+      if (result?.url) {
+        handleAppUrlOpen({ url: result.url });
+      }
+    });
+    
+    return () => {
+      listener.then((l: { remove: () => void }) => l.remove());
+    };
+  }, [setLocation]);
+  
+  return null;
+}
+
 function AppContent() {
   const { hasSelectedLanguage } = useLanguage();
   
@@ -91,6 +131,7 @@ function AppContent() {
   
   return (
     <PushNotificationProvider>
+      <DeepLinkHandler />
       <Router />
     </PushNotificationProvider>
   );
