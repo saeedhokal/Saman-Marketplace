@@ -46,10 +46,11 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 ### Android Application
 - **Wrapper:** Capacitor v7
-- **Package Name:** com.saeed.saman
+- **Package Name:** com.saman.marketplace (Google Play listing)
 - **App Name:** Saman Marketplace
 - **Push Notifications:** Firebase Cloud Messaging (FCM)
 - **Build Process:** GitHub → Codemagic → Google Play / APK
+- **NOTE:** Android uses different package name than iOS due to original Google Play listing
 
 ## External Dependencies
 
