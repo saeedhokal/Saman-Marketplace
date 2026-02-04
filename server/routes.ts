@@ -1103,20 +1103,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         status: "pending",
       });
       
-      // Get customer IP for 3D Secure
-      const forwardedFor = req.headers["x-forwarded-for"];
-      const customerIp = typeof forwardedFor === 'string' ? forwardedFor.split(',')[0].trim() : (req.ip || "127.0.0.1");
-      
-      // Format phone number for Telr (remove leading zero if present)
+      // Format phone number for Telr (must include + prefix)
       let customerPhone = user?.phone || "971500000000";
       if (customerPhone.startsWith("0")) {
-        customerPhone = "971" + customerPhone.substring(1);
+        customerPhone = "+971" + customerPhone.substring(1);
+      } else if (!customerPhone.startsWith("+")) {
+        customerPhone = "+" + customerPhone;
       }
+      
+      // Use the Wallets auth key (same as Apple Pay which works)
+      const telrAuthKey = process.env.TELR_WALLETS_AUTH_KEY || "spRZ^QWJ5P~MWJpV";
       
       const telrData = {
         method: "create",
         store: 32400,
-        authkey: "3SWWK@m9Mz-5GNtS",
+        authkey: telrAuthKey,
         framed: 0,
         order: {
           cartid: cartId,
@@ -1146,9 +1147,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             areacode: "00000",
           },
           phone: customerPhone,
-          ip: customerIp,
         },
       };
+      
+      console.log("[CHECKOUT-REDIRECT] Using Wallets auth key:", telrAuthKey ? "SET" : "MISSING");
+      console.log("[CHECKOUT-REDIRECT] Request data:", JSON.stringify(telrData, null, 2));
 
       const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
         method: "POST",
