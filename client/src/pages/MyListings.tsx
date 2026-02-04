@@ -9,6 +9,7 @@ import {
   Pencil, Trash2, CheckCircle, Clock, Timer, RefreshCw
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { differenceInDays } from "date-fns";
@@ -36,6 +37,7 @@ export default function MyListings() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t, isRTL } = useLanguage();
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [renewId, setRenewId] = useState<number | null>(null);
@@ -62,11 +64,11 @@ export default function MyListings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
-      toast({ title: "Listing deleted" });
+      toast({ title: t('listingDeleted') });
       setDeleteId(null);
     },
     onError: () => {
-      toast({ variant: "destructive", title: "Failed to delete listing" });
+      toast({ variant: "destructive", title: t('failedToDelete') });
     },
   });
 
@@ -76,10 +78,10 @@ export default function MyListings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
-      toast({ title: "Listing marked as sold" });
+      toast({ title: t('markedAsSold') });
     },
     onError: () => {
-      toast({ variant: "destructive", title: "Failed to update listing" });
+      toast({ variant: "destructive", title: t('failedToUpdate') });
     },
   });
 
@@ -91,7 +93,7 @@ export default function MyListings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({ title: "Listing renewed for 30 days" });
+      toast({ title: t('listingRenewed') });
       setRenewId(null);
     },
     onError: (error: any) => {
@@ -99,12 +101,12 @@ export default function MyListings() {
       if (error?.message?.includes("credit") || error?.message?.includes("insufficient")) {
         toast({ 
           variant: "destructive", 
-          title: "Not enough credits",
-          description: "You need 1 credit to renew. Tap here to buy credits.",
-          action: <Button size="sm" variant="outline" onClick={() => setLocation("/subscription")}>Buy Credits</Button>
+          title: t('notEnoughCredits'),
+          description: t('needCreditToRenew'),
+          action: <Button size="sm" variant="outline" onClick={() => setLocation("/subscription")}>{t('buyCredits')}</Button>
         });
       } else {
-        toast({ variant: "destructive", title: error?.message || "Failed to renew listing" });
+        toast({ variant: "destructive", title: error?.message || t('failedToUpdate') });
       }
     },
   });
@@ -114,9 +116,9 @@ export default function MyListings() {
       <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
         <div className="text-center">
           <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h2 className="text-lg font-semibold mb-2">Sign in to view your listings</h2>
+          <h2 className="text-lg font-semibold mb-2">{t('signInToViewListings')}</h2>
           <Link href="/auth">
-            <Button>Sign In</Button>
+            <Button>{t('signIn')}</Button>
           </Link>
         </div>
       </div>
@@ -130,13 +132,13 @@ export default function MyListings() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Active</span>;
+        return <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">{t('active')}</span>;
       case "pending":
-        return <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Pending</span>;
+        return <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">{t('pending')}</span>;
       case "rejected":
-        return <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Rejected</span>;
+        return <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">{t('rejected')}</span>;
       case "sold":
-        return <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400">Sold</span>;
+        return <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400">{t('sold')}</span>;
       default:
         return null;
     }
@@ -149,11 +151,11 @@ export default function MyListings() {
     const daysLeft = differenceInDays(expiresAt, new Date());
     
     if (daysLeft < 0) {
-      return <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-1"><Timer className="h-3 w-3" />Expired</span>;
+      return <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-1"><Timer className="h-3 w-3" />{t('expired')}</span>;
     } else if (daysLeft <= 7) {
-      return <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 flex items-center gap-1"><Timer className="h-3 w-3" />{daysLeft} day{daysLeft !== 1 ? 's' : ''} left</span>;
+      return <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 flex items-center gap-1"><Timer className="h-3 w-3" />{daysLeft} {daysLeft !== 1 ? t('daysLeft') : t('dayLeft')}</span>;
     } else {
-      return <span className="text-xs text-muted-foreground flex items-center gap-1"><Timer className="h-3 w-3" />{daysLeft} days left</span>;
+      return <span className="text-xs text-muted-foreground flex items-center gap-1"><Timer className="h-3 w-3" />{daysLeft} {t('daysLeft')}</span>;
     }
   };
 
@@ -172,24 +174,24 @@ export default function MyListings() {
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
-          <div className="flex items-center h-14">
+          <div className={`flex items-center h-14 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Link href="/">
-              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
+              <button className={`p-2 rounded-lg hover:bg-secondary transition-colors ${isRTL ? '-mr-2' : '-ml-2'}`} data-testid="button-back">
+                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
             </Link>
-            <h1 className="flex-1 text-center font-semibold text-lg pr-8">My listings</h1>
+            <h1 className={`flex-1 text-center font-semibold text-lg ${isRTL ? 'pl-8' : 'pr-8'}`}>{t('myListings')}</h1>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pt-4">
-        <div className="flex items-center border border-border rounded-full px-4 py-2 mb-4">
-          <Search className="h-5 w-5 text-muted-foreground mr-3" />
+      <div className={`container mx-auto px-4 pt-4 ${isRTL ? 'text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`flex items-center border border-border rounded-full px-4 py-2 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Search className={`h-5 w-5 text-muted-foreground ${isRTL ? 'ml-3' : 'mr-3'}`} />
           <Input
             type="text"
-            placeholder="Search"
-            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0"
+            placeholder={t('search')}
+            className={`border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 ${isRTL ? 'text-right' : ''}`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search-listings"
@@ -230,10 +232,10 @@ export default function MyListings() {
                       <DropdownMenuContent align="end" className="min-w-[160px]">
                         <DropdownMenuItem 
                           onSelect={() => handleEdit(listing.id)}
-                          className="py-3 text-base cursor-pointer"
+                          className={`py-3 text-base cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
-                          <Pencil className="h-5 w-5 mr-3" />
-                          Edit
+                          <Pencil className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                          {t('edit')}
                         </DropdownMenuItem>
                         {canRenew(listing) && (
                           <DropdownMenuItem 
@@ -241,10 +243,10 @@ export default function MyListings() {
                               setOpenMenuId(null);
                               setRenewId(listing.id);
                             }}
-                            className="py-3 text-base cursor-pointer text-orange-600 dark:text-orange-400"
+                            className={`py-3 text-base cursor-pointer text-orange-600 dark:text-orange-400 ${isRTL ? 'flex-row-reverse' : ''}`}
                           >
-                            <RefreshCw className="h-5 w-5 mr-3" />
-                            Renew Listing
+                            <RefreshCw className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                            {t('renewListing')}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem 
@@ -252,20 +254,20 @@ export default function MyListings() {
                             setOpenMenuId(null);
                             markSoldMutation.mutate(listing.id);
                           }}
-                          className="py-3 text-base cursor-pointer"
+                          className={`py-3 text-base cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
-                          <CheckCircle className="h-5 w-5 mr-3" />
-                          Mark as Sold
+                          <CheckCircle className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                          {t('markAsSold')}
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onSelect={() => {
                             setOpenMenuId(null);
                             setDeleteId(listing.id);
                           }}
-                          className="text-destructive py-3 text-base cursor-pointer"
+                          className={`text-destructive py-3 text-base cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
-                          <Trash2 className="h-5 w-5 mr-3" />
-                          Delete
+                          <Trash2 className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                          {t('deleteListing')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -284,9 +286,9 @@ export default function MyListings() {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
               <Package className="h-8 w-8 text-accent/50" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No listings yet</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{t('noListingsYetTitle')}</h3>
             <p className="text-muted-foreground text-sm mb-4">
-              Start selling by adding your first listing
+              {t('startSellingFirst')}
             </p>
           </div>
         )}
@@ -295,41 +297,41 @@ export default function MyListings() {
       <div className="fixed left-0 right-0 p-4 pointer-events-none" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
         <Link href="/sell" className="pointer-events-auto">
           <Button className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-medium rounded-full shadow-lg" data-testid="button-add-listing">
-            Add Listing
+            {t('addListing')}
           </Button>
         </Link>
       </div>
 
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete listing?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your listing.
+            <AlertDialogTitle className={isRTL ? 'text-right' : ''}>{t('deleteListingTitle')}</AlertDialogTitle>
+            <AlertDialogDescription className={isRTL ? 'text-right' : ''}>
+              {t('deleteListingDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className={isRTL ? 'flex-row-reverse gap-2' : ''}>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && deleteMutation.mutate(deleteId)}
               className="bg-destructive text-destructive-foreground"
             >
-              Delete
+              {t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog open={renewId !== null} onOpenChange={() => setRenewId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Renew listing?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will extend your listing for another 30 days and use 1 credit from your account.
+            <AlertDialogTitle className={isRTL ? 'text-right' : ''}>{t('renewListingTitle')}</AlertDialogTitle>
+            <AlertDialogDescription className={isRTL ? 'text-right' : ''}>
+              {t('renewListingDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className={isRTL ? 'flex-row-reverse gap-2' : ''}>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => renewId && renewMutation.mutate(renewId)}
               className="bg-accent text-white"
@@ -337,11 +339,11 @@ export default function MyListings() {
             >
               {renewMutation.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Renewing...
+                  <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('renewing')}
                 </>
               ) : (
-                "Renew (1 Credit)"
+                t('renewOneCredit')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
