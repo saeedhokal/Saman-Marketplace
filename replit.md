@@ -153,6 +153,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 1. Now storing BOTH values as `cartId::orderRef` in `paymentReference`
 2. Updated `getTransactionByReference()` to find transactions by cartId prefix
 3. Updated `/api/payment/verify` to extract the Telr order.ref and use it for the check API
+4. **CRITICAL FIX (Feb 5):** There were TWO checkout endpoints - the redirect checkout (used by iOS for credit cards) was NOT fixed! Now both endpoints store `cartId::orderRef` format
 
 **Telr API Format (IMPORTANT - DO NOT CHANGE):**
 - `order.json` endpoint requires `application/x-www-form-urlencoded` format (NOT JSON)

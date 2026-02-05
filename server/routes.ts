@@ -1157,7 +1157,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.log("[CHECKOUT-REDIRECT] Telr response:", JSON.stringify(telrResult));
 
       if (telrResult.order?.url) {
-        await storage.updateTransactionReference(transaction.id, telrResult.order.ref);
+        // Store both cartId and Telr order.ref so we can find by cartId and check with order.ref
+        await storage.updateTransactionReference(transaction.id, `${cartId}::${telrResult.order.ref}`);
         // Redirect directly to Telr payment page
         return res.redirect(telrResult.order.url);
       } else {
