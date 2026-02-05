@@ -107,6 +107,13 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 **Suspected:** Something in redirect flow between Safari and iOS app after payment. Data mismatch somewhere.
 
+**INVESTIGATION RESULT (Feb 5, 2026):**
+- Compared original working code (commit 2bb7edf) to current - Telr request data is IDENTICAL
+- Only changes were: phone format (+971 vs 971), and what we store AFTER Telr responds
+- The Status 90 happens DURING payment on Telr's page, BEFORE our verification code runs
+- This means the decline happens on TELR'S SIDE after bank approval
+- Telr portal shows "matched to previous transaction" - possibly velocity checks on repeated 5 AED test purchases
+
 **Email sent to Telr (Rahul) - waiting for response.**
 
 **Payment Verification Fix Applied:**
