@@ -1428,17 +1428,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         method: "create",
         store: storeId,
         authkey: telrAuthKey,
-        framed: 0,
+        framed: 2,
         order: {
           cartid: cartId,
           test: 0,
           amount: amountInAED,
           currency: "AED",
           description: `Saman Marketplace - ${pkg.name}`,
-        },
-        tran: {
-          type: "sale",
-          class: "ecom",
         },
         return: {
           authorised: `${baseUrl}/payment/success?cart=${cartId}`,
@@ -1461,7 +1457,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             areacode: "00000",
           },
           phone: customerPhone,
-          ip: customerIp,
         },
       };
 
