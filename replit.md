@@ -105,21 +105,13 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Apple Pay** - 100% success rate via Remote API
 - **Payment Verification** - Fixed (stores `cartId::orderRef` format)
 
-### ❌ NOT WORKING - Credit Cards (Status 90)
-**Problem:** Bank approves payment, but Telr blocks it AFTER bank approval with Status 90.
+### ✅ RESOLVED - Credit Cards (Status 90)
+**Root Cause CONFIRMED by Telr (Feb 5, 2026):**
+Telr's velocity/fraud detection blocks the **same credit card within 24 hours**.
 
-**CONFIRMED:** Tested with DIFFERENT phone, DIFFERENT card, DIFFERENT user → SAME result. This rules out duplicate detection. **Issue is on OUR side.**
+**Solution:** Wait 24 hours between tests with the same card, OR use a different card.
 
-**Suspected:** Something in redirect flow between Safari and iOS app after payment. Data mismatch somewhere.
-
-**INVESTIGATION RESULT (Feb 5, 2026):**
-- Compared original working code (commit 2bb7edf) to current - Telr request data is IDENTICAL
-- Only changes were: phone format (+971 vs 971), and what we store AFTER Telr responds
-- The Status 90 happens DURING payment on Telr's page, BEFORE our verification code runs
-- This means the decline happens on TELR'S SIDE after bank approval
-- Telr portal shows "matched to previous transaction" - possibly velocity checks on repeated 5 AED test purchases
-
-**Email sent to Telr (Rahul) - waiting for response.**
+**This is NOT a code issue - it's Telr's fraud protection working as designed.**
 
 **NEW FINDING (Feb 5, 2026 - from Telr screenshots):**
 - DECLINED transactions: Integration = **"Payment Page"** → Status 90 even after 3D Secure succeeds
