@@ -68,5 +68,11 @@
                         </array>
                 </dict>
         </array>
+        <key>WKAppBoundDomains</key>
+        <array>
+                <string>thesamanapp.com</string>
+                <string>secure.telr.com</string>
+                <string>www.telr.com</string>
+        </array>
 </dict>
 </plist>

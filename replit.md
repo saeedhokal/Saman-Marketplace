@@ -183,15 +183,17 @@ Compared current code to working commit 2bb7edf - Telr request data is **IDENTIC
 
 ### CRITICAL ISSUES
 
-**1. iOS capacitor.config.json has WRONG server URL**
-- `ios/App/App/capacitor.config.json` points to `https://saman-market-fixer--saeedhokal.replit.app`
-- But `capacitor.config.ts` points to `https://thesamanapp.com`
-- The iOS build might use WRONG URL unless Codemagic runs `npx cap sync`
+**1. iOS capacitor.config.json has WRONG server URL** ✅ FIXED (Feb 5, 2026)
+- WAS: `https://saman-market-fixer--saeedhokal.replit.app`
+- NOW: `https://thesamanapp.com`
+- Also synced all iOS config settings with capacitor.config.ts
 
-**2. `limitsNavigationsToAppBoundDomains: true` without `WKAppBoundDomains`**
-- `capacitor.config.ts` has `limitsNavigationsToAppBoundDomains: true`
-- But `Info.plist` has NO `WKAppBoundDomains` key defined
-- This could restrict iOS WebView from navigating to `secure.telr.com`
+**2. `limitsNavigationsToAppBoundDomains: true` without `WKAppBoundDomains`** ✅ FIXED (Feb 5, 2026)
+- Added `WKAppBoundDomains` to Info.plist with:
+  - `thesamanapp.com`
+  - `secure.telr.com`
+  - `www.telr.com`
+- iOS WebView can now properly navigate to payment pages
 
 **3. PaymentSuccess.tsx race condition**
 - Tries deep link AND immediately calls `/api/payment/verify` in parallel
