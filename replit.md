@@ -116,6 +116,13 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 **Email sent to Telr (Rahul) - waiting for response.**
 
+**NEW FINDING (Feb 5, 2026 - from Telr screenshots):**
+- DECLINED transactions: Integration = **"Payment Page"** → Status 90 even after 3D Secure succeeds
+- SUCCESSFUL transaction: Integration = **"Admin"** → Works fine with Auth Code
+- MPI shows "Authentication succeeded" and "Successful" but still declines!
+- This suggests Payment Page integration has DIFFERENT fraud rules than Admin integration
+- Telr needs to check their Payment Page integration settings for Store 32400
+
 **Payment Verification Fix Applied:**
 1. Both checkout endpoints now store `cartId::orderRef` format
 2. `getTransactionByReference()` finds transactions by cartId prefix
