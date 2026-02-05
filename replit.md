@@ -81,3 +81,77 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Domain:**
     - Name: thesamanapp.com
     - Registrar: GoDaddy
+
+---
+
+## User Account Details
+- **Phone:** 971507242111 (use 0507242111 or +971507242111 to login)
+- **Password:** 1234
+- **Email:** saeed.hokal@hotmail.com
+- **Production User ID:** 4da27671-5543-481f-8f33-eab5336aae41
+- **Development User ID:** a899957f-130f-45a4-a5b0-e4c0ef1f809c
+- **Admin:** Yes
+
+---
+
+## Payment System Status (February 5, 2026)
+
+### ✅ WORKING
+- **Apple Pay** - 100% success rate via Remote API
+- **Payment Verification** - Fixed (stores `cartId::orderRef` format)
+
+### ❌ NOT WORKING - Credit Cards (Status 90)
+**Problem:** Bank approves payment, but Telr blocks it AFTER bank approval with Status 90.
+
+**CONFIRMED:** Tested with DIFFERENT phone, DIFFERENT card, DIFFERENT user → SAME result. This rules out duplicate detection. **Issue is on OUR side.**
+
+**Suspected:** Something in redirect flow between Safari and iOS app after payment. Data mismatch somewhere.
+
+**Email sent to Telr (Rahul) - waiting for response.**
+
+**Payment Verification Fix Applied:**
+1. Both checkout endpoints now store `cartId::orderRef` format
+2. `getTransactionByReference()` finds transactions by cartId prefix
+3. `/api/payment/verify` extracts Telr order.ref for check API
+
+**Auth Keys (DO NOT MIX):**
+- `3SWWK@m9Mz-5GNtS` = Hosted Payment Page (credit cards)
+- `spRZ^QWJ5P~MWJpV` = Remote API (Apple Pay)
+
+**ALREADY TRIED (DO NOT REPEAT):**
+- Added `tran.type: "sale"` and `tran.class: "ecom"` - Still Status 90
+- Changed `framed: 0` to `framed: 2` (iframe mode) - Still Status 90
+- Removed `customer.ip` field - Still Status 90
+- Removed `tran` object - Still Status 90
+- Tried Wallets auth key for Hosted Page - "Auth key mismatch"
+- Added/changed phone formatting (with/without + prefix) - Still Status 90
+- Added/removed customer email - Still Status 90
+
+### ⚠️ 3D Secure - Not Working
+**Workaround:** User does NOT tick the 3D Secure checkbox on Telr payment page.
+
+**ALREADY TRIED (DO NOT REPEAT):**
+- Added customer IP - didn't fix
+- Changed customer reference - didn't fix
+- Phone formatting changes - didn't fix
+- Removed "Mr" title - didn't fix
+- Added production user email - didn't fix
+
+---
+
+## App Store Status
+
+### iOS - LIVE
+- Version 2.0.0
+- Bundle ID: com.saeed.saman
+- App Store ID: id6744526430
+
+### Android - In Review
+- Version 1.1.3 (versionCode 14)
+- Package Name: com.saman.marketplace
+
+---
+
+## Build Process
+- **Server changes:** Just publish from Replit
+- **iOS/Android app changes:** Push to GitHub → Codemagic builds → TestFlight/Play Store
