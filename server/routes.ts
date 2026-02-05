@@ -1436,6 +1436,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           currency: "AED",
           description: `Saman Marketplace - ${pkg.name}`,
         },
+        tran: {
+          type: "sale",
+          class: "ecom",
+        },
         return: {
           authorised: `${baseUrl}/payment/success?cart=${cartId}`,
           declined: `${baseUrl}/payment/declined?cart=${cartId}`,

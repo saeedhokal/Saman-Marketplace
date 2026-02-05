@@ -1,0 +1,153 @@
+This is a hard integration error 👇
+“Authentication key mismatch” is 100% merchant-side config.
+
+Let me break it down cleanly.
+
+🔴 Root cause (very clear)
+
+Authentication key mismatch
+
+That means:
+
+👉 ivp_store = 32400
+👉 ivp_authkey = ************
+
+❌ That auth key does NOT belong to store 32400
+OR
+❌ You’re mixing sandbox vs live credentials
+
+Telr immediately rejects the request before fraud checks even run.
+
+Why Apple Pay “worked” but cards didn’t
+
+This part is confusing but logical once you see it:
+
+Apple Pay
+
+Often uses a different flow
+
+Sometimes routed through mobile SDK / tokenized request
+
+May still succeed if:
+
+Apple Pay key is correct
+
+Card payment key is wrong
+
+Credit Card payment page
+
+Uses ivp_store + ivp_authkey strictly
+
+Any mismatch = instant failure
+
+So this was never IP-related — the IP showing/not showing was just coincidence timing-wise.
+
+🚨 Smoking guns in your log
+1️⃣ ivp_trantype -- not set --
+
+This must be set.
+
+Valid values:
+
+sale
+
+auth
+
+Missing this alone can break payments.
+
+2️⃣ ivp_test 0
+
+This means LIVE mode.
+
+If even ONE of these is sandbox:
+
+authkey
+
+store ID
+
+endpoint URL
+
+→ authentication mismatch.
+
+3️⃣ User Agent = node
+
+This tells me:
+
+You recently updated backend / server code
+
+Keys likely changed, env vars swapped, or overwritten
+
+Very common after “latest update”.
+
+✅ What to fix (in order)
+✅ Step 1 — Verify credentials (MOST IMPORTANT)
+
+Log into Telr Merchant Dashboard → Settings → Integration
+
+Confirm:
+
+Store ID = 32400
+
+Auth Key = exact match (no spaces, no old key)
+
+⚠️ If you regenerated the auth key → old one is DEAD.
+
+✅ Step 2 — Make sure environment matches
+
+You must have one clean set:
+
+LIVE
+
+ivp_test = 0
+
+Live Store ID
+
+Live Auth Key
+
+Live endpoint
+
+SANDBOX
+
+ivp_test = 1
+
+Sandbox Store ID
+
+Sandbox Auth Key
+
+Sandbox endpoint
+
+❌ Never mix.
+
+✅ Step 3 — Set ivp_trantype
+
+Add this now:
+
+ivp_trantype = sale
+
+
+This is mandatory.
+
+✅ Step 4 — IP is NOT the problem
+
+Your IP:
+
+34.96.46.67
+
+
+This is a Google Cloud / server IP — Telr accepts these fine.
+
+Fraud rules were never reached because auth failed first.
+
+Why it broke “after latest update”
+
+Classic scenario:
+
+.env file changed
+
+Keys copied from wrong merchant
+
+Apple Pay config left untouched
+
+Card flow using wrong key
+
+I’ve seen this exact thing dozens of times.
