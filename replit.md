@@ -94,7 +94,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Phone:** 971507242111 (use 0507242111 or +971507242111 to login)
 - **Password:** 1234
 - **Email:** saeed.hokal@hotmail.com (IMPORTANT: Must be set in production for 3D Secure!)
-- **Production User ID:** aaf09421-ec24-4799-8ae2-4bb88af00aaf
+- **Production User ID:** 4da27671-5543-481f-8f33-eab5336aae41 (updated Feb 5, 2026)
 - **Development User ID:** a899957f-130f-45a4-a5b0-e4c0ef1f809c
 - **Admin:** Yes
 - **Spare Parts Credits:** 10
@@ -109,7 +109,8 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - Product listings (create, view, edit, delete)
 - Image uploads to Google Cloud Storage
 - Push notifications (APNs for iOS, FCM for Android)
-- **Native iOS Apple Pay** - FULLY WORKING!
+- **Native iOS Apple Pay** - FULLY WORKING! (100% success rate)
+- **Payment Verification** - Fixed and working (Feb 5, 2026)
 - Admin panel (moderation, credits, broadcast)
 - Favorites/saved items
 - Notification inbox
@@ -117,6 +118,10 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - Skeleton loading cards on Landing page
 - Desktop-optimized Subscription page layout
 - Downloads page with SAMAN logo for QR marketing
+
+### What's WAITING (Telr Support)
+- **Credit Card Payments** - Status 90 anti-fraud blocks (Telr merchant config issue)
+- Email sent to Telr (Rahul) on Feb 5, 2026 requesting fraud settings adjustment
 
 ### App Store Submissions Status
 
@@ -142,28 +147,62 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **SHA1:** `E0:94:63:3C:74:75:5F:7B:D9:56:0B:F4:14:01:6E:E6:7F:2A:E1:8A`
 - Google approved upload key reset on February 4, 2026
 
-### BUG FIXED - Payment Verification After Telr Redirect (February 5, 2026)
-**Problem:** Payment completed successfully on Telr's page but failed when returning to the app.
+---
 
-**Root Cause:** TWO bugs in the payment verification flow:
-1. After creating a Telr order, we stored the Telr `order.ref` in `paymentReference`, OVERWRITING our original `cartId`. When the user returned with `?cart=cartId` in the URL, we couldn't find the transaction anymore.
+## Payment System Fixes (February 5, 2026)
+
+### ✅ BUG FIXED - Payment Verification After Telr Redirect
+
+**Problem:** Payment completed successfully on Telr's page but failed when returning to the app. Money was charged but credits weren't added.
+
+**Root Cause:** THREE bugs in the payment verification flow:
+1. After creating a Telr order, we stored ONLY the Telr `order.ref` in `paymentReference`, OVERWRITING our original `cartId`. When the user returned with `?cart=cartId` in the URL, we couldn't find the transaction anymore.
 2. When calling Telr's "check" API, we passed our `cartId` as `order_ref`, but Telr requires their own order reference token.
+3. **There were TWO checkout endpoints** (`/api/checkout/redirect` and `/api/checkout`) - only one was fixed initially!
 
-**Fix Applied:**
-1. Now storing BOTH values as `cartId::orderRef` in `paymentReference`
-2. Updated `getTransactionByReference()` to find transactions by cartId prefix
-3. Updated `/api/payment/verify` to extract the Telr order.ref and use it for the check API
-4. **CRITICAL FIX (Feb 5):** There were TWO checkout endpoints - the redirect checkout (used by iOS for credit cards) was NOT fixed! Now both endpoints store `cartId::orderRef` format
+**Fixes Applied (All in server/routes.ts):**
+
+1. **Both checkout endpoints now store combined format:**
+   - `/api/checkout/redirect` (line ~1164): `await storage.updateTransactionReference(transaction.id, \`${cartId}::${telrResult.order.ref}\`);`
+   - `/api/checkout` (line ~1468): Same fix applied
+
+2. **Updated `getTransactionByReference()` in storage.ts:**
+   - Now finds transactions by cartId prefix when paymentReference contains `::`
+   - Uses SQL LIKE query: `like(transactions.paymentReference, \`${reference}::%\`)`
+
+3. **Updated `/api/payment/verify` endpoint:**
+   - Extracts Telr order.ref from stored `cartId::orderRef` format
+   - Uses extracted order.ref for Telr check API call
+
+**Code Example (Verification Flow):**
+```javascript
+// Extract Telr order reference from paymentReference (format: cartId::orderRef)
+let telrOrderRef = cart; // fallback to cart if no :: separator
+if (transaction.paymentReference?.includes("::")) {
+  telrOrderRef = transaction.paymentReference.split("::")[1];
+}
+// Use telrOrderRef (not cartId) when calling Telr check API
+```
 
 **Telr API Format (IMPORTANT - DO NOT CHANGE):**
-- `order.json` endpoint requires `application/x-www-form-urlencoded` format (NOT JSON)
-- Uses `ivp_` prefixed parameters: `ivp_method`, `ivp_store`, `ivp_authkey`, `ivp_cart`, etc.
+- `order.json` endpoint uses JSON format for creating orders
+- `check` method requires URL-encoded: `ivp_method=check&ivp_store=32400&ivp_authkey=...&order_ref=TELR_ORDER_REF`
 - The "check" method requires `order_ref` = Telr's order reference (from create response), NOT our cartId
 
-### KNOWN ISSUE - Credit Card Payments (Status 90)
-Credit card payments may still fail with Status 90 (Telr anti-fraud blocks). This is a Telr merchant configuration issue, NOT a code issue. Apple Pay works fine (100% success rate).
+---
 
-**Auth Key Separation:**
+### ⏳ PENDING - Credit Card Status 90 (Telr Anti-Fraud)
+
+**Problem:** Credit card payments get declined with Status 90 on Telr's payment page. This happens BEFORE verification, so it's not a code issue.
+
+**Email Sent to Telr (Feb 5, 2026):**
+| Integration | Auth Key | Telr Source | Result |
+|-------------|----------|-------------|--------|
+| Apple Pay | Wallets Key | "Admin" | ✅ Works |
+| Credit Card | Regular Key | "Payment Page" | ❌ Status 90 |
+| Credit Card with Wallets Key | Wallets Key | - | ❌ "Auth key mismatch" |
+
+**Auth Key Separation (DO NOT MIX):**
 - `3SWWK@m9Mz-5GNtS` = ONLY for Hosted Payment Page (credit cards)
 - `spRZ^QWJ5P~MWJpV` = ONLY for Remote API (Apple Pay, wallets)
 
@@ -183,16 +222,20 @@ Credit card payments may still fail with Status 90 (Telr anti-fraud blocks). Thi
 - "Admin" integration has looser fraud rules → transactions succeed
 - "Payment Page" integration has stricter fraud rules → Status 90 blocks
 - Apple Pay uses completely different API (Remote API) → always works
+- **This is 100% a Telr merchant configuration issue, NOT a code issue**
 
-**Action Required from Telr (WAITING FOR RESPONSE):**
-Contact Telr support and ask them to:
-1. Check why some transactions route through "Admin" while others route through "Payment Page"
-2. Check why "Payment Page" integration has stricter fraud rules than "Admin"
-3. Review/adjust anti-fraud settings for credit card payments on merchant account (Store ID: 32400)
-4. Specifically mention Status 90 blocks on valid cards that pass 3D Secure
+**Action Required from Telr (Rahul):**
+1. Check why transactions route through "Payment Page" with strict fraud rules
+2. Adjust anti-fraud settings for "Payment Page" to match "Admin"
+3. Store ID: 32400
 
-### Previous 3D Secure Issue (Resolved)
-Production user email was missing. Added admin endpoint to update email:
+---
+
+### ✅ Previous 3D Secure Issue (Resolved - Feb 1, 2026)
+
+**Problem:** Status 47 = 3DSecure authentication rejected
+
+**Solution:** Production user email was missing. Added admin endpoint to update email:
 ```javascript
 fetch('/api/admin/user/aaf09421-ec24-4799-8ae2-4bb88af00aaf/email', {
   method: 'POST',
@@ -200,6 +243,12 @@ fetch('/api/admin/user/aaf09421-ec24-4799-8ae2-4bb88af00aaf/email', {
   body: JSON.stringify({email: 'saeed.hokal@hotmail.com'})
 }).then(r => r.json()).then(console.log)
 ```
+
+**Other 3D Secure fixes applied:**
+1. Added customer IP to Telr requests (required for 3D Secure 2.0)
+2. Fixed customer reference from `"saman_user"` to actual `userId`
+3. Improved phone formatting with 971 prefix
+4. Removed "Mr" title from customer name
 
 ---
 
