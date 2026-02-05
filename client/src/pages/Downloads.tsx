@@ -4,7 +4,7 @@ import { SiApple, SiGoogleplay } from "react-icons/si";
 
 export default function Downloads() {
   const appStoreUrl = "https://apps.apple.com/kh/app/saman-marketplace/id6744526430";
-  const playStoreUrl = "https://play.google.com/store/apps/details?id=com.saman.marketplace";
+  const playStoreUrl = "https://play.google.com/store/apps/details?id=com.saman.marketplace&referrer=utm_source%3Dappbrain%26utm_medium%3Dappbrain_web%26utm_campaign%3Dappbrain_web";
 
   return (
     <div className="min-h-screen relative flex items-center justify-center">
