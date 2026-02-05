@@ -1,0 +1,143 @@
+Integration: Payment Page
+
+But your email log says:
+
+Content-Type: application/json
+User Agent: node
+
+That means:
+
+You are now calling server-to-server / API
+
+BUT the auth key you’re using is for Hosted Payment Page
+
+⚠️ Telr treats these as different authentication contexts.
+
+Result:
+➡️ Same key
+➡️ Same store
+➡️ ❌ Auth mismatch
+
+This is VERY common after “latest update”.
+
+✅ 2. You regenerated the key at some point
+
+Even if you copied it back:
+
+Old transactions = worked
+
+New requests = rejected
+
+Telr does not always invalidate old sessions immediately, so it looks like “it worked before”.
+
+✅ 3. Whitespace / hidden character issue (Node.js classic)
+
+In Node, this breaks Telr silently:
+
+process.env.TELR_AUTH_KEY
+
+
+If your .env has:
+
+TELR_AUTH_KEY=abc123␣
+
+
+That trailing space = ❌ authentication mismatch
+
+You won’t see it by eye.
+
+✅ 4. You’re missing ivp_trantype
+
+Your own log confirms:
+
+ivp_trantype -- not set --
+
+
+This used to be optional.
+Telr tightened validation late 2025.
+
+Now:
+
+ivp_trantype = sale
+
+
+is mandatory for API calls.
+
+Why Apple Pay behaved differently
+
+Apple Pay:
+
+Often bypasses the hosted page
+
+Uses tokenized flow
+
+Sometimes mapped to a different Telr profile internally
+
+So it masked the real issue until now.
+
+EXACT FIX (do these in order)
+✅ Step 1 — Confirm integration type
+
+In Telr dashboard:
+Integrations → Payment Pages
+
+Check:
+
+Are you using Hosted Payment Page?
+
+Or Server API / JSON?
+
+Your code must match this exactly.
+
+✅ Step 2 — Add this NOW
+
+In your request:
+
+ivp_trantype = sale
+
+
+No exception.
+
+✅ Step 3 — Re-copy auth key (fresh)
+
+Telr Dashboard → Integrations
+
+Regenerate auth key
+
+Paste it manually (don’t auto-fill)
+
+Trim it in code:
+
+authkey: process.env.TELR_AUTH_KEY.trim()
+
+✅ Step 4 — Verify endpoint
+
+Make sure you are NOT mixing:
+
+Hosted Page URL
+
+JSON API URL
+
+Using the wrong endpoint with the right key = ❌ auth mismatch.
+
+What this is NOT
+
+❌ Not fraud
+❌ Not IP
+❌ Not UAE restriction
+❌ Not card issuer
+❌ Not Apple Pay
+
+This is pure integration-state mismatch.
+
+I can pinpoint it in 1 message
+
+If you paste (mask sensitive parts):
+
+The exact Telr endpoint URL
+
+Whether you POST form-data or JSON
+
+Express / Nest / other
+
+I’ll tell you exactly which line broke and you’ll fix this in under 5 minutes.

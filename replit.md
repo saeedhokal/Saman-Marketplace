@@ -165,6 +165,22 @@ Credit card payments fail with Status 90 (Telr anti-fraud blocks). This is a Tel
 
 **Mystery:** User completed a 5 AED credit card payment through the app normally, but it went through "Admin" integration instead of "Payment Page" - and it worked! Other identical attempts go through "Payment Page" and fail.
 
+**FAILED CODE ATTEMPTS (DO NOT REPEAT):**
+1. ❌ Added `tran.type: "sale"` and `tran.class: "ecom"` - Still Status 90
+2. ❌ Changed `framed: 0` to `framed: 2` (iframe mode) - Still Status 90
+3. ❌ Removed `customer.ip` field entirely - Still Status 90
+4. ❌ Removed `tran` object entirely - Still Status 90
+5. ❌ Tried using Wallets auth key for Hosted Page - "Authentication key mismatch" error
+6. ❌ Verified all auth keys multiple times - Keys are correct
+7. ❌ Added/removed customer email - Email not the issue (successful 5 AED also had fallback email)
+
+**CONFIRMED FACTS:**
+- Same user, same cart format, same email = different results based on Integration type
+- Telr routes transactions to "Admin" or "Payment Page" integration - we cannot control this
+- "Admin" integration has looser fraud rules → transactions succeed
+- "Payment Page" integration has stricter fraud rules → Status 90 blocks
+- Apple Pay uses completely different API (Remote API) → always works
+
 **Action Required from Telr (WAITING FOR RESPONSE):**
 Contact Telr support and ask them to:
 1. Check why some transactions route through "Admin" while others route through "Payment Page"

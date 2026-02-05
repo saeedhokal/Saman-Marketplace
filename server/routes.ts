@@ -1353,8 +1353,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(404).json({ message: "Package not found or inactive" });
     }
 
-    const telrStoreId = process.env.TELR_STORE_ID;
-    const telrAuthKey = process.env.TELR_AUTH_KEY;
+    // IMPORTANT: Trim auth keys to avoid whitespace issues (per Telr guide)
+    const telrStoreId = process.env.TELR_STORE_ID?.trim();
+    const telrAuthKey = process.env.TELR_AUTH_KEY?.trim();
     
     // Get user info for billing
     const [user] = await db.select().from(users).where(eq(users.id, userId));
@@ -1428,13 +1429,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         method: "create",
         store: storeId,
         authkey: telrAuthKey,
-        framed: 2,
+        framed: 0,
         order: {
           cartid: cartId,
           test: 0,
           amount: amountInAED,
           currency: "AED",
           description: `Saman Marketplace - ${pkg.name}`,
+        },
+        tran: {
+          type: "sale",
+          class: "ecom",
         },
         return: {
           authorised: `${baseUrl}/payment/success?cart=${cartId}`,
@@ -1457,6 +1462,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             areacode: "00000",
           },
           phone: customerPhone,
+          ip: customerIp,
         },
       };
 
@@ -1694,9 +1700,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(404).json({ message: "Package not found or inactive" });
     }
 
-    const telrStoreId = process.env.TELR_STORE_ID;
+    // IMPORTANT: Trim auth keys to avoid whitespace issues (per Telr guide)
+    const telrStoreId = process.env.TELR_STORE_ID?.trim();
     // Apple Pay (Wallets) uses a DIFFERENT auth key than Hosted Page or Remote API
-    const telrAuthKey = process.env.TELR_WALLETS_AUTH_KEY || process.env.TELR_REMOTE_AUTH_KEY || process.env.TELR_AUTH_KEY;
+    const telrAuthKey = (process.env.TELR_WALLETS_AUTH_KEY || process.env.TELR_REMOTE_AUTH_KEY || process.env.TELR_AUTH_KEY)?.trim();
     
     if (!telrStoreId || !telrAuthKey) {
       return res.status(400).json({ message: "Payment gateway not configured" });
@@ -1953,8 +1960,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(400).json({ message: "Cart ID is required" });
     }
 
-    const telrStoreId = process.env.TELR_STORE_ID;
-    const telrAuthKey = process.env.TELR_AUTH_KEY;
+    // IMPORTANT: Trim auth keys to avoid whitespace issues (per Telr guide)
+    const telrStoreId = process.env.TELR_STORE_ID?.trim();
+    const telrAuthKey = process.env.TELR_AUTH_KEY?.trim();
     
     if (!telrStoreId || !telrAuthKey) {
       return res.status(400).json({ message: "Payment not configured" });
