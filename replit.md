@@ -123,6 +123,32 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - This suggests Payment Page integration has DIFFERENT fraud rules than Admin integration
 - Telr needs to check their Payment Page integration settings for Store 32400
 
+**CRITICAL PROOF (Feb 5, 2026 - from successful transaction screenshot):**
+- Sale 030066820400 - **AUTHORISED** on Feb 4 at 17:30 GST
+- Integration: **Payment Page** (SAME as failing ones!)
+- Auth Code: 858669
+- Card ending 3705 (same card that later failed)
+- Amount: AED 30.00
+
+**Timeline proving issue started AFTER working:**
+- Feb 4, 17:30 → Payment Page → **SUCCESS** ✅ (Auth Code 858669)
+- Feb 5, 01:40 → Payment Page → **Status 90** ❌
+- Feb 5, 05:26 → Payment Page → **Status 90** ❌
+
+**CODE COMPARISON RESULT:**
+Compared current code to working commit 2bb7edf - Telr request data is **IDENTICAL**:
+- Same store ID: 32400
+- Same authkey: 3SWWK@m9Mz-5GNtS
+- Same framed: 0
+- Same order structure, return URLs, customer data
+
+**CONCLUSION: Issue is NOT in our code.**
+1. Same Payment Page integration worked Feb 4 17:30
+2. Same code, same card started failing Feb 5
+3. Telr portal shows "matched to previous transaction" = velocity checks
+4. 3D Secure succeeds (MPI Level 2, Status 1), then Telr blocks anyway
+5. This is Telr's fraud/velocity detection - they need to adjust Store 32400 settings
+
 **Payment Verification Fix Applied:**
 1. Both checkout endpoints now store `cartId::orderRef` format
 2. `getTransactionByReference()` finds transactions by cartId prefix
