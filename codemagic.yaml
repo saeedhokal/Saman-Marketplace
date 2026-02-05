@@ -60,8 +60,8 @@ workflows:
       - name: Set version and build number
         script: |
           cd $CM_BUILD_DIR/ios/App
-          # Set version to 2.0.0 (higher than previous 1.2.9)
-          agvtool new-marketing-version 2.0.0
+          # Set version to 2.0.1 (higher than previous 2.0.0)
+          agvtool new-marketing-version 2.0.1
           # Get latest build number from App Store Connect and increment
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-build-number "$APP_ID" --platform IOS 2>/dev/null || echo "20")
           NEW_BUILD=$((LATEST_BUILD_NUMBER + 1))
