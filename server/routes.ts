@@ -1424,54 +1424,40 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Use environment variables for credentials
       const storeId = parseInt(telrStoreId, 10);
       
-      // JSON format matching Telr API requirements
-      const telrData = {
-        method: "create",
-        store: storeId,
-        authkey: telrAuthKey,
-        framed: 0,
-        order: {
-          cartid: cartId,
-          test: 0,
-          amount: amountInAED,
-          currency: "AED",
-          description: `Saman Marketplace - ${pkg.name}`,
-        },
-        tran: {
-          type: "sale",
-          class: "ecom",
-        },
-        return: {
-          authorised: `${baseUrl}/payment/success?cart=${cartId}`,
-          declined: `${baseUrl}/payment/declined?cart=${cartId}`,
-          cancelled: `${baseUrl}/payment/cancelled?cart=${cartId}`,
-        },
-        customer: {
-          ref: userId,
-          email: user?.email || "customer@saman.ae",
-          name: {
-            title: "",
-            forenames: user?.firstName || "Customer",
-            surname: user?.lastName || "User",
-          },
-          address: {
-            line1: "Dubai",
-            city: "Dubai",
-            state: "Dubai",
-            country: "AE",
-            areacode: "00000",
-          },
-          phone: customerPhone,
-          ip: customerIp,
-        },
-      };
+      // URL-encoded format for Hosted Payment Page (ivp_ prefixed parameters)
+      const telrParams = new URLSearchParams({
+        ivp_method: "create",
+        ivp_store: telrStoreId,
+        ivp_authkey: telrAuthKey,
+        ivp_cart: cartId,
+        ivp_test: "0",
+        ivp_amount: amountInAED.toString(),
+        ivp_currency: "AED",
+        ivp_desc: `Saman Marketplace - ${pkg.name}`,
+        ivp_trantype: "sale",
+        ivp_tranclass: "ecom",
+        return_auth: `${baseUrl}/payment/success?cart=${cartId}`,
+        return_decl: `${baseUrl}/payment/declined?cart=${cartId}`,
+        return_can: `${baseUrl}/payment/cancelled?cart=${cartId}`,
+        bill_ref: userId,
+        bill_email: user?.email || "customer@saman.ae",
+        bill_fname: user?.firstName || "Customer",
+        bill_sname: user?.lastName || "User",
+        bill_addr1: "Dubai",
+        bill_city: "Dubai",
+        bill_region: "Dubai",
+        bill_country: "AE",
+        bill_zip: "00000",
+        bill_phone: customerPhone,
+        ivp_framed: "0",
+      });
 
-      console.log("[TELR] Sending JSON request:", JSON.stringify(telrData));
+      console.log("[TELR] Sending URL-encoded request:", telrParams.toString());
 
       const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(telrData),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: telrParams.toString(),
       });
 
       const telrResult = await telrResponse.json();

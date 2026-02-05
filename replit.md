@@ -173,6 +173,8 @@ Credit card payments fail with Status 90 (Telr anti-fraud blocks). This is a Tel
 5. ❌ Tried using Wallets auth key for Hosted Page - "Authentication key mismatch" error
 6. ❌ Verified all auth keys multiple times - Keys are correct
 7. ❌ Added/removed customer email - Email not the issue (successful 5 AED also had fallback email)
+8. ❌ Trimmed auth keys with `.trim()` - Still Status 90
+9. ❌ Restored IP + tran object + framed:0 - Still Status 90
 
 **CONFIRMED FACTS:**
 - Same user, same cart format, same email = different results based on Integration type
