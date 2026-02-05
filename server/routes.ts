@@ -1103,7 +1103,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         status: "pending",
       });
       
-      // Format phone number for Telr (remove leading zero if present)
+      // Format phone number for Telr (971 prefix, no +)
       let customerPhone = user?.phone || "971500000000";
       if (customerPhone.startsWith("0")) {
         customerPhone = "971" + customerPhone.substring(1);

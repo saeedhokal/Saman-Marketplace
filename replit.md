@@ -231,24 +231,29 @@ if (transaction.paymentReference?.includes("::")) {
 
 ---
 
-### ✅ Previous 3D Secure Issue (Resolved - Feb 1, 2026)
+### ⚠️ 3D Secure Issue (Still Not Working - Feb 5, 2026)
 
-**Problem:** Status 47 = 3DSecure authentication rejected
+**Current Workaround:** User does NOT tick the 3D Secure checkbox on Telr's payment page.
 
-**Solution:** Production user email was missing. Added admin endpoint to update email:
-```javascript
-fetch('/api/admin/user/aaf09421-ec24-4799-8ae2-4bb88af00aaf/email', {
-  method: 'POST',
-  headers: {'Content-Type': 'application/json'},
-  body: JSON.stringify({email: 'saeed.hokal@hotmail.com'})
-}).then(r => r.json()).then(console.log)
-```
+**History:**
+- 3D Secure WAS working before any verification fixes were attempted
+- User reports it stopped working after verification display fix attempts
+- Status 47 = 3DSecure authentication rejected
 
-**Other 3D Secure fixes applied:**
-1. Added customer IP to Telr requests (required for 3D Secure 2.0)
-2. Fixed customer reference from `"saman_user"` to actual `userId`
-3. Improved phone formatting with 971 prefix
-4. Removed "Mr" title from customer name
+**ALREADY TRIED (DO NOT REPEAT):**
+1. ❌ Added customer IP to Telr requests - didn't fix it
+2. ❌ Changed customer reference from `"saman_user"` to actual `userId` - didn't fix it  
+3. ❌ Added/changed phone formatting (with/without + prefix) - didn't fix it
+4. ❌ Removed "Mr" title from customer name - didn't fix it
+5. ❌ Added production user email - didn't fix it
+
+**Current Telr Request Structure (checkout redirect):**
+- Uses JSON format to `https://secure.telr.com/gateway/order.json`
+- Phone format: `971...` (no + prefix) - THIS WORKED BEFORE
+- No customer IP field currently
+- Customer email included
+
+**Note:** User confirmed 3D Secure worked before verification fixes. The verification fix only changed how `paymentReference` is stored AFTER order creation - it should NOT affect 3D Secure. Investigation needed to find what actually broke.
 
 ---
 
