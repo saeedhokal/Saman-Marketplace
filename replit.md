@@ -15,6 +15,11 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Tests on physical iPhone** via TestFlight
 - **Communicates via desktop** while testing on phone
 
+## Agent Work Guidelines
+- **BE THOROUGH:** When debugging or making changes, search ALL relevant files (build configs, yaml, json, plist, project files) - not just the obvious ones. Use broad grep searches first.
+- **Check build pipelines first:** codemagic.yaml overrides local project settings during builds. Always check it when version/build issues occur.
+- **Don't rush:** Take time to find the root cause rather than making quick fixes that miss the actual problem.
+
 ## System Architecture
 
 ### Frontend
