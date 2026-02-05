@@ -146,6 +146,65 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 ---
 
+## Comprehensive A-Z Issue List (Feb 5, 2026)
+
+### CRITICAL ISSUES
+
+**1. iOS capacitor.config.json has WRONG server URL**
+- `ios/App/App/capacitor.config.json` points to `https://saman-market-fixer--saeedhokal.replit.app`
+- But `capacitor.config.ts` points to `https://thesamanapp.com`
+- The iOS build might use WRONG URL unless Codemagic runs `npx cap sync`
+
+**2. `limitsNavigationsToAppBoundDomains: true` without `WKAppBoundDomains`**
+- `capacitor.config.ts` has `limitsNavigationsToAppBoundDomains: true`
+- But `Info.plist` has NO `WKAppBoundDomains` key defined
+- This could restrict iOS WebView from navigating to `secure.telr.com`
+
+**3. PaymentSuccess.tsx race condition**
+- Tries deep link AND immediately calls `/api/payment/verify` in parallel
+- Safari doesn't have session cookies, so verification fails there
+- No `return` statement after deep link attempt, so both execute
+
+### MEDIUM ISSUES
+
+**4. Two checkout endpoints with DIFFERENT formats**
+- `/api/checkout-redirect` uses JSON format: `method: "create"`
+- `/api/checkout` uses URL-encoded: `ivp_method: "create"`
+- Different return URL key names: `authorised` vs `return_auth`
+
+**5. POST `/api/checkout` endpoint is NEVER CALLED**
+- `purchaseMutation` is defined in Checkout.tsx but never invoked
+- Dead code that could cause confusion
+
+**6. Hardcoded auth keys vs environment variables inconsistency**
+- Lines 1115, 1215, 1280: Hardcoded `3SWWK@m9Mz-5GNtS`
+- POST /api/checkout uses `process.env.TELR_AUTH_KEY`
+- Same value, but inconsistent approach
+
+**7. Third auth key `TELR_REMOTE_AUTH_KEY` exists but unexplained**
+- `TELR_REMOTE_AUTH_KEY=DdkLr~C8Nph^cpfK` in env vars
+- Not documented - different from the two known keys
+- Apple Pay fallback chain includes it
+
+### MINOR ISSUES
+
+**8. Phone number format inconsistency**
+- Original code: `+971` prefix
+- Current code: `971` without +
+- Telr may expect specific format
+
+**9. Capacitor configs out of sync**
+- `ios/App/App/capacitor.config.json` differs from `capacitor.config.ts`
+- iOS config missing `limitsNavigationsToAppBoundDomains`
+- Different `backgroundColor`, `contentInset` values
+
+**10. Test endpoints vs production endpoints**
+- Test endpoints use `test: 1`
+- Production endpoints use `test: 0`
+- Verify iOS always hits production endpoint
+
+---
+
 ## App Store Status
 
 ### iOS - LIVE
