@@ -142,28 +142,29 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **SHA1:** `E0:94:63:3C:74:75:5F:7B:D9:56:0B:F4:14:01:6E:E6:7F:2A:E1:8A`
 - Google approved upload key reset on February 4, 2026
 
+### BUG FIXED - Payment Verification After Telr Redirect (February 5, 2026)
+**Problem:** Payment completed successfully on Telr's page but failed when returning to the app.
+
+**Root Cause:** TWO bugs in the payment verification flow:
+1. After creating a Telr order, we stored the Telr `order.ref` in `paymentReference`, OVERWRITING our original `cartId`. When the user returned with `?cart=cartId` in the URL, we couldn't find the transaction anymore.
+2. When calling Telr's "check" API, we passed our `cartId` as `order_ref`, but Telr requires their own order reference token.
+
+**Fix Applied:**
+1. Now storing BOTH values as `cartId::orderRef` in `paymentReference`
+2. Updated `getTransactionByReference()` to find transactions by cartId prefix
+3. Updated `/api/payment/verify` to extract the Telr order.ref and use it for the check API
+
+**Telr API Format (IMPORTANT - DO NOT CHANGE):**
+- `order.json` endpoint requires `application/x-www-form-urlencoded` format (NOT JSON)
+- Uses `ivp_` prefixed parameters: `ivp_method`, `ivp_store`, `ivp_authkey`, `ivp_cart`, etc.
+- The "check" method requires `order_ref` = Telr's order reference (from create response), NOT our cartId
+
 ### KNOWN ISSUE - Credit Card Payments (Status 90)
-Credit card payments fail with Status 90 (Telr anti-fraud blocks). This is a Telr merchant configuration issue, NOT a code issue. Apple Pay works fine (100% success rate).
+Credit card payments may still fail with Status 90 (Telr anti-fraud blocks). This is a Telr merchant configuration issue, NOT a code issue. Apple Pay works fine (100% success rate).
 
-**Key Findings (February 5, 2026):**
-
-| Transaction | Amount | Integration | IP Shown | Result |
-|------------|--------|-------------|----------|--------|
-| Apple Pay | 30 AED | Remote (V2) | Yes (server IP) | ✅ Works |
-| Credit Card | 5 AED | **Admin** | **No** | ✅ Works |
-| Credit Card | 30 AED | Payment Page | Yes | ❌ Status 90 |
-
-- Apple Pay uses **Remote API** with Wallets auth key → Integration shows "Remote (V2)" → **WORKS**
-- One credit card transaction mysteriously went through **Admin** integration → **WORKED**
-- Most credit cards use **Hosted Payment Page** → Integration shows "Payment Page" → **BLOCKED (Status 90)**
-- Attempted using Wallets auth key for Hosted Page → "Authentication key mismatch" error
-- Each auth key is locked to its specific API - cannot be swapped
-
-**Confirmed Auth Key Separation:**
+**Auth Key Separation:**
 - `3SWWK@m9Mz-5GNtS` = ONLY for Hosted Payment Page (credit cards)
 - `spRZ^QWJ5P~MWJpV` = ONLY for Remote API (Apple Pay, wallets)
-
-**Mystery:** User completed a 5 AED credit card payment through the app normally, but it went through "Admin" integration instead of "Payment Page" - and it worked! Other identical attempts go through "Payment Page" and fail.
 
 **FAILED CODE ATTEMPTS (DO NOT REPEAT):**
 1. ❌ Added `tran.type: "sale"` and `tran.class: "ecom"` - Still Status 90
@@ -172,9 +173,8 @@ Credit card payments fail with Status 90 (Telr anti-fraud blocks). This is a Tel
 4. ❌ Removed `tran` object entirely - Still Status 90
 5. ❌ Tried using Wallets auth key for Hosted Page - "Authentication key mismatch" error
 6. ❌ Verified all auth keys multiple times - Keys are correct
-7. ❌ Added/removed customer email - Email not the issue (successful 5 AED also had fallback email)
+7. ❌ Added/removed customer email - Email not the issue
 8. ❌ Trimmed auth keys with `.trim()` - Still Status 90
-9. ❌ Restored IP + tran object + framed:0 - Still Status 90
 
 **CONFIRMED FACTS:**
 - Same user, same cart format, same email = different results based on Integration type

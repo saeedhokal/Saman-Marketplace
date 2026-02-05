@@ -581,9 +581,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTransactionByReference(reference: string): Promise<Transaction | undefined> {
+    // First try exact match
     const [tx] = await db.select().from(transactions)
       .where(eq(transactions.paymentReference, reference));
-    return tx;
+    if (tx) return tx;
+    
+    // Then try prefix match (for cartId::orderRef format)
+    const allPending = await db.select().from(transactions)
+      .where(eq(transactions.status, "pending"));
+    return allPending.find(t => t.paymentReference?.startsWith(reference + "::") || t.paymentReference?.startsWith(reference));
   }
 
   async updateTransactionStatus(id: number, status: string): Promise<void> {
