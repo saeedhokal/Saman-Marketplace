@@ -58,24 +58,24 @@ export function BottomNav() {
 
   return (
     <>
-      <nav
-        className="shrink-0 bg-[#0f1318] border-t border-slate-700/50"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
+      <div className="shrink-0 relative" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', backgroundColor: '#0f1318' }}>
+        <div className="absolute left-1/2 -translate-x-1/2 -top-3 z-10">
+          <button 
+            onClick={handlePostClick}
+            className="flex items-center justify-center w-14 h-14 rounded-full bg-accent text-white shadow-lg shadow-accent/30 hover:bg-accent/90 transition-colors"
+            data-testid="button-post"
+          >
+            <Plus className="h-7 w-7" />
+          </button>
+        </div>
+        <nav className="border-t border-slate-700/50">
         <div className="flex items-center justify-around h-16 px-2">
           {navItems.map((item) => {
             const isActive = location === item.href;
             
             if (item.isCenter) {
               return (
-                <button 
-                  key={item.href}
-                  onClick={handlePostClick}
-                  className="flex items-center justify-center w-14 h-14 -mt-6 rounded-full bg-accent text-white shadow-lg shadow-accent/30 hover:bg-accent/90 transition-colors"
-                  data-testid="button-post"
-                >
-                  <Plus className="h-7 w-7" />
-                </button>
+                <div key={item.href} className="w-14" />
               );
             }
 
@@ -96,7 +96,8 @@ export function BottomNav() {
             );
           })}
         </div>
-      </nav>
+        </nav>
+      </div>
 
       <AlertDialog open={showNoCreditsDialog} onOpenChange={setShowNoCreditsDialog}>
         <AlertDialogContent className="max-w-sm mx-4">
