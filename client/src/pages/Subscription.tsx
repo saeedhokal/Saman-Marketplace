@@ -191,9 +191,10 @@ export default function Subscription() {
                         <h3 className="font-semibold text-base">{packageNameMap[pkg.name] ? t(packageNameMap[pkg.name]) : pkg.name}</h3>
                         <div className="flex items-baseline gap-2 mt-1">
                           <span className="text-2xl font-bold text-accent">{isRTL ? `${pkg.price} د.إ` : `AED ${pkg.price}`}</span>
+                          <span className="text-xs text-muted-foreground">+ VAT</span>
                         </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm text-foreground">
                             {pkg.credits} {t("credit")}{pkg.credits > 1 && !isRTL ? 's' : ''}
                             {hasBonusCredits && (
                               <span className={`text-green-600 font-medium ${isRTL ? 'mr-1' : 'ml-1'}`}>
