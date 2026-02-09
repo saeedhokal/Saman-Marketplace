@@ -181,6 +181,8 @@ export const translations = {
     orderSummary: "Order Summary",
     package: "Package",
     total: "Total",
+    subtotal: "Subtotal",
+    vat: "VAT (5%)",
     paymentMethod: "Payment Method",
     applePay: "Apple Pay",
     creditCard: "Credit Card",
@@ -194,6 +196,20 @@ export const translations = {
     pleaseSignIn: "Please sign in to complete your purchase",
     packageNotFound: "Package not found",
     applePayNotAvailable: "Apple Pay is only available on iOS devices",
+    
+    // Invoices
+    invoices: "Invoices",
+    invoiceNumber: "Invoice No.",
+    noInvoices: "No invoices yet",
+    noInvoicesDesc: "Your purchase invoices will appear here",
+    downloadInvoice: "View Invoice",
+    invoiceDetails: "Invoice Details",
+    billTo: "Bill To",
+    qty: "Qty",
+    unitPrice: "Unit Price",
+    creditsPackage: "Credits Package",
+    taxNumber: "TRN",
+    inclVat: "incl. VAT",
     
     // Footer Links
     about: "About",
@@ -428,6 +444,8 @@ export const translations = {
     orderSummary: "ملخص الطلب",
     package: "الباقة",
     total: "المجموع",
+    subtotal: "المجموع الفرعي",
+    vat: "ضريبة القيمة المضافة (٥٪)",
     paymentMethod: "طريقة الدفع",
     applePay: "Apple Pay",
     creditCard: "بطاقة ائتمان",
@@ -441,6 +459,20 @@ export const translations = {
     pleaseSignIn: "يرجى تسجيل الدخول لإتمام عملية الشراء",
     packageNotFound: "الباقة غير موجودة",
     applePayNotAvailable: "Apple Pay متاح فقط على أجهزة iOS",
+    
+    // Invoices
+    invoices: "الفواتير",
+    invoiceNumber: "رقم الفاتورة",
+    noInvoices: "لا توجد فواتير بعد",
+    noInvoicesDesc: "ستظهر فواتير مشترياتك هنا",
+    downloadInvoice: "عرض الفاتورة",
+    invoiceDetails: "تفاصيل الفاتورة",
+    billTo: "فاتورة إلى",
+    qty: "الكمية",
+    unitPrice: "سعر الوحدة",
+    creditsPackage: "باقة رصيد",
+    taxNumber: "الرقم الضريبي",
+    inclVat: "شامل الضريبة",
     
     // Footer Links
     about: "عن سامان",

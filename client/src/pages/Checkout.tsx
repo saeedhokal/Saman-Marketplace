@@ -153,7 +153,8 @@ export default function Checkout() {
     
     setIsProcessing(true);
     const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
-    const amount = pkg.price.toString(); // Price is already in AED
+    const applePayTotal = (pkg.price * 1.05).toFixed(2);
+    const amount = applePayTotal;
     
     console.log("[ApplePay Native] Starting native Apple Pay");
     fetch("/api/debug/applepay-client-log", {
@@ -329,7 +330,7 @@ export default function Checkout() {
     
     setIsProcessing(true);
     const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
-    const amount = pkg.price.toString(); // Price is already in AED
+    const amount = (pkg.price * 1.05).toFixed(2);
 
     const paymentRequest: ApplePayJS.ApplePayPaymentRequest = {
       countryCode: "AE",
@@ -524,6 +525,13 @@ export default function Checkout() {
   }
 
   const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
+  const vatRate = 0.05;
+  const vatAmount = pkg.price * vatRate;
+  const totalWithVat = pkg.price + vatAmount;
+  const formatPrice = (val: number) => {
+    const formatted = val % 1 === 0 ? val.toString() : val.toFixed(2);
+    return isRTL ? `${formatted} د.إ` : `${formatted} AED`;
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20" dir={isRTL ? "rtl" : "ltr"}>
@@ -546,15 +554,15 @@ export default function Checkout() {
             <CardTitle className="text-lg">{t("orderSummary")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-2">
               <span className="text-muted-foreground">{t("package")}</span>
               <span className="font-medium">{pkg.name}</span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-2">
               <span className="text-muted-foreground">{t("category")}</span>
               <span>{pkg.category === "Spare Parts" ? t("spareParts") : t("automotive")}</span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-2">
               <span className="text-muted-foreground">{t("credits")}</span>
               <span>
                 {pkg.credits}
@@ -563,9 +571,19 @@ export default function Checkout() {
                 )}
               </span>
             </div>
-            <div className="border-t pt-3 flex justify-between items-center">
-              <span className="font-semibold">{t("total")}</span>
-              <span className="text-xl font-bold text-accent">{isRTL ? `${pkg.price} د.إ` : `${pkg.price} AED`}</span>
+            <div className="border-t pt-3 space-y-2">
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-muted-foreground">{t("subtotal")}</span>
+                <span data-testid="text-subtotal">{formatPrice(pkg.price)}</span>
+              </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-muted-foreground">{t("vat")}</span>
+                <span data-testid="text-vat">{formatPrice(vatAmount)}</span>
+              </div>
+              <div className="flex justify-between items-center gap-2 pt-2 border-t">
+                <span className="font-semibold">{t("total")}</span>
+                <span className="text-xl font-bold text-accent" data-testid="text-total-price">{formatPrice(totalWithVat)}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -654,7 +672,7 @@ export default function Checkout() {
               ) : (
                 <CreditCard className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               )}
-              {isRTL ? `${pkg.price} د.إ` : `Pay ${pkg.price} AED`}
+              {isRTL ? `${totalWithVat.toFixed(2)} د.إ` : `Pay ${totalWithVat.toFixed(2)} AED`}
             </>
           )}
         </Button>

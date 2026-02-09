@@ -53,6 +53,7 @@ export default function Profile() {
     { icon: Bell, label: t('notification'), href: "/inbox" },
     { icon: CreditCard, label: t('purchaseSubscription'), href: "/profile/subscription" },
     { icon: History, label: t('creditHistory'), href: "/profile/credits" },
+    { icon: FileText, label: t('invoices'), href: "/profile/invoices" },
     { icon: Settings, label: t('settings'), href: "/profile/settings" },
     { divider: true },
     { icon: FileText, label: t('aboutUs'), href: "/about" },

@@ -29,6 +29,7 @@ import ProfileDetails from "@/pages/ProfileDetails";
 import Notifications from "@/pages/Notifications";
 import NotificationInbox from "@/pages/NotificationInbox";
 import CreditHistory from "@/pages/CreditHistory";
+import Invoices from "@/pages/Invoices";
 import Settings from "@/pages/Settings";
 import DeleteAccount from "@/pages/DeleteAccount";
 import About from "@/pages/About";
@@ -74,6 +75,7 @@ function Router() {
           <Route path="/profile/notifications" component={Notifications} />
           <Route path="/inbox" component={NotificationInbox} />
           <Route path="/profile/credits" component={CreditHistory} />
+          <Route path="/profile/invoices" component={Invoices} />
           <Route path="/profile/settings" component={Settings} />
           <Route path="/profile/delete" component={DeleteAccount} />
           <Route path="/checkout/:id" component={Checkout} />

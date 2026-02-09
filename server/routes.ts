@@ -1086,10 +1086,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const cartId = `SAMAN-${userId}-${packageId}-${Date.now()}`;
       const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
-      const amountInAED = Number(pkg.price).toFixed(2); // Must be decimal format like "5.00"
+      const vatRate = 0.05;
+      const vatAmount = Number((pkg.price * vatRate).toFixed(2));
+      const totalWithVat = Number((pkg.price + vatAmount).toFixed(2));
+      const amountInAED = totalWithVat.toFixed(2);
       const baseUrl = "https://thesamanapp.com";
       
-      console.log(`[CHECKOUT-REDIRECT] Creating payment: ${amountInAED} AED for ${pkg.name}`);
+      console.log(`[CHECKOUT-REDIRECT] Creating payment: ${amountInAED} AED (base ${pkg.price} + VAT ${vatAmount}) for ${pkg.name}`);
       
       // Create pending transaction
       const transaction = await storage.createTransaction({
@@ -1701,6 +1704,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     const cartId = `SAMAN-AP-${userId}-${packageId}-${Date.now()}`;
     const totalCredits = pkg.credits + (pkg.bonusCredits || 0);
+    const vatRate = 0.05;
+    const vatAmount = Number((pkg.price * vatRate).toFixed(2));
+    const totalWithVat = Number((pkg.price + vatAmount).toFixed(2));
 
     // Create pending transaction
     const transaction = await storage.createTransaction({
@@ -1783,7 +1789,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           type: "sale",
           method: "applepay",
           cartid: cartId,
-          amount: pkg.price.toString(), // Price is already in AED
+          amount: totalWithVat.toFixed(2),
           currency: "AED",
           description: `${pkg.name} - ${totalCredits} ${pkg.category} Credits`,
           test: 0, // Live production mode
@@ -2108,6 +2114,38 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const userId = getCurrentUserId(req)!;
     const transactions = await storage.getTransactions({ userId });
     res.json(transactions);
+  });
+
+  app.get("/api/user/invoices", isAuthenticated, async (req, res) => {
+    const userId = getCurrentUserId(req)!;
+    const userTransactions = await storage.getTransactions({ userId });
+    const completedTransactions = userTransactions.filter(t => t.status === "completed");
+    
+    const allPackages = await storage.getPackages();
+    const packageMap = new Map(allPackages.map(p => [p.id, p]));
+    
+    const invoices = completedTransactions.map(t => {
+      const pkg = t.packageId ? packageMap.get(t.packageId) : null;
+      const baseAmount = t.amount;
+      const vatAmount = Number((baseAmount * 0.05).toFixed(2));
+      const totalAmount = Number((baseAmount + vatAmount).toFixed(2));
+      
+      return {
+        id: t.id,
+        invoiceNumber: `SAM-${String(t.id).padStart(6, '0')}`,
+        date: t.createdAt,
+        packageName: pkg?.name || "Credits Package",
+        category: t.category,
+        credits: t.credits,
+        paymentMethod: t.paymentMethod,
+        baseAmount,
+        vatAmount,
+        totalAmount,
+        status: t.status,
+      };
+    });
+    
+    res.json(invoices);
   });
 
   // Delete user account
