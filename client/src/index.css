@@ -112,6 +112,18 @@
   }
 }
 
+/* iOS Bottom Nav Fix - prevent keyboard push-up */
+[data-bottom-nav] {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 /* Custom Scrollbar - Dark theme */
 ::-webkit-scrollbar {
   width: 10px;

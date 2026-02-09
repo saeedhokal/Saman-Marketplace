@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Home, Search, Plus, Package, User, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
@@ -16,11 +16,38 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+function useKeyboardVisible() {
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const initialHeight = window.innerHeight;
+
+    const handleResize = () => {
+      const currentHeight = vv.height;
+      setIsKeyboardVisible(currentHeight < initialHeight * 0.75);
+    };
+
+    vv.addEventListener("resize", handleResize);
+    vv.addEventListener("scroll", handleResize);
+
+    return () => {
+      vv.removeEventListener("resize", handleResize);
+      vv.removeEventListener("scroll", handleResize);
+    };
+  }, []);
+
+  return isKeyboardVisible;
+}
+
 export function BottomNav() {
   const [location, setLocation] = useLocation();
   const { t } = useLanguage();
   const { user } = useAuth();
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
+  const keyboardVisible = useKeyboardVisible();
 
   const { data: userInfo } = useQuery<{
     sparePartsCredits: number;
@@ -56,9 +83,19 @@ export function BottomNav() {
     { href: "/profile", icon: User, labelKey: "profile" },
   ];
 
+  if (keyboardVisible) return null;
+
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0f1318]/95 backdrop-blur-md border-t border-slate-700/50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', position: 'fixed', bottom: 0, willChange: 'transform', transform: 'translate3d(0,0,0)', WebkitTransform: 'translate3d(0,0,0)', WebkitBackfaceVisibility: 'hidden' } as React.CSSProperties}>
+      <nav
+        data-bottom-nav
+        className="fixed bottom-0 left-0 right-0 z-[9999] bg-[#0f1318]/95 backdrop-blur-md border-t border-slate-700/50"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          WebkitTransform: 'translate3d(0,0,0)',
+          transform: 'translate3d(0,0,0)',
+        } as React.CSSProperties}
+      >
         <div className="flex items-center justify-around h-16 px-2">
           {navItems.map((item) => {
             const isActive = location === item.href;
