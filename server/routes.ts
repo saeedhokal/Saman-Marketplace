@@ -2584,57 +2584,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
-  // TEMPORARY: Force sync subscription packages (for fixing production duplicates)
-  app.get("/api/fix-packages", async (req, res) => {
-    try {
-      console.log("[FIX-PACKAGES] Manually triggered package sync...");
-      
-      // Define the correct packages
-      const correctPackages = [
-        { name: "Spare Part Basic", price: 30, credits: 1, bonusCredits: 0, category: "Spare Parts", sortOrder: 1 },
-        { name: "Spare Part Standard", price: 150, credits: 5, bonusCredits: 1, category: "Spare Parts", sortOrder: 2 },
-        { name: "Spare Part Advanced", price: 600, credits: 20, bonusCredits: 7, category: "Spare Parts", sortOrder: 3 },
-        { name: "Automotive Basic", price: 75, credits: 1, bonusCredits: 0, category: "Automotive", sortOrder: 4 },
-        { name: "Automotive Standard", price: 210, credits: 3, bonusCredits: 0, category: "Automotive", sortOrder: 5 },
-        { name: "Automotive Premium", price: 420, credits: 6, bonusCredits: 2, category: "Automotive", sortOrder: 6 },
-      ];
-      
-      // Get current packages
-      const currentPackages = await storage.getPackages();
-      console.log(`[FIX-PACKAGES] Found ${currentPackages.length} existing packages`);
-      
-      // First, unlink all transactions from packages (set package_id to null)
-      await db.update(transactions).set({ packageId: null });
-      console.log("[FIX-PACKAGES] Unlinked transactions from packages");
-      
-      // Delete all existing packages
-      for (const pkg of currentPackages) {
-        await storage.deletePackage(pkg.id);
-      }
-      console.log("[FIX-PACKAGES] Deleted all existing packages");
-      
-      // Create the correct packages
-      for (const pkg of correctPackages) {
-        await storage.createPackage({
-          ...pkg,
-          isActive: true,
-        });
-      }
-      console.log("[FIX-PACKAGES] Created 6 correct packages");
-      
-      // Verify
-      const newPackages = await storage.getPackages();
-      
-      res.json({
-        success: true,
-        message: `Fixed! Deleted ${currentPackages.length} old packages, created ${newPackages.length} correct packages`,
-        packages: newPackages.map(p => ({ name: p.name, price: p.price, category: p.category })),
-      });
-    } catch (error) {
-      console.error("[FIX-PACKAGES] Error:", error);
-      res.status(500).json({ error: String(error) });
-    }
-  });
 
   // Admin: Database diagnostic endpoint
   app.get("/api/admin/db-status", isAuthenticated, isAdmin, async (req, res) => {
@@ -3199,58 +3148,41 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
-  // ==================== SYNC SUBSCRIPTION PACKAGES ====================
+  // ==================== ONE-TIME CLEANUP: LEGACY PACKAGES ====================
   
-  // Ensure correct subscription packages exist (runs on startup)
-  async function syncSubscriptionPackages() {
+  async function cleanupLegacyPackages() {
     try {
-      console.log("[SYNC] Checking subscription packages...");
+      const allPackages = await storage.getPackages();
+      const legacyCutoff = new Date("2026-02-05T00:00:00Z");
+      const legacyPackages = allPackages.filter(p => 
+        p.createdAt && new Date(p.createdAt) < legacyCutoff
+      );
+      const newerPackages = allPackages.filter(p => 
+        !p.createdAt || new Date(p.createdAt) >= legacyCutoff
+      );
       
-      // Define the correct packages
-      const correctPackages = [
-        { name: "Spare Part Basic", price: 30, credits: 1, bonusCredits: 0, category: "Spare Parts", sortOrder: 1 },
-        { name: "Spare Part Standard", price: 150, credits: 5, bonusCredits: 1, category: "Spare Parts", sortOrder: 2 },
-        { name: "Spare Part Advanced", price: 600, credits: 20, bonusCredits: 7, category: "Spare Parts", sortOrder: 3 },
-        { name: "Automotive Basic", price: 75, credits: 1, bonusCredits: 0, category: "Automotive", sortOrder: 4 },
-        { name: "Automotive Standard", price: 210, credits: 3, bonusCredits: 0, category: "Automotive", sortOrder: 5 },
-        { name: "Automotive Premium", price: 420, credits: 6, bonusCredits: 2, category: "Automotive", sortOrder: 6 },
-      ];
-      
-      // Get current packages
-      const currentPackages = await storage.getPackages();
-      
-      // Check if packages need to be reset (more than 6 or incorrect pricing)
-      const needsReset = currentPackages.length !== 6 || 
-        !currentPackages.some(p => p.name === "Spare Part Basic" && p.price === 30) ||
-        !currentPackages.some(p => p.name === "Automotive Basic" && p.price === 75);
-      
-      if (needsReset) {
-        console.log(`[SYNC] Found ${currentPackages.length} packages, resetting to correct 6 packages...`);
-        
-        // Delete all existing packages
-        for (const pkg of currentPackages) {
-          await storage.deletePackage(pkg.id);
-        }
-        
-        // Create the correct packages
-        for (const pkg of correctPackages) {
-          await storage.createPackage({
-            ...pkg,
-            isActive: true,
-          });
-        }
-        
-        console.log("[SYNC] Subscription packages reset successfully");
-      } else {
-        console.log("[SYNC] Subscription packages are correct");
+      if (legacyPackages.length === 0 || newerPackages.length === 0) {
+        return;
       }
+      
+      console.log(`[CLEANUP] Found ${legacyPackages.length} legacy packages to remove (replaced by ${newerPackages.length} admin-created packages)`);
+      
+      for (const pkg of legacyPackages) {
+        await db.update(transactions)
+          .set({ packageId: null })
+          .where(eq(transactions.packageId, pkg.id));
+        await storage.deletePackage(pkg.id);
+        console.log(`[CLEANUP] Removed legacy: "${pkg.name}" (ID ${pkg.id})`);
+      }
+      
+      const remaining = await storage.getPackages();
+      console.log(`[CLEANUP] Done. ${remaining.length} packages remaining`);
     } catch (error) {
-      console.error("[SYNC] Error syncing subscription packages:", error);
+      console.error("[CLEANUP] Error:", error);
     }
   }
   
-  // Run package sync on startup
-  syncSubscriptionPackages();
+  cleanupLegacyPackages();
 
   // ==================== SCHEDULED TASKS ====================
   
