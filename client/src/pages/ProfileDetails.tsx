@@ -102,7 +102,7 @@ export default function ProfileDetails() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
+      <div className="min-h-screen bg-background pb-28 flex items-center justify-center">
         <div className="text-center px-4">
           <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">Sign in to view your profile</h2>
@@ -115,7 +115,7 @@ export default function ProfileDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-28">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">

@@ -175,7 +175,7 @@ export default function Categories() {
   }, [products, activeModel, sortBy, activeCategory, activeSubCategory, priceMin, priceMax]);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-28">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="relative flex items-center justify-center h-14">

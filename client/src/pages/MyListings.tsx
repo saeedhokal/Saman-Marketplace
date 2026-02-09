@@ -113,7 +113,7 @@ export default function MyListings() {
 
   if (!user && !isAuthLoading) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
+      <div className="min-h-screen bg-background pb-28 flex items-center justify-center">
         <div className="text-center">
           <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">{t('signInToViewListings')}</h2>
@@ -172,7 +172,7 @@ export default function MyListings() {
 
   return (
     <>
-    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background pb-28">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="relative flex items-center justify-center h-14">
@@ -204,7 +204,7 @@ export default function MyListings() {
             <Loader2 className="h-8 w-8 animate-spin text-accent" />
           </div>
         ) : filteredListings && filteredListings.length > 0 ? (
-          <div className="space-y-3 pb-24">
+          <div className="space-y-3 pb-28">
             {filteredListings.map((listing) => (
               <div
                 key={listing.id}

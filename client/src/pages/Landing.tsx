@@ -58,7 +58,7 @@ export default function Landing() {
   }, [refetchRecent, refetchRecommended]);
 
   return (
-    <div className="min-h-screen pb-20 relative -mt-0">
+    <div className="min-h-screen relative -mt-0">
       {/* Full-page Dubai Skyline Background */}
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
@@ -190,7 +190,7 @@ export default function Landing() {
 
         {/* Recent Posts Section - show skeleton while loading */}
         {(isLoadingRecent || recentProducts.length > 0) && (
-          <div className="mb-4 -mx-4 px-4 py-4">
+          <div className="mb-0 -mx-4 px-4 py-4 pb-28">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-white">{t('recentPosts')}</h2>
               <Link href="/categories">
@@ -218,6 +218,7 @@ export default function Landing() {
             </div>
           </div>
         )}
+          <div className="h-28" />
         </div>
       </PullToRefresh>
     </div>
