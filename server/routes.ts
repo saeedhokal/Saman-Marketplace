@@ -3056,25 +3056,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         await db.insert(products).values(listing as any);
       }
 
-      // Seed subscription packages for both categories
-      const demoPackages = [
-        // Spare Parts packages
-        { name: "Basic", price: 30, credits: 1, bonusCredits: 0, category: "Spare Parts", isActive: true, sortOrder: 1 },
-        { name: "Standard", price: 75, credits: 3, bonusCredits: 0, category: "Spare Parts", isActive: true, sortOrder: 2 },
-        { name: "Premium", price: 250, credits: 10, bonusCredits: 2, category: "Spare Parts", isActive: true, sortOrder: 3 },
-        { name: "Pro", price: 450, credits: 20, bonusCredits: 5, category: "Spare Parts", isActive: true, sortOrder: 4 },
-        // Automotive packages
-        { name: "Basic", price: 50, credits: 1, bonusCredits: 0, category: "Automotive", isActive: true, sortOrder: 1 },
-        { name: "Standard", price: 120, credits: 3, bonusCredits: 0, category: "Automotive", isActive: true, sortOrder: 2 },
-        { name: "Premium", price: 350, credits: 10, bonusCredits: 2, category: "Automotive", isActive: true, sortOrder: 3 },
-        { name: "Pro", price: 600, credits: 20, bonusCredits: 5, category: "Automotive", isActive: true, sortOrder: 4 },
-      ];
+      // Seed subscription packages only if none exist (never duplicate)
+      const existingPackages = await storage.getPackages();
+      if (existingPackages.length === 0) {
+        const demoPackages = [
+          { name: "Basic", price: 30, credits: 1, bonusCredits: 0, category: "Spare Parts", isActive: true, sortOrder: 1 },
+          { name: "Standard", price: 75, credits: 3, bonusCredits: 0, category: "Spare Parts", isActive: true, sortOrder: 2 },
+          { name: "Premium", price: 250, credits: 10, bonusCredits: 2, category: "Spare Parts", isActive: true, sortOrder: 3 },
+          { name: "Pro", price: 450, credits: 20, bonusCredits: 5, category: "Spare Parts", isActive: true, sortOrder: 4 },
+          { name: "Basic", price: 50, credits: 1, bonusCredits: 0, category: "Automotive", isActive: true, sortOrder: 1 },
+          { name: "Standard", price: 120, credits: 3, bonusCredits: 0, category: "Automotive", isActive: true, sortOrder: 2 },
+          { name: "Premium", price: 350, credits: 10, bonusCredits: 2, category: "Automotive", isActive: true, sortOrder: 3 },
+          { name: "Pro", price: 600, credits: 20, bonusCredits: 5, category: "Automotive", isActive: true, sortOrder: 4 },
+        ];
 
-      for (const pkg of demoPackages) {
-        await storage.createPackage(pkg);
+        for (const pkg of demoPackages) {
+          await storage.createPackage(pkg);
+        }
       }
 
-      res.json({ message: `Successfully added ${demoListings.length} demo listings and ${demoPackages.length} subscription packages` });
+      res.json({ message: `Successfully added ${demoListings.length} demo listings` });
     } catch (error) {
       console.error("Error seeding demo listings:", error);
       res.status(500).json({ message: "Failed to seed demo listings" });
