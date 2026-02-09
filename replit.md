@@ -11,6 +11,9 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Build workflow:** Codemagic for iOS builds, GitHub via Replit Git panel
 - **Important:** User does NOT code - all changes must be made by agent
 - **IMPORTANT:** User is ALWAYS logged in on their iPhone, using the PUBLISHED URL (not preview), and has notifications enabled. Do not ask about this again.
+- **Subscription Packages:** User manages packages via admin panel. NEVER hardcode or auto-create packages. Current authoritative packages (production, Feb 9 2026):
+  - Spare Parts: Basic (30 AED/1 credit), Standard (135 AED/5 credits), Premium (255 AED/10 credits), Pro (690 AED/30 credits)
+  - Automotive: Basic (75 AED/1 credit), Standard (210 AED/3 credits), Premium (390 AED/6 credits), Pro (600 AED/10 credits)
 - **User has NO Mac** and has never used Xcode
 - **Tests on physical iPhone** via TestFlight
 - **Communicates via desktop** while testing on phone
