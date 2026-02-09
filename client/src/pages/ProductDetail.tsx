@@ -200,7 +200,7 @@ export default function ProductDetail() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
         <Link href="/">
           <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-accent" data-testid="button-back">

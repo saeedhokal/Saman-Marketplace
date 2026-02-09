@@ -42,6 +42,13 @@
 
   --font-display: 'Outfit', sans-serif;
   --font-body: 'DM Sans', sans-serif;
+  --app-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-height: 100dvh;
+  }
 }
 
 @layer base {
@@ -49,8 +56,8 @@
     background-color: #0f1318;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100%;
+    overflow: hidden;
   }
   
   html {
@@ -64,12 +71,14 @@
     padding-top: calc(env(safe-area-inset-top) / 2);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+    height: 100%;
+    overflow: hidden;
   }
   
   #root {
     background-color: #0f1318;
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100%;
+    overflow: hidden;
   }
   
   .safe-area-bottom {
@@ -110,18 +119,6 @@
   .gradient-dark-blue {
     background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
   }
-}
-
-/* iOS Bottom Nav Fix - prevent keyboard push-up */
-[data-bottom-nav] {
-  position: fixed !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
 
 /* Custom Scrollbar - Dark theme */

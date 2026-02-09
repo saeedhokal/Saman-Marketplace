@@ -26,7 +26,7 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background pb-28 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">{t('loading')}</div>
       </div>
     );
@@ -34,7 +34,7 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-28 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center px-4">
           <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">{t('signInToView')}</h2>
@@ -68,7 +68,7 @@ export default function Profile() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="relative flex items-center justify-center h-14">

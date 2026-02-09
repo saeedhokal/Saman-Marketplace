@@ -479,7 +479,7 @@ export default function Checkout() {
   // FIRST: Wait for auth to finish loading before deciding
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-background pb-28 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />
       </div>
     );
@@ -488,7 +488,7 @@ export default function Checkout() {
   // THEN: Check for either session user or localStorage user ID (for iOS compatibility)
   if (!effectiveUserId) {
     return (
-      <div className="min-h-screen bg-background pb-28 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center px-4">
           <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">Sign in to continue</h2>
@@ -505,7 +505,7 @@ export default function Checkout() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background pb-28 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />
       </div>
     );
@@ -513,7 +513,7 @@ export default function Checkout() {
 
   if (!pkg) {
     return (
-      <div className="min-h-screen bg-background pb-28 flex items-center justify-center" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="min-h-screen bg-background flex items-center justify-center" dir={isRTL ? "rtl" : "ltr"}>
         <div className="text-center px-4">
           <h2 className="text-lg font-semibold mb-2">{t("packageNotFound")}</h2>
           <Link href="/profile/subscription">
@@ -534,7 +534,7 @@ export default function Checkout() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">

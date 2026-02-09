@@ -7,6 +7,10 @@ interface PullToRefreshProps {
   className?: string;
 }
 
+function getScrollContainer(): HTMLElement | null {
+  return document.getElementById('main-scroll-container');
+}
+
 export function PullToRefresh({ onRefresh, children, className = "" }: PullToRefreshProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -19,10 +23,11 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
   const PULL_THRESHOLD = 55;
   const MAX_PULL = 80;
 
-  // Detect iOS/Capacitor
-  const isCapacitor = typeof (window as any).Capacitor !== 'undefined';
-
   const getScrollTop = useCallback(() => {
+    const container = getScrollContainer();
+    if (container) {
+      return container.scrollTop;
+    }
     return Math.max(
       window.scrollY || 0,
       window.pageYOffset || 0,
@@ -37,7 +42,6 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
       
       const scrollTop = getScrollTop();
       
-      // Allow pull if at very top
       if (scrollTop <= 1) {
         startY.current = e.touches[0].clientY;
         canPull.current = true;
@@ -53,19 +57,16 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
       const currentY = e.touches[0].clientY;
       const diff = currentY - startY.current;
       
-      // Only activate if still at top and pulling down
       if (diff > 0 && scrollTop <= 1) {
         pulling.current = true;
         setIsPulling(true);
         const distance = Math.min(diff * 0.4, MAX_PULL);
         setPullDistance(distance);
         
-        // Prevent default scroll when pulling
         if (distance > 5) {
           e.preventDefault();
         }
       } else {
-        // User scrolled or pulled up - cancel
         if (pulling.current) {
           pulling.current = false;
           setIsPulling(false);
@@ -102,8 +103,8 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
       }
     };
 
-    // Use document-level listeners for iOS Capacitor
-    const target = isCapacitor ? document : (containerRef.current || document);
+    const scrollContainer = getScrollContainer();
+    const target = scrollContainer || document;
     
     target.addEventListener('touchstart', onTouchStart as any, { passive: true });
     target.addEventListener('touchmove', onTouchMove as any, { passive: false });
@@ -116,11 +117,10 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
       target.removeEventListener('touchend', onTouchEnd as any);
       target.removeEventListener('touchcancel', onTouchEnd as any);
     };
-  }, [isRefreshing, onRefresh, pullDistance, getScrollTop, isCapacitor]);
+  }, [isRefreshing, onRefresh, pullDistance, getScrollTop]);
 
   const pullProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);
 
-  // Only show indicator if actively pulling (distance > threshold to be visible)
   const showIndicator = (isPulling || isRefreshing) && pullDistance > 10;
 
   return (
@@ -128,7 +128,6 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
       ref={containerRef}
       className={`relative ${className}`}
     >
-      {/* Pull indicator - only show when actively pulling */}
       {showIndicator && (
         <div
           className="fixed left-1/2 z-[9999] pointer-events-none"
@@ -151,7 +150,6 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
         </div>
       )}
       
-      {/* Content - only transform when actively pulling, snap back instantly */}
       <div
         style={{
           transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : 'none',

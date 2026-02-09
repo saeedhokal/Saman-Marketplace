@@ -49,7 +49,12 @@ function ScrollToTop() {
   const [location] = useLocation();
   
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const el = document.getElementById('main-scroll-container');
+    if (el) {
+      el.scrollTo(0, 0);
+    } else {
+      window.scrollTo(0, 0);
+    }
   }, [location]);
   
   return null;
@@ -57,9 +62,9 @@ function ScrollToTop() {
 
 function Router() {
   return (
-    <>
+    <div className="flex flex-col bg-[#0f1318]" style={{ height: 'calc(var(--app-height, 100vh))' } as React.CSSProperties}>
       <ScrollToTop />
-      <div className="min-h-screen bg-[#0f1318]">
+      <div id="main-scroll-container" className="flex-1 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/categories" component={Categories} />
@@ -96,7 +101,7 @@ function Router() {
         </Switch>
       </div>
       <BottomNavWrapper />
-    </>
+    </div>
   );
 }
 

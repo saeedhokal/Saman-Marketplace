@@ -22,7 +22,7 @@ export default function CreditHistory() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-28 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center px-4">
           <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">Sign in to view credit history</h2>
@@ -37,7 +37,7 @@ export default function CreditHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">

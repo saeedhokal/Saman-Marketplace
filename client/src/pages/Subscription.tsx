@@ -46,7 +46,7 @@ export default function Subscription() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-28 flex items-center justify-center" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="min-h-screen bg-background flex items-center justify-center" dir={isRTL ? "rtl" : "ltr"}>
         <div className="text-center px-4">
           <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">{t("signInToPurchase")}</h2>
@@ -62,7 +62,7 @@ export default function Subscription() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background pb-28 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />
       </div>
     );
@@ -70,7 +70,7 @@ export default function Subscription() {
 
   if (!creditsInfo?.subscriptionEnabled) {
     return (
-      <div className="min-h-screen bg-background pb-28" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
         <div className="sticky top-0 z-40 bg-background border-b border-border">
           <div className="container mx-auto px-4">
             <div className="relative flex items-center justify-center h-14">
@@ -108,7 +108,7 @@ export default function Subscription() {
   const tabLabel = activeTab === "Spare Parts" ? t("spareParts") : t("automotive");
 
   return (
-    <div className="min-h-screen bg-background pb-28" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="relative flex items-center justify-center h-14">

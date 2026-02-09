@@ -61,11 +61,11 @@ export default function Landing() {
     <div className="min-h-screen relative -mt-0">
       {/* Full-page Dubai Skyline Background */}
       <div 
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none"
         style={{ backgroundImage: `url(${dubaiSkylineBg})` }}
       />
       {/* Dark overlay for readability */}
-      <div className="fixed inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
+      <div className="fixed inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 pointer-events-none" />
       
       <PullToRefresh onRefresh={handleRefresh} className="relative z-10">
         <div className="container mx-auto px-4 pt-3" style={{ paddingTop: 'max(8px, env(safe-area-inset-top, 8px))' }}>
@@ -190,7 +190,7 @@ export default function Landing() {
 
         {/* Recent Posts Section - show skeleton while loading */}
         {(isLoadingRecent || recentProducts.length > 0) && (
-          <div className="mb-0 -mx-4 px-4 py-4 pb-28">
+          <div className="mb-0 -mx-4 px-4 py-4">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-white">{t('recentPosts')}</h2>
               <Link href="/categories">
@@ -218,7 +218,7 @@ export default function Landing() {
             </div>
           </div>
         )}
-          <div className="h-28" />
+
         </div>
       </PullToRefresh>
     </div>
