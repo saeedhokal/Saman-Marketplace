@@ -208,8 +208,9 @@ export default function MyListings() {
             {filteredListings.map((listing) => (
               <div
                 key={listing.id}
-                className="flex gap-3 p-3 bg-card border border-border rounded-xl"
+                className="flex gap-3 p-3 bg-card border border-border rounded-xl cursor-pointer touch-manipulation"
                 data-testid={`listing-${listing.id}`}
+                onClick={() => setLocation(`/product/${listing.id}`)}
               >
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                   <img

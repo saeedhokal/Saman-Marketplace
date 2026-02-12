@@ -152,7 +152,7 @@ export default function Sell() {
       onSuccess: () => {
         toast({
           title: "Listing Submitted!",
-          description: "Your listing is pending review. Once approved, it will be visible for 1 month.",
+          description: "Your listing is under review and may take up to 24 hours to be approved.",
         });
         setLocation("/");
       },
