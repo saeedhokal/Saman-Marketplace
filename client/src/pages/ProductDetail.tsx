@@ -51,6 +51,7 @@ export default function ProductDetail() {
     lastName: string | null;
     profileImageUrl: string | null;
     createdAt: string;
+    phone: string | null;
   };
 
   const { data: sellerInfo } = useQuery<SellerInfo>({
@@ -286,7 +287,7 @@ export default function ProductDetail() {
 
             <div className="flex items-center gap-3 mb-6">
               <a 
-                href={`tel:${product.phoneNumber || '+971501234567'}`}
+                href={`tel:+${formatWhatsAppNumber(product.phoneNumber || sellerInfo?.phone || '')}`}
                 className="flex-1"
               >
                 <Button 
@@ -300,7 +301,7 @@ export default function ProductDetail() {
               </a>
               
               <a 
-                href={`https://wa.me/${formatWhatsAppNumber(product.whatsappNumber || '+971501234567')}`}
+                href={`https://wa.me/${formatWhatsAppNumber(product.whatsappNumber || sellerInfo?.phone || '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1"

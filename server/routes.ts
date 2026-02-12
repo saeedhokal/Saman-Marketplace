@@ -636,6 +636,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       lastName: users.lastName,
       profileImageUrl: users.profileImageUrl,
       createdAt: users.createdAt,
+      phone: users.phone,
     }).from(users).where(eq(users.id, sellerId));
     
     if (!seller) {
