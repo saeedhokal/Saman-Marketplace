@@ -113,7 +113,13 @@ export class DatabaseStorage implements IStorage {
             sql`${products.expiresAt} > NOW()`
           )
         ),
-        eq(products.status, "sold")
+        and(
+          eq(products.status, "sold"),
+          or(
+            eq(products.expiresAt, sql`NULL`),
+            sql`${products.expiresAt} > NOW()`
+          )
+        )
       )
     ];
 

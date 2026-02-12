@@ -72,11 +72,9 @@ export default function SellerProfile() {
       <div className="min-h-screen bg-background py-8 px-4">
         <div className="container mx-auto max-w-6xl text-center py-20">
           <h2 className="text-xl font-bold text-destructive">Unable to load seller profile</h2>
-          <Link href="/">
-            <Button variant="outline" className="mt-4">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Back to Home
-            </Button>
-          </Link>
+          <Button variant="outline" className="mt-4" onClick={() => window.history.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back
+          </Button>
         </div>
       </div>
     );
@@ -85,11 +83,9 @@ export default function SellerProfile() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="container mx-auto max-w-6xl">
-        <Link href="/">
-          <Button variant="ghost" className="mb-6" data-testid="button-back">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to listings
-          </Button>
-        </Link>
+        <Button variant="ghost" className="mb-6" data-testid="button-back" onClick={() => window.history.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back
+        </Button>
 
         <div className="flex items-center gap-4 mb-8 p-6 bg-card rounded-2xl border border-border">
           <Avatar className="h-16 w-16">

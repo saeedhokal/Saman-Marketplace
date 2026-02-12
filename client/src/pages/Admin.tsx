@@ -62,7 +62,7 @@ export default function Admin() {
     endDate: '',
   });
 
-  const { data: userInfo } = useQuery<{ credits: number; isAdmin: boolean }>({
+  const { data: userInfo, isLoading: userInfoLoading } = useQuery<{ credits: number; isAdmin: boolean }>({
     queryKey: ["/api/user/credits"],
   });
 
@@ -311,6 +311,14 @@ export default function Admin() {
     },
   });
 
+  if (userInfoLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
   if (!userInfo?.isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -389,11 +397,9 @@ export default function Admin() {
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">
-            <Link href="/">
-              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-            </Link>
+            <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back" onClick={() => window.history.back()}>
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <h1 className="flex-1 text-center font-semibold text-lg pr-8">Admin Panel</h1>
           </div>
         </div>

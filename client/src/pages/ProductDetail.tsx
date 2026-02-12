@@ -182,11 +182,9 @@ export default function ProductDetail() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <h2 className="text-2xl font-bold text-foreground">Listing not found</h2>
-        <Link href="/">
-          <Button variant="ghost" className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Browse
-          </Button>
-        </Link>
+        <Button variant="ghost" className="mt-4" onClick={() => window.history.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
       </div>
     );
   }
@@ -202,11 +200,9 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
-        <Link href="/">
-          <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-accent" data-testid="button-back">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Browse
-          </Button>
-        </Link>
+        <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-accent" data-testid="button-back" onClick={() => window.history.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
       </div>
 
       <div className="container mx-auto px-4 max-w-7xl">
