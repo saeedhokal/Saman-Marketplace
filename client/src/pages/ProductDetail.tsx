@@ -218,7 +218,7 @@ export default function ProductDetail() {
 
             {product.status === "sold" && (
               <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                <span className="text-red-600 font-black text-5xl tracking-widest uppercase -rotate-12" style={{ WebkitTextStroke: '2px white', textShadow: '0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.4)' }}>SOLD</span>
+                <span className="text-red-600 font-black text-6xl tracking-widest uppercase -rotate-12" style={{ WebkitTextStroke: '2px white' }}>SOLD</span>
               </div>
             )}
             
