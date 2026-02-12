@@ -219,9 +219,7 @@ export default function MyListings() {
                   />
                   {listing.status === "sold" && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-red-600/85 px-2 py-0.5 -rotate-12">
-                        <span className="text-white font-bold text-[10px] tracking-wider uppercase">SOLD</span>
-                      </div>
+                      <span className="text-red-600 font-black text-sm tracking-widest uppercase -rotate-12" style={{ WebkitTextStroke: '1px white', textShadow: '0 0 6px rgba(255,255,255,0.8), 0 0 12px rgba(255,255,255,0.4)' }}>SOLD</span>
                     </div>
                   )}
                 </div>

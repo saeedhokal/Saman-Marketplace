@@ -50,9 +50,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
 
             {isSold && (
               <div className="absolute inset-0 flex items-center justify-center z-20">
-                <div className="bg-red-600/85 px-6 py-2 -rotate-12 shadow-lg">
-                  <span className="text-white font-bold text-xl tracking-widest uppercase">SOLD</span>
-                </div>
+                <span className="text-red-600 font-black text-3xl tracking-widest uppercase -rotate-12" style={{ WebkitTextStroke: '1.5px white', textShadow: '0 0 8px rgba(255,255,255,0.8), 0 0 16px rgba(255,255,255,0.4)' }}>SOLD</span>
               </div>
             )}
             
