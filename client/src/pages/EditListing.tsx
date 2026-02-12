@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useUpload } from "@/hooks/use-upload";
 import { useAuth } from "@/hooks/use-auth";
-import { insertProductSchema, type Product } from "@shared/schema";
+import { insertProductSchema, CAR_MODELS, type Product } from "@shared/schema";
 import { 
   Form, 
   FormControl, 
@@ -31,9 +31,13 @@ const formSchema = insertProductSchema.extend({
   imageUrls: z.array(z.string()).optional(),
   mainCategory: z.string().min(1, "Category is required"),
   subCategory: z.string().min(1, "Sub-category is required"),
+  model: z.string().optional(),
   mileage: z.coerce.number().optional(),
   year: z.coerce.number().min(1900).max(new Date().getFullYear() + 1).optional(),
-  price: z.coerce.number().optional(),
+  price: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null) ? undefined : Number(val),
+    z.number().min(45, "Price must be at least 45 AED").optional()
+  ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -66,6 +70,7 @@ export default function EditListing() {
       description: "",
       mainCategory: "",
       subCategory: "",
+      model: "",
       imageUrl: "",
       imageUrls: [],
       mileage: undefined,
@@ -81,6 +86,7 @@ export default function EditListing() {
         description: listing.description || "",
         mainCategory: listing.mainCategory,
         subCategory: listing.subCategory,
+        model: listing.model || "",
         imageUrl: listing.imageUrl || "",
         imageUrls: listing.imageUrls || [],
         mileage: listing.mileage || undefined,
@@ -238,7 +244,10 @@ export default function EditListing() {
                     form.setValue("mileage", undefined);
                     form.setValue("year", undefined);
                   }}
-                  onSubCategoryChange={(value) => form.setValue("subCategory", value, { shouldValidate: true })}
+                  onSubCategoryChange={(value) => {
+                    form.setValue("subCategory", value, { shouldValidate: true });
+                    form.setValue("model", "");
+                  }}
                 />
                 
                 {form.formState.errors.mainCategory && (
@@ -246,6 +255,32 @@ export default function EditListing() {
                 )}
                 {form.formState.errors.subCategory && (
                   <p className="text-sm text-destructive">{form.formState.errors.subCategory.message}</p>
+                )}
+                
+                {subCategory && CAR_MODELS[subCategory] && (
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Model (Optional)</FormLabel>
+                        <FormControl>
+                          <select
+                            className="w-full h-12 px-3 rounded-lg border border-border bg-background text-foreground"
+                            data-testid="select-model"
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          >
+                            <option value="">Select Model</option>
+                            {CAR_MODELS[subCategory].map((model) => (
+                              <option key={model} value={model}>{model}</option>
+                            ))}
+                          </select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
               </div>
 
@@ -448,6 +483,27 @@ export default function EditListing() {
                             className="min-h-[120px] resize-none leading-relaxed" 
                             data-testid="input-description"
                             {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price (AED)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="e.g. 500" 
+                            className="h-12" 
+                            data-testid="input-price"
+                            {...field}
+                            value={field.value || ""}
                           />
                         </FormControl>
                         <FormMessage />
