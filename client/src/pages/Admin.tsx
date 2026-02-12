@@ -1338,15 +1338,20 @@ function ListingCard({
               />
             </div>
           )}
-          <img
-            src={listing.imageUrl}
-            alt={listing.title}
-            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-          />
+          <Link href={`/product/${listing.id}`}>
+            <img
+              src={listing.imageUrl}
+              alt={listing.title}
+              className="w-20 h-20 object-cover rounded-lg flex-shrink-0 cursor-pointer"
+              data-testid={`img-listing-${listing.id}`}
+            />
+          </Link>
           <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex items-start gap-2">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm truncate">{listing.title}</h3>
+                <Link href={`/product/${listing.id}`}>
+                  <h3 className="font-semibold text-sm truncate cursor-pointer hover:text-accent transition-colors" data-testid={`title-listing-${listing.id}`}>{listing.title}</h3>
+                </Link>
                 <p className="text-xs text-muted-foreground">
                   {listing.mainCategory} / {listing.subCategory}
                 </p>
