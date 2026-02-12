@@ -91,7 +91,7 @@ export default function EditListing() {
         imageUrls: listing.imageUrls || [],
         mileage: listing.mileage || undefined,
         year: listing.year || undefined,
-        price: listing.price ? listing.price / 100 : undefined,
+        price: listing.price || undefined,
       });
       const images = listing.imageUrls?.length ? listing.imageUrls : (listing.imageUrl ? [listing.imageUrl] : []);
       setUploadedImages(images);
@@ -113,7 +113,7 @@ export default function EditListing() {
     mutationFn: async (data: FormValues) => {
       const payload = {
         ...data,
-        price: data.price ? Math.round(data.price * 100) : undefined,
+        price: data.price ? Math.round(data.price) : undefined,
       };
       await apiRequest("PUT", `/api/products/${listingId}`, payload);
     },

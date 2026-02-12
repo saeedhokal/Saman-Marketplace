@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 interface RevenueStats {
   totalRevenue: number;
@@ -1324,6 +1324,12 @@ function ListingCard({
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [removeReason, setRemoveReason] = useState("");
   const [showRemoveForm, setShowRemoveForm] = useState(false);
+  const [, setLocation] = useLocation();
+
+  const openListing = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLocation(`/product/${listing.id}`);
+  };
 
   return (
     <Card className={isSelected ? "ring-2 ring-primary" : ""}>
@@ -1338,26 +1344,27 @@ function ListingCard({
               />
             </div>
           )}
-          <Link href={`/product/${listing.id}`}>
-            <img
-              src={listing.imageUrl}
-              alt={listing.title}
-              className="w-20 h-20 object-cover rounded-lg flex-shrink-0 cursor-pointer"
-              data-testid={`img-listing-${listing.id}`}
-            />
-          </Link>
+          <img
+            src={listing.imageUrl}
+            alt={listing.title}
+            className="w-20 h-20 object-cover rounded-lg flex-shrink-0 cursor-pointer touch-manipulation"
+            data-testid={`img-listing-${listing.id}`}
+            onClick={openListing}
+          />
           <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex items-start gap-2">
               <div className="flex-1 min-w-0">
-                <Link href={`/product/${listing.id}`}>
-                  <h3 className="font-semibold text-sm truncate cursor-pointer hover:text-accent transition-colors" data-testid={`title-listing-${listing.id}`}>{listing.title}</h3>
-                </Link>
+                <h3 
+                  className="font-semibold text-sm truncate cursor-pointer hover:text-accent transition-colors touch-manipulation" 
+                  data-testid={`title-listing-${listing.id}`}
+                  onClick={openListing}
+                >{listing.title}</h3>
                 <p className="text-xs text-muted-foreground">
                   {listing.mainCategory} / {listing.subCategory}
                 </p>
                 {listing.price && (
                   <p className="text-sm font-bold text-accent mt-0.5">
-                    AED {Math.floor(listing.price / 100)}
+                    AED {listing.price.toLocaleString()}
                   </p>
                 )}
               </div>

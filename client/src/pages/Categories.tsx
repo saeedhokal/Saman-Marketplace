@@ -155,11 +155,11 @@ export default function Categories() {
     }
 
     if (priceMin) {
-      const minPrice = parseFloat(priceMin) * 100;
+      const minPrice = parseFloat(priceMin);
       filtered = filtered.filter(p => (p.price || 0) >= minPrice);
     }
     if (priceMax) {
-      const maxPrice = parseFloat(priceMax) * 100;
+      const maxPrice = parseFloat(priceMax);
       filtered = filtered.filter(p => (p.price || 0) <= maxPrice);
     }
     

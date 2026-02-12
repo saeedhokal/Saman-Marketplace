@@ -145,7 +145,7 @@ export default function Sell() {
   const onSubmit = (data: FormValues) => {
     const payload = {
       ...data,
-      price: data.price ? Math.round(data.price * 100) : undefined,
+      price: data.price ? Math.round(data.price) : undefined,
     };
 
     createProduct.mutate(payload, {

@@ -782,8 +782,27 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const updated = await storage.updateProduct(id, updates);
     
     // Attach seller profile image with cache-busting
-    const [seller] = await db.select({ profileImageUrl: users.profileImageUrl })
+    const [seller] = await db.select({ profileImageUrl: users.profileImageUrl, firstName: users.firstName, lastName: users.lastName })
       .from(users).where(eq(users.id, userId));
+    
+    // Notify admins about the resubmitted listing
+    try {
+      const adminUsers = await storage.getAdminUsers();
+      for (const admin of adminUsers) {
+        await storage.createNotification({
+          userId: admin.id,
+          type: "new_listing_request",
+          title: "Listing Resubmitted",
+          message: `An edited listing "${updates.title}" needs your re-approval.`,
+          relatedId: id,
+        });
+      }
+      
+      const sellerName = seller ? `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'A user' : 'A user';
+      await notifyNewListing(updates.title, sellerName);
+    } catch (notifyErr) {
+      console.error("Failed to notify admins about resubmitted listing:", notifyErr);
+    }
     
     res.json({
       ...updated,
