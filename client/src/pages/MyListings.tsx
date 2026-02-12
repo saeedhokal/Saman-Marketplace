@@ -224,48 +224,56 @@ export default function MyListings() {
                     <DropdownMenu 
                       open={openMenuId === listing.id} 
                       onOpenChange={(open) => setOpenMenuId(open ? listing.id : null)}
+                      modal={false}
                     >
                       <DropdownMenuTrigger asChild>
-                        <button className="p-2 -m-1 rounded-lg hover:bg-secondary active:bg-secondary/80" data-testid={`menu-${listing.id}`}>
+                        <button 
+                          className="p-3 -m-1 rounded-lg hover:bg-secondary active:bg-secondary/80 touch-manipulation" 
+                          data-testid={`menu-${listing.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === listing.id ? null : listing.id);
+                          }}
+                        >
                           <MoreVertical className="h-5 w-5 text-muted-foreground" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="min-w-[160px]">
+                      <DropdownMenuContent align="end" className="min-w-[180px] z-[100]" sideOffset={8}>
                         <DropdownMenuItem 
-                          onSelect={() => handleEdit(listing.id)}
-                          className={`py-3 text-base cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
+                          onClick={() => handleEdit(listing.id)}
+                          className={`py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <Pencil className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                           {t('edit')}
                         </DropdownMenuItem>
                         {canRenew(listing) && (
                           <DropdownMenuItem 
-                            onSelect={() => {
+                            onClick={() => {
                               setOpenMenuId(null);
                               setRenewId(listing.id);
                             }}
-                            className={`py-3 text-base cursor-pointer text-orange-600 dark:text-orange-400 ${isRTL ? 'flex-row-reverse' : ''}`}
+                            className={`py-3 text-base cursor-pointer touch-manipulation text-orange-600 dark:text-orange-400 ${isRTL ? 'flex-row-reverse' : ''}`}
                           >
                             <RefreshCw className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                             {t('renewListing')}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem 
-                          onSelect={() => {
+                          onClick={() => {
                             setOpenMenuId(null);
                             markSoldMutation.mutate(listing.id);
                           }}
-                          className={`py-3 text-base cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
+                          className={`py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <CheckCircle className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                           {t('markAsSold')}
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onSelect={() => {
+                          onClick={() => {
                             setOpenMenuId(null);
                             setDeleteId(listing.id);
                           }}
-                          className={`text-destructive py-3 text-base cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
+                          className={`text-destructive py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <Trash2 className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                           {t('deleteListing')}
