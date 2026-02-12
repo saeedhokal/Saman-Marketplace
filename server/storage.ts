@@ -105,10 +105,15 @@ export class DatabaseStorage implements IStorage {
   // Only show approved, non-expired products to public
   async getProducts(options?: { search?: string; mainCategory?: string; subCategory?: string }): Promise<Product[]> {
     const conditions = [
-      eq(products.status, "approved"),
       or(
-        eq(products.expiresAt, sql`NULL`),
-        sql`${products.expiresAt} > NOW()`
+        and(
+          eq(products.status, "approved"),
+          or(
+            eq(products.expiresAt, sql`NULL`),
+            sql`${products.expiresAt} > NOW()`
+          )
+        ),
+        eq(products.status, "sold")
       )
     ];
 
@@ -129,7 +134,7 @@ export class DatabaseStorage implements IStorage {
 
     return await db.select().from(products)
       .where(and(...conditions))
-      .orderBy(desc(products.createdAt));
+      .orderBy(sql`CASE WHEN ${products.status} = 'sold' THEN 1 ELSE 0 END`, desc(products.createdAt));
   }
 
   async getProduct(id: number): Promise<Product | undefined> {
@@ -141,9 +146,12 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(products)
       .where(and(
         eq(products.sellerId, sellerId),
-        eq(products.status, "approved")
+        or(
+          eq(products.status, "approved"),
+          eq(products.status, "sold")
+        )
       ))
-      .orderBy(desc(products.createdAt));
+      .orderBy(sql`CASE WHEN ${products.status} = 'sold' THEN 1 ELSE 0 END`, desc(products.createdAt));
   }
 
   async getMyProducts(sellerId: string): Promise<Product[]> {
@@ -181,9 +189,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markAsSold(id: number): Promise<void> {
-    await db.delete(userViews).where(eq(userViews.productId, id));
-    await db.delete(favorites).where(eq(favorites.productId, id));
-    await db.delete(products).where(eq(products.id, id));
+    await db.update(products)
+      .set({ status: "sold" })
+      .where(eq(products.id, id));
   }
 
   async createProduct(product: InsertProduct & { sellerId: string }): Promise<Product> {
@@ -267,6 +275,7 @@ export class DatabaseStorage implements IStorage {
   async deleteExpiredProducts(): Promise<number> {
     const result = await db.delete(products)
       .where(and(
+        eq(products.status, "approved"),
         sql`${products.expiresAt} IS NOT NULL`,
         lt(products.expiresAt, new Date())
       ))

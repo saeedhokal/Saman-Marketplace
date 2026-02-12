@@ -2125,7 +2125,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
 
     await storage.markAsSold(id);
-    res.json({ message: "Listing marked as sold and removed" });
+    res.json({ message: "Listing marked as sold" });
   });
 
   // Get user's transaction history

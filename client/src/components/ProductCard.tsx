@@ -15,6 +15,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
+  const isSold = product.status === "sold";
   const formattedPrice = new Intl.NumberFormat("en-AE", {
     style: "currency",
     currency: "AED",
@@ -32,18 +33,26 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
       transition={{ duration: 0.3 }}
     >
       <Link href={`/product/${product.id}`}>
-        <Card className="group h-full overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl">
+        <Card className={`group h-full overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl ${isSold ? 'opacity-80' : ''}`}>
           <div className="relative aspect-[4/3] md:aspect-square overflow-hidden bg-slate-700/30">
             {product.imageUrl && !imageError ? (
               <img
                 src={product.imageUrl}
                 alt={product.title}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''}`}
                 onError={() => setImageError(true)}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-muted-foreground bg-secondary">
                 <ImageOff className="h-8 w-8" />
+              </div>
+            )}
+
+            {isSold && (
+              <div className="absolute inset-0 flex items-center justify-center z-20">
+                <div className="bg-red-600/85 px-6 py-2 -rotate-12 shadow-lg">
+                  <span className="text-white font-bold text-xl tracking-widest uppercase">SOLD</span>
+                </div>
               </div>
             )}
             
@@ -69,13 +78,13 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
           </div>
 
           <CardContent className="p-3 sm:p-4">
-            <h3 className="font-display text-sm sm:text-base font-bold leading-tight text-foreground line-clamp-2 group-hover:text-accent transition-colors">
+            <h3 className={`font-display text-sm sm:text-base font-bold leading-tight line-clamp-2 transition-colors ${isSold ? 'text-muted-foreground' : 'text-foreground group-hover:text-accent'}`}>
               {product.title}
             </h3>
           </CardContent>
 
           <CardFooter className="p-3 sm:p-4 pt-0 mt-auto">
-            <p className="font-display text-base sm:text-lg font-bold text-orange-700">
+            <p className={`font-display text-base sm:text-lg font-bold ${isSold ? 'text-muted-foreground line-through' : 'text-orange-700'}`}>
               {formattedPrice}
             </p>
           </CardFooter>

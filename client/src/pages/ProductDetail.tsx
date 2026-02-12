@@ -219,6 +219,14 @@ export default function ProductDetail() {
                 No Image Available
               </div>
             )}
+
+            {product.status === "sold" && (
+              <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                <div className="bg-red-600/85 px-10 py-3 -rotate-12 shadow-lg">
+                  <span className="text-white font-bold text-3xl tracking-widest uppercase">SOLD</span>
+                </div>
+              </div>
+            )}
             
             <Button
               size="icon"
@@ -237,8 +245,15 @@ export default function ProductDetail() {
                 {showTranslation && translatedTitle ? translatedTitle : product.title}
               </h1>
 
-              <div className="font-display text-3xl font-bold text-orange-700">
-                {formattedPrice}
+              <div className="flex items-center gap-3">
+                <span className={`font-display text-3xl font-bold ${product.status === "sold" ? 'text-muted-foreground line-through' : 'text-orange-700'}`}>
+                  {formattedPrice}
+                </span>
+                {product.status === "sold" && (
+                  <span className="text-sm font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                    SOLD
+                  </span>
+                )}
               </div>
 
               {product.location && (

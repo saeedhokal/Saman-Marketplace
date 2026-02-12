@@ -211,12 +211,19 @@ export default function MyListings() {
                 className="flex gap-3 p-3 bg-card border border-border rounded-xl"
                 data-testid={`listing-${listing.id}`}
               >
-                <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                   <img
                     src={listing.imageUrl}
                     alt={listing.title}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover ${listing.status === "sold" ? 'blur-[1px] brightness-75' : ''}`}
                   />
+                  {listing.status === "sold" && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-red-600/85 px-2 py-0.5 -rotate-12">
+                        <span className="text-white font-bold text-[10px] tracking-wider uppercase">SOLD</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
@@ -258,16 +265,18 @@ export default function MyListings() {
                             {t('renewListing')}
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            setOpenMenuId(null);
-                            markSoldMutation.mutate(listing.id);
-                          }}
-                          className={`py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
-                        >
-                          <CheckCircle className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                          {t('markAsSold')}
-                        </DropdownMenuItem>
+                        {listing.status !== "sold" && (
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              markSoldMutation.mutate(listing.id);
+                            }}
+                            className={`py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
+                          >
+                            <CheckCircle className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                            {t('markAsSold')}
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           onClick={() => {
                             setOpenMenuId(null);
