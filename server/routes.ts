@@ -743,6 +743,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(401).json({ message: "Unauthorized" });
     }
 
+    if (product.status === "sold") {
+      return res.status(400).json({ message: "Cannot edit a sold listing" });
+    }
+
     // Validate required fields
     if (!req.body.title || req.body.title.length < 3) {
       return res.status(400).json({ message: "Title must be at least 3 characters" });

@@ -473,13 +473,16 @@ export class DatabaseStorage implements IStorage {
   async getRecentProducts(limit: number = 10): Promise<Product[]> {
     return await db.select().from(products)
       .where(and(
-        eq(products.status, "approved"),
+        or(
+          eq(products.status, "approved"),
+          eq(products.status, "sold")
+        ),
         or(
           sql`${products.expiresAt} IS NULL`,
           sql`${products.expiresAt} > NOW()`
         )
       ))
-      .orderBy(desc(products.createdAt))
+      .orderBy(sql`CASE WHEN ${products.status} = 'sold' THEN 1 ELSE 0 END`, desc(products.createdAt))
       .limit(limit);
   }
 
@@ -516,14 +519,17 @@ export class DatabaseStorage implements IStorage {
 
     return await db.select().from(products)
       .where(and(
-        eq(products.status, "approved"),
+        or(
+          eq(products.status, "approved"),
+          eq(products.status, "sold")
+        ),
         or(
           sql`${products.expiresAt} IS NULL`,
           sql`${products.expiresAt} > NOW()`
         ),
         or(...categoryConditions)
       ))
-      .orderBy(desc(products.createdAt))
+      .orderBy(sql`CASE WHEN ${products.status} = 'sold' THEN 1 ELSE 0 END`, desc(products.createdAt))
       .limit(limit);
   }
 

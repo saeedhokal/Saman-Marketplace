@@ -246,13 +246,15 @@ export default function MyListings() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="min-w-[180px] z-[100]" sideOffset={8}>
-                        <DropdownMenuItem 
-                          onClick={() => handleEdit(listing.id)}
-                          className={`py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
-                        >
-                          <Pencil className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                          {t('edit')}
-                        </DropdownMenuItem>
+                        {listing.status !== "sold" && (
+                          <DropdownMenuItem 
+                            onClick={() => handleEdit(listing.id)}
+                            className={`py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
+                          >
+                            <Pencil className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                            {t('edit')}
+                          </DropdownMenuItem>
+                        )}
                         {canRenew(listing) && (
                           <DropdownMenuItem 
                             onClick={() => {
