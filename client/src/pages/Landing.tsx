@@ -119,7 +119,7 @@ export default function Landing() {
               <div className="absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 30%, transparent 75%)` }} />
               {/* Content */}
               <div className="relative h-40 sm:h-48">
-                <div className={`relative z-10 p-6 h-full flex items-center ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                <div className="relative z-10 p-6 h-full flex items-center justify-start">
                   <div className={`flex flex-col justify-center ${isRTL ? 'items-end text-right' : ''}`}>
                     <p className="text-orange-400 text-xs uppercase tracking-widest mb-2 font-medium">{t('uaeMarketplace')}</p>
                     <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">{t('yourNextRide')}</h2>
