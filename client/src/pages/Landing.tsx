@@ -103,9 +103,10 @@ export default function Landing() {
 
           {/* Glass Hero Banner - semi-transparent so skyline shows through */}
           <div className="mb-6">
-            <div className="relative rounded-2xl overflow-hidden border border-white/20">
+            <div className="relative rounded-2xl overflow-hidden" style={{ maskImage: 'linear-gradient(to right, black 0%, black 50%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 0%, black 50%, transparent 100%)' }}>
+              <div className="absolute inset-0 border border-white/20 rounded-2xl" />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.02) 100%)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', maskImage: 'linear-gradient(to right, black 0%, black 40%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 0%, black 40%, transparent 100%)' }} />
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 60%, transparent 100%)' }} />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 50%, transparent 100%)' }} />
               {/* Content */}
               <div className="relative h-40 sm:h-48">
                 <div className={`relative z-10 p-6 h-full flex items-center ${isRTL ? 'justify-end' : 'justify-start'}`}>
