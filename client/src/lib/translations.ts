@@ -120,8 +120,8 @@ export const translations = {
     searchCategory: "Search for category...",
     
     // Hero Banner
-    yourNextRide: "Your Next Ride",
-    startsHere: "Starts Here",
+    yourNextRide: "Powering the UAE",
+    startsHere: "Auto Market",
     
     // My Listings Page
     addListing: "Add Listing",
@@ -383,8 +383,8 @@ export const translations = {
     searchCategory: "ابحث عن فئة...",
     
     // Hero Banner
-    yourNextRide: "سيارتك القادمة",
-    startsHere: "تبدأ هنا",
+    yourNextRide: "نقود سوق السيارات",
+    startsHere: "في الإمارات",
     
     // My Listings Page
     addListing: "إضافة إعلان",
