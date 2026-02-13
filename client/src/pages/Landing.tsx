@@ -113,8 +113,8 @@ export default function Landing() {
 
           {/* Glass Hero Banner - semi-transparent so skyline shows through */}
           <div className="mb-6">
-            <div className="relative rounded-2xl overflow-hidden" style={{ maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)` }}>
-              <div className="absolute inset-0 border border-white/20 rounded-2xl" />
+            <div className="relative rounded-2xl overflow-hidden">
+              <div className="absolute inset-0 border border-white/20 rounded-2xl" style={{ maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)` }} />
               <div className="absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.02) 55%, transparent 100%)`, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)` }} />
               <div className="absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 30%, transparent 75%)` }} />
               {/* Content */}
