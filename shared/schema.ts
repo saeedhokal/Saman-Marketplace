@@ -16,21 +16,21 @@ export const SPARE_PARTS_SUBCATEGORIES = [
   // Other
   "Other",
   // Car brands alphabetically
-  "Audi", "BMW", "CAN-AM", "Chevrolet", "Dodge", "Ferrari", "Ford", "GMC",
-  "Honda", "Hyundai", "Infiniti", "Jeep", "Kia", "Lamborghini", "Land Rover",
-  "Lexus", "Mazda", "Mercedes", "Mitsubishi", "Nissan", "OFFROAD", "Polaris",
-  "Porsche", "Toyota", "Volkswagen"
+  "Acura", "Audi", "BMW", "CAN-AM", "Chevrolet", "Dodge", "Fiat", "Ferrari", "Ford", "GMC",
+  "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lamborghini", "Land Rover",
+  "Lexus", "Lincoln", "Mazda", "Mercedes", "Mini", "Mitsubishi", "Nissan", "OFFROAD", "Peugeot", "Polaris",
+  "Porsche", "Renault", "Rolls Royce", "Suzuki", "Tesla", "Toyota", "Volkswagen", "Volvo"
 ] as const;
 
 // Sub-categories for Automotive (vehicles for sale - includes Chinese brands)
 // Alphabetical order
 export const AUTOMOTIVE_SUBCATEGORIES = [
-  "Alfa Romeo", "Audi", "Bentley", "BMW", "BYD", "Cadillac", "CAN-AM", "Chery",
-  "Chevrolet", "Dodge", "Ferrari", "Ford", "Geely", "Genesis", "GMC", "Great Wall",
-  "Haval", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lamborghini",
-  "Land Rover", "Lexus", "Li Auto", "Maserati", "Mazda", "Mercedes", "MG",
-  "Mitsubishi", "Motorcycles", "NIO", "Nissan", "OFFROAD", "Other", "Polaris",
-  "Porsche", "Rolls Royce", "Rox", "Subaru", "Toyota", "Volkswagen", "XPeng"
+  "Acura", "Alfa Romeo", "Audi", "Bentley", "BMW", "BYD", "Cadillac", "CAN-AM", "Chery",
+  "Chevrolet", "Citroen", "Dodge", "Ferrari", "Fiat", "Ford", "Geely", "Genesis", "GMC", "Great Wall",
+  "Haval", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Jetour", "Kia", "Lamborghini",
+  "Land Rover", "Lexus", "Li Auto", "Lincoln", "Maserati", "Mazda", "Mercedes", "MG",
+  "Mini", "Mitsubishi", "Motorcycles", "NIO", "Nissan", "OFFROAD", "Other", "Peugeot", "Polaris",
+  "Porsche", "Renault", "Rolls Royce", "Rox", "Subaru", "Suzuki", "Tesla", "Toyota", "Volkswagen", "Volvo", "XPeng"
 ] as const;
 
 // Car models by brand (for Automotive filtering)
@@ -49,12 +49,14 @@ export const CAR_MODELS: Record<string, string[]> = {
     "Sequoia", "Sequoia TRD Pro", "Tundra", "Tundra TRD Pro", "4Runner", "4Runner TRD Pro",
     "Tacoma", "Tacoma TRD", "Sienna", "Venza", "Highlander", "C-HR", "bZ4X",
     "FJ Cruiser", "Granvia", "Previa", "Innova", "Rush", "Avanza",
-    "Cressida", "Celica", "MR2", "Tercel", "Starlet", "Land Cruiser Pick Up"
+    "Cressida", "Celica", "MR2", "Tercel", "Starlet", "Land Cruiser Pick Up",
+    "Veloz", "Urban Cruiser", "Crown Crossover", "Coaster"
   ],
   "Honda": [
     "Civic", "Civic Si", "Civic Type R", "Accord", "Accord Hybrid", "CR-V", "CR-V Hybrid", "HR-V", "Pilot", "Pilot TrailSport",
     "Odyssey", "City", "Jazz", "Fit", "Passport", "Ridgeline", "Element", "Insight", "S2000", "NSX",
-    "Prelude", "Integra", "CR-Z", "ZR-V", "Vezel", "BR-V", "WR-V", "Freed", "Stepwgn"
+    "Prelude", "Integra", "CR-Z", "ZR-V", "Vezel", "BR-V", "WR-V", "Freed", "Stepwgn",
+    "Prologue", "Prologue EV", "Brio", "Amaze", "Mobilio", "N-Box"
   ],
   "Nissan": [
     "Altima", "Altima SR", "Maxima", "Maxima SR",
@@ -66,7 +68,8 @@ export const CAR_MODELS: Record<string, string[]> = {
     "Rogue", "Murano", "Armada", "Armada Platinum",
     "Titan", "Titan XD", "Frontier", "Juke", "Juke Nismo", "Leaf", "Ariya",
     "Navara", "Sunny", "Tiida", "Qashqai", "Terra", "Urvan", "Z", "Z Nismo",
-    "Note", "Note e-Power", "Micra", "Versa", "Xterra", "Safari", "Datsun"
+    "Note", "Note e-Power", "Micra", "Versa", "Xterra", "Safari", "Datsun",
+    "Magnite", "Interstar", "Patrol Pickup"
   ],
   "Mazda": [
     "Mazda2", "Mazda3", "Mazda3 Turbo", "Mazda6", "Mazda6 Signature", "CX-3", "CX-30", "CX-30 Turbo",
@@ -100,49 +103,58 @@ export const CAR_MODELS: Record<string, string[]> = {
     "Edge", "Edge ST", "Edge Titanium", "Escape", "Escape Hybrid", "Ranger", "Ranger Raptor", "Ranger Wildtrak",
     "Bronco", "Bronco Sport", "Bronco Raptor", "Bronco Badlands", "Maverick", "Maverick Hybrid",
     "Focus", "Focus RS", "Focus ST", "Fiesta", "Fiesta ST", "Fusion", "Taurus", "Taurus SHO",
-    "GT", "EcoSport", "Everest", "Territory", "Transit", "E-Series"
+    "GT", "EcoSport", "Everest", "Territory", "Transit", "E-Series",
+    "Crown Victoria", "Flex", "Excursion", "F-150 King Ranch", "Puma", "Kuga"
   ],
   "Chevrolet": [
     "Camaro", "Camaro LT", "Camaro SS", "Camaro ZL1", "Camaro 1LE", "Corvette", "Corvette Stingray", "Corvette Z06", "Corvette ZR1", "Corvette E-Ray",
     "Tahoe", "Tahoe Z71", "Tahoe High Country", "Suburban", "Suburban Premier",
     "Silverado 1500", "Silverado 1500 LT", "Silverado 1500 RST", "Silverado 1500 High Country", "Silverado ZR2", "Silverado 2500HD", "Silverado 3500HD",
     "Colorado", "Colorado Z71", "Colorado ZR2", "Traverse", "Traverse RS", "Equinox", "Equinox RS",
-    "Blazer", "Blazer RS", "Blazer EV", "Trailblazer", "Trailblazer RS", "Trax", "Malibu", "Bolt EV", "Bolt EUV"
+    "Blazer", "Blazer RS", "Blazer EV", "Trailblazer", "Trailblazer RS", "Trax", "Malibu", "Bolt EV", "Bolt EUV",
+    "Captiva", "Spark", "Groove", "Menlo", "Impala", "SS", "Monte Carlo", "El Camino"
   ],
   "Dodge": [
     "Challenger", "Challenger SXT", "Challenger R/T", "Challenger R/T Scat Pack", "Challenger SRT Hellcat", "Challenger SRT Demon",
     "Charger", "Charger SXT", "Charger R/T", "Charger R/T Scat Pack", "Charger SRT Hellcat", "Charger Daytona",
-    "Durango", "Durango GT", "Durango R/T", "Durango SRT", "Durango SRT Hellcat", "Hornet", "Journey"
+    "Durango", "Durango GT", "Durango R/T", "Durango SRT", "Durango SRT Hellcat", "Hornet", "Journey",
+    "Viper", "Viper ACR", "Viper GTS", "Ram 1500", "Ram 1500 TRX", "Ram 2500", "Ram 3500", "Neon", "Dart"
   ],
   "Jeep": [
     "Wrangler", "Wrangler Sport", "Wrangler Sahara", "Wrangler Rubicon", "Wrangler 4xe", "Wrangler Unlimited", "Wrangler 392",
     "Grand Cherokee", "Grand Cherokee L", "Grand Cherokee 4xe", "Grand Cherokee Summit", "Grand Cherokee SRT", "Grand Cherokee Trackhawk",
     "Cherokee", "Cherokee Trailhawk", "Cherokee Limited", "Compass", "Compass Trailhawk", "Renegade", "Renegade Trailhawk",
-    "Gladiator", "Gladiator Rubicon", "Gladiator Mojave", "Grand Wagoneer", "Wagoneer", "Commander"
+    "Gladiator", "Gladiator Rubicon", "Gladiator Mojave", "Grand Wagoneer", "Wagoneer", "Commander",
+    "Avenger", "Recon"
   ],
   "GMC": [
     "Sierra 1500", "Sierra 1500 SLE", "Sierra 1500 SLT", "Sierra 1500 AT4", "Sierra 1500 Denali", "Sierra 2500HD", "Sierra 3500HD",
     "Yukon", "Yukon SLE", "Yukon SLT", "Yukon AT4", "Yukon Denali", "Yukon XL",
     "Terrain", "Terrain SLE", "Terrain AT4", "Terrain Denali", "Acadia", "Acadia AT4", "Acadia Denali",
-    "Canyon", "Canyon AT4", "Canyon Denali", "Hummer EV", "Hummer EV SUV"
+    "Canyon", "Canyon AT4", "Canyon Denali", "Hummer EV", "Hummer EV SUV",
+    "Envoy", "Savana"
   ],
   "Cadillac": [
     "Escalade", "Escalade ESV", "Escalade V", "Escalade Sport", "Escalade Premium Luxury",
     "CT4", "CT4 Luxury", "CT4-V", "CT4-V Blackwing", "CT5", "CT5 Luxury", "CT5-V", "CT5-V Blackwing",
-    "XT4", "XT4 Luxury", "XT4 Sport", "XT5", "XT5 Luxury", "XT6", "XT6 Luxury", "Lyriq", "Celestiq"
+    "XT4", "XT4 Luxury", "XT4 Sport", "XT5", "XT5 Luxury", "XT6", "XT6 Luxury", "Lyriq", "Celestiq",
+    "CT6", "ATS", "CTS", "CTS-V", "SRX", "STS", "DTS", "Optiq", "Vistiq"
   ],
   "BMW": [
     "118i", "120i", "125i", "M135i", "M140i",
-    "220i", "228i", "230i", "235i", "M240i", "M2", "M2 Competition", "M2 CS",
-    "318i", "320i", "325i", "328i", "330i", "330e", "335i", "340i", "M3", "M3 Competition", "M3 CS", "M3 GTS",
-    "420i", "428i", "430i", "435i", "440i", "M4", "M4 Competition", "M4 CSL", "M4 GTS",
-    "520i", "525i", "528i", "530i", "530e", "535i", "540i", "545i", "550i", "M5", "M5 Competition", "M5 CS",
+    "220i", "228i", "228i Gran Coupe", "230i", "235i", "M235i", "M235i Gran Coupe", "M240i", "M2", "M2 Competition", "M2 CS",
+    "318i", "320i", "320d", "325i", "328i", "330i", "330e", "335i", "340i", "M340i", "M3", "M3 Competition", "M3 CS", "M3 GTS",
+    "420i", "428i", "430i", "435i", "440i", "M440i", "M4", "M4 Competition", "M4 CSL", "M4 GTS",
+    "520i", "525i", "528i", "530i", "530e", "535i", "540i", "545i", "550i", "550e", "M550i", "M5", "M5 Competition", "M5 CS",
     "630i", "640i", "645i", "650i", "M6", "M6 Gran Coupe",
-    "730i", "735i", "740i", "745i", "750i", "760i", "M760i",
-    "840i", "850i", "M8", "M8 Competition", "M8 Gran Coupe",
-    "X1", "X1 sDrive", "X2", "X3", "X3 M", "X3 M Competition", "X4", "X4 M",
-    "X5", "X5 M", "X5 M Competition", "X5 4.8i", "X6", "X6 M", "X7", "XM", "Z4", "Z4 M40i", "Z3",
-    "i3", "i4", "i4 M50", "i5", "i7", "iX", "iX M60", "iX1", "iX3",
+    "730i", "735i", "740i", "740e", "745e", "745i", "750i", "760i", "M760i",
+    "840i", "M850i", "850i", "M8", "M8 Competition", "M8 Gran Coupe",
+    "X1", "X1 sDrive", "X1 M35i", "X2", "X2 M35i", "X3", "X3 M", "X3 M40i", "X3 M50", "X3 M Competition", "X4", "X4 M", "X4 M40i",
+    "X5", "X5 M", "X5 M50i", "X5 M60i", "X5 M Competition", "X5 45e", "X5 50e", "X5 4.8i",
+    "X6", "X6 M", "X6 M50i", "X6 M60i", "X7", "X7 M60i", "XM", "XM Label",
+    "Z4", "Z4 M40i", "Z3", "Z3 M", "Z8",
+    "i3", "i4", "i4 eDrive40", "i4 M50", "i5", "i5 M60", "i7", "i7 M70", "iX", "iX M60", "iX1", "iX3",
+    "Alpina B3", "Alpina B4", "Alpina B5", "Alpina B7", "Alpina XB7",
     "E30", "E36", "E39", "E46", "E60", "E90", "E92", "F30", "F80", "G20", "G80"
   ],
   "Mercedes": [
@@ -150,7 +162,7 @@ export const CAR_MODELS: Record<string, string[]> = {
     "B 200", "B 250",
     "C 180", "C 200", "C 230", "C 250", "C 280", "C 300", "C 350", "C 43 AMG", "C 55 AMG", "C 63 AMG", "C 63 S AMG",
     "E 200", "E 250", "E 280", "E 300", "E 350", "E 400", "E 450", "E 500", "E 53 AMG", "E 55 AMG", "E 63 AMG", "E 63 S AMG",
-    "S 350", "S 400", "S 450", "S 500", "S 550", "S 580", "S 600", "S 63 AMG", "S 65 AMG", "S 680 Maybach",
+    "S 320", "S 350", "S 350d", "S 400", "S 450", "S 500", "S 55 AMG", "S 550", "S 580", "S 600", "S 63 AMG", "S 65 AMG", "S 680 Maybach",
     "CLA 180", "CLA 200", "CLA 250", "CLA 35 AMG", "CLA 45 AMG",
     "CLK 200", "CLK 320", "CLK 350", "CLK 500", "CLK 55 AMG", "CLK 63 AMG",
     "CLS 350", "CLS 450", "CLS 500", "CLS 53 AMG", "CLS 55 AMG", "CLS 63 AMG",
@@ -164,6 +176,8 @@ export const CAR_MODELS: Record<string, string[]> = {
     "G 500", "G 550", "G 63 AMG", "G 63 AMG 4x4²", "G 65 AMG", "G 350d", "G Wagon",
     "AMG GT 43", "AMG GT 53", "AMG GT 63", "AMG GT R", "AMG GT R Pro", "AMG GT Black Series", "AMG GT C", "AMG GT S",
     "AMG ONE", "SLS AMG",
+    "CLE 200", "CLE 300", "CLE 450", "CLE 53 AMG",
+    "R 350", "R 500", "R 63 AMG",
     "EQA", "EQB", "EQC", "EQE", "EQE SUV", "EQS", "EQS SUV", "EQV",
     "V 250", "V 300", "Vito", "Sprinter", "W124", "W126", "W140", "W202", "W203", "W204", "W205", "W211", "W212", "W213", "W221", "W222", "W223"
   ],
@@ -346,6 +360,103 @@ export const CAR_MODELS: Record<string, string[]> = {
     "Triumph Speed Triple", "Triumph Street Triple", "Triumph Tiger", "Triumph Bonneville",
     "Indian Scout", "Indian Chief", "Indian Challenger", "Indian FTR",
     "Aprilia RSV4", "Aprilia Tuono", "MV Agusta F3", "MV Agusta Brutale"
+  ],
+  "Tesla": [
+    "Model 3", "Model 3 Long Range", "Model 3 Performance",
+    "Model Y", "Model Y Long Range", "Model Y Performance",
+    "Model S", "Model S Long Range", "Model S Plaid",
+    "Model X", "Model X Long Range", "Model X Plaid",
+    "Cybertruck", "Cybertruck AWD", "Cybertruck Cyberbeast",
+    "Roadster"
+  ],
+  "Volvo": [
+    "S60", "S60 T5", "S60 T6", "S60 T8", "S60 Polestar",
+    "S90", "S90 T5", "S90 T6", "S90 T8",
+    "V60", "V60 Cross Country", "V60 T5", "V60 T8",
+    "V90", "V90 Cross Country",
+    "XC40", "XC40 T4", "XC40 T5", "XC40 Recharge",
+    "XC60", "XC60 T5", "XC60 T6", "XC60 T8", "XC60 Polestar",
+    "XC90", "XC90 T5", "XC90 T6", "XC90 T8", "XC90 Recharge",
+    "EX30", "EX40", "EC40", "EX90",
+    "C30", "C70", "V40", "V40 Cross Country", "S40", "240", "740", "850"
+  ],
+  "Lincoln": [
+    "Navigator", "Navigator L", "Navigator Reserve", "Navigator Black Label",
+    "Aviator", "Aviator Reserve", "Aviator Grand Touring", "Aviator Black Label",
+    "Corsair", "Corsair Reserve", "Corsair Grand Touring",
+    "Nautilus", "Nautilus Reserve", "Nautilus Black Label",
+    "Continental", "Continental Reserve", "Continental Black Label",
+    "MKZ", "MKZ Hybrid", "MKC", "MKX", "MKT", "Town Car"
+  ],
+  "Peugeot": [
+    "208", "e-208", "2008", "e-2008",
+    "308", "308 GT", "308 SW",
+    "3008", "3008 GT", "e-3008",
+    "408", "508", "508 GT", "508 SW",
+    "5008", "e-5008",
+    "Partner", "Rifter", "Traveller", "Expert",
+    "RCZ",
+    "206", "206 CC", "207", "207 CC", "301",
+    "306", "307", "307 CC", "406", "407", "607"
+  ],
+  "Renault": [
+    "Clio", "Clio RS",
+    "Megane", "Megane RS", "Megane E-Tech",
+    "Scenic", "Scenic E-Tech",
+    "Captur", "Captur E-Tech",
+    "Arkana", "Austral", "Koleos",
+    "Espace", "Talisman",
+    "Zoe", "Kangoo", "Trafic", "Master",
+    "Duster", "Symbol", "Fluence", "Safrane", "Laguna",
+    "5 E-Tech", "Twingo"
+  ],
+  "Acura": [
+    "ILX", "TLX", "TLX Type S", "RLX",
+    "Integra", "Integra Type S",
+    "MDX", "MDX Type S", "MDX A-Spec",
+    "RDX", "RDX A-Spec",
+    "ZDX", "ZDX Type S",
+    "NSX", "NSX Type S",
+    "TSX", "RSX", "Legend", "RL", "TL"
+  ],
+  "Mini": [
+    "Cooper", "Cooper S", "Cooper SE", "Cooper JCW",
+    "Countryman", "Countryman S", "Countryman SE", "Countryman JCW",
+    "Clubman", "Clubman S", "Clubman JCW",
+    "Convertible", "Convertible S", "Convertible JCW",
+    "Paceman", "Coupe", "Roadster"
+  ],
+  "Suzuki": [
+    "Swift", "Swift Sport",
+    "Baleno", "Ciaz", "Dzire",
+    "Vitara", "Grand Vitara", "S-Cross",
+    "Jimny", "Jimny 5-Door",
+    "Ertiga", "XL7",
+    "Ignis", "Alto", "Celerio", "Carry", "Every",
+    "SX4", "Kizashi", "Liana"
+  ],
+  "Fiat": [
+    "500", "500e", "500X", "500L", "500C",
+    "Tipo", "Tipo Cross", "Panda", "Panda Cross",
+    "Punto", "Punto Evo", "Linea",
+    "Doblo", "Ducato", "Fiorino",
+    "Abarth 500", "Abarth 595", "Abarth 695",
+    "124 Spider", "Bravo", "Stilo", "Multipla"
+  ],
+  "Citroen": [
+    "C3", "C3 Aircross",
+    "C4", "C4 X", "C4 Cactus",
+    "C5 Aircross", "C5 X",
+    "Berlingo", "SpaceTourer", "Jumpy", "Jumper",
+    "DS3", "DS4", "DS5", "DS7",
+    "C1", "C2", "C-Elysee", "Xsara"
+  ],
+  "Jetour": [
+    "T2", "T2 Pro",
+    "Dashing", "Dashing Pro",
+    "X70", "X70 Plus", "X70S",
+    "X90", "X90 Plus",
+    "T1"
   ],
 };
 
