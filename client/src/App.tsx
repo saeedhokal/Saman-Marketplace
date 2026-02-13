@@ -45,22 +45,6 @@ import PaymentDeclined from "@/pages/PaymentDeclined";
 import Downloads from "@/pages/Downloads";
 import NotFound from "@/pages/not-found";
 
-function useAppHeight() {
-  useEffect(() => {
-    const setHeight = () => {
-      const vh = window.innerHeight;
-      document.documentElement.style.setProperty('--app-height', `${vh}px`);
-    };
-    setHeight();
-    window.addEventListener('resize', setHeight);
-    const timeout = setTimeout(setHeight, 100);
-    return () => {
-      window.removeEventListener('resize', setHeight);
-      clearTimeout(timeout);
-    };
-  }, []);
-}
-
 function ScrollToTop() {
   const [location] = useLocation();
   
@@ -77,9 +61,8 @@ function ScrollToTop() {
 }
 
 function Router() {
-  useAppHeight();
   return (
-    <div className="flex flex-col bg-[#0f1318]" style={{ height: 'var(--app-height, 100%)' }}>
+    <div className="flex flex-col bg-[#0f1318] h-full">
       <ScrollToTop />
       <div id="main-scroll-container" className="flex-1 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <Switch>
