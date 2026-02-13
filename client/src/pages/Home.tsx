@@ -166,7 +166,7 @@ export default function Home() {
           <Input
             type="text"
             placeholder="Search for category..."
-            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-white/80 placeholder:font-semibold"
+            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-muted-foreground placeholder:font-semibold"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search"
@@ -179,8 +179,8 @@ export default function Home() {
             data-testid="tab-automotive"
             className={`flex-1 py-4 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border-2 ${
               activeCategory === "automotive" 
-                ? "border-slate-500/60 text-white shadow-lg" 
-                : "bg-slate-800/30 border-slate-600/30 text-slate-400"
+                ? "border-blue-300 dark:border-slate-500/60 text-white shadow-lg" 
+                : "bg-gray-100 dark:bg-slate-800/30 border-gray-200 dark:border-slate-600/30 text-gray-500 dark:text-slate-400"
             }`}
             style={activeCategory === "automotive" ? { background: 'linear-gradient(135deg, #1e3a5f 0%, #0f2744 50%, #1a3550 100%)' } : {}}
           >
@@ -194,7 +194,7 @@ export default function Home() {
             className={`flex-1 py-4 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border-2 ${
               activeCategory === "spare-parts" 
                 ? "border-orange-400/60 text-white shadow-lg shadow-orange-500/30" 
-                : "bg-slate-800/30 border-slate-600/30 text-slate-400"
+                : "bg-gray-100 dark:bg-slate-800/30 border-gray-200 dark:border-slate-600/30 text-gray-500 dark:text-slate-400"
             }`}
             style={activeCategory === "spare-parts" ? { background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #fb923c 100%)' } : {}}
           >

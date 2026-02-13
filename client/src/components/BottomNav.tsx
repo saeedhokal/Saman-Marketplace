@@ -58,7 +58,7 @@ export function BottomNav() {
 
   return (
     <>
-      <div className="shrink-0 relative" style={{ backgroundColor: '#0f1318' }}>
+      <div className="shrink-0 relative bg-background">
         <div className="absolute left-1/2 -translate-x-1/2 -top-3 z-10">
           <button 
             onClick={handlePostClick}
@@ -68,7 +68,7 @@ export function BottomNav() {
             <Plus className="h-7 w-7" />
           </button>
         </div>
-        <nav className="border-t border-slate-700/50">
+        <nav className="border-t border-border">
         <div className="flex items-center justify-around h-16 px-2">
           {navItems.map((item) => {
             const isActive = location === item.href;

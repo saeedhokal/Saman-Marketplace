@@ -195,7 +195,7 @@ export default function Categories() {
           <Input
             type="text"
             placeholder={t('searchCategory')}
-            className={`border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-white/80 placeholder:font-semibold ${isRTL ? 'text-right' : ''}`}
+            className={`border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-muted-foreground placeholder:font-semibold ${isRTL ? 'text-right' : ''}`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search"

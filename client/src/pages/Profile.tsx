@@ -87,7 +87,7 @@ export default function Profile() {
         <div className="flex flex-col items-center mb-8">
           <Avatar className="h-24 w-24 mb-4">
             <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "Profile"} />
-            <AvatarFallback className="bg-[#3a4553] text-white text-2xl font-semibold">
+            <AvatarFallback className="bg-gray-200 dark:bg-[#3a4553] text-gray-700 dark:text-white text-2xl font-semibold">
               {user.firstName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
