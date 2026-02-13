@@ -1,10 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, ChevronRight, Car, Wrench, Globe } from "lucide-react";
+import { Search, Bell, ChevronRight, Car, Wrench, Globe, Moon, Sun } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProductCard } from "@/components/ProductCard";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -16,6 +16,23 @@ export default function Landing() {
   const { user } = useAuth();
   const { t, isRTL, language, setLanguage } = useLanguage();
   const [, navigate] = useLocation();
+
+  const [darkMode, setDarkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark');
+  });
+
+  const toggleDarkMode = useCallback(() => {
+    const root = document.documentElement;
+    const isDark = root.classList.contains('dark');
+    if (isDark) {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+    setDarkMode(!isDark);
+  }, []);
 
   const { data: recentProducts = [], refetch: refetchRecent, isLoading: isLoadingRecent } = useQuery<Product[]>({
     queryKey: ["/api/products/recent"],
@@ -78,6 +95,17 @@ export default function Landing() {
               <h1 className="text-xl font-bold text-white">{t('welcome')}</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button 
+                onClick={toggleDarkMode}
+                className="p-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+                data-testid="button-theme-toggle"
+              >
+                {darkMode ? (
+                  <Sun className="h-5 w-5 text-white" />
+                ) : (
+                  <Moon className="h-5 w-5 text-white" />
+                )}
+              </button>
               <button 
                 onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
                 className="relative p-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
