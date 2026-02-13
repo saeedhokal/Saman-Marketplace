@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, ChevronRight, Car, Wrench } from "lucide-react";
+import { Search, Bell, ChevronRight, Car, Wrench, Globe } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProductCard } from "@/components/ProductCard";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -14,7 +14,7 @@ import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
 
 export default function Landing() {
   const { user } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language, setLanguage } = useLanguage();
   const [, navigate] = useLocation();
 
   const { data: recentProducts = [], refetch: refetchRecent, isLoading: isLoadingRecent } = useQuery<Product[]>({
@@ -78,6 +78,16 @@ export default function Landing() {
               <h1 className="text-xl font-bold text-white">{t('welcome')}</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+                className="relative p-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+                data-testid="button-language-toggle"
+              >
+                <Globe className="h-5 w-5 text-white" />
+                <span className="absolute -bottom-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#f97316] text-white text-[9px] font-bold px-0.5">
+                  {language === 'en' ? 'ع' : 'EN'}
+                </span>
+              </button>
               <button 
                 onClick={() => navigate(user ? "/inbox" : "/auth")}
                 className="relative p-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors" 
