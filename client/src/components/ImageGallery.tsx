@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -155,88 +156,92 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
         </div>
       )}
 
-      <AnimatePresence>
-        {isFullscreen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
-            data-testid="fullscreen-gallery"
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 z-10 text-white hover:bg-white/20 rounded-full"
-              onClick={() => setIsFullscreen(false)}
-              data-testid="button-close-fullscreen"
-            >
-              <X className="h-6 w-6" />
-            </Button>
-
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/80 text-sm">
-              {currentIndex + 1} / {images.length}
-            </div>
-
+      {createPortal(
+        <AnimatePresence>
+          {isFullscreen && (
             <motion.div
-              className="w-full h-full flex items-center justify-center p-4"
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={handleDragEnd}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
+              data-testid="fullscreen-gallery"
             >
-              <motion.img
-                key={currentIndex}
-                src={images[currentIndex]}
-                alt={`Image ${currentIndex + 1}`}
-                className="max-w-full max-h-full object-contain"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-                draggable={false}
-              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-6 right-4 z-10 text-white bg-white/20 backdrop-blur-sm border border-white/30 rounded-full h-11 w-11"
+                onClick={() => setIsFullscreen(false)}
+                style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+                data-testid="button-close-fullscreen"
+              >
+                <X className="h-7 w-7" strokeWidth={2.5} />
+              </Button>
+
+              <div className="absolute top-7 left-1/2 -translate-x-1/2 text-white text-sm font-medium bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full">
+                {currentIndex + 1} / {images.length}
+              </div>
+
+              <motion.div
+                className="w-full h-full flex items-center justify-center p-4"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={handleDragEnd}
+              >
+                <motion.img
+                  key={currentIndex}
+                  src={images[currentIndex]}
+                  alt={`Image ${currentIndex + 1}`}
+                  className="max-w-full max-h-full object-contain"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  draggable={false}
+                />
+              </motion.div>
+
+              {images.length > 1 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white bg-white/20 backdrop-blur-sm border border-white/30 rounded-full h-11 w-11"
+                    onClick={goToPrevious}
+                    data-testid="button-fullscreen-prev"
+                  >
+                    <ChevronLeft className="h-7 w-7" strokeWidth={2.5} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white bg-white/20 backdrop-blur-sm border border-white/30 rounded-full h-11 w-11"
+                    onClick={goToNext}
+                    data-testid="button-fullscreen-next"
+                  >
+                    <ChevronRight className="h-7 w-7" strokeWidth={2.5} />
+                  </Button>
+
+                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+                    {images.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentIndex(idx)}
+                        className={`w-2.5 h-2.5 rounded-full transition-all ${
+                          idx === currentIndex
+                            ? "bg-white w-6"
+                            : "bg-white/50"
+                        }`}
+                        data-testid={`fullscreen-dot-${idx}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </motion.div>
-
-            {images.length > 1 && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full h-12 w-12"
-                  onClick={goToPrevious}
-                  data-testid="button-fullscreen-prev"
-                >
-                  <ChevronLeft className="h-8 w-8" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full h-12 w-12"
-                  onClick={goToNext}
-                  data-testid="button-fullscreen-next"
-                >
-                  <ChevronRight className="h-8 w-8" />
-                </Button>
-
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-                  {images.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentIndex(idx)}
-                      className={`w-2.5 h-2.5 rounded-full transition-all ${
-                        idx === currentIndex
-                          ? "bg-white w-6"
-                          : "bg-white/50"
-                      }`}
-                      data-testid={`fullscreen-dot-${idx}`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }

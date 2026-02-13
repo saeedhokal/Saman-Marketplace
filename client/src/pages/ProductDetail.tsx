@@ -201,8 +201,8 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
-        <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-accent" data-testid="button-back" onClick={() => window.history.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-accent text-base" data-testid="button-back" onClick={() => window.history.back()}>
+          <ArrowLeft className="mr-2 h-5 w-5" strokeWidth={2.5} /> Back
         </Button>
       </div>
 
