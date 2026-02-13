@@ -68,7 +68,7 @@ export default function Landing() {
       <div className="fixed inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 pointer-events-none" />
       
       <PullToRefresh onRefresh={handleRefresh} className="relative z-10">
-        <div className="container mx-auto px-4 pt-2">
+        <div className="container mx-auto px-4 pt-2" style={{ paddingTop: 'max(env(safe-area-inset-top, 8px), 8px)' }}>
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div>
