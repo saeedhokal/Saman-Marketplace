@@ -113,10 +113,10 @@ export default function Landing() {
 
           {/* Glass Hero Banner - semi-transparent so skyline shows through */}
           <div className="mb-6">
-            <div className="relative rounded-2xl overflow-hidden" style={{ maskImage: 'linear-gradient(to right, black 0%, black 25%, transparent 75%)', WebkitMaskImage: 'linear-gradient(to right, black 0%, black 25%, transparent 75%)' }}>
+            <div className="relative rounded-2xl overflow-hidden" style={{ maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)` }}>
               <div className="absolute inset-0 border border-white/20 rounded-2xl" />
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.02) 55%, transparent 100%)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', maskImage: 'linear-gradient(to right, black 0%, black 20%, transparent 75%)', WebkitMaskImage: 'linear-gradient(to right, black 0%, black 20%, transparent 75%)' }} />
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 30%, transparent 75%)' }} />
+              <div className="absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.02) 55%, transparent 100%)`, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)` }} />
+              <div className="absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 30%, transparent 75%)` }} />
               {/* Content */}
               <div className="relative h-40 sm:h-48">
                 <div className={`relative z-10 p-6 h-full flex items-center ${isRTL ? 'justify-end' : 'justify-start'}`}>
