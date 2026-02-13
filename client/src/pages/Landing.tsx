@@ -120,7 +120,7 @@ export default function Landing() {
               {/* Content */}
               <div className="relative h-40 sm:h-48">
                 <div className="relative z-10 p-6 h-full flex items-center justify-start">
-                  <div className={`flex flex-col justify-center ${isRTL ? 'items-end text-right' : ''}`}>
+                  <div className={`flex flex-col justify-center ${isRTL ? 'items-start text-right' : ''}`}>
                     <p className="text-orange-400 text-xs uppercase tracking-widest mb-2 font-medium">{t('uaeMarketplace')}</p>
                     <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">{t('yourNextRide')}</h2>
                     <p className="text-white text-2xl sm:text-3xl font-bold leading-tight">{t('startsHere')}</p>
