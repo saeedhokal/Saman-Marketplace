@@ -48,12 +48,12 @@ export default function Landing() {
 
   // Skeleton card component for loading state
   const SkeletonCard = () => (
-    <div className="rounded-xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 animate-pulse">
-      <div className="aspect-square bg-white/5" />
+    <div className="rounded-xl overflow-hidden bg-gray-100 dark:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/20 animate-pulse">
+      <div className="aspect-square bg-gray-200 dark:bg-white/5" />
       <div className="p-3 space-y-2">
-        <div className="h-4 bg-white/10 rounded w-3/4" />
-        <div className="h-3 bg-white/10 rounded w-1/2" />
-        <div className="h-4 bg-orange-500/20 rounded w-1/3" />
+        <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-3/4" />
+        <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
+        <div className="h-4 bg-orange-200 dark:bg-orange-500/20 rounded w-1/3" />
       </div>
     </div>
   );
@@ -76,52 +76,54 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen relative -mt-0">
-      {/* Full-page Dubai Skyline Background */}
+      {/* Full-page Dubai Skyline Background - only in dark mode */}
       <div 
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none transition-opacity duration-500 dark:opacity-100 opacity-0"
         style={{ backgroundImage: `url(${dubaiSkylineBg})` }}
       />
-      {/* Dark overlay for readability */}
-      <div className="fixed inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 pointer-events-none" />
+      {/* Light mode background */}
+      <div className="fixed inset-0 bg-gray-50 dark:opacity-0 opacity-100 transition-opacity duration-500 pointer-events-none" />
+      {/* Dark overlay for readability - only in dark mode */}
+      <div className="fixed inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 pointer-events-none dark:opacity-100 opacity-0 transition-opacity duration-500" />
       
       <PullToRefresh onRefresh={handleRefresh} className="relative z-10">
         <div className="container mx-auto px-4 pt-2" style={{ paddingTop: 'max(env(safe-area-inset-top, 8px), 8px)' }}>
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-white/70 text-sm">
+              <p className="text-gray-500 dark:text-white/70 text-sm">
                 {user ? `${t('hey')}, ${user.firstName || 'there'}` : `${t('hey')}, ${t('guest')}`}
               </p>
-              <h1 className="text-xl font-bold text-white">{t('welcome')}</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('welcome')}</h1>
             </div>
             <div className="flex items-center gap-3">
               <button 
                 onClick={toggleDarkMode}
-                className="p-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+                className="p-2.5 rounded-full bg-gray-100 dark:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/20 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
                 data-testid="button-theme-toggle"
               >
                 {darkMode ? (
-                  <Sun className="h-5 w-5 text-white" />
+                  <Sun className="h-5 w-5 text-yellow-500" />
                 ) : (
-                  <Moon className="h-5 w-5 text-white" />
+                  <Moon className="h-5 w-5 text-gray-600" />
                 )}
               </button>
               <button 
                 onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-                className="relative p-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+                className="relative p-2.5 rounded-full bg-gray-100 dark:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/20 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
                 data-testid="button-language-toggle"
               >
-                <Globe className="h-5 w-5 text-white" />
+                <Globe className="h-5 w-5 text-gray-600 dark:text-white" />
                 <span className="absolute -bottom-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#f97316] text-white text-[9px] font-bold px-0.5">
                   {language === 'en' ? 'ع' : 'EN'}
                 </span>
               </button>
               <button 
                 onClick={() => navigate(user ? "/inbox" : "/auth")}
-                className="relative p-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors" 
+                className="relative p-2.5 rounded-full bg-gray-100 dark:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/20 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors" 
                 data-testid="button-notifications"
               >
-                <Bell className="h-5 w-5 text-white" />
+                <Bell className="h-5 w-5 text-gray-600 dark:text-white" />
                 {unreadData && unreadData.count > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#f97316] text-white text-xs font-medium px-1">
                     {unreadData.count > 99 ? '99+' : unreadData.count}
@@ -129,9 +131,9 @@ export default function Landing() {
                 )}
               </button>
               <Link href="/profile">
-                <Avatar className="h-9 w-9 border-2 border-white/30">
+                <Avatar className="h-9 w-9 border-2 border-gray-200 dark:border-white/30">
                   <AvatarImage src={user?.profileImageUrl || undefined} />
-                  <AvatarFallback className="bg-white/20 text-white text-sm backdrop-blur-md">
+                  <AvatarFallback className="bg-gray-100 dark:bg-white/20 text-gray-700 dark:text-white text-sm backdrop-blur-md">
                     {user?.firstName?.charAt(0) || 'G'}
                   </AvatarFallback>
                 </Avatar>
@@ -139,23 +141,26 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Glass Hero Banner - semi-transparent so skyline shows through */}
+          {/* Hero Banner */}
           <div className="mb-6">
             <div className="relative rounded-2xl overflow-hidden">
-              <div className="absolute inset-0 border border-white/20 rounded-2xl" style={{ maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)` }} />
-              <div className="absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.02) 55%, transparent 100%)`, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)` }} />
-              <div className="absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 30%, transparent 75%)` }} />
+              {/* Dark mode glass effect */}
+              <div className="hidden dark:block absolute inset-0 border border-white/20 rounded-2xl" style={{ maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)` }} />
+              <div className="hidden dark:block absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.02) 55%, transparent 100%)`, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)` }} />
+              <div className="hidden dark:block absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 30%, transparent 75%)` }} />
+              {/* Light mode background */}
+              <div className="dark:hidden absolute inset-0 bg-gradient-to-r from-orange-50 to-orange-100/50 rounded-2xl border border-orange-200/60" />
               {/* Content */}
               <div className="relative h-40 sm:h-48">
                 <div className="relative z-10 p-6 h-full flex items-center justify-start">
                   <div className={`flex flex-col justify-center ${isRTL ? 'items-start text-right' : ''}`}>
-                    <p className="text-orange-400 text-xs uppercase tracking-widest mb-2 font-medium">{t('uaeMarketplace')}</p>
-                    <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">{t('yourNextRide')}</h2>
-                    <p className="text-white text-2xl sm:text-3xl font-bold leading-tight">{t('startsHere')}</p>
+                    <p className="text-orange-500 dark:text-orange-400 text-xs uppercase tracking-widest mb-2 font-medium">{t('uaeMarketplace')}</p>
+                    <h2 className="text-gray-900 dark:text-white text-2xl sm:text-3xl font-bold leading-tight">{t('yourNextRide')}</h2>
+                    <p className="text-gray-900 dark:text-white text-2xl sm:text-3xl font-bold leading-tight">{t('startsHere')}</p>
                     <Link href="/sell">
                       <Button 
                         size="sm" 
-                        className="mt-4 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-full px-6 py-2 font-semibold shadow-lg shadow-orange-500/30"
+                        className="mt-4 bg-[#f97316] text-white rounded-full px-6 py-2 font-semibold shadow-lg shadow-orange-500/30"
                         data-testid="banner-cta-sell"
                       >
                         {t('startSelling')}
@@ -168,19 +173,19 @@ export default function Landing() {
             </div>
           </div>
 
-          <h2 className="text-base font-semibold text-white mb-3">{t('categories')}</h2>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">{t('categories')}</h2>
 
-          {/* Glass Category Cards - semi-transparent */}
+          {/* Category Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <Link href="/categories?tab=automotive">
               <div 
-                className="relative h-24 rounded-2xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 bg-slate-800/60 backdrop-blur-md border border-slate-500/40 hover:border-slate-400/60 transition-all"
+                className="relative h-24 rounded-2xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-800/60 backdrop-blur-md border border-gray-200 dark:border-slate-500/40 hover:border-gray-300 dark:hover:border-slate-400/60 transition-all shadow-sm dark:shadow-none"
                 data-testid="card-automotive"
               >
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-2 bg-orange-500">
                   <Car className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-white font-bold text-sm">{t('automotive')}</span>
+                <span className="text-gray-900 dark:text-white font-bold text-sm">{t('automotive')}</span>
               </div>
             </Link>
 
@@ -200,11 +205,11 @@ export default function Landing() {
 
         {/* For You Section - show skeleton while loading */}
         {(isLoadingRecommended || recommendedProducts.length > 0) && (
-          <div className="mb-4 -mx-4 px-4 py-4 bg-black/30 backdrop-blur-sm">
+          <div className="mb-4 -mx-4 px-4 py-4 bg-gray-100/80 dark:bg-black/30 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-white">{t('forYou')}</h2>
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('forYou')}</h2>
               <Link href="/categories">
-                <span className="text-orange-400 text-sm font-medium" data-testid="link-view-all-recommended">{t('viewAll')}</span>
+                <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recommended">{t('viewAll')}</span>
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
@@ -233,9 +238,9 @@ export default function Landing() {
         {(isLoadingRecent || recentProducts.length > 0) && (
           <div className="mb-0 -mx-4 px-4 py-4">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-white">{t('recentPosts')}</h2>
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('recentPosts')}</h2>
               <Link href="/categories">
-                <span className="text-orange-400 text-sm font-medium" data-testid="link-view-all-recent">{t('viewAll')}</span>
+                <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recent">{t('viewAll')}</span>
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">

@@ -34,7 +34,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
     >
       <Link href={`/product/${product.id}`}>
         <Card className={`group h-full overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl ${isSold ? 'opacity-80' : ''}`}>
-          <div className="relative aspect-[4/3] md:aspect-square overflow-hidden bg-slate-700/30">
+          <div className="relative aspect-[4/3] md:aspect-square overflow-hidden bg-gray-100 dark:bg-slate-700/30">
             {product.imageUrl && !imageError ? (
               <img
                 src={product.imageUrl}
@@ -83,7 +83,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
           </CardContent>
 
           <CardFooter className="p-3 sm:p-4 pt-0 mt-auto">
-            <p className={`font-display text-base sm:text-lg font-bold ${isSold ? 'text-muted-foreground line-through' : 'text-orange-700'}`}>
+            <p className={`font-display text-base sm:text-lg font-bold ${isSold ? 'text-muted-foreground line-through' : 'text-orange-600 dark:text-orange-700'}`}>
               {formattedPrice}
             </p>
           </CardFooter>
