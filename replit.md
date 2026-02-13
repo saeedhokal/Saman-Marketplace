@@ -32,6 +32,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Animations:** Framer Motion
 - **Routing:** Wouter (client-side)
 - **UI Theme:** Orange (#f97316) accent, dark gradient cards, rounded corners
+- **Dark Mode:** Supported via localStorage theme preference, toggleable from Settings page and landing page header
 - **Translation:** Bidirectional Arabic ↔ English translation for listings using OpenAI.
 
 ### Backend
@@ -102,57 +103,55 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 ---
 
+## Recent Changes (Feb 13, 2026)
+
+### UI/UX Improvements
+- **Arabic mode banner layout:** Text properly positioned on right side with RTL-aware flex positioning
+- **"Start Selling" button:** Alignment in Arabic matches English layout positioning
+- **Listing detail images:** Changed from object-cover to object-contain for better photo visibility before fullscreen
+- **Fullscreen image gallery:** Portal rendering to document.body ensures nav bar is completely covered; simplified button styling to clean white icons
+- **Product card images:** object-position: 50% 60% to frame car body better
+- **Day/Night mode toggle:** Added to landing page header next to language globe button
+
+### Car Models Database Expansion (Feb 13, 2026)
+- **Mercedes additions:** S 320, S 350d, S 55 AMG, CLE series (200/300/450/53 AMG), R-Class (R 350/R 500/R 63 AMG)
+- **BMW additions:** M-performance variants (M340i, M440i, M550i, M850i), Alpina models (B3/B4/B5/B7/XB7), electric variants (i4 eDrive40, i5 M60, i7 M70), Z3 M, Z8
+- **11 new brands added with full model lists:**
+  - Tesla (Model 3/Y/S/X variants, Cybertruck, Roadster)
+  - Volvo (S60/S90/V60/V90/XC40/XC60/XC90/EX/EC series + classics)
+  - Lincoln (Navigator/Aviator/Corsair/Nautilus/Continental + heritage)
+  - Peugeot (200/300/400/500/3000/5000 series + classics)
+  - Renault (Clio/Megane/Scenic/Captur/Arkana + heritage)
+  - Acura (ILX/TLX/Integra/MDX/RDX/ZDX/NSX + classics)
+  - Mini (Cooper/Countryman/Clubman/Convertible variants)
+  - Suzuki (Swift/Vitara/Jimny/Ertiga + heritage)
+  - Fiat (500 series/Tipo/Panda/Abarth variants)
+  - Citroen (C3/C4/C5/Berlingo/DS series)
+  - Jetour (T2/Dashing/X70/X90/T1)
+
+---
+
+## Known Technical Notes
+- **iOS cold-start bottom nav:** Brief layout size issue on first open that self-corrects on scroll - acceptable Capacitor WebView timing issue
+- **Landing page banner:** Uses RTL-aware justify-start (not justify-end) for proper text positioning in both languages
+- **Fullscreen gallery:** Uses createPortal to render at document.body level for true fullscreen over all UI elements
+- **Scheduler FK constraint:** deleteExpiredProducts can fail if user_views references the product - needs CASCADE or pre-delete cleanup
+
+---
+
 ## Payment System Status (February 5, 2026)
 
-### ✅ WORKING
+### WORKING
 - **Apple Pay** - 100% success rate via Remote API
 - **Payment Verification** - Fixed (stores `cartId::orderRef` format)
 
-### ✅ RESOLVED - Credit Cards (Status 90)
+### RESOLVED - Credit Cards (Status 90)
 **Root Cause CONFIRMED by Telr (Feb 5, 2026):**
 Telr's velocity/fraud detection blocks the **same credit card within 24 hours**.
 
 **Solution:** Wait 24 hours between tests with the same card, OR use a different card.
 
 **This is NOT a code issue - it's Telr's fraud protection working as designed.**
-
-**NEW FINDING (Feb 5, 2026 - from Telr screenshots):**
-- DECLINED transactions: Integration = **"Payment Page"** → Status 90 even after 3D Secure succeeds
-- SUCCESSFUL transaction: Integration = **"Admin"** → Works fine with Auth Code
-- MPI shows "Authentication succeeded" and "Successful" but still declines!
-- This suggests Payment Page integration has DIFFERENT fraud rules than Admin integration
-- Telr needs to check their Payment Page integration settings for Store 32400
-
-**CRITICAL PROOF (Feb 5, 2026 - from successful transaction screenshot):**
-- Sale 030066820400 - **AUTHORISED** on Feb 4 at 17:30 GST
-- Integration: **Payment Page** (SAME as failing ones!)
-- Auth Code: 858669
-- Card ending 3705 (same card that later failed)
-- Amount: AED 30.00
-
-**Timeline proving issue started AFTER working:**
-- Feb 4, 17:30 → Payment Page → **SUCCESS** ✅ (Auth Code 858669)
-- Feb 5, 01:40 → Payment Page → **Status 90** ❌
-- Feb 5, 05:26 → Payment Page → **Status 90** ❌
-
-**CODE COMPARISON RESULT:**
-Compared current code to working commit 2bb7edf - Telr request data is **IDENTICAL**:
-- Same store ID: 32400
-- Same authkey: 3SWWK@m9Mz-5GNtS
-- Same framed: 0
-- Same order structure, return URLs, customer data
-
-**CONCLUSION: Issue is NOT in our code.**
-1. Same Payment Page integration worked Feb 4 17:30
-2. Same code, same card started failing Feb 5
-3. Telr portal shows "matched to previous transaction" = velocity checks
-4. 3D Secure succeeds (MPI Level 2, Status 1), then Telr blocks anyway
-5. This is Telr's fraud/velocity detection - they need to adjust Store 32400 settings
-
-**Payment Verification Fix Applied:**
-1. Both checkout endpoints now store `cartId::orderRef` format
-2. `getTransactionByReference()` finds transactions by cartId prefix
-3. `/api/payment/verify` extracts Telr order.ref for check API
 
 **Auth Keys (DO NOT MIX):**
 - `3SWWK@m9Mz-5GNtS` = Hosted Payment Page (credit cards)
@@ -167,76 +166,8 @@ Compared current code to working commit 2bb7edf - Telr request data is **IDENTIC
 - Added/changed phone formatting (with/without + prefix) - Still Status 90
 - Added/removed customer email - Still Status 90
 
-### ⚠️ 3D Secure - Not Working
+### 3D Secure - Not Working
 **Workaround:** User does NOT tick the 3D Secure checkbox on Telr payment page.
-
-**ALREADY TRIED (DO NOT REPEAT):**
-- Added customer IP - didn't fix
-- Changed customer reference - didn't fix
-- Phone formatting changes - didn't fix
-- Removed "Mr" title - didn't fix
-- Added production user email - didn't fix
-
----
-
-## Comprehensive A-Z Issue List (Feb 5, 2026)
-
-### CRITICAL ISSUES
-
-**1. iOS capacitor.config.json has WRONG server URL** ✅ FIXED (Feb 5, 2026)
-- WAS: `https://saman-market-fixer--saeedhokal.replit.app`
-- NOW: `https://thesamanapp.com`
-- Also synced all iOS config settings with capacitor.config.ts
-
-**2. `limitsNavigationsToAppBoundDomains: true` without `WKAppBoundDomains`** ✅ FIXED (Feb 5, 2026)
-- Added `WKAppBoundDomains` to Info.plist with:
-  - `thesamanapp.com`
-  - `secure.telr.com`
-  - `www.telr.com`
-- iOS WebView can now properly navigate to payment pages
-
-**3. PaymentSuccess.tsx race condition**
-- Tries deep link AND immediately calls `/api/payment/verify` in parallel
-- Safari doesn't have session cookies, so verification fails there
-- No `return` statement after deep link attempt, so both execute
-
-### MEDIUM ISSUES
-
-**4. Two checkout endpoints with DIFFERENT formats**
-- `/api/checkout-redirect` uses JSON format: `method: "create"`
-- `/api/checkout` uses URL-encoded: `ivp_method: "create"`
-- Different return URL key names: `authorised` vs `return_auth`
-
-**5. POST `/api/checkout` endpoint is NEVER CALLED**
-- `purchaseMutation` is defined in Checkout.tsx but never invoked
-- Dead code that could cause confusion
-
-**6. Hardcoded auth keys vs environment variables inconsistency**
-- Lines 1115, 1215, 1280: Hardcoded `3SWWK@m9Mz-5GNtS`
-- POST /api/checkout uses `process.env.TELR_AUTH_KEY`
-- Same value, but inconsistent approach
-
-**7. Third auth key `TELR_REMOTE_AUTH_KEY` exists but unexplained**
-- `TELR_REMOTE_AUTH_KEY=DdkLr~C8Nph^cpfK` in env vars
-- Not documented - different from the two known keys
-- Apple Pay fallback chain includes it
-
-### MINOR ISSUES
-
-**8. Phone number format inconsistency**
-- Original code: `+971` prefix
-- Current code: `971` without +
-- Telr may expect specific format
-
-**9. Capacitor configs out of sync**
-- `ios/App/App/capacitor.config.json` differs from `capacitor.config.ts`
-- iOS config missing `limitsNavigationsToAppBoundDomains`
-- Different `backgroundColor`, `contentInset` values
-
-**10. Test endpoints vs production endpoints**
-- Test endpoints use `test: 1`
-- Production endpoints use `test: 0`
-- Verify iOS always hits production endpoint
 
 ---
 
