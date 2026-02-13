@@ -39,7 +39,8 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
               <img
                 src={product.imageUrl}
                 alt={product.title}
-                className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''}`}
+                className={`h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''}`}
+                style={{ objectPosition: '50% 60%' }}
                 onError={() => setImageError(true)}
               />
             ) : (
