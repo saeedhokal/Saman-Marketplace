@@ -166,16 +166,13 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
               className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
               data-testid="fullscreen-gallery"
             >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-6 right-4 z-10 text-white bg-white/20 backdrop-blur-sm border border-white/30 rounded-full h-11 w-11"
+              <button
+                className="absolute top-6 right-4 z-10 text-white p-2"
                 onClick={() => setIsFullscreen(false)}
-                style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
                 data-testid="button-close-fullscreen"
               >
                 <X className="h-7 w-7" strokeWidth={2.5} />
-              </Button>
+              </button>
 
               <div className="absolute top-7 left-1/2 -translate-x-1/2 text-white text-sm font-medium bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full">
                 {currentIndex + 1} / {images.length}
@@ -202,24 +199,20 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
 
               {images.length > 1 && (
                 <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white bg-white/20 backdrop-blur-sm border border-white/30 rounded-full h-11 w-11"
+                  <button
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/80 p-2"
                     onClick={goToPrevious}
                     data-testid="button-fullscreen-prev"
                   >
-                    <ChevronLeft className="h-7 w-7" strokeWidth={2.5} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white bg-white/20 backdrop-blur-sm border border-white/30 rounded-full h-11 w-11"
+                    <ChevronLeft className="h-8 w-8" strokeWidth={2} />
+                  </button>
+                  <button
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 p-2"
                     onClick={goToNext}
                     data-testid="button-fullscreen-next"
                   >
-                    <ChevronRight className="h-7 w-7" strokeWidth={2.5} />
-                  </Button>
+                    <ChevronRight className="h-8 w-8" strokeWidth={2} />
+                  </button>
 
                   <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
                     {images.map((_, idx) => (
