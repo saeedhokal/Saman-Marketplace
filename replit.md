@@ -178,9 +178,12 @@ Telr's velocity/fraud detection blocks the **same credit card within 24 hours**.
 - Bundle ID: com.saeed.saman
 - App Store ID: id6744526430
 
-### Android - In Review
-- Version 1.1.3 (versionCode 14)
-- Package Name: com.saman.marketplace
+### Android - LIVE (with crash fix pending)
+- Version 1.1.4 (versionCode 15) - pending build
+- Previous: 1.1.3 (versionCode 14) - had ClassNotFoundException crash on some devices
+- Package Name: com.saman.marketplace (applicationId for Play Store)
+- Java Package: com.saeed.saman (namespace, matches Capacitor appId)
+- **Fixed Feb 14, 2026:** Namespace mismatch in build.gradle caused crash on Android 15 devices (was `com.saman.marketplace`, should be `com.saeed.saman`)
 
 ---
 
