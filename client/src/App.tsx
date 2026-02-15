@@ -159,7 +159,7 @@ function AppContent() {
   return (
     <PushNotificationProvider>
       <DeepLinkHandler />
-      <div className="flex flex-col bg-background" style={{ height: '40%' }}>
+      <div className="flex flex-col bg-background h-full">
         <Router />
         <BottomNavWrapper />
       </div>
