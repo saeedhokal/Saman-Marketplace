@@ -159,7 +159,7 @@ function AppContent() {
   return (
     <PushNotificationProvider>
       <DeepLinkHandler />
-      <div className="fixed inset-0 flex flex-col bg-background" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <div className="fixed inset-0 flex flex-col bg-background">
         <Router />
         <BottomNavWrapper />
       </div>
