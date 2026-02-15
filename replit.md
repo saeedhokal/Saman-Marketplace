@@ -111,6 +111,8 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Landing page overlays:** Added inline `pointerEvents: 'none'` to fixed overlay divs as bulletproof guarantee against CSS loading delays on cold start.
 - **Adaptive top padding:** Uses `max(env(safe-area-inset-top), 8px)` so it works whether WebView extends behind status bar or not.
 - **Bottom nav spacing:** Removed extra `pb-1` padding from BottomNav for tighter bottom layout.
+- **CONFIRMED WORKING cold-start checkpoint:** Commit `0a866d8109a66646105a9d8bd07f20f093c97c76` (pb-1 removal + BottomNav outside Router) — user confirmed cold start worked perfectly on first try. Revert to this commit if new cold-start issues appear.
+- **Post-confirmation change (experimental):** Switched AppContent container from `height: 100dvh` to `fixed inset-0` and added inline `paddingBottom: env(safe-area-inset-bottom)` on BottomNav outer div. This was to fix a one-time bottom nav cutoff seen on cold start. If this causes issues, revert to commit `0a866d8` above.
 
 ### UI/UX Improvements (Feb 13, 2026)
 - **Arabic mode banner layout:** Text properly positioned on right side with RTL-aware flex positioning
