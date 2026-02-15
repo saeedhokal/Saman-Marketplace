@@ -58,7 +58,7 @@ export function BottomNav() {
 
   return (
     <>
-      <div className="shrink-0 relative bg-background" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="shrink-0 relative bg-background pb-5">
         <div className="absolute left-1/2 -translate-x-1/2 -top-3 z-10">
           <button 
             onClick={handlePostClick}
