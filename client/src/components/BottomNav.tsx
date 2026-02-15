@@ -58,7 +58,7 @@ export function BottomNav() {
 
   return (
     <>
-      <div className="shrink-0 relative bg-background pb-5">
+      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-background pb-2" data-testid="bottom-nav">
         <div className="absolute left-1/2 -translate-x-1/2 -top-3 z-10">
           <button 
             onClick={handlePostClick}
@@ -69,7 +69,7 @@ export function BottomNav() {
           </button>
         </div>
         <nav className="border-t border-border">
-        <div className="flex items-center justify-around h-16 px-2">
+        <div className="flex items-center justify-around h-14 px-2">
           {navItems.map((item) => {
             const isActive = location === item.href;
             
