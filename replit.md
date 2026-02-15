@@ -132,7 +132,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 ---
 
 ## Known Technical Notes
-- **iOS cold-start bottom nav:** Brief layout size issue on first open that self-corrects on scroll - acceptable Capacitor WebView timing issue
+- **iOS cold-start bottom nav:** FIXED (Feb 15, 2026) - Was caused by `100vh` not reflecting actual viewport on Capacitor cold start. Fixed with JS-based `--app-height` that uses `window.innerHeight` and recalculates on resize + multiple deferred re-checks after DOMContentLoaded. Also added `env(safe-area-inset-bottom)` padding to BottomNav.
 - **Landing page banner:** Uses RTL-aware justify-start (not justify-end) for proper text positioning in both languages
 - **Fullscreen gallery:** Uses createPortal to render at document.body level for true fullscreen over all UI elements
 - **Scheduler FK constraint:** deleteExpiredProducts can fail if user_views references the product - needs CASCADE or pre-delete cleanup

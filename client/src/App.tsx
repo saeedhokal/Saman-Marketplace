@@ -62,7 +62,7 @@ function ScrollToTop() {
 
 function Router() {
   return (
-    <div className="flex flex-col bg-background h-full">
+    <div className="flex flex-col bg-background" style={{ height: 'var(--app-height, 100vh)' }}>
       <ScrollToTop />
       <div id="main-scroll-container" className="flex-1 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <Switch>

@@ -16,6 +16,19 @@
         if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.classList.add('dark');
         }
+        function setAppHeight() {
+          document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+        }
+        setAppHeight();
+        window.addEventListener('resize', setAppHeight);
+        window.addEventListener('orientationchange', function() { setTimeout(setAppHeight, 100); });
+        document.addEventListener('visibilitychange', function() { if (!document.hidden) setAppHeight(); });
+        document.addEventListener('DOMContentLoaded', function() {
+          setAppHeight();
+          setTimeout(setAppHeight, 50);
+          setTimeout(setAppHeight, 300);
+          setTimeout(setAppHeight, 1000);
+        });
       })();
     </script>
     <div id="root"></div>
