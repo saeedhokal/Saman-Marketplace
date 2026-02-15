@@ -59,10 +59,7 @@ export function usePushNotifications() {
     // If user is logged in, register immediately
     if (userRef.current) {
       console.log('[Push] User logged in, registering token now');
-      const success = await registerTokenToServer(token);
-      if (success) {
-        showInAppNotification('Push Enabled', 'You will receive notifications');
-      }
+      await registerTokenToServer(token);
     } else {
       // Save for later when user logs in
       console.log('[Push] User not logged in, saving token for later');
@@ -93,11 +90,7 @@ export function usePushNotifications() {
     const pendingToken = localStorage.getItem(PENDING_TOKEN_KEY);
     if (pendingToken && !hasRegisteredRef.current) {
       console.log('[Push] Found pending token, registering now...');
-      registerTokenToServer(pendingToken).then(success => {
-        if (success) {
-          showInAppNotification('Push Enabled', 'You will receive notifications');
-        }
-      });
+      registerTokenToServer(pendingToken);
     }
     
     // Also check if we have a stored token that might not have been sent
