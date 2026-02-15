@@ -159,7 +159,7 @@ function AppContent() {
   return (
     <PushNotificationProvider>
       <DeepLinkHandler />
-      <div className="fixed inset-0 flex flex-col bg-background">
+      <div className="flex flex-col bg-background h-full">
         <Router />
         <BottomNavWrapper />
       </div>
