@@ -103,9 +103,16 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 ---
 
-## Recent Changes (Feb 13, 2026)
+## Recent Changes (Feb 15, 2026)
 
-### UI/UX Improvements
+### iOS Cold-Start Fix (Feb 15, 2026)
+- **BottomNav isolation:** Moved BottomNav completely outside Router component into AppContent as a separate sibling in the flex container. Router now renders as a Fragment containing only ScrollToTop + main-scroll-container.
+- **PullToRefresh fix:** Removed fallback that attached touch listeners to `document` - now only attaches to its own containerRef, preventing touch event blocking.
+- **Landing page overlays:** Added inline `pointerEvents: 'none'` to fixed overlay divs as bulletproof guarantee against CSS loading delays on cold start.
+- **Adaptive top padding:** Uses `max(env(safe-area-inset-top), 8px)` so it works whether WebView extends behind status bar or not.
+- **Bottom nav spacing:** Removed extra `pb-1` padding from BottomNav for tighter bottom layout.
+
+### UI/UX Improvements (Feb 13, 2026)
 - **Arabic mode banner layout:** Text properly positioned on right side with RTL-aware flex positioning
 - **"Start Selling" button:** Alignment in Arabic matches English layout positioning
 - **Listing detail images:** Changed from object-cover to object-contain for better photo visibility before fullscreen
@@ -132,7 +139,8 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 ---
 
 ## Known Technical Notes
-- **iOS cold-start bottom nav:** FIXED (Feb 15, 2026) - Was caused by `100vh` not reflecting actual viewport on Capacitor cold start. Fixed with JS-based `--app-height` that uses `window.innerHeight` and recalculates on resize + multiple deferred re-checks after DOMContentLoaded. Also added `env(safe-area-inset-bottom)` padding to BottomNav.
+- **iOS cold-start bottom nav:** FIXED (Feb 15, 2026) - Root causes: (1) PullToRefresh was falling back to attaching touch listeners to `document` when scroll container wasn't ready, blocking all touch events - now only attaches to its own containerRef. (2) BottomNav was inside Router component, affected by page rendering. Fix: BottomNav moved completely outside Router as a sibling in AppContent's flex container (100dvh). Layout structure: AppContent → flex container (100dvh) → Router (flex-1, scroll area as Fragment) + BottomNavWrapper (shrink-0, separate sibling). Landing page overlays have inline `pointerEvents: 'none'` as bulletproof guarantee against CSS loading delays.
+- **Bottom nav spacing:** Removed extra `pb-1` padding from BottomNav container; safe-area-inset-bottom handled via CSS in index.css (Feb 15, 2026)
 - **Landing page banner:** Uses RTL-aware justify-start (not justify-end) for proper text positioning in both languages
 - **Fullscreen gallery:** Uses createPortal to render at document.body level for true fullscreen over all UI elements
 - **Scheduler FK constraint:** deleteExpiredProducts can fail if user_views references the product - needs CASCADE or pre-delete cleanup
