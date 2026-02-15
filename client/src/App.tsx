@@ -62,9 +62,9 @@ function ScrollToTop() {
 
 function Router() {
   return (
-    <div className="bg-background h-full">
+    <>
       <ScrollToTop />
-      <div id="main-scroll-container" className="overflow-y-auto overflow-x-hidden overscroll-none" style={{ height: 'calc(100% - 60px)', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+      <div id="main-scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/categories" component={Categories} />
@@ -100,8 +100,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </div>
-      <BottomNavWrapper />
-    </div>
+    </>
   );
 }
 
@@ -160,7 +159,10 @@ function AppContent() {
   return (
     <PushNotificationProvider>
       <DeepLinkHandler />
-      <Router />
+      <div className="flex flex-col bg-background" style={{ height: '100dvh' }}>
+        <Router />
+        <BottomNavWrapper />
+      </div>
     </PushNotificationProvider>
   );
 }

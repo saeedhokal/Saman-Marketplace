@@ -7,10 +7,6 @@ interface PullToRefreshProps {
   className?: string;
 }
 
-function getScrollContainer(): HTMLElement | null {
-  return document.getElementById('main-scroll-container');
-}
-
 export function PullToRefresh({ onRefresh, children, className = "" }: PullToRefreshProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -19,13 +15,12 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
   const startY = useRef(0);
   const pulling = useRef(false);
   const canPull = useRef(false);
-  const targetRef = useRef<HTMLElement | null>(null);
 
   const PULL_THRESHOLD = 55;
   const MAX_PULL = 80;
 
   const getScrollTop = useCallback(() => {
-    const container = getScrollContainer();
+    const container = document.getElementById('main-scroll-container');
     if (container) {
       return container.scrollTop;
     }
@@ -33,105 +28,89 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
   }, []);
 
   useEffect(() => {
-    const scrollContainer = getScrollContainer();
-    if (!scrollContainer) {
-      const retryTimer = setTimeout(() => {
-        const container = getScrollContainer();
-        if (container) {
-          targetRef.current = container;
-          attachListeners(container);
-        }
-      }, 500);
-      return () => clearTimeout(retryTimer);
-    }
+    const el = containerRef.current;
+    if (!el) return;
 
-    targetRef.current = scrollContainer;
-    const cleanup = attachListeners(scrollContainer);
-    return cleanup;
+    const onTouchStart = (e: TouchEvent) => {
+      if (isRefreshing) return;
 
-    function attachListeners(target: HTMLElement) {
-      const onTouchStart = (e: TouchEvent) => {
-        if (isRefreshing) return;
+      const scrollTop = getScrollTop();
 
-        const scrollTop = getScrollTop();
-
-        if (scrollTop <= 1) {
-          startY.current = e.touches[0].clientY;
-          canPull.current = true;
-        } else {
-          canPull.current = false;
-        }
-      };
-
-      const onTouchMove = (e: TouchEvent) => {
-        if (!canPull.current || isRefreshing) return;
-
-        const scrollTop = getScrollTop();
-        const currentY = e.touches[0].clientY;
-        const diff = currentY - startY.current;
-
-        if (diff > 0 && scrollTop <= 1) {
-          pulling.current = true;
-          setIsPulling(true);
-          const distance = Math.min(diff * 0.4, MAX_PULL);
-          setPullDistance(distance);
-
-          if (distance > 5) {
-            e.preventDefault();
-          }
-        } else {
-          if (pulling.current) {
-            pulling.current = false;
-            setIsPulling(false);
-            setPullDistance(0);
-          }
-          canPull.current = false;
-        }
-      };
-
-      const onTouchEnd = async () => {
-        if (!pulling.current) {
-          canPull.current = false;
-          setIsPulling(false);
-          return;
-        }
-
-        const dist = pullDistance;
-        pulling.current = false;
+      if (scrollTop <= 1) {
+        startY.current = e.touches[0].clientY;
+        canPull.current = true;
+      } else {
         canPull.current = false;
-        setIsPulling(false);
+      }
+    };
 
-        if (dist >= PULL_THRESHOLD && !isRefreshing) {
-          setIsRefreshing(true);
-          setPullDistance(PULL_THRESHOLD);
+    const onTouchMove = (e: TouchEvent) => {
+      if (!canPull.current || isRefreshing) return;
 
-          try {
-            await onRefresh();
-          } finally {
-            setIsRefreshing(false);
-            setPullDistance(0);
-          }
-        } else {
+      const scrollTop = getScrollTop();
+      const currentY = e.touches[0].clientY;
+      const diff = currentY - startY.current;
+
+      if (diff > 0 && scrollTop <= 1) {
+        pulling.current = true;
+        setIsPulling(true);
+        const distance = Math.min(diff * 0.4, MAX_PULL);
+        setPullDistance(distance);
+
+        if (distance > 5) {
+          e.preventDefault();
+        }
+      } else {
+        if (pulling.current) {
+          pulling.current = false;
+          setIsPulling(false);
           setPullDistance(0);
         }
-      };
+        canPull.current = false;
+      }
+    };
 
-      target.addEventListener('touchstart', onTouchStart as any, { passive: true });
-      target.addEventListener('touchmove', onTouchMove as any, { passive: false });
-      target.addEventListener('touchend', onTouchEnd as any, { passive: true });
-      target.addEventListener('touchcancel', onTouchEnd as any, { passive: true });
+    const onTouchEnd = async () => {
+      if (!pulling.current) {
+        canPull.current = false;
+        setIsPulling(false);
+        return;
+      }
 
-      return () => {
-        target.removeEventListener('touchstart', onTouchStart as any);
-        target.removeEventListener('touchmove', onTouchMove as any);
-        target.removeEventListener('touchend', onTouchEnd as any);
-        target.removeEventListener('touchcancel', onTouchEnd as any);
-      };
-    }
+      const dist = pullDistance;
+      pulling.current = false;
+      canPull.current = false;
+      setIsPulling(false);
+
+      if (dist >= PULL_THRESHOLD && !isRefreshing) {
+        setIsRefreshing(true);
+        setPullDistance(PULL_THRESHOLD);
+
+        try {
+          await onRefresh();
+        } finally {
+          setIsRefreshing(false);
+          setPullDistance(0);
+        }
+      } else {
+        setPullDistance(0);
+      }
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
   }, [isRefreshing, onRefresh, pullDistance, getScrollTop]);
 
   const pullProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);
-
   const showIndicator = (isPulling || isRefreshing) && pullDistance > 10;
 
   return (

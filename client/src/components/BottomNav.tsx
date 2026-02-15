@@ -58,7 +58,7 @@ export function BottomNav() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-[9998] bg-background pb-1" data-testid="bottom-nav">
+      <div className="shrink-0 relative bg-background pb-1" data-testid="bottom-nav">
         <div className="absolute left-1/2 -translate-x-1/2 -top-3 z-10">
           <button 
             onClick={handlePostClick}

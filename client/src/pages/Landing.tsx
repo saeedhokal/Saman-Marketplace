@@ -79,12 +79,12 @@ export default function Landing() {
       {/* Full-page Dubai Skyline Background - only in dark mode */}
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none transition-opacity duration-500 dark:opacity-100 opacity-0"
-        style={{ backgroundImage: `url(${dubaiSkylineBg})` }}
+        style={{ backgroundImage: `url(${dubaiSkylineBg})`, pointerEvents: 'none' }}
       />
       {/* Light mode background */}
-      <div className="fixed inset-0 bg-gray-50 dark:opacity-0 opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="fixed inset-0 bg-gray-50 dark:opacity-0 opacity-100 transition-opacity duration-500 pointer-events-none" style={{ pointerEvents: 'none' }} />
       {/* Dark overlay for readability - only in dark mode */}
-      <div className="fixed inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 pointer-events-none dark:opacity-100 opacity-0 transition-opacity duration-500" />
+      <div className="fixed inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 pointer-events-none dark:opacity-100 opacity-0 transition-opacity duration-500" style={{ pointerEvents: 'none' }} />
       
       <PullToRefresh onRefresh={handleRefresh} className="relative z-10">
         <div className="container mx-auto px-4" style={{ paddingTop: 'max(env(safe-area-inset-top, 8px), 8px)' }}>
