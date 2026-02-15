@@ -64,7 +64,7 @@ function Router() {
   return (
     <div className="bg-background h-full">
       <ScrollToTop />
-      <div id="main-scroll-container" className="h-full overflow-y-auto overflow-x-hidden overscroll-none pb-[60px]" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+      <div id="main-scroll-container" className="overflow-y-auto overflow-x-hidden overscroll-none" style={{ height: 'calc(100% - 60px)', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/categories" component={Categories} />
