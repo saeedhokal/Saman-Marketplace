@@ -19,6 +19,7 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
   const startY = useRef(0);
   const pulling = useRef(false);
   const canPull = useRef(false);
+  const targetRef = useRef<HTMLElement | null>(null);
 
   const PULL_THRESHOLD = 55;
   const MAX_PULL = 80;
@@ -28,95 +29,105 @@ export function PullToRefresh({ onRefresh, children, className = "" }: PullToRef
     if (container) {
       return container.scrollTop;
     }
-    return Math.max(
-      window.scrollY || 0,
-      window.pageYOffset || 0,
-      document.documentElement?.scrollTop || 0,
-      document.body?.scrollTop || 0
-    );
+    return 0;
   }, []);
 
   useEffect(() => {
-    const onTouchStart = (e: TouchEvent) => {
-      if (isRefreshing) return;
-      
-      const scrollTop = getScrollTop();
-      
-      if (scrollTop <= 1) {
-        startY.current = e.touches[0].clientY;
-        canPull.current = true;
-      } else {
-        canPull.current = false;
-      }
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (!canPull.current || isRefreshing) return;
-      
-      const scrollTop = getScrollTop();
-      const currentY = e.touches[0].clientY;
-      const diff = currentY - startY.current;
-      
-      if (diff > 0 && scrollTop <= 1) {
-        pulling.current = true;
-        setIsPulling(true);
-        const distance = Math.min(diff * 0.4, MAX_PULL);
-        setPullDistance(distance);
-        
-        if (distance > 5) {
-          e.preventDefault();
+    const scrollContainer = getScrollContainer();
+    if (!scrollContainer) {
+      const retryTimer = setTimeout(() => {
+        const container = getScrollContainer();
+        if (container) {
+          targetRef.current = container;
+          attachListeners(container);
         }
-      } else {
-        if (pulling.current) {
-          pulling.current = false;
+      }, 500);
+      return () => clearTimeout(retryTimer);
+    }
+
+    targetRef.current = scrollContainer;
+    const cleanup = attachListeners(scrollContainer);
+    return cleanup;
+
+    function attachListeners(target: HTMLElement) {
+      const onTouchStart = (e: TouchEvent) => {
+        if (isRefreshing) return;
+
+        const scrollTop = getScrollTop();
+
+        if (scrollTop <= 1) {
+          startY.current = e.touches[0].clientY;
+          canPull.current = true;
+        } else {
+          canPull.current = false;
+        }
+      };
+
+      const onTouchMove = (e: TouchEvent) => {
+        if (!canPull.current || isRefreshing) return;
+
+        const scrollTop = getScrollTop();
+        const currentY = e.touches[0].clientY;
+        const diff = currentY - startY.current;
+
+        if (diff > 0 && scrollTop <= 1) {
+          pulling.current = true;
+          setIsPulling(true);
+          const distance = Math.min(diff * 0.4, MAX_PULL);
+          setPullDistance(distance);
+
+          if (distance > 5) {
+            e.preventDefault();
+          }
+        } else {
+          if (pulling.current) {
+            pulling.current = false;
+            setIsPulling(false);
+            setPullDistance(0);
+          }
+          canPull.current = false;
+        }
+      };
+
+      const onTouchEnd = async () => {
+        if (!pulling.current) {
+          canPull.current = false;
           setIsPulling(false);
-          setPullDistance(0);
+          return;
         }
-        canPull.current = false;
-      }
-    };
 
-    const onTouchEnd = async () => {
-      if (!pulling.current) {
+        const dist = pullDistance;
+        pulling.current = false;
         canPull.current = false;
         setIsPulling(false);
-        return;
-      }
-      
-      const distance = pullDistance;
-      pulling.current = false;
-      canPull.current = false;
-      setIsPulling(false);
-      
-      if (distance >= PULL_THRESHOLD && !isRefreshing) {
-        setIsRefreshing(true);
-        setPullDistance(PULL_THRESHOLD);
-        
-        try {
-          await onRefresh();
-        } finally {
-          setIsRefreshing(false);
+
+        if (dist >= PULL_THRESHOLD && !isRefreshing) {
+          setIsRefreshing(true);
+          setPullDistance(PULL_THRESHOLD);
+
+          try {
+            await onRefresh();
+          } finally {
+            setIsRefreshing(false);
+            setPullDistance(0);
+          }
+        } else {
           setPullDistance(0);
         }
-      } else {
-        setPullDistance(0);
-      }
-    };
+      };
 
-    const scrollContainer = getScrollContainer();
-    const target = scrollContainer || document;
-    
-    target.addEventListener('touchstart', onTouchStart as any, { passive: true });
-    target.addEventListener('touchmove', onTouchMove as any, { passive: false });
-    target.addEventListener('touchend', onTouchEnd as any, { passive: true });
-    target.addEventListener('touchcancel', onTouchEnd as any, { passive: true });
+      target.addEventListener('touchstart', onTouchStart as any, { passive: true });
+      target.addEventListener('touchmove', onTouchMove as any, { passive: false });
+      target.addEventListener('touchend', onTouchEnd as any, { passive: true });
+      target.addEventListener('touchcancel', onTouchEnd as any, { passive: true });
 
-    return () => {
-      target.removeEventListener('touchstart', onTouchStart as any);
-      target.removeEventListener('touchmove', onTouchMove as any);
-      target.removeEventListener('touchend', onTouchEnd as any);
-      target.removeEventListener('touchcancel', onTouchEnd as any);
-    };
+      return () => {
+        target.removeEventListener('touchstart', onTouchStart as any);
+        target.removeEventListener('touchmove', onTouchMove as any);
+        target.removeEventListener('touchend', onTouchEnd as any);
+        target.removeEventListener('touchcancel', onTouchEnd as any);
+      };
+    }
   }, [isRefreshing, onRefresh, pullDistance, getScrollTop]);
 
   const pullProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);
