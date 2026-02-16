@@ -350,9 +350,12 @@ export function setupSimpleAuth(app: Express) {
         .from(users)
         .where(eq(users.phone, normalizedPhone));
 
-      if (!user || !user.email) {
-        // Generic response to prevent user enumeration
+      if (!user) {
         return res.json({ message: "If an account with a recovery email exists for this number, a temporary password has been sent." });
+      }
+
+      if (!user.email) {
+        return res.status(400).json({ message: "No recovery email is set on this account. Please contact SamanHelp@outlook.com for assistance." });
       }
 
       const tempPassword = crypto.randomBytes(4).toString('hex');
@@ -384,12 +387,12 @@ export function setupSimpleAuth(app: Express) {
             </div>
             <h2>Password Reset</h2>
             <p>Hello ${user.firstName || ''},</p>
-            <p>Your temporary password is:</p>
+            <p>You requested a password reset. Here is your <strong>temporary password</strong>:</p>
             <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
               <span style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #f97316;">${tempPassword}</span>
             </div>
-            <p>Please log in with this temporary password and change it from your profile settings.</p>
-            <p style="color: #888; font-size: 12px;">If you did not request this, please ignore this email or contact support.</p>
+            <p><strong>This is a temporary password.</strong> Please log in with it and then go to your <strong>Profile Settings</strong> to set a new permanent password.</p>
+            <p style="color: #888; font-size: 12px; margin-top: 20px;">If you did not request this, please contact us at SamanHelp@outlook.com.</p>
           </div>
         `,
       });
