@@ -64,7 +64,7 @@ function Router() {
   return (
     <>
       <ScrollToTop />
-      <div id="main-scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+      <div id="main-scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch', paddingTop: 'env(safe-area-inset-top)' } as React.CSSProperties}>
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/categories" component={Categories} />
@@ -159,7 +159,7 @@ function AppContent() {
   return (
     <PushNotificationProvider>
       <DeepLinkHandler />
-      <div className="flex flex-col bg-background" style={{ height: 'var(--app-height)', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="flex flex-col bg-background" style={{ height: 'var(--app-height)' }}>
         <Router />
         <BottomNavWrapper />
       </div>
