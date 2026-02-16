@@ -64,7 +64,8 @@ function Router() {
   return (
     <>
       <ScrollToTop />
-      <div id="main-scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch', paddingTop: 'env(safe-area-inset-top)' } as React.CSSProperties}>
+      <div className="shrink-0 bg-background" style={{ height: 'env(safe-area-inset-top)' }} />
+      <div id="main-scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/categories" component={Categories} />
