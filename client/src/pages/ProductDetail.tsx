@@ -94,8 +94,18 @@ export default function ProductDetail() {
     }
   };
 
+  const formatPhoneForCall = (num: string) => {
+    const digits = num.replace(/[^0-9]/g, '');
+    if (digits.startsWith('971')) return `+${digits}`;
+    if (digits.startsWith('0')) return `+971${digits.slice(1)}`;
+    return `+971${digits}`;
+  };
+
   const formatWhatsAppNumber = (num: string) => {
-    return num.replace(/[^0-9]/g, '');
+    const digits = num.replace(/[^0-9]/g, '');
+    if (digits.startsWith('971')) return digits;
+    if (digits.startsWith('0')) return `971${digits.slice(1)}`;
+    return `971${digits}`;
   };
 
   const allImages = useMemo(() => {
@@ -289,7 +299,7 @@ export default function ProductDetail() {
 
             <div className="flex items-center gap-3 mb-6">
               <a 
-                href={`tel:+${formatWhatsAppNumber(product.phoneNumber || sellerInfo?.phone || '')}`}
+                href={`tel:${formatPhoneForCall(product.phoneNumber || sellerInfo?.phone || '')}`}
                 className="flex-1"
               >
                 <Button 
