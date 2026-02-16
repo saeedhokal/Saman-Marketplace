@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Phone, Lock, User } from "lucide-react";
+import { Loader2, Phone, Lock, User, Mail, ArrowLeft } from "lucide-react";
 import samanLogo from "@/assets/saman-logo.jpg";
 
 interface LoginFormValues {
@@ -16,6 +16,7 @@ interface LoginFormValues {
   password: string;
   firstName: string;
   lastName: string;
+  email: string;
 }
 
 export default function Auth() {
@@ -24,6 +25,8 @@ export default function Auth() {
   const { toast } = useToast();
   const { t, isRTL } = useLanguage();
   const [isNewUser, setIsNewUser] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const form = useForm<LoginFormValues>({
     defaultValues: {
@@ -31,6 +34,7 @@ export default function Auth() {
       password: "",
       firstName: "",
       lastName: "",
+      email: "",
     },
   });
 
@@ -47,7 +51,8 @@ export default function Auth() {
           phone: data.phone, 
           password: data.password,
           firstName: data.firstName,
-          lastName: data.lastName
+          lastName: data.lastName,
+          email: data.email || undefined,
         });
         toast({
           title: "Welcome to Saman Marketplace!",
@@ -78,7 +83,129 @@ export default function Auth() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    const phone = form.getValues("phone");
+    if (!phone) {
+      toast({
+        variant: "destructive",
+        title: isRTL ? "مطلوب" : "Required",
+        description: isRTL ? "يرجى إدخال رقم هاتفك أولاً" : "Please enter your phone number first",
+      });
+      return;
+    }
+
+    setIsSendingReset(true);
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      toast({
+        title: isRTL ? "تم الإرسال" : "Email Sent",
+        description: data.message,
+      });
+      setShowForgotPassword(false);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: isRTL ? "خطأ" : "Error",
+        description: error.message,
+      });
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
+
   const isLoading = isLoggingIn || isRegistering;
+
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3d3d3d 100%)' }}>
+        <Card className="w-full max-w-md border-2" style={{ borderColor: '#f97316' }}>
+          <CardHeader className="text-center pb-2">
+            <img 
+              src={samanLogo} 
+              alt="Saman Marketplace" 
+              className="mx-auto mb-4 w-24 h-24 rounded-2xl object-cover shadow-lg"
+            />
+            <CardTitle className="text-2xl font-bold" style={{ color: '#f97316' }}>
+              {isRTL ? 'استعادة كلمة المرور' : 'Reset Password'}
+            </CardTitle>
+            <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>
+              {isRTL ? 'أدخل رقم هاتفك وسنرسل كلمة مرور مؤقتة إلى بريدك الإلكتروني' : 'Enter your phone number and we\'ll send a temporary password to your recovery email'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Form {...form}>
+              <FormField
+                control={form.control}
+                name="phone"
+                rules={{ 
+                  required: "Phone number is required",
+                  minLength: { value: 9, message: "Please enter a valid phone number" }
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('phoneNumber')}</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Phone className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Input
+                          type="tel"
+                          placeholder="+971 50 123 4567"
+                          className={isRTL ? 'pr-10' : 'pl-10'}
+                          data-testid="input-forgot-phone"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </Form>
+
+            <Button
+              className="w-full text-white font-semibold"
+              style={{ backgroundColor: '#f97316' }}
+              disabled={isSendingReset}
+              onClick={handleForgotPassword}
+              data-testid="button-send-reset"
+            >
+              {isSendingReset ? (
+                <>
+                  <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {isRTL ? 'جارٍ الإرسال...' : 'Sending...'}
+                </>
+              ) : (
+                isRTL ? 'إرسال كلمة المرور المؤقتة' : 'Send Temporary Password'
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              style={{ borderColor: '#f97316', color: '#f97316' }}
+              onClick={() => setShowForgotPassword(false)}
+              data-testid="button-back-to-login"
+            >
+              <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {isRTL ? 'العودة لتسجيل الدخول' : 'Back to Login'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3d3d3d 100%)' }}>
@@ -131,7 +258,20 @@ export default function Auth() {
                 }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('password')}</FormLabel>
+                    <div className="flex items-center justify-between flex-wrap gap-1">
+                      <FormLabel>{t('password')}</FormLabel>
+                      {!isNewUser && (
+                        <button
+                          type="button"
+                          className="text-xs font-medium hover:underline"
+                          style={{ color: '#f97316' }}
+                          onClick={() => setShowForgotPassword(true)}
+                          data-testid="button-forgot-password"
+                        >
+                          {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot Password?'}
+                        </button>
+                      )}
+                    </div>
                     <FormControl>
                       <div className="relative">
                         <Lock className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
@@ -159,13 +299,13 @@ export default function Auth() {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name</FormLabel>
+                        <FormLabel>{isRTL ? 'الاسم الأول' : 'First Name'}</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                             <Input
                               type="text"
-                              placeholder="Enter your first name"
+                              placeholder={isRTL ? 'أدخل اسمك الأول' : 'Enter your first name'}
                               className={isRTL ? 'pr-10' : 'pl-10'}
                               data-testid="input-firstname"
                               {...field}
@@ -185,15 +325,49 @@ export default function Auth() {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name</FormLabel>
+                        <FormLabel>{isRTL ? 'اسم العائلة' : 'Last Name'}</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                             <Input
                               type="text"
-                              placeholder="Enter your last name"
+                              placeholder={isRTL ? 'أدخل اسم العائلة' : 'Enter your last name'}
                               className={isRTL ? 'pr-10' : 'pl-10'}
                               data-testid="input-lastname"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    rules={{
+                      pattern: {
+                        value: /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        message: "Please enter a valid email address",
+                      }
+                    }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {isRTL ? 'البريد الإلكتروني' : 'Email'}
+                          <span className="text-muted-foreground text-xs font-normal ml-1">
+                            ({isRTL ? 'اختياري - لاستعادة كلمة المرور' : 'Optional - for password recovery'})
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Mail className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+                            <Input
+                              type="email"
+                              placeholder={isRTL ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
+                              className={isRTL ? 'pr-10' : 'pl-10'}
+                              data-testid="input-email"
                               {...field}
                             />
                           </div>

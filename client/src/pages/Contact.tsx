@@ -34,8 +34,8 @@ export default function Contact() {
             <Mail className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div>
               <span className="font-medium">Email:</span>{" "}
-              <a href="mailto:Saeed.hokal@hotmail.com" className="text-accent hover:underline">
-                Saeed.hokal@hotmail.com
+              <a href="mailto:SamanHelp@outlook.com" className="text-accent hover:underline">
+                SamanHelp@outlook.com
               </a>
             </div>
           </div>

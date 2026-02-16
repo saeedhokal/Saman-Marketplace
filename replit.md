@@ -103,7 +103,16 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 ---
 
-## Recent Changes (Feb 15, 2026)
+## Recent Changes (Feb 16, 2026)
+
+### Forgot Password & Recovery Email (Feb 16, 2026)
+- **Contact Us email:** Updated to SamanHelp@outlook.com (was Saeed.hokal@hotmail.com)
+- **Forgot Password:** Added "Forgot Password?" link on login screen. Sends temporary password to user's recovery email via Outlook SMTP.
+- **Recovery email on registration:** Optional email field added to sign-up form, labeled "for password recovery"
+- **Backend:** New `/api/auth/forgot-password` endpoint generates temp password, hashes it, emails it via nodemailer
+- **Email service:** Uses SamanHelp@outlook.com via Outlook SMTP (requires SAMAN_EMAIL_PASSWORD secret)
+
+## Previous Changes (Feb 15, 2026)
 
 ### iOS Cold-Start Fix (Feb 15, 2026)
 - **BottomNav isolation:** Moved BottomNav completely outside Router component into AppContent as a separate sibling in the flex container. Router now renders as a Fragment containing only ScrollToTop + main-scroll-container.

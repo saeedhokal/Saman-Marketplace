@@ -5,6 +5,8 @@ import { db } from "./db";
 import { users, otpCodes } from "@shared/models/auth";
 import { eq, and, gt, desc, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 
 declare module "express-session" {
   interface SessionData {
@@ -316,10 +318,94 @@ export function setupSimpleAuth(app: Express) {
     }
   });
 
+  // Forgot password - rate limiting (max 3 requests per phone per hour)
+  const forgotPasswordAttempts = new Map<string, { count: number; resetTime: number }>();
+  const FORGOT_PW_MAX_ATTEMPTS = 3;
+  const FORGOT_PW_WINDOW = 60 * 60 * 1000; // 1 hour
+
+  app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
+    try {
+      const { phone } = req.body;
+
+      if (!phone) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      const normalizedPhone = normalizePhone(phone);
+
+      // Rate limiting per phone number
+      const now = Date.now();
+      const attempts = forgotPasswordAttempts.get(normalizedPhone);
+      if (attempts && now < attempts.resetTime) {
+        if (attempts.count >= FORGOT_PW_MAX_ATTEMPTS) {
+          return res.status(429).json({ message: "Too many reset attempts. Please try again later." });
+        }
+        attempts.count++;
+      } else {
+        forgotPasswordAttempts.set(normalizedPhone, { count: 1, resetTime: now + FORGOT_PW_WINDOW });
+      }
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.phone, normalizedPhone));
+
+      if (!user || !user.email) {
+        // Generic response to prevent user enumeration
+        return res.json({ message: "If an account with a recovery email exists for this number, a temporary password has been sent." });
+      }
+
+      const tempPassword = crypto.randomBytes(4).toString('hex');
+      const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+      await db
+        .update(users)
+        .set({ password: hashedPassword, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+
+      const transporter = nodemailer.createTransport({
+        host: "smtp-mail.outlook.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "SamanHelp@outlook.com",
+          pass: process.env.SAMAN_EMAIL_PASSWORD,
+        },
+      });
+
+      await transporter.sendMail({
+        from: '"Saman Marketplace" <SamanHelp@outlook.com>',
+        to: user.email,
+        subject: "Saman Marketplace - Password Reset",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h1 style="color: #f97316; margin: 0;">Saman Marketplace</h1>
+            </div>
+            <h2>Password Reset</h2>
+            <p>Hello ${user.firstName || ''},</p>
+            <p>Your temporary password is:</p>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
+              <span style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #f97316;">${tempPassword}</span>
+            </div>
+            <p>Please log in with this temporary password and change it from your profile settings.</p>
+            <p style="color: #888; font-size: 12px;">If you did not request this, please ignore this email or contact support.</p>
+          </div>
+        `,
+      });
+
+      const maskedEmail = user.email.replace(/(.{2})(.*)(@.*)/, "$1***$3");
+      res.json({ message: `A temporary password has been sent to ${maskedEmail}` });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Failed to send reset email. Please try again later." });
+    }
+  });
+
   // Register with phone + password
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const { phone, password, firstName, lastName } = req.body;
+      const { phone, password, firstName, lastName, email } = req.body;
 
       if (!phone || !password || !firstName || !lastName) {
         return res.status(400).json({ message: "Phone, password, first name, and last name are required" });
@@ -351,6 +437,7 @@ export function setupSimpleAuth(app: Express) {
           password: hashedPassword,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
+          email: email?.trim() || null,
           credits: 0,
           isAdmin: false,
           profileImageUrl: defaultProfileImage,

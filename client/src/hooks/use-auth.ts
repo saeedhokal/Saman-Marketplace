@@ -78,6 +78,7 @@ interface RegisterParams {
   password: string;
   firstName: string;
   lastName: string;
+  email?: string;
 }
 
 async function loginFn(params: LoginParams): Promise<User> {
