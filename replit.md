@@ -141,8 +141,9 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 ---
 
 ## Known Technical Notes
-- **iOS cold-start bottom nav:** FIXED (Feb 15, 2026) - Root causes: (1) PullToRefresh was falling back to attaching touch listeners to `document` when scroll container wasn't ready, blocking all touch events - now only attaches to its own containerRef. (2) BottomNav was inside Router component, affected by page rendering. Fix: BottomNav moved completely outside Router as a sibling in AppContent's flex container (100dvh). Layout structure: AppContent → flex container (100dvh) → Router (flex-1, scroll area as Fragment) + BottomNavWrapper (shrink-0, separate sibling). Landing page overlays have inline `pointerEvents: 'none'` as bulletproof guarantee against CSS loading delays.
-- **Bottom nav spacing:** Removed extra `pb-1` padding from BottomNav container; safe-area-inset-bottom handled via CSS in index.css (Feb 15, 2026)
+- **iOS cold-start viewport fix (Feb 16, 2026):** Dynamic `--vh` CSS variable calculated via inline JS in index.html BEFORE app renders. `--app-height: calc(var(--vh, 1vh) * 100)` used for html/body height instead of 100vh/100dvh/100%. AppContent container uses `height: var(--app-height)` with `paddingTop: env(safe-area-inset-top)` and `paddingBottom: env(safe-area-inset-bottom)` applied at App level. BottomNav has NO safe-area padding (App level handles it). Landing page uses `minHeight: var(--app-height)` instead of `min-h-screen`. JS also listens for resize/orientationchange to update --vh dynamically.
+- **iOS cold-start bottom nav (Feb 15, 2026):** PullToRefresh only attaches touch listeners to its own containerRef. BottomNav moved completely outside Router as a sibling in AppContent's flex container. Landing page overlays have inline `pointerEvents: 'none'`.
+- **Bottom nav spacing:** Removed all padding from BottomNav container; safe-area-inset-bottom handled at App container level (Feb 16, 2026)
 - **Landing page banner:** Uses RTL-aware justify-start (not justify-end) for proper text positioning in both languages
 - **Fullscreen gallery:** Uses createPortal to render at document.body level for true fullscreen over all UI elements
 - **Scheduler FK constraint:** deleteExpiredProducts can fail if user_views references the product - needs CASCADE or pre-delete cleanup
