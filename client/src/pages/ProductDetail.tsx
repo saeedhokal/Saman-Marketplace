@@ -102,10 +102,7 @@ export default function ProductDetail() {
   };
 
   const formatWhatsAppNumber = (num: string) => {
-    const digits = num.replace(/[^0-9]/g, '');
-    if (digits.startsWith('971')) return digits;
-    if (digits.startsWith('0')) return `971${digits.slice(1)}`;
-    return `971${digits}`;
+    return num.replace(/[^0-9]/g, '');
   };
 
   const allImages = useMemo(() => {
