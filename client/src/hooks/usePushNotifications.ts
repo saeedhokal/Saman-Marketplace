@@ -3,7 +3,6 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
-import { showInAppNotification } from '@/components/InAppNotificationBanner';
 
 const TOKEN_KEY = 'saman_push_token';
 const PENDING_TOKEN_KEY = 'saman_pending_push_token';
@@ -128,21 +127,18 @@ export function usePushNotifications() {
           }, 500);
         } else {
           console.error('[Push] Token is empty!');
-          showInAppNotification('Push Error', 'Could not get notification token');
+          console.error('[Push] Could not get notification token');
         }
       });
 
       await PushNotifications.addListener('registrationError', (error: any) => {
         console.error('[Push] Registration error:', JSON.stringify(error));
-        showInAppNotification('Push Error', 'Registration failed');
+        console.error('[Push] Registration failed');
       });
 
       await PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
         console.log('[Push] Notification received:', notification.title);
-        showInAppNotification(
-          notification.title || 'Saman Marketplace',
-          notification.body || ''
-        );
+        console.log('[Push] Foreground notification:', notification.title, notification.body);
       });
 
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
@@ -169,7 +165,7 @@ export function usePushNotifications() {
 
       if (permStatus.receive !== 'granted') {
         console.log('[Push] Permission not granted');
-        showInAppNotification('Notifications Blocked', 'Enable in Settings');
+        console.warn('[Push] Notifications blocked - enable in Settings');
         return;
       }
 

@@ -7,7 +7,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageProvider, useLanguage } from "@/hooks/use-language";
 import { PushNotificationProvider } from "@/components/PushNotificationProvider";
-import { InAppNotificationBanner } from "@/components/InAppNotificationBanner";
 import { App as CapApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 
@@ -173,7 +172,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <LanguageProvider>
-          <InAppNotificationBanner />
           <Toaster />
           <AppContent />
         </LanguageProvider>
