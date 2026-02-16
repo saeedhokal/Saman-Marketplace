@@ -176,7 +176,7 @@ export default function Categories() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background">
-      <div className="sticky top-0 z-40 bg-background border-b border-border">
+      <div className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="relative flex items-center justify-center h-14">
             <Link href="/" className={`absolute ${isRTL ? 'right-0' : 'left-0'}`}>
