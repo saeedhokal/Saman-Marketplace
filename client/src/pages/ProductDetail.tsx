@@ -15,6 +15,7 @@ import { Card } from "@/components/ui/card";
 import { ImageGallery } from "@/components/ImageGallery";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -25,6 +26,7 @@ export default function ProductDetail() {
   const addFavorite = useAddFavorite();
   const removeFavorite = useRemoveFavorite();
   const { toast } = useToast();
+  const { isRTL } = useLanguage();
   
   // Translation state
   const [showTranslation, setShowTranslation] = useState(false);
@@ -201,8 +203,8 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
-        <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-accent text-base" data-testid="button-back" onClick={() => window.history.back()}>
-          <ArrowLeft className="mr-2 h-5 w-5" strokeWidth={2.5} /> Back
+        <Button variant="ghost" className={`${isRTL ? 'pr-0' : 'pl-0'} hover:bg-transparent hover:text-accent text-base`} data-testid="button-back" onClick={() => window.history.back()}>
+          <ArrowLeft className={`h-5 w-5 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} strokeWidth={2.5} /> {isRTL ? 'رجوع' : 'Back'}
         </Button>
       </div>
 
@@ -226,7 +228,7 @@ export default function ProductDetail() {
             <Button
               size="icon"
               variant="secondary"
-              className={`absolute top-4 right-4 h-10 w-10 rounded-full shadow-lg z-10 ${isFavorite ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-white/90 hover:bg-white'}`}
+              className={`absolute top-4 right-4 h-10 w-10 rounded-full shadow-lg z-10 border ${isFavorite ? 'bg-red-50 text-red-500 border-red-200' : 'bg-white text-gray-700 border-gray-200'}`}
               onClick={handleToggleFavorite}
               data-testid="button-favorite"
             >
@@ -261,7 +263,7 @@ export default function ProductDetail() {
 
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Description</span>
+                <span className="text-sm font-medium text-muted-foreground">{isRTL ? 'الوصف' : 'Description'}</span>
                 <Button
                   size="sm"
                   variant="secondary"
@@ -354,10 +356,10 @@ export default function ProductDetail() {
         {sellerProducts && sellerProducts.filter(p => p.id !== id).length > 0 && (
           <div className="mt-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl font-bold text-foreground">More from this seller</h2>
+              <h2 className="font-display text-xl font-bold text-foreground">{isRTL ? 'المزيد من هذا البائع' : 'More from this seller'}</h2>
               <Link href={`/seller/${product?.sellerId}`}>
                 <Button variant="ghost" size="sm" data-testid="button-view-all-seller">
-                  View All <ChevronRight className="h-4 w-4 ml-1" />
+                  {isRTL ? 'عرض الكل' : 'View All'} <ChevronRight className={`h-4 w-4 ${isRTL ? 'mr-1 rotate-180' : 'ml-1'}`} />
                 </Button>
               </Link>
             </div>
