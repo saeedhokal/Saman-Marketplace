@@ -103,7 +103,18 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 
 ---
 
-## Recent Changes (Feb 16, 2026)
+## Recent Changes (Feb 18, 2026)
+
+### Firebase Phone OTP for Registration (Feb 18, 2026)
+- **OTP verification:** New users must verify their phone number via SMS OTP before account creation. Prevents bots and fake accounts.
+- **Flow:** Sign up form → "Send Verification Code" → 6-digit OTP entry → Verify & Create Account
+- **Firebase SDK:** Client uses `firebase/auth` for reCAPTCHA + `signInWithPhoneNumber`. Backend uses `firebase-admin` to verify the idToken.
+- **Server-side enforcement:** `/api/auth/register` requires `firebaseIdToken` instead of plain phone number. Phone is extracted from the verified Firebase token — cannot be spoofed.
+- **Files changed:** `client/src/lib/firebase.ts` (new), `client/src/pages/Auth.tsx`, `client/src/hooks/use-auth.ts`, `server/simpleAuth.ts`
+- **Requirement:** Phone Authentication must be enabled in Firebase Console (Authentication → Sign-in method → Phone)
+- **Login unaffected:** Existing users log in with phone + password as before. OTP only applies to new registrations.
+
+## Previous Changes (Feb 16, 2026)
 
 ### Forgot Password & Recovery Email (Feb 16, 2026)
 - **Contact Us email:** Updated to SamanHelp@outlook.com (was Saeed.hokal@hotmail.com)

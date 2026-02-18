@@ -74,7 +74,7 @@ interface LoginParams {
 }
 
 interface RegisterParams {
-  phone: string;
+  firebaseIdToken: string;
   password: string;
   firstName: string;
   lastName: string;

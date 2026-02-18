@@ -7,6 +7,7 @@ import { eq, and, gt, desc, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import admin from "firebase-admin";
 
 declare module "express-session" {
   interface SessionData {
@@ -405,16 +406,32 @@ export function setupSimpleAuth(app: Express) {
     }
   });
 
-  // Register with phone + password
+  // Register with phone + password (requires Firebase phone verification token)
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const { phone, password, firstName, lastName, email } = req.body;
+      const { firebaseIdToken, password, firstName, lastName, email } = req.body;
 
-      if (!phone || !password || !firstName || !lastName) {
-        return res.status(400).json({ message: "Phone, password, first name, and last name are required" });
+      if (!firebaseIdToken || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "Phone verification, password, first name, and last name are required" });
       }
 
-      const normalizedPhone = normalizePhone(phone);
+      if (!admin.apps.length) {
+        console.error("Firebase Admin SDK not initialized - cannot verify phone token");
+        return res.status(500).json({ message: "Phone verification service unavailable. Please try again later." });
+      }
+
+      let normalizedPhone: string;
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
+        const phoneNumber = decodedToken.phone_number;
+        if (!phoneNumber) {
+          return res.status(400).json({ message: "No phone number found in verification token" });
+        }
+        normalizedPhone = normalizePhone(phoneNumber);
+      } catch (tokenError: any) {
+        console.error("Firebase token verification error:", tokenError);
+        return res.status(401).json({ message: "Phone verification failed. Please try again." });
+      }
 
       // Check if user already exists
       const [existingUser] = await db
