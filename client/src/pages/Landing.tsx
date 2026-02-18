@@ -148,8 +148,9 @@ export default function Landing() {
               <div className="hidden dark:block absolute inset-0 border border-white/20 rounded-2xl" style={{ maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)` }} />
               <div className="hidden dark:block absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.02) 55%, transparent 100%)`, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)` }} />
               <div className="hidden dark:block absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 30%, transparent 75%)` }} />
-              {/* Light mode background */}
-              <div className="dark:hidden absolute inset-0 bg-gradient-to-r from-orange-50 to-orange-100/50 rounded-2xl border border-orange-200/60" />
+              {/* Light mode glass effect */}
+              <div className="dark:hidden absolute inset-0 rounded-2xl border border-gray-200/60" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(249,115,22,0.08) 0%, rgba(249,115,22,0.04) 30%, rgba(255,255,255,0.02) 55%, transparent 100%)`, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
+              <div className="dark:hidden absolute inset-0 rounded-2xl" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(249,115,22,0.06) 0%, rgba(249,115,22,0.02) 30%, transparent 75%)` }} />
               {/* Content */}
               <div className="relative h-40 sm:h-48">
                 <div className="relative z-10 p-6 h-full flex items-center justify-start">
