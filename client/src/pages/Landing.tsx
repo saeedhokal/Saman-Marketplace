@@ -35,13 +35,13 @@ export default function Landing() {
   }, []);
 
   const { data: recentProducts = [], refetch: refetchRecent, isLoading: isLoadingRecent } = useQuery<Product[]>({
-    queryKey: ["/api/products/recent"],
+    queryKey: ["/api/products/recent?limit=12"],
     refetchOnWindowFocus: true,
     staleTime: 30000,
   });
 
   const { data: recommendedProducts = [], refetch: refetchRecommended, isLoading: isLoadingRecommended } = useQuery<Product[]>({
-    queryKey: ["/api/products/recommended"],
+    queryKey: ["/api/products/recommended?limit=12"],
     refetchOnWindowFocus: true,
     staleTime: 30000,
   });
@@ -219,9 +219,13 @@ export default function Landing() {
                   <SkeletonCard />
                   <SkeletonCard />
                   <SkeletonCard />
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
                 </>
               ) : (
-                recommendedProducts.slice(0, 6).map((product) => (
+                recommendedProducts.slice(0, 12).map((product) => (
                   <ProductCard 
                     key={product.id} 
                     product={product}
@@ -250,9 +254,13 @@ export default function Landing() {
                   <SkeletonCard />
                   <SkeletonCard />
                   <SkeletonCard />
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
                 </>
               ) : (
-                recentProducts.slice(0, 6).map((product) => (
+                recentProducts.slice(0, 12).map((product) => (
                   <ProductCard 
                     key={product.id} 
                     product={product}
