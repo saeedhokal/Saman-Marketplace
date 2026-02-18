@@ -393,8 +393,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/products/recent", async (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     const limit = Math.min(Number(req.query.limit) || 10, 20);
-    const mainCategory = req.query.mainCategory as string | undefined;
-    const productsList = await storage.getRecentProducts(limit, mainCategory);
+    const productsList = await storage.getRecentProducts(limit);
     const productsWithSeller = await attachSellerImages(productsList);
     res.json(productsWithSeller);
   });

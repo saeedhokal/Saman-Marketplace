@@ -53,7 +53,7 @@ export interface IStorage {
   
   // User Views & Recommendations
   recordView(view: InsertUserView): Promise<void>;
-  getRecentProducts(limit?: number, mainCategory?: string): Promise<Product[]>;
+  getRecentProducts(limit?: number): Promise<Product[]>;
   getRecommendedProducts(userId?: string, sessionId?: string, limit?: number): Promise<Product[]>;
   
   // Subscription Packages
@@ -470,22 +470,18 @@ export class DatabaseStorage implements IStorage {
     await db.insert(userViews).values(view);
   }
 
-  async getRecentProducts(limit: number = 10, mainCategory?: string): Promise<Product[]> {
-    const conditions = [
-      or(
-        eq(products.status, "approved"),
-        eq(products.status, "sold")
-      ),
-      or(
-        sql`${products.expiresAt} IS NULL`,
-        sql`${products.expiresAt} > NOW()`
-      ),
-    ];
-    if (mainCategory) {
-      conditions.push(eq(products.mainCategory, mainCategory));
-    }
+  async getRecentProducts(limit: number = 10): Promise<Product[]> {
     return await db.select().from(products)
-      .where(and(...conditions))
+      .where(and(
+        or(
+          eq(products.status, "approved"),
+          eq(products.status, "sold")
+        ),
+        or(
+          sql`${products.expiresAt} IS NULL`,
+          sql`${products.expiresAt} > NOW()`
+        )
+      ))
       .orderBy(sql`CASE WHEN ${products.status} = 'sold' THEN 1 ELSE 0 END`, desc(products.createdAt))
       .limit(limit);
   }
