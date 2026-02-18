@@ -34,8 +34,14 @@ export default function Landing() {
     setDarkMode(!isDark);
   }, []);
 
-  const { data: recentProducts = [], refetch: refetchRecent, isLoading: isLoadingRecent } = useQuery<Product[]>({
-    queryKey: ["/api/products/recent?limit=12"],
+  const { data: recentAutomotive = [], refetch: refetchRecentAuto, isLoading: isLoadingRecentAuto } = useQuery<Product[]>({
+    queryKey: ["/api/products/recent?limit=12&mainCategory=automotive"],
+    refetchOnWindowFocus: true,
+    staleTime: 30000,
+  });
+
+  const { data: recentParts = [], refetch: refetchRecentParts, isLoading: isLoadingRecentParts } = useQuery<Product[]>({
+    queryKey: ["/api/products/recent?limit=12&mainCategory=spare-parts"],
     refetchOnWindowFocus: true,
     staleTime: 30000,
   });
@@ -67,12 +73,13 @@ export default function Landing() {
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([
-      refetchRecent(),
+      refetchRecentAuto(),
+      refetchRecentParts(),
       refetchRecommended(),
       queryClient.invalidateQueries({ queryKey: ['/api/products'] }),
       queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] }),
     ]);
-  }, [refetchRecent, refetchRecommended]);
+  }, [refetchRecentAuto, refetchRecentParts, refetchRecommended]);
 
   return (
     <div className="relative" style={{ minHeight: 'var(--app-height)' }}>
@@ -239,17 +246,17 @@ export default function Landing() {
           </div>
         )}
 
-        {/* Recent Posts Section - show skeleton while loading */}
-        {(isLoadingRecent || recentProducts.length > 0) && (
-          <div className="mb-0 -mx-4 px-4 py-4">
+        {/* Recent Automotive Section */}
+        {(isLoadingRecentAuto || recentAutomotive.length > 0) && (
+          <div className="mb-4 -mx-4 px-4 py-4">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('recentPosts')}</h2>
-              <Link href="/categories">
-                <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recent">{t('viewAll')}</span>
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('recentAutomotive')}</h2>
+              <Link href="/categories?tab=automotive">
+                <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recent-auto">{t('viewAll')}</span>
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {isLoadingRecent ? (
+              {isLoadingRecentAuto ? (
                 <>
                   <SkeletonCard />
                   <SkeletonCard />
@@ -261,7 +268,42 @@ export default function Landing() {
                   <div className="hidden md:block"><SkeletonCard /></div>
                 </>
               ) : (
-                recentProducts.slice(0, 12).map((product) => (
+                recentAutomotive.slice(0, 12).map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product}
+                    sellerImageUrl={(product as any).sellerProfileImageUrl}
+                    showDate
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Parts Section */}
+        {(isLoadingRecentParts || recentParts.length > 0) && (
+          <div className="mb-0 -mx-4 px-4 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('recentParts')}</h2>
+              <Link href="/categories?tab=spare-parts">
+                <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recent-parts">{t('viewAll')}</span>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {isLoadingRecentParts ? (
+                <>
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                </>
+              ) : (
+                recentParts.slice(0, 12).map((product) => (
                   <ProductCard 
                     key={product.id} 
                     product={product}
