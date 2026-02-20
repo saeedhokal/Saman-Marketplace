@@ -312,8 +312,13 @@ export function setupSimpleAuth(app: Express) {
         return res.status(401).json({ message: "Please register first" });
       }
 
-      const validPassword = await bcrypt.compare(password, user.password);
+      const trimmedPassword = typeof password === 'string' ? password.trim() : String(password);
+      let validPassword = await bcrypt.compare(trimmedPassword, user.password);
+      if (!validPassword && trimmedPassword !== password) {
+        validPassword = await bcrypt.compare(password, user.password);
+      }
       if (!validPassword) {
+        console.log(`[Login] Invalid password for phone: ${user.phone}, pwd length: ${trimmedPassword.length}`);
         return res.status(401).json({ message: "Invalid password" });
       }
 
