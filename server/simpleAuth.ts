@@ -340,20 +340,14 @@ export function setupSimpleAuth(app: Express) {
 
   function createEmailTransporter() {
     return nodemailer.createTransport({
-      host: "smtp-mail.outlook.com",
-      port: 587,
-      secure: false,
+      service: 'gmail',
       auth: {
-        user: "SamanHelp@outlook.com",
+        user: "Samanapp.help@gmail.com",
         pass: process.env.SAMAN_EMAIL_PASSWORD,
       },
       connectionTimeout: 15000,
       greetingTimeout: 15000,
       socketTimeout: 20000,
-      tls: {
-        ciphers: 'SSLv3',
-        rejectUnauthorized: false,
-      },
     });
   }
 
@@ -412,7 +406,7 @@ export function setupSimpleAuth(app: Express) {
       const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
 
       await sendEmailWithRetry({
-        from: '"Saman Marketplace" <SamanHelp@outlook.com>',
+        from: '"Saman Marketplace" <Samanapp.help@gmail.com>',
         to: user.email,
         subject: "Saman Marketplace - Reset Your Password",
         html: `
