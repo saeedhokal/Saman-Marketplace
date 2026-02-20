@@ -282,11 +282,27 @@ export function setupSimpleAuth(app: Express) {
       }
 
       const normalizedPhone = normalizePhone(phone);
+      const rawCleaned = phone.replace(/[^0-9]/g, "");
+      const withoutLeadingZero = rawCleaned.startsWith("0") ? rawCleaned.slice(1) : null;
 
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.phone, normalizedPhone));
+      const phoneVariants = [normalizedPhone, rawCleaned];
+      if (withoutLeadingZero) phoneVariants.push(withoutLeadingZero);
+
+      let user = null;
+      for (const variant of phoneVariants) {
+        const [found] = await db
+          .select()
+          .from(users)
+          .where(eq(users.phone, variant));
+        if (found) {
+          user = found;
+          if (found.phone !== normalizedPhone) {
+            await db.update(users).set({ phone: normalizedPhone }).where(eq(users.id, found.id));
+            user = { ...found, phone: normalizedPhone };
+          }
+          break;
+        }
+      }
 
       if (!user) {
         return res.status(401).json({ message: "User not found" });
@@ -386,10 +402,25 @@ export function setupSimpleAuth(app: Express) {
         forgotPasswordAttempts.set(normalizedPhone, { count: 1, resetTime: now + FORGOT_PW_WINDOW });
       }
 
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.phone, normalizedPhone));
+      const rawCleaned = phone.replace(/[^0-9]/g, "");
+      const withoutLeadingZero = rawCleaned.startsWith("0") ? rawCleaned.slice(1) : null;
+      const phoneVariants = [normalizedPhone, rawCleaned];
+      if (withoutLeadingZero) phoneVariants.push(withoutLeadingZero);
+
+      let user = null;
+      for (const variant of phoneVariants) {
+        const [found] = await db
+          .select()
+          .from(users)
+          .where(eq(users.phone, variant));
+        if (found) {
+          user = found;
+          if (found.phone !== normalizedPhone) {
+            await db.update(users).set({ phone: normalizedPhone }).where(eq(users.id, found.id));
+          }
+          break;
+        }
+      }
 
       if (!user) {
         return res.json({ message: "If an account with a recovery email exists for this number, a reset link has been sent." });
