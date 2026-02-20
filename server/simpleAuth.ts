@@ -324,6 +324,39 @@ export function setupSimpleAuth(app: Express) {
   const FORGOT_PW_MAX_ATTEMPTS = 3;
   const FORGOT_PW_WINDOW = 60 * 60 * 1000; // 1 hour
 
+  const passwordResetTokens = new Map<string, { userId: string; expires: number }>();
+
+  function generateResetToken(userId: string): string {
+    const token = crypto.randomBytes(32).toString('hex');
+    passwordResetTokens.set(token, { userId, expires: Date.now() + 30 * 60 * 1000 });
+    return token;
+  }
+
+  function getBaseUrl(req: Request): string {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'thesamanapp.com';
+    return `${proto}://${host}`;
+  }
+
+  let emailTransporter: nodemailer.Transporter | null = null;
+  function getEmailTransporter() {
+    if (!emailTransporter) {
+      emailTransporter = nodemailer.createTransport({
+        host: "smtp-mail.outlook.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "SamanHelp@outlook.com",
+          pass: process.env.SAMAN_EMAIL_PASSWORD,
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+      });
+    }
+    return emailTransporter;
+  }
+
   app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
     try {
       const { phone } = req.body;
@@ -334,7 +367,6 @@ export function setupSimpleAuth(app: Express) {
 
       const normalizedPhone = normalizePhone(phone);
 
-      // Rate limiting per phone number
       const now = Date.now();
       const attempts = forgotPasswordAttempts.get(normalizedPhone);
       if (attempts && now < attempts.resetTime) {
@@ -352,57 +384,98 @@ export function setupSimpleAuth(app: Express) {
         .where(eq(users.phone, normalizedPhone));
 
       if (!user) {
-        return res.json({ message: "If an account with a recovery email exists for this number, a temporary password has been sent." });
+        return res.json({ message: "If an account with a recovery email exists for this number, a reset link has been sent." });
       }
 
       if (!user.email) {
         return res.status(400).json({ message: "No recovery email is set on this account. Please contact SamanHelp@outlook.com for assistance." });
       }
 
-      const tempPassword = crypto.randomBytes(4).toString('hex');
-      const hashedPassword = await bcrypt.hash(tempPassword, 10);
+      const resetToken = generateResetToken(user.id);
+      const baseUrl = getBaseUrl(req);
+      const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
 
-      await db
-        .update(users)
-        .set({ password: hashedPassword, updatedAt: new Date() })
-        .where(eq(users.id, user.id));
-
-      const transporter = nodemailer.createTransport({
-        host: "smtp-mail.outlook.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: "SamanHelp@outlook.com",
-          pass: process.env.SAMAN_EMAIL_PASSWORD,
-        },
-      });
+      const transporter = getEmailTransporter();
 
       await transporter.sendMail({
         from: '"Saman Marketplace" <SamanHelp@outlook.com>',
         to: user.email,
-        subject: "Saman Marketplace - Password Reset",
+        subject: "Saman Marketplace - Reset Your Password",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 20px;">
               <h1 style="color: #f97316; margin: 0;">Saman Marketplace</h1>
+              <p style="color: #888; margin: 5px 0 0;">UAE Spare Parts and Cars Marketplace</p>
             </div>
-            <h2>Password Reset</h2>
+            <h2 style="color: #333;">Reset Your Password</h2>
             <p>Hello ${user.firstName || ''},</p>
-            <p>You requested a password reset. Here is your <strong>temporary password</strong>:</p>
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
-              <span style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #f97316;">${tempPassword}</span>
+            <p>We received a request to reset your password. Click the button below to set a new password:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" style="background-color: #f97316; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;">Reset Password</a>
             </div>
-            <p><strong>This is a temporary password.</strong> Please log in with it and then go to your <strong>Profile Settings</strong> to set a new permanent password.</p>
-            <p style="color: #888; font-size: 12px; margin-top: 20px;">If you did not request this, please contact us at SamanHelp@outlook.com.</p>
+            <p style="color: #666; font-size: 14px;">This link will expire in <strong>30 minutes</strong>.</p>
+            <p style="color: #666; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="color: #f97316; font-size: 12px; word-break: break-all;">${resetLink}</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #888; font-size: 12px;">If you did not request this, you can safely ignore this email. Your password will not be changed.</p>
           </div>
         `,
       });
 
       const maskedEmail = user.email.replace(/(.{2})(.*)(@.*)/, "$1***$3");
-      res.json({ message: `A temporary password has been sent to ${maskedEmail}` });
-    } catch (error) {
-      console.error("Forgot password error:", error);
+      res.json({ message: `A password reset link has been sent to ${maskedEmail}` });
+    } catch (error: any) {
+      console.error("Forgot password error:", error?.message || error);
+      if (emailTransporter) {
+        emailTransporter = null;
+      }
       res.status(500).json({ message: "Failed to send reset email. Please try again later." });
+    }
+  });
+
+  app.get("/api/auth/reset-password/verify", (req: Request, res: Response) => {
+    const { token } = req.query;
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ valid: false, message: "Invalid reset link" });
+    }
+    const data = passwordResetTokens.get(token);
+    if (!data || Date.now() > data.expires) {
+      if (data) passwordResetTokens.delete(token);
+      return res.status(400).json({ valid: false, message: "This reset link has expired. Please request a new one." });
+    }
+    res.json({ valid: true });
+  });
+
+  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+
+      if (newPassword.length < 4) {
+        return res.status(400).json({ message: "Password must be at least 4 characters" });
+      }
+
+      const data = passwordResetTokens.get(token);
+      if (!data || Date.now() > data.expires) {
+        if (data) passwordResetTokens.delete(token);
+        return res.status(400).json({ message: "This reset link has expired. Please request a new one." });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await db
+        .update(users)
+        .set({ password: hashedPassword, updatedAt: new Date() })
+        .where(eq(users.id, data.userId));
+
+      passwordResetTokens.delete(token);
+
+      res.json({ message: "Your password has been reset successfully. You can now log in with your new password." });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Failed to reset password. Please try again." });
     }
   });
 

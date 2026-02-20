@@ -42,6 +42,7 @@ import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentCancelled from "@/pages/PaymentCancelled";
 import PaymentDeclined from "@/pages/PaymentDeclined";
 import Downloads from "@/pages/Downloads";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 
 function ScrollToTop() {
@@ -97,6 +98,7 @@ function Router() {
           <Route path="/payment/cancelled" component={PaymentCancelled} />
           <Route path="/payment/declined" component={PaymentDeclined} />
           <Route path="/downloads" component={Downloads} />
+          <Route path="/reset-password" component={ResetPassword} />
           <Route component={NotFound} />
         </Switch>
       </div>
@@ -106,7 +108,7 @@ function Router() {
 
 function BottomNavWrapper() {
   const [location] = useLocation();
-  const hideBottomNav = location === '/downloads';
+  const hideBottomNav = location === '/downloads' || location.startsWith('/reset-password');
   
   if (hideBottomNav) return null;
   return <BottomNav />;

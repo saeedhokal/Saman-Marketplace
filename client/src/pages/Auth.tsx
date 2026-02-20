@@ -216,7 +216,7 @@ export default function Auth() {
       }
 
       toast({
-        title: isRTL ? "تم الإرسال" : "Email Sent",
+        title: isRTL ? "تم الإرسال" : "Reset Link Sent",
         description: data.message,
       });
       setShowForgotPassword(false);
@@ -340,7 +340,7 @@ export default function Auth() {
               {isRTL ? 'استعادة كلمة المرور' : 'Reset Password'}
             </CardTitle>
             <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>
-              {isRTL ? 'أدخل رقم هاتفك وسنرسل كلمة مرور مؤقتة إلى بريدك الإلكتروني' : 'Enter your phone number and we\'ll send a temporary password to your recovery email'}
+              {isRTL ? 'أدخل رقم هاتفك وسنرسل رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني' : 'Enter your phone number and we\'ll send a password reset link to your recovery email'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -386,7 +386,7 @@ export default function Auth() {
                   {isRTL ? 'جارٍ الإرسال...' : 'Sending...'}
                 </>
               ) : (
-                isRTL ? 'إرسال كلمة المرور المؤقتة' : 'Send Temporary Password'
+                isRTL ? 'إرسال رابط إعادة التعيين' : 'Send Reset Link'
               )}
             </Button>
 
