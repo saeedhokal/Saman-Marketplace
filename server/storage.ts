@@ -279,24 +279,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteExpiredProducts(): Promise<number> {
-    const result = await db.delete(products)
+    const expiredProducts = await db.select({ id: products.id })
+      .from(products)
       .where(and(
         eq(products.status, "approved"),
         sql`${products.expiresAt} IS NOT NULL`,
         lt(products.expiresAt, new Date())
-      ))
+      ));
+    if (expiredProducts.length === 0) return 0;
+    const ids = expiredProducts.map(p => p.id);
+    await db.delete(userViews).where(sql`${userViews.productId} IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`);
+    await db.delete(favorites).where(sql`${favorites.productId} IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`);
+    const result = await db.delete(products)
+      .where(sql`${products.id} IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`)
       .returning();
     return result.length;
   }
 
   async deleteOldRejectedProducts(): Promise<number> {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const result = await db.delete(products)
+    const rejectedProducts = await db.select({ id: products.id })
+      .from(products)
       .where(and(
         eq(products.status, "rejected"),
         sql`${products.rejectedAt} IS NOT NULL`,
         lt(products.rejectedAt, sevenDaysAgo)
-      ))
+      ));
+    if (rejectedProducts.length === 0) return 0;
+    const ids = rejectedProducts.map(p => p.id);
+    await db.delete(userViews).where(sql`${userViews.productId} IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`);
+    await db.delete(favorites).where(sql`${favorites.productId} IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`);
+    const result = await db.delete(products)
+      .where(sql`${products.id} IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`)
       .returning();
     return result.length;
   }
