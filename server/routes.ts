@@ -12,6 +12,39 @@ import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
 import { translateText, translateListing, detectLanguage, containsArabic } from "./translation";
+import rateLimit from "express-rate-limit";
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: "Too many attempts, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const createListingLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  message: { message: "Too many listings created, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  message: { message: "Too many payment attempts, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const generalApiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 120,
+  message: { message: "Too many requests, please slow down" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Server version for deployment verification
 const SERVER_VERSION = "v3.0.2";
@@ -73,6 +106,13 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
+  app.use("/api/", generalApiLimiter);
+  app.use("/api/auth/login", authLimiter);
+  app.use("/api/auth/register", authLimiter);
+  app.use("/api/auth/forgot-password", authLimiter);
+  app.use("/api/auth/send-otp", authLimiter);
+  app.use("/api/auth/verify-otp", authLimiter);
+
   setupSimpleAuth(app);
   registerObjectStorageRoutes(app);
 
@@ -646,7 +686,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(seller);
   });
 
-  app.post(api.products.create.path, isAuthenticated, async (req, res) => {
+  app.post(api.products.create.path, createListingLimiter, isAuthenticated, async (req, res) => {
     try {
       const bodySchema = api.products.create.input.extend({
         price: z.coerce.number().optional(),
@@ -1036,7 +1076,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
   
   // Generate checkout token (accepts userId directly for iOS compatibility)
-  app.post("/api/checkout-token", async (req, res) => {
+  app.post("/api/checkout-token", paymentLimiter, async (req, res) => {
     // Try session first, then fall back to userId from body (for iOS)
     let userId = getCurrentUserId(req);
     const { packageId, userId: bodyUserId } = req.body;
@@ -1361,7 +1401,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Checkout - create Telr payment session
-  app.post("/api/checkout", isAuthenticated, async (req, res) => {
+  app.post("/api/checkout", paymentLimiter, isAuthenticated, async (req, res) => {
     console.log("[CHECKOUT] ========== NEW CHECKOUT REQUEST ==========");
     console.log("[CHECKOUT] Body:", JSON.stringify(req.body));
     console.log("[CHECKOUT] User-Agent:", req.headers["user-agent"]);
@@ -1520,7 +1560,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Apple Pay: Validate merchant session with Apple using TLS client certificates
-  app.post("/api/applepay/session", isAuthenticated, async (req, res) => {
+  app.post("/api/applepay/session", paymentLimiter, isAuthenticated, async (req, res) => {
     logApplePaySession("REQUEST_RECEIVED", { 
       userId: req.session?.userId, 
       headers: { 'x-user-id': req.headers['x-user-id'] },
@@ -1701,7 +1741,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Apple Pay: Process payment with Telr Remote API
-  app.post("/api/applepay/process", isAuthenticated, async (req, res) => {
+  app.post("/api/applepay/process", paymentLimiter, isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
     const { packageId, applePayToken, billingContact } = req.body;
     

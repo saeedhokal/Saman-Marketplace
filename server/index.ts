@@ -4,9 +4,19 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import path from "path";
 import fs from "fs";
+import helmet from "helmet";
+// @ts-ignore
+import compression from "compression";
 
 const app = express();
+app.set("trust proxy", 1);
 const httpServer = createServer(app);
+
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+app.use(compression());
 
 // Apple Pay domain verification - embedded content for reliable production serving
 // Domain: thesamanapp.com - Updated Jan 28, 2026 19:45:28
