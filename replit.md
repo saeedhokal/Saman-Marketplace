@@ -40,7 +40,8 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Listing Management:** Automated cleanup of rejected and expired listings. Users can renew listings.
 - **Price Handling:** All prices stored and displayed in AED as whole numbers.
 - **Security:** Rate limiting on key endpoints (auth, listing creation, payments) and Helmet middleware for security headers. Response compression is enabled.
-- **Authentication:** Firebase Phone OTP for new user registration, requiring phone verification. Existing users login with phone and password. Forgot password functionality sends temporary password to recovery email via Outlook SMTP.
+- **Authentication:** Direct phone + password registration (no OTP currently). Existing users login with phone and password. Forgot password sends reset link to recovery email via Gmail SMTP (Samanapp.help@gmail.com). Reset links expire in 30 minutes. Tokens stored in-memory. Reset page at `/reset-password`.
+- **Email Service:** Gmail SMTP via Samanapp.help@gmail.com with app password. Uses nodemailer with retry mechanism and fresh transporter creation. Reset emails use production URL (thesamanapp.com). Emails may initially go to spam/junk folder.
 
 ### Mobile Applications (iOS & Android)
 - **Wrapper:** Capacitor v7
@@ -72,3 +73,35 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
     - Project: saman-car-spare-parts
     - Purpose: Firebase Cloud Messaging (FCM) for Android push notifications and Firebase Phone Authentication.
 - **Domain:** thesamanapp.com (managed via GoDaddy).
+
+## Future Feature: Firebase OTP Phone Verification (DISABLED - Re-enable when ready)
+
+**Status:** Code removed from registration flow. Re-add when new app version is released on App Store.
+
+**What it does:** New users must verify their phone number via SMS OTP before account creation (prevents bots/fake accounts).
+
+**Firebase project:** saman-car-spare-parts
+
+**Files to modify when re-enabling:**
+1. `client/src/pages/Auth.tsx` — Add back OTP step between form submit and account creation:
+   - Import `sendOTP`, `verifyOTP` from `@/lib/firebase`
+   - Add states: `otpStep`, `otpCode`, `otpDigits`, `isSendingOTP`, `isVerifyingOTP`, `pendingFormData`, `otpInputRefs`
+   - On register submit: call `sendOTP(phone)` → show OTP input screen → on verify call `verifyOTP(code)` → get `idToken` → send to backend
+   - Add `<div id="recaptcha-container"></div>` at bottom of page (required by Firebase)
+   - Import `ShieldCheck` from lucide-react for the OTP screen icon
+2. `client/src/hooks/use-auth.ts` — Change `RegisterParams.phone` back to `RegisterParams.firebaseIdToken` (string)
+3. `server/simpleAuth.ts` — In `/api/auth/register` endpoint:
+   - Accept `firebaseIdToken` instead of `phone`
+   - Use `admin.auth().verifyIdToken(firebaseIdToken)` to extract phone number
+   - Normalize the phone from the decoded token
+4. `client/src/lib/firebase.ts` — Already exists with `sendOTP()` and `verifyOTP()` functions using Firebase JS SDK
+
+**Firebase config (already in client/src/lib/firebase.ts):**
+- API Key, Auth Domain, Project ID etc. for saman-car-spare-parts
+- Uses `RecaptchaVerifier` (invisible) for bot protection
+- `signInWithPhoneNumber()` for sending OTP
+- `confirm()` on the confirmation result to verify code and get `idToken`
+
+**Backend Firebase Admin SDK (already in server/simpleAuth.ts):**
+- Uses `FIREBASE_ADMIN_CREDENTIALS` secret for service account
+- `admin.auth().verifyIdToken()` to validate the Firebase ID token from frontend
