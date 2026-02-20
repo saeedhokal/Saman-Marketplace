@@ -338,23 +338,39 @@ export function setupSimpleAuth(app: Express) {
     return `${proto}://${host}`;
   }
 
-  let emailTransporter: nodemailer.Transporter | null = null;
-  function getEmailTransporter() {
-    if (!emailTransporter) {
-      emailTransporter = nodemailer.createTransport({
-        host: "smtp-mail.outlook.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: "SamanHelp@outlook.com",
-          pass: process.env.SAMAN_EMAIL_PASSWORD,
-        },
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
-      });
+  function createEmailTransporter() {
+    return nodemailer.createTransport({
+      host: "smtp-mail.outlook.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "SamanHelp@outlook.com",
+        pass: process.env.SAMAN_EMAIL_PASSWORD,
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
+      tls: {
+        ciphers: 'SSLv3',
+        rejectUnauthorized: false,
+      },
+    });
+  }
+
+  async function sendEmailWithRetry(mailOptions: any, retries = 2): Promise<void> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const transporter = createEmailTransporter();
+      try {
+        await transporter.sendMail(mailOptions);
+        transporter.close();
+        return;
+      } catch (err: any) {
+        transporter.close();
+        console.error(`Email attempt ${attempt}/${retries} failed:`, err?.message || err);
+        if (attempt === retries) throw err;
+        await new Promise(r => setTimeout(r, 2000));
+      }
     }
-    return emailTransporter;
   }
 
   app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
@@ -395,9 +411,7 @@ export function setupSimpleAuth(app: Express) {
       const baseUrl = getBaseUrl(req);
       const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
 
-      const transporter = getEmailTransporter();
-
-      await transporter.sendMail({
+      await sendEmailWithRetry({
         from: '"Saman Marketplace" <SamanHelp@outlook.com>',
         to: user.email,
         subject: "Saman Marketplace - Reset Your Password",
@@ -425,10 +439,7 @@ export function setupSimpleAuth(app: Express) {
       const maskedEmail = user.email.replace(/(.{2})(.*)(@.*)/, "$1***$3");
       res.json({ message: `A password reset link has been sent to ${maskedEmail}` });
     } catch (error: any) {
-      console.error("Forgot password error:", error?.message || error);
-      if (emailTransporter) {
-        emailTransporter = null;
-      }
+      console.error("Forgot password error:", error?.code, error?.message || error);
       res.status(500).json({ message: "Failed to send reset email. Please try again later." });
     }
   });
