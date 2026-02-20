@@ -20,24 +20,51 @@ function generateOTP(): string {
 }
 
 function normalizePhone(phone: string): string {
-  // Remove all non-numeric characters except +
   let cleaned = phone.replace(/[^0-9+]/g, "");
   
-  // UAE phone number normalization
-  // Convert local format (0507242111) to international format (971507242111)
-  // Convert +971507242111 to 971507242111 (remove + for consistent storage)
-  
-  // Remove leading + if present
   if (cleaned.startsWith("+")) {
     cleaned = cleaned.slice(1);
   }
   
-  // If starts with 0 (UAE local format), replace with 971
+  if (cleaned.startsWith("00971")) {
+    cleaned = cleaned.slice(2);
+  }
+  
   if (cleaned.startsWith("0") && cleaned.length >= 9 && cleaned.length <= 10) {
     cleaned = "971" + cleaned.slice(1);
   }
   
+  if (cleaned.length === 9 && !cleaned.startsWith("971")) {
+    cleaned = "971" + cleaned;
+  }
+  
   return cleaned;
+}
+
+function getPhoneVariants(phone: string): string[] {
+  const cleaned = phone.replace(/[^0-9+]/g, "");
+  const normalized = normalizePhone(phone);
+  const variants = new Set<string>();
+  
+  variants.add(normalized);
+  variants.add(cleaned);
+  
+  if (cleaned.startsWith("+")) variants.add(cleaned.slice(1));
+  if (cleaned.startsWith("0")) variants.add(cleaned.slice(1));
+  if (cleaned.startsWith("00")) variants.add(cleaned.slice(2));
+  if (cleaned.startsWith("00971")) variants.add(cleaned.slice(2));
+  if (cleaned.startsWith("+971")) variants.add(cleaned.slice(1));
+  
+  if (normalized.startsWith("971") && normalized.length === 12) {
+    variants.add(normalized.slice(3));
+    variants.add("0" + normalized.slice(3));
+    variants.add("+" + normalized);
+    variants.add("00" + normalized);
+  }
+  
+  variants.add(phone.replace(/[^0-9]/g, ""));
+  
+  return Array.from(variants).filter(v => v.length >= 7);
 }
 
 // Simple in-memory rate limiter for OTP endpoints
@@ -282,11 +309,7 @@ export function setupSimpleAuth(app: Express) {
       }
 
       const normalizedPhone = normalizePhone(phone);
-      const rawCleaned = phone.replace(/[^0-9]/g, "");
-      const withoutLeadingZero = rawCleaned.startsWith("0") ? rawCleaned.slice(1) : null;
-
-      const phoneVariants = [normalizedPhone, rawCleaned];
-      if (withoutLeadingZero) phoneVariants.push(withoutLeadingZero);
+      const phoneVariants = getPhoneVariants(phone);
 
       let user = null;
       for (const variant of phoneVariants) {
@@ -313,12 +336,8 @@ export function setupSimpleAuth(app: Express) {
       }
 
       const trimmedPassword = typeof password === 'string' ? password.trim() : String(password);
-      let validPassword = await bcrypt.compare(trimmedPassword, user.password);
-      if (!validPassword && trimmedPassword !== password) {
-        validPassword = await bcrypt.compare(password, user.password);
-      }
+      const validPassword = await bcrypt.compare(trimmedPassword, user.password);
       if (!validPassword) {
-        console.log(`[Login] Invalid password for phone: ${user.phone}, pwd length: ${trimmedPassword.length}`);
         return res.status(401).json({ message: "Invalid password" });
       }
 
@@ -407,10 +426,7 @@ export function setupSimpleAuth(app: Express) {
         forgotPasswordAttempts.set(normalizedPhone, { count: 1, resetTime: now + FORGOT_PW_WINDOW });
       }
 
-      const rawCleaned = phone.replace(/[^0-9]/g, "");
-      const withoutLeadingZero = rawCleaned.startsWith("0") ? rawCleaned.slice(1) : null;
-      const phoneVariants = [normalizedPhone, rawCleaned];
-      if (withoutLeadingZero) phoneVariants.push(withoutLeadingZero);
+      const phoneVariants = getPhoneVariants(phone);
 
       let user = null;
       for (const variant of phoneVariants) {
