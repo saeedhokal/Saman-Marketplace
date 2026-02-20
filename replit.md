@@ -7,13 +7,13 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Communication style:** Simple, everyday language (non-technical)
 - **Region:** UAE
 - **Currency:** AED (United Arab Emirates Dirham)
-- **Testing:** TestFlight iOS app only
+- **App Distribution:** App is LIVE on the App Store (not just TestFlight). Users download directly from App Store.
 - **Build workflow:** Codemagic for iOS builds, GitHub via Replit Git panel
 - **Important:** User does NOT code - all changes must be made by agent
 - **IMPORTANT:** User is ALWAYS logged in on their iPhone, using the PUBLISHED URL (not preview), and has notifications enabled. Do not ask about this again.
 - **Subscription Packages:** User manages packages via admin panel. NEVER hardcode or auto-create packages.
 - **User has NO Mac** and has never used Xcode
-- **Tests on physical iPhone** via TestFlight
+- **Tests on physical iPhone** via App Store build
 - **Communicates via desktop** while testing on phone
 - **BE THOROUGH:** When debugging or making changes, search ALL relevant files (build configs, yaml, json, plist, project files) - not just the obvious ones. Use broad grep searches first.
 - **Check build pipelines first:** codemagic.yaml overrides local project settings during builds. Always check it when version/build issues occur.
