@@ -166,15 +166,17 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
               className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
               data-testid="fullscreen-gallery"
             >
+              <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-0" />
+              
               <button
-                className="absolute top-6 right-4 z-10 text-white p-2"
+                className="absolute top-[env(safe-area-inset-top,24px)] right-4 z-10 text-white p-2 hover:bg-white/10 rounded-full transition-colors"
                 onClick={() => setIsFullscreen(false)}
                 data-testid="button-close-fullscreen"
               >
                 <X className="h-7 w-7" strokeWidth={2.5} />
               </button>
 
-              <div className="absolute top-7 left-1/2 -translate-x-1/2 text-white text-sm font-medium bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full">
+              <div className="absolute top-[env(safe-area-inset-top,24px)] mt-2 left-1/2 -translate-x-1/2 text-white text-sm font-medium bg-white/15 backdrop-blur-md px-3 py-1 rounded-full z-10 border border-white/10">
                 {currentIndex + 1} / {images.length}
               </div>
 
