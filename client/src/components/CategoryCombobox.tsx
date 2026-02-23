@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
+import { useLanguage } from "@/hooks/use-language";
 
 interface CategoryComboboxProps {
   mainCategory: string;
@@ -32,6 +33,7 @@ export function CategoryCombobox({
 }: CategoryComboboxProps) {
   const [mainOpen, setMainOpen] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
+  const { t, isRTL } = useLanguage();
 
   const getSubcategories = () => {
     if (mainCategory === "Spare Parts") {
@@ -44,11 +46,17 @@ export function CategoryCombobox({
 
   const subcategories = getSubcategories();
 
+  const getCategoryLabel = (cat: string) => {
+    if (cat === "Spare Parts") return t("spareParts");
+    if (cat === "Automotive") return t("automotive");
+    return cat;
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          Main Category
+          {t("mainCategory")}
         </label>
         <Popover open={mainOpen} onOpenChange={setMainOpen}>
           <PopoverTrigger asChild>
@@ -76,24 +84,24 @@ export function CategoryCombobox({
                       <Wrench className="h-4 w-4 text-white" />
                     )}
                   </span>
-                  <span className="text-orange-900 dark:text-orange-100 font-semibold">{mainCategory}</span>
+                  <span className="text-orange-900 dark:text-orange-100 font-semibold">{getCategoryLabel(mainCategory)}</span>
                 </span>
               ) : (
                 <span className="flex items-center gap-3 text-muted-foreground">
                   <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted">
                     <Car className="h-4 w-4" />
                   </span>
-                  Select category...
+                  {t("selectCategoryPlaceholder")}
                 </span>
               )}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <ChevronsUpDown className={`${isRTL ? 'mr-2' : 'ml-2'} h-4 w-4 shrink-0 opacity-50`} />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 rounded-xl" align="start">
             <Command>
-              <CommandInput placeholder="Search category..." className="h-10" />
+              <CommandInput placeholder={t("searchCategoryPlaceholder")} className="h-10" />
               <CommandList>
-                <CommandEmpty>No category found.</CommandEmpty>
+                <CommandEmpty>{t("noCategoryFound")}</CommandEmpty>
                 <CommandGroup className="p-1">
                   {MAIN_CATEGORIES.map((cat) => (
                     <CommandItem
@@ -117,7 +125,7 @@ export function CategoryCombobox({
                             <Wrench className="h-4 w-4" style={{ color: mainCategory === cat ? 'white' : '#9a3412' }} />
                           )}
                         </span>
-                        <span className="font-medium">{cat}</span>
+                        <span className="font-medium">{getCategoryLabel(cat)}</span>
                       </div>
                       <Check
                         className={cn(
@@ -133,13 +141,13 @@ export function CategoryCombobox({
           </PopoverContent>
         </Popover>
         <p className="text-sm text-muted-foreground">
-          Spare Parts for car parts, Automotive for vehicles
+          {t("sparePartsDesc")}
         </p>
       </div>
 
       <div className="space-y-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          Sub-Category
+          {t("subcategory")}
         </label>
         <Popover open={subOpen} onOpenChange={setSubOpen}>
           <PopoverTrigger asChild>
@@ -168,20 +176,20 @@ export function CategoryCombobox({
                 </span>
               ) : (
                 <span className="text-muted-foreground">
-                  {mainCategory ? "Search or select..." : "Select main category first"}
+                  {mainCategory ? t("searchOrSelect") : t("selectMainFirst")}
                 </span>
               )}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <ChevronsUpDown className={`${isRTL ? 'mr-2' : 'ml-2'} h-4 w-4 shrink-0 opacity-50`} />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 rounded-xl" align="start">
             <Command>
-              <CommandInput placeholder="Search sub-category..." />
+              <CommandInput placeholder={t("searchSubCategory")} />
               <CommandList>
-                <CommandEmpty>No sub-category found.</CommandEmpty>
+                <CommandEmpty>{t("noSubCategoryFound")}</CommandEmpty>
                 {mainCategory === "Spare Parts" && (
                   <>
-                    <CommandGroup heading="Part Types">
+                    <CommandGroup heading={t("partTypes")}>
                       {["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other"]
                         .filter(cat => subcategories.includes(cat as any))
                         .map((cat) => (
@@ -204,7 +212,7 @@ export function CategoryCombobox({
                           </CommandItem>
                         ))}
                     </CommandGroup>
-                    <CommandGroup heading="Manufacturers">
+                    <CommandGroup heading={t("manufacturers")}>
                       {subcategories
                         .filter(cat => !["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other"].includes(cat))
                         .map((cat) => (
@@ -231,7 +239,7 @@ export function CategoryCombobox({
                 )}
                 {mainCategory === "Automotive" && (
                   <>
-                    <CommandGroup heading="Brands">
+                    <CommandGroup heading={t("brands")}>
                       {subcategories
                         .filter(cat => !["Motorcycles", "Other"].includes(cat))
                         .map((cat) => (
@@ -254,7 +262,7 @@ export function CategoryCombobox({
                           </CommandItem>
                         ))}
                     </CommandGroup>
-                    <CommandGroup heading="Vehicle Types">
+                    <CommandGroup heading={t("vehicleTypes")}>
                       {["Motorcycles", "Other"]
                         .filter(cat => subcategories.includes(cat as any))
                         .map((cat) => (

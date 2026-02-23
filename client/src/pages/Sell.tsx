@@ -25,6 +25,7 @@ import { Loader2, UploadCloud, AlertCircle, Coins, Clock, Car, Wrench, ArrowLeft
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
+import { useLanguage } from "@/hooks/use-language";
 
 const formSchema = insertProductSchema.extend({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -47,6 +48,7 @@ export default function Sell() {
   const { toast } = useToast();
   const createProduct = useCreateProduct();
   const { uploadFile, isUploading, progress } = useUpload();
+  const { t, isRTL } = useLanguage();
 
   const { data: userInfo } = useQuery<{ 
     sparePartsCredits: number; 
@@ -94,8 +96,8 @@ export default function Sell() {
     if (remainingSlots <= 0) {
       toast({
         variant: "destructive",
-        title: "Maximum photos reached",
-        description: "You can upload up to 20 photos.",
+        title: t("maxPhotosReached"),
+        description: t("maxPhotosDesc"),
       });
       return;
     }
@@ -116,15 +118,15 @@ export default function Sell() {
       } catch (error) {
         toast({
           variant: "destructive",
-          title: "Upload failed",
-          description: `Failed to upload ${file.name}. Please try again.`,
+          title: t("uploadFailed"),
+          description: `${(error as any)?.name || ''} ${t("uploadFailedDesc")}`,
         });
       }
     }
 
     toast({
-      title: "Photos uploaded",
-      description: `${filesToUpload.length} photo(s) uploaded successfully.`,
+      title: t("photosUploaded"),
+      description: `${filesToUpload.length} ${t("photosUploadedDesc")}`,
     });
   };
 
@@ -151,8 +153,8 @@ export default function Sell() {
     createProduct.mutate(payload, {
       onSuccess: () => {
         toast({
-          title: "Listing Submitted!",
-          description: "Your listing is under review and may take up to 24 hours to be approved.",
+          title: t("listingSubmitted"),
+          description: t("listingUnderReview"),
         });
         setLocation("/");
       },
@@ -160,13 +162,13 @@ export default function Sell() {
         if (err.code === "INSUFFICIENT_CREDITS") {
           toast({
             variant: "destructive",
-            title: "No Credits",
-            description: "You need credits to post a listing. Please purchase credits.",
+            title: t("noCreditsTitle"),
+            description: t("noCreditsDesc"),
           });
         } else {
           toast({
             variant: "destructive",
-            title: "Error",
+            title: t("error"),
             description: err.message,
           });
         }
@@ -183,16 +185,16 @@ export default function Sell() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">
             <Link href="/">
-              <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
+              <button className={`p-2 ${isRTL ? '-mr-2' : '-ml-2'} rounded-lg hover:bg-secondary transition-colors`} data-testid="button-back">
+                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
             </Link>
-            <h1 className="flex-1 text-center font-semibold text-lg pr-8">Post Listing</h1>
+            <h1 className={`flex-1 text-center font-semibold text-lg ${isRTL ? 'pl-8' : 'pr-8'}`}>{t("postListing")}</h1>
           </div>
         </div>
       </div>
@@ -203,7 +205,7 @@ export default function Sell() {
             <div className="bg-gradient-to-r from-accent/10 to-accent/5 px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <Coins className="h-5 w-5 text-accent" />
-                <span className="font-semibold">Your Credits</span>
+                <span className="font-semibold">{t("yourCredits")}</span>
               </div>
             </div>
             <div className="p-4 grid grid-cols-2 gap-4">
@@ -212,14 +214,14 @@ export default function Sell() {
                   <Wrench className="h-6 w-6 text-accent" />
                 </div>
                 <span className="text-2xl font-bold">{userInfo?.sparePartsCredits || 0}</span>
-                <span className="text-sm text-muted-foreground">Spare Parts</span>
+                <span className="text-sm text-muted-foreground">{t("spareParts")}</span>
               </div>
               <div className="flex flex-col items-center justify-center p-4 bg-secondary/30 rounded-xl">
                 <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-2">
                   <Car className="h-6 w-6 text-accent" />
                 </div>
                 <span className="text-2xl font-bold">{userInfo?.automotiveCredits || 0}</span>
-                <span className="text-sm text-muted-foreground">Automotive</span>
+                <span className="text-sm text-muted-foreground">{t("automotive")}</span>
               </div>
             </div>
           </Card>
@@ -233,9 +235,9 @@ export default function Sell() {
             return requiredCredits < 1 ? (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>No {mainCategory} Credits</AlertTitle>
+                <AlertTitle>{t("noCreditsFor")} {mainCategory === "Spare Parts" ? t("spareParts") : t("automotive")} {t("creditsWord")}</AlertTitle>
                 <AlertDescription>
-                  You need at least 1 {mainCategory} credit to post this listing.
+                  {t("needAtLeast1Credit")} {mainCategory === "Spare Parts" ? t("spareParts") : t("automotive")} {t("creditToPost")}
                 </AlertDescription>
               </Alert>
             ) : null;
@@ -248,7 +250,7 @@ export default function Sell() {
               
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                  Category
+                  {t("category")}
                 </h3>
                 
                 <CategoryCombobox
@@ -278,7 +280,7 @@ export default function Sell() {
                     name="model"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Model (Optional)</FormLabel>
+                        <FormLabel>{t("modelOptional")}</FormLabel>
                         <FormControl>
                           <select
                             className="w-full h-12 px-3 rounded-lg border border-border bg-background text-foreground"
@@ -286,7 +288,7 @@ export default function Sell() {
                             value={field.value || ""}
                             onChange={(e) => field.onChange(e.target.value)}
                           >
-                            <option value="">Select Model</option>
+                            <option value="">{t("selectModel")}</option>
                             {CAR_MODELS[subCategory].map((model) => (
                               <option key={model} value={model}>{model}</option>
                             ))}
@@ -310,7 +312,7 @@ export default function Sell() {
                       <Wrench className="h-4 w-4 text-accent" />
                     )}
                     <span className="font-medium">
-                      {isAutomotive ? "Vehicle Details" : "Part Details"}
+                      {isAutomotive ? t("vehicleDetails") : t("partDetails")}
                     </span>
                   </div>
 
@@ -319,10 +321,10 @@ export default function Sell() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel>{t("title")}</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder={isAutomotive ? "e.g. 2020 Toyota Camry SE" : "e.g. Toyota Camry Bumper OEM"} 
+                            placeholder={isAutomotive ? t("titlePlaceholderAuto") : t("titlePlaceholderParts")} 
                             className="h-12" 
                             data-testid="input-title"
                             {...field} 
@@ -338,7 +340,7 @@ export default function Sell() {
                     name="imageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Photos ({uploadedImages.length}/20)</FormLabel>
+                        <FormLabel>{t("uploadPhotos")} ({uploadedImages.length}/20)</FormLabel>
                         <FormControl>
                           <div>
                             <Input type="hidden" {...field} />
@@ -357,14 +359,14 @@ export default function Sell() {
                                         className="w-full h-full object-cover"
                                       />
                                       {index === 0 && (
-                                        <div className="absolute top-1 left-1 bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded">
-                                          Main
+                                        <div className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded`}>
+                                          {t("main")}
                                         </div>
                                       )}
                                       <button
                                         type="button"
                                         onClick={() => removeImage(index)}
-                                        className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                                        className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors`}
                                         data-testid={`button-remove-image-${index}`}
                                       >
                                         <X className="h-3 w-3" />
@@ -414,10 +416,10 @@ export default function Sell() {
                                     accept="image/*"
                                     multiple
                                   />
-                                  {isUploading ? "Uploading..." : "Upload Photos"}
+                                  {isUploading ? t("uploading") : t("uploadPhotos")}
                                 </Button>
                                 <p className="mt-2 text-xs text-muted-foreground">
-                                  JPG, PNG up to 5MB each (max 20 photos)
+                                  {t("photoFormatNote")}
                                 </p>
                               </div>
                             )}
@@ -444,11 +446,11 @@ export default function Sell() {
                         name="year"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Year</FormLabel>
+                            <FormLabel>{t("year")}</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
-                                placeholder="e.g. 2020" 
+                                placeholder={t("yearPlaceholder")} 
                                 className="h-12" 
                                 data-testid="input-year"
                                 {...field}
@@ -465,11 +467,11 @@ export default function Sell() {
                         name="mileage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Mileage (km)</FormLabel>
+                            <FormLabel>{t("mileageKm")}</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
-                                placeholder="e.g. 50000" 
+                                placeholder={t("mileagePlaceholder")} 
                                 className="h-12" 
                                 data-testid="input-mileage"
                                 {...field}
@@ -488,12 +490,12 @@ export default function Sell() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel>{t("description")}</FormLabel>
                         <FormControl>
                           <Textarea 
                             placeholder={isAutomotive 
-                              ? "Describe the vehicle condition, features, service history..." 
-                              : "Describe the part condition, compatibility, any defects..."
+                              ? t("descPlaceholderAuto") 
+                              : t("descPlaceholderParts")
                             }
                             className="min-h-[120px] resize-none leading-relaxed" 
                             data-testid="input-description"
@@ -510,11 +512,11 @@ export default function Sell() {
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Price (AED)</FormLabel>
+                        <FormLabel>{t("priceAED")}</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
-                            placeholder="e.g. 500" 
+                            placeholder={t("pricePlaceholder")} 
                             className="h-12" 
                             data-testid="input-price"
                             {...field}
@@ -536,15 +538,15 @@ export default function Sell() {
                     >
                       {createProduct.isPending ? (
                         <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Submitting...
+                          <Loader2 className={`${isRTL ? 'ml-2' : 'mr-2'} h-5 w-5 animate-spin`} /> {t("submitting")}
                         </>
                       ) : (
-                        "Submit Listing"
+                        t("submitListing")
                       )}
                     </Button>
                     <p className="text-center text-xs text-muted-foreground mt-3">
-                      <Clock className="inline h-3 w-3 mr-1" />
-                      Listings are reviewed before going live
+                      <Clock className={`inline h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      {t("listingsReviewed")}
                     </p>
                   </div>
                 </>
