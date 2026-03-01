@@ -23,6 +23,7 @@ interface CategoryComboboxProps {
   subCategory: string;
   onMainCategoryChange: (value: string) => void;
   onSubCategoryChange: (value: string) => void;
+  isPosting?: boolean;
 }
 
 export function CategoryCombobox({
@@ -30,10 +31,11 @@ export function CategoryCombobox({
   subCategory,
   onMainCategoryChange,
   onSubCategoryChange,
+  isPosting = false,
 }: CategoryComboboxProps) {
   const [mainOpen, setMainOpen] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
 
   const getSubcategories = () => {
     if (mainCategory === "Spare Parts") {
@@ -48,7 +50,9 @@ export function CategoryCombobox({
 
   const getCategoryLabel = (cat: string) => {
     if (cat === "Spare Parts") return t("spareParts");
-    if (cat === "Automotive") return t("automotive");
+    if (cat === "Automotive") {
+      return isPosting && language === 'ar' ? "سيارات، دراجات" : t("automotive");
+    }
     return cat;
   };
 

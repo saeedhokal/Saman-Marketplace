@@ -254,6 +254,7 @@ export default function Sell() {
                 </h3>
                 
                 <CategoryCombobox
+                  isPosting={true}
                   mainCategory={mainCategory}
                   subCategory={subCategory}
                   onMainCategoryChange={(value) => {
