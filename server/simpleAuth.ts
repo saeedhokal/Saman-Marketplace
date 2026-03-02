@@ -19,7 +19,7 @@ function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function normalizePhone(phone: string): string {
+export function normalizePhone(phone: string): string {
   let cleaned = phone.replace(/[^0-9+]/g, "");
   
   if (cleaned.startsWith("+")) {

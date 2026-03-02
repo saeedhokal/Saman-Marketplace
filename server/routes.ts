@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { setupSimpleAuth, isAuthenticated, getCurrentUserId } from "./simpleAuth";
+import { setupSimpleAuth, isAuthenticated, getCurrentUserId, normalizePhone } from "./simpleAuth";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
@@ -947,7 +947,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Update user profile
   app.put("/api/user/profile", isAuthenticated, async (req, res) => {
     const userId = getCurrentUserId(req)!;
-    const { displayName, firstName, lastName, profileImageUrl, email } = req.body;
+    const { displayName, firstName, lastName, profileImageUrl, email, phone } = req.body;
     
     const updateData: Record<string, any> = { updatedAt: new Date() };
     
@@ -956,6 +956,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (lastName !== undefined) updateData.lastName = lastName || null;
     if (profileImageUrl !== undefined) updateData.profileImageUrl = profileImageUrl || null;
     if (email !== undefined) updateData.email = email || null;
+    
+    if (phone !== undefined && phone !== null && phone !== "") {
+      const normalizedPhone = normalizePhone(phone);
+      if (normalizedPhone.length < 9) {
+        return res.status(400).json({ message: "Invalid phone number" });
+      }
+      const existingUser = await db.select({ id: users.id }).from(users)
+        .where(eq(users.phone, normalizedPhone));
+      if (existingUser.length > 0 && existingUser[0].id !== userId) {
+        return res.status(400).json({ message: "Phone number already in use by another account" });
+      }
+      updateData.phone = normalizedPhone;
+    }
     
     await db.update(users)
       .set(updateData)
@@ -2479,6 +2492,35 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
     
     res.json({ message: "Email updated", user: updated });
+  });
+
+  app.post("/api/admin/user/:userId/phone", isAuthenticated, isAdmin, async (req, res) => {
+    const targetUserId = req.params.userId as string;
+    const { phone } = req.body;
+    
+    if (!phone) {
+      return res.status(400).json({ message: "Phone number is required" });
+    }
+    
+    const normalizedPhone = normalizePhone(phone);
+    
+    await db.update(users)
+      .set({ phone: normalizedPhone, updatedAt: new Date() })
+      .where(sql`id = ${targetUserId}`);
+    
+    const [updated] = await db.select({
+      id: users.id,
+      phone: users.phone,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+    }).from(users).where(sql`id = ${targetUserId}`);
+    
+    if (!updated) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.json({ message: "Phone updated", user: updated });
   });
 
   // Bootstrap: Clean up and delete all accounts with owner phone number

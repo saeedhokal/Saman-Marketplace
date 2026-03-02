@@ -31,6 +31,7 @@ export default function ProfileDetails() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,18 +74,28 @@ export default function ProfileDetails() {
   };
 
   const updateProfile = useMutation({
-    mutationFn: async (data: { displayName?: string; firstName?: string; lastName?: string; email?: string }) => {
+    mutationFn: async (data: { displayName?: string; firstName?: string; lastName?: string; email?: string; phone?: string }) => {
       return apiRequest("PUT", "/api/user/profile", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({ title: "Profile updated successfully" });
       setIsEditing(false);
     },
-    onError: () => {
-      toast({ variant: "destructive", title: "Failed to update profile" });
+    onError: (err: any) => {
+      const message = err?.message || "Failed to update profile";
+      toast({ variant: "destructive", title: message });
     },
   });
+
+  const formatPhoneDisplay = (phone: string | null) => {
+    if (!phone) return "Not set";
+    if (phone.startsWith("971") && phone.length === 12) {
+      return "+971 " + phone.slice(3);
+    }
+    return phone;
+  };
 
   const handleEdit = () => {
     setFormData({
@@ -92,6 +103,7 @@ export default function ProfileDetails() {
       firstName: profile?.firstName || "",
       lastName: profile?.lastName || "",
       email: profile?.email || "",
+      phone: profile?.phone || "",
     });
     setIsEditing(true);
   };
@@ -211,6 +223,21 @@ export default function ProfileDetails() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="e.g. 0525888823 or +971525888823"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    data-testid="input-phone"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Accepts formats: 05XXXXXXXX or +971XXXXXXXX. This will also update your login number.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -264,7 +291,7 @@ export default function ProfileDetails() {
 
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Phone</Label>
-                  <p className="font-medium">{profile?.phone || "Not set"}</p>
+                  <p className="font-medium" data-testid="text-phone">{formatPhoneDisplay(profile?.phone || null)}</p>
                 </div>
 
                 <div className="space-y-1">
