@@ -151,7 +151,7 @@ export default function Auth() {
                 name="phone"
                 rules={{ 
                   required: "Phone number is required",
-                  minLength: { value: 9, message: "Please enter a valid phone number" }
+                  minLength: { value: 7, message: "Phone number must be at least 7 digits" }
                 }}
                 render={({ field }) => (
                   <FormItem>
@@ -228,7 +228,7 @@ export default function Auth() {
                 name="phone"
                 rules={{ 
                   required: "Phone number is required",
-                  minLength: { value: 9, message: "Please enter a valid phone number" }
+                  minLength: { value: 7, message: "Phone number must be at least 7 digits" }
                 }}
                 render={({ field }) => (
                   <FormItem>

@@ -545,6 +545,10 @@ export function setupSimpleAuth(app: Express) {
 
       const normalizedPhone = normalizePhone(phone);
 
+      if (normalizedPhone.length < 7) {
+        return res.status(400).json({ message: "Phone number must be at least 7 digits" });
+      }
+
       // Check if user already exists
       const [existingUser] = await db
         .select()
