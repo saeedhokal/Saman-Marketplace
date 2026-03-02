@@ -2708,6 +2708,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ deletedCount: count });
   });
 
+  app.post("/api/admin/extend-all-listings", isAuthenticated, isAdmin, async (req, res) => {
+    const days = req.body.days || 30;
+    const result = await db.update(products)
+      .set({ 
+        expiresAt: sql`${products.expiresAt} + interval '${sql.raw(String(days))} days'`
+      })
+      .where(sql`${products.expiresAt} IS NOT NULL`)
+      .returning({ id: products.id, title: products.title, expiresAt: products.expiresAt });
+    
+    res.json({ 
+      message: `Extended ${result.length} listings by ${days} days`,
+      count: result.length,
+      listings: result.map(l => ({ id: l.id, title: l.title, newExpiry: l.expiresAt }))
+    });
+  });
+
   // Admin: Apple Pay debug endpoint
   app.get("/api/admin/applepay-debug", isAuthenticated, isAdmin, async (req, res) => {
     res.json({
