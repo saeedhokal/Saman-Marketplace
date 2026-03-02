@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useProduct } from "@/hooks/use-products";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
@@ -40,6 +40,30 @@ export default function ProductDetail() {
     setTranslatedTitle(null);
     setTranslatedDescription(null);
   }, [id]);
+
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-testid="image-gallery-main"]') || target.closest('[data-testid="fullscreen-gallery"]')) {
+      return;
+    }
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    touchStartX.current = null;
+    touchStartY.current = null;
+    if (deltaX > 80 && deltaY < 100) {
+      window.history.back();
+    }
+  }, []);
 
   const { data: sellerProducts } = useQuery<Product[]>({
     queryKey: ['/api/sellers', product?.sellerId, 'products'],
@@ -208,7 +232,7 @@ export default function ProductDetail() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" ref={pageRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <div className="container mx-auto px-4 py-6">
         <Button variant="ghost" className={`${isRTL ? 'pr-0' : 'pl-0'} hover:bg-transparent hover:text-accent text-base`} data-testid="button-back" onClick={() => window.history.back()}>
           <ArrowLeft className={`h-5 w-5 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} strokeWidth={2.5} /> {isRTL ? 'رجوع' : 'Back'}
