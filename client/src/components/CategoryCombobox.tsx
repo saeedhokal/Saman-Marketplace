@@ -221,7 +221,30 @@ export function CategoryCombobox({
                     </CommandGroup>
                     <CommandGroup heading={t("manufacturers")}>
                       {subcategories
-                        .filter(cat => !["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other"].includes(cat))
+                        .filter(cat => !["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other", "Motorcycles", "Offroad", "ATV", "UTV", "Jet Ski"].includes(cat))
+                        .map((cat) => (
+                          <CommandItem
+                            key={cat}
+                            value={cat}
+                            onSelect={() => {
+                              onSubCategoryChange(cat);
+                              setSubOpen(false);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {cat}
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                subCategory === cat ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                    <CommandGroup heading={t("vehicleTypes")}>
+                      {["Motorcycles", "Offroad", "ATV", "UTV", "Jet Ski"]
+                        .filter(cat => subcategories.includes(cat as any))
                         .map((cat) => (
                           <CommandItem
                             key={cat}
@@ -248,7 +271,7 @@ export function CategoryCombobox({
                   <>
                     <CommandGroup heading={t("brands")}>
                       {subcategories
-                        .filter(cat => !["Motorcycles", "Offroad", "ATV", "UTV", "Other"].includes(cat))
+                        .filter(cat => !["Motorcycles", "Offroad", "ATV", "UTV", "Jet Ski", "Other"].includes(cat))
                         .map((cat) => (
                           <CommandItem
                             key={cat}
@@ -270,7 +293,7 @@ export function CategoryCombobox({
                         ))}
                     </CommandGroup>
                     <CommandGroup heading={t("vehicleTypes")}>
-                      {["Motorcycles", "Offroad", "ATV", "UTV", "Other"]
+                      {["Motorcycles", "Offroad", "ATV", "UTV", "Jet Ski", "Other"]
                         .filter(cat => subcategories.includes(cat as any))
                         .map((cat) => (
                           <CommandItem

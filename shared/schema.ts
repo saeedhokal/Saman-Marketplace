@@ -16,21 +16,29 @@ export const SPARE_PARTS_SUBCATEGORIES = [
   // Other
   "Other",
   // Car brands alphabetically
-  "Acura", "Audi", "BMW", "CAN-AM", "Chevrolet", "Dodge", "Fiat", "Ferrari", "Ford", "GMC",
+  "Acura", "Alfa Romeo", "Audi", "Bentley", "BMW", "Cadillac", "Chevrolet", "Citroen",
+  "Dodge", "Ferrari", "Fiat", "Ford", "Genesis", "GMC",
   "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lamborghini", "Land Rover",
-  "Lexus", "Lincoln", "Mazda", "Mercedes", "Mini", "Mitsubishi", "Nissan", "OFFROAD", "Peugeot", "Polaris",
-  "Porsche", "Renault", "Rolls Royce", "Suzuki", "Tesla", "Toyota", "Volkswagen", "Volvo"
+  "Lexus", "Lincoln", "Maserati", "Mazda", "Mercedes", "MG", "Mini", "Mitsubishi", "Nissan",
+  "Peugeot", "Porsche", "Renault", "Rolls Royce", "Subaru", "Suzuki", "Tesla", "Toyota",
+  "Volkswagen", "Volvo",
+  // Non-car vehicle types (at end)
+  "Motorcycles", "Offroad", "ATV", "UTV", "Jet Ski"
 ] as const;
 
 // Sub-categories for Automotive (vehicles for sale - includes Chinese brands)
 // Alphabetical order
 export const AUTOMOTIVE_SUBCATEGORIES = [
-  "Acura", "Alfa Romeo", "ATV", "Audi", "Bentley", "BMW", "BYD", "Cadillac", "CAN-AM", "Chery",
+  // Car brands alphabetically
+  "Acura", "Alfa Romeo", "Audi", "Bentley", "BMW", "BYD", "Cadillac", "CAN-AM", "Chery",
   "Chevrolet", "Citroen", "Dodge", "Ferrari", "Fiat", "Ford", "Geely", "Genesis", "GMC", "Great Wall",
   "Haval", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Jetour", "Kia", "Lamborghini",
   "Land Rover", "Lexus", "Li Auto", "Lincoln", "Maserati", "Mazda", "Mercedes", "MG",
-  "Mini", "Mitsubishi", "Motorcycles", "NIO", "Nissan", "Offroad", "Other", "Peugeot", "Polaris",
-  "Porsche", "Renault", "Rolls Royce", "Rox", "Subaru", "Suzuki", "Tesla", "Toyota", "UTV", "Volkswagen", "Volvo", "XPeng"
+  "Mini", "Mitsubishi", "NIO", "Nissan", "Peugeot", "Polaris",
+  "Porsche", "Renault", "Rolls Royce", "Rox", "Subaru", "Suzuki", "Tesla", "Toyota",
+  "Volkswagen", "Volvo", "XPeng",
+  // Non-car vehicle types (at end)
+  "Motorcycles", "Offroad", "ATV", "UTV", "Jet Ski", "Other"
 ] as const;
 
 // Car models by brand (for Automotive filtering)
