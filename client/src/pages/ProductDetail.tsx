@@ -277,14 +277,34 @@ export default function ProductDetail() {
           <div
             style={{
               position: 'fixed', inset: 0, zIndex: 39,
-              background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)',
+              background: 'hsl(var(--background))',
               pointerEvents: 'none',
+              overflow: 'hidden',
             }}
-          />
+          >
+            {product?.imageUrl && (
+              <img
+                src={product.imageUrl}
+                alt=""
+                style={{
+                  position: 'absolute', inset: '-40px',
+                  width: 'calc(100% + 80px)', height: 'calc(100% + 80px)',
+                  objectFit: 'cover',
+                  filter: 'blur(30px) brightness(0.4) saturate(1.2)',
+                  opacity: 0.6,
+                  transform: `translateX(${-swipeOffset * 0.1}px)`,
+                }}
+              />
+            )}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.7) 100%)',
+            }} />
+          </div>
           <div
             style={{
               position: 'fixed', inset: 0, zIndex: 40,
-              backgroundColor: `rgba(0,0,0,${0.3 * Math.max(0, 1 - swipeOffset / (window.innerWidth || 400))})`,
+              backgroundColor: `rgba(0,0,0,${0.2 * Math.max(0, 1 - swipeOffset / (window.innerWidth || 400))})`,
               pointerEvents: 'none',
               transition: isAnimatingOut ? 'opacity 0.25s ease-out' : 'none',
             }}
