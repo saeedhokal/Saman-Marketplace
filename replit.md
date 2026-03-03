@@ -40,7 +40,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Listing Management:** Automated cleanup of rejected and expired listings. Users can renew listings.
 - **Price Handling:** All prices stored and displayed in AED as whole numbers.
 - **Security:** Rate limiting on key endpoints (auth, listing creation, payments) and Helmet middleware for security headers. Response compression is enabled.
-- **Authentication:** Direct phone + password registration (no OTP currently). Existing users login with phone and password. Forgot password sends reset link to recovery email via Gmail SMTP (Samanapp.help@gmail.com). Reset links expire in 30 minutes. Tokens stored in-memory. Reset page at `/reset-password`.
+- **Authentication:** Phone + password registration with Firebase OTP verification for new users. Backend accepts both OTP-verified and direct phone registration for backward compatibility. Existing users login with phone and password. Forgot password sends reset link to recovery email via Gmail SMTP (Samanapp.help@gmail.com). Reset links expire in 30 minutes. Tokens stored in-memory. Reset page at `/reset-password`.
 - **Email Service:** Gmail SMTP via Samanapp.help@gmail.com with app password. Uses nodemailer with retry mechanism and fresh transporter creation. Reset emails use production URL (thesamanapp.com). Emails may initially go to spam/junk folder.
 
 ### Mobile Applications (iOS & Android)
@@ -52,6 +52,14 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Apple Pay:** Native integration via Capacitor.
 - **Build Process:** GitHub → Codemagic → TestFlight (iOS) / Google Play (Android).
 - **iOS Splash Screen:** Fullscreen with SAMAN logo + Dubai skyline.
+
+## App Versioning
+- **Current Version:** 2.0.2 (OTP verification update)
+- **iOS:** Version set in `codemagic.yaml` via `agvtool new-marketing-version`. Also in `ios/App/App.xcodeproj/project.pbxproj` (MARKETING_VERSION). Build number auto-incremented by Codemagic.
+- **Android:** Version in `android/app/build.gradle` — `versionName "2.0.2"`, `versionCode 17`.
+- **In-app display:** `client/src/pages/Settings.tsx` shows version to users.
+- **IMPORTANT:** When bumping versions, update ALL of these files: `codemagic.yaml`, `project.pbxproj` (both Debug and Release), `build.gradle`, `Settings.tsx`.
+- **Apple rejects** builds where CFBundleShortVersionString matches a previously approved version — always increment.
 
 ## External Dependencies
 
