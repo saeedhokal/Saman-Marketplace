@@ -54,7 +54,7 @@ export default function ProductDetail() {
     if (target.closest('[data-testid="image-gallery-main"]') || target.closest('[data-testid="fullscreen-gallery"]')) {
       return;
     }
-    if (e.touches[0].clientX > 60) return;
+    if (e.touches[0].clientX > 140) return;
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     touchStartTime.current = Date.now();
@@ -273,21 +273,31 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-background" ref={pageRef} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {swipeOffset > 0 && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 40,
-            backgroundColor: `rgba(0,0,0,${0.4 * Math.max(0, 1 - swipeOffset / (window.innerWidth || 400))})`,
-            pointerEvents: 'none',
-            transition: isAnimatingOut ? 'background-color 0.25s ease-out' : 'none',
-          }}
-        />
+        <>
+          <div
+            style={{
+              position: 'fixed', inset: 0, zIndex: 39,
+              background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)',
+              pointerEvents: 'none',
+            }}
+          />
+          <div
+            style={{
+              position: 'fixed', inset: 0, zIndex: 40,
+              backgroundColor: `rgba(0,0,0,${0.3 * Math.max(0, 1 - swipeOffset / (window.innerWidth || 400))})`,
+              pointerEvents: 'none',
+              transition: isAnimatingOut ? 'opacity 0.25s ease-out' : 'none',
+            }}
+          />
+        </>
       )}
       <div style={{
         transform: swipeOffset > 0 ? `translateX(${swipeOffset}px)` : 'none',
         transition: isAnimatingOut ? 'transform 0.25s ease-out' : (swipeOffset === 0 ? 'transform 0.2s ease-out' : 'none'),
-        boxShadow: swipeOffset > 0 ? '-8px 0 24px rgba(0,0,0,0.2)' : 'none',
+        boxShadow: swipeOffset > 0 ? '-4px 0 20px rgba(0,0,0,0.15), -1px 0 4px rgba(0,0,0,0.1)' : 'none',
         position: 'relative', zIndex: 41, backgroundColor: 'var(--background)',
         minHeight: '100vh',
+        borderRadius: swipeOffset > 10 ? '12px 0 0 12px' : '0',
       }}>
       <div className="container mx-auto px-4 py-6">
         <Button variant="ghost" className={`${isRTL ? 'pr-0' : 'pl-0'} hover:bg-transparent hover:text-accent text-base`} data-testid="button-back" onClick={() => window.history.back()}>
