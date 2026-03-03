@@ -46,8 +46,9 @@ export default function ProductDetail() {
   const touchStartTime = useRef<number>(0);
   const isSwiping = useRef(false);
   const pageRef = useRef<HTMLDivElement>(null);
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
@@ -69,21 +70,36 @@ export default function ProductDetail() {
       if (deltaY > 30) {
         touchStartX.current = null;
         touchStartY.current = null;
-        setSwipeOffset(0);
         return;
       }
       if (deltaX > 10) {
         isSwiping.current = true;
+        if (contentRef.current) contentRef.current.style.transition = 'none';
+        if (overlayRef.current) {
+          overlayRef.current.style.display = 'block';
+          overlayRef.current.style.transition = 'none';
+        }
+        if (bgRef.current) bgRef.current.style.display = 'block';
       }
     }
     if (isSwiping.current && deltaX > 0) {
-      setSwipeOffset(deltaX);
+      const sw = window.innerWidth;
+      const progress = deltaX / sw;
+      if (contentRef.current) {
+        contentRef.current.style.transform = `translateX(${deltaX}px)`;
+        contentRef.current.style.boxShadow = '-4px 0 20px rgba(0,0,0,0.15)';
+        contentRef.current.style.borderRadius = '12px 0 0 12px';
+      }
+      if (overlayRef.current) {
+        overlayRef.current.style.opacity = String(0.35 * (1 - progress));
+      }
     }
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) {
-      setSwipeOffset(0);
+    if (touchStartX.current === null || touchStartY.current === null || !isSwiping.current) {
+      touchStartX.current = null;
+      touchStartY.current = null;
       return;
     }
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
@@ -93,14 +109,31 @@ export default function ProductDetail() {
     touchStartY.current = null;
     isSwiping.current = false;
     const screenWidth = window.innerWidth;
-    if (deltaX > screenWidth * 0.35 || velocity > 0.5) {
-      setIsAnimatingOut(true);
-      setSwipeOffset(screenWidth);
-      setTimeout(() => {
-        window.history.back();
-      }, 250);
+    if (deltaX > screenWidth * 0.3 || velocity > 0.5) {
+      if (contentRef.current) {
+        contentRef.current.style.transition = 'transform 0.28s cubic-bezier(0.2,0.9,0.3,1)';
+        contentRef.current.style.transform = `translateX(${screenWidth}px)`;
+      }
+      if (overlayRef.current) {
+        overlayRef.current.style.transition = 'opacity 0.28s ease-out';
+        overlayRef.current.style.opacity = '0';
+      }
+      setTimeout(() => window.history.back(), 280);
     } else {
-      setSwipeOffset(0);
+      if (contentRef.current) {
+        contentRef.current.style.transition = 'transform 0.25s cubic-bezier(0.2,0.9,0.3,1)';
+        contentRef.current.style.transform = 'translateX(0)';
+        contentRef.current.style.boxShadow = 'none';
+        contentRef.current.style.borderRadius = '0';
+      }
+      if (overlayRef.current) {
+        overlayRef.current.style.transition = 'opacity 0.25s ease-out';
+        overlayRef.current.style.opacity = '0';
+        setTimeout(() => { if (overlayRef.current) overlayRef.current.style.display = 'none'; }, 250);
+      }
+      if (bgRef.current) {
+        setTimeout(() => { if (bgRef.current) bgRef.current.style.display = 'none'; }, 250);
+      }
     }
   }, []);
 
@@ -272,52 +305,25 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background" ref={pageRef} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      {swipeOffset > 0 && (
-        <>
-          <div
-            style={{
-              position: 'fixed', inset: 0, zIndex: 39,
-              background: 'hsl(var(--background))',
-              pointerEvents: 'none',
-              overflow: 'hidden',
-            }}
-          >
-            {product?.imageUrl && (
-              <img
-                src={product.imageUrl}
-                alt=""
-                style={{
-                  position: 'absolute', inset: '-40px',
-                  width: 'calc(100% + 80px)', height: 'calc(100% + 80px)',
-                  objectFit: 'cover',
-                  filter: 'blur(30px) brightness(0.4) saturate(1.2)',
-                  opacity: 0.6,
-                  transform: `translateX(${-swipeOffset * 0.1}px)`,
-                }}
-              />
-            )}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.7) 100%)',
-            }} />
-          </div>
-          <div
-            style={{
-              position: 'fixed', inset: 0, zIndex: 40,
-              backgroundColor: `rgba(0,0,0,${0.2 * Math.max(0, 1 - swipeOffset / (window.innerWidth || 400))})`,
-              pointerEvents: 'none',
-              transition: isAnimatingOut ? 'opacity 0.25s ease-out' : 'none',
-            }}
-          />
-        </>
-      )}
-      <div style={{
-        transform: swipeOffset > 0 ? `translateX(${swipeOffset}px)` : 'none',
-        transition: isAnimatingOut ? 'transform 0.25s ease-out' : (swipeOffset === 0 ? 'transform 0.2s ease-out' : 'none'),
-        boxShadow: swipeOffset > 0 ? '-4px 0 20px rgba(0,0,0,0.15), -1px 0 4px rgba(0,0,0,0.1)' : 'none',
+      <div
+        ref={bgRef}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 39,
+          display: 'none', pointerEvents: 'none',
+          background: '#111',
+        }}
+      />
+      <div
+        ref={overlayRef}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 40,
+          display: 'none', pointerEvents: 'none',
+          backgroundColor: 'rgba(0,0,0,0.35)',
+        }}
+      />
+      <div ref={contentRef} style={{
         position: 'relative', zIndex: 41, backgroundColor: 'var(--background)',
-        minHeight: '100vh',
-        borderRadius: swipeOffset > 10 ? '12px 0 0 12px' : '0',
+        minHeight: '100vh', willChange: 'transform',
       }}>
       <div className="container mx-auto px-4 py-6">
         <Button variant="ghost" className={`${isRTL ? 'pr-0' : 'pl-0'} hover:bg-transparent hover:text-accent text-base`} data-testid="button-back" onClick={() => window.history.back()}>
