@@ -50,7 +50,6 @@ export default function ProductDetail() {
     if (target.closest('[data-testid="image-gallery-main"]') || target.closest('[data-testid="fullscreen-gallery"]')) {
       return;
     }
-    if (e.touches[0].clientX > 120) return;
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
   }, []);
