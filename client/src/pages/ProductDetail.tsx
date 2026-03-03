@@ -43,25 +43,64 @@ export default function ProductDetail() {
 
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+  const isSwiping = useRef(false);
   const pageRef = useRef<HTMLDivElement>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('[data-testid="image-gallery-main"]') || target.closest('[data-testid="fullscreen-gallery"]')) {
       return;
     }
+    if (e.touches[0].clientX > 60) return;
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
+    touchStartTime.current = Date.now();
+    isSwiping.current = false;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.touches[0].clientX - touchStartX.current;
+    const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current);
+    if (!isSwiping.current) {
+      if (deltaY > 30) {
+        touchStartX.current = null;
+        touchStartY.current = null;
+        setSwipeOffset(0);
+        return;
+      }
+      if (deltaX > 10) {
+        isSwiping.current = true;
+      }
+    }
+    if (isSwiping.current && deltaX > 0) {
+      setSwipeOffset(deltaX);
+    }
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
+    if (touchStartX.current === null || touchStartY.current === null) {
+      setSwipeOffset(0);
+      return;
+    }
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    const elapsed = Date.now() - touchStartTime.current;
+    const velocity = deltaX / elapsed;
     touchStartX.current = null;
     touchStartY.current = null;
-    if (deltaX > 80 && deltaY < 100) {
-      window.history.back();
+    isSwiping.current = false;
+    const screenWidth = window.innerWidth;
+    if (deltaX > screenWidth * 0.35 || velocity > 0.5) {
+      setIsAnimatingOut(true);
+      setSwipeOffset(screenWidth);
+      setTimeout(() => {
+        window.history.back();
+      }, 250);
+    } else {
+      setSwipeOffset(0);
     }
   }, []);
 
@@ -232,7 +271,24 @@ export default function ProductDetail() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background" ref={pageRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className="min-h-screen bg-background" ref={pageRef} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+      {swipeOffset > 0 && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 40,
+            backgroundColor: `rgba(0,0,0,${0.4 * Math.max(0, 1 - swipeOffset / (window.innerWidth || 400))})`,
+            pointerEvents: 'none',
+            transition: isAnimatingOut ? 'background-color 0.25s ease-out' : 'none',
+          }}
+        />
+      )}
+      <div style={{
+        transform: swipeOffset > 0 ? `translateX(${swipeOffset}px)` : 'none',
+        transition: isAnimatingOut ? 'transform 0.25s ease-out' : (swipeOffset === 0 ? 'transform 0.2s ease-out' : 'none'),
+        boxShadow: swipeOffset > 0 ? '-8px 0 24px rgba(0,0,0,0.2)' : 'none',
+        position: 'relative', zIndex: 41, backgroundColor: 'var(--background)',
+        minHeight: '100vh',
+      }}>
       <div className="container mx-auto px-4 py-6">
         <Button variant="ghost" className={`${isRTL ? 'pr-0' : 'pl-0'} hover:bg-transparent hover:text-accent text-base`} data-testid="button-back" onClick={() => window.history.back()}>
           <ArrowLeft className={`h-5 w-5 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} strokeWidth={2.5} /> {isRTL ? 'رجوع' : 'Back'}
@@ -425,6 +481,7 @@ export default function ProductDetail() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
