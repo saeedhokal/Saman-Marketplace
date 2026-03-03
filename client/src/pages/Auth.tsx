@@ -67,13 +67,28 @@ export default function Auth() {
           });
         } catch (error: any) {
           console.error("OTP send error:", error);
-          let errorMsg = isRTL ? "فشل في إرسال رمز التحقق" : "Failed to send verification code";
           if (error?.code === "auth/too-many-requests") {
-            errorMsg = isRTL ? "محاولات كثيرة. يرجى المحاولة لاحقاً" : "Too many attempts. Please try again later.";
+            toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "محاولات كثيرة. يرجى المحاولة لاحقاً" : "Too many attempts. Please try again later." });
           } else if (error?.code === "auth/invalid-phone-number") {
-            errorMsg = isRTL ? "رقم هاتف غير صالح" : "Invalid phone number format";
+            toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "رقم هاتف غير صالح" : "Invalid phone number format" });
+          } else {
+            try {
+              await register({
+                phone: data.phone,
+                password: data.password,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email || undefined,
+              });
+              toast({
+                title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
+                description: isRTL ? "تم إنشاء حسابك بنجاح" : "Your account has been created.",
+              });
+              setLocation("/");
+            } catch (regError: any) {
+              toast({ variant: "destructive", title: isRTL ? "خطأ" : "Registration failed", description: regError.message });
+            }
           }
-          toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: errorMsg });
         } finally {
           setIsSendingOTP(false);
         }
