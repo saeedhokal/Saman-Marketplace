@@ -51,7 +51,10 @@ export function CategoryCombobox({
   const getCategoryLabel = (cat: string) => {
     if (cat === "Spare Parts") return t("spareParts");
     if (cat === "Automotive") {
-      return isPosting && language === 'ar' ? "سيارات، دراجات" : t("automotive");
+      if (isPosting) {
+        return language === 'ar' ? "سيارات، دراجات" : "Automotive, Motorcycles";
+      }
+      return t("automotive");
     }
     return cat;
   };
@@ -245,7 +248,7 @@ export function CategoryCombobox({
                   <>
                     <CommandGroup heading={t("brands")}>
                       {subcategories
-                        .filter(cat => !["Motorcycles", "Other"].includes(cat))
+                        .filter(cat => !["Motorcycles", "Offroad", "ATV", "UTV", "Other"].includes(cat))
                         .map((cat) => (
                           <CommandItem
                             key={cat}
@@ -267,7 +270,7 @@ export function CategoryCombobox({
                         ))}
                     </CommandGroup>
                     <CommandGroup heading={t("vehicleTypes")}>
-                      {["Motorcycles", "Other"]
+                      {["Motorcycles", "Offroad", "ATV", "UTV", "Other"]
                         .filter(cat => subcategories.includes(cat as any))
                         .map((cat) => (
                           <CommandItem

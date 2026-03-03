@@ -25,12 +25,12 @@ export const SPARE_PARTS_SUBCATEGORIES = [
 // Sub-categories for Automotive (vehicles for sale - includes Chinese brands)
 // Alphabetical order
 export const AUTOMOTIVE_SUBCATEGORIES = [
-  "Acura", "Alfa Romeo", "Audi", "Bentley", "BMW", "BYD", "Cadillac", "CAN-AM", "Chery",
+  "Acura", "Alfa Romeo", "ATV", "Audi", "Bentley", "BMW", "BYD", "Cadillac", "CAN-AM", "Chery",
   "Chevrolet", "Citroen", "Dodge", "Ferrari", "Fiat", "Ford", "Geely", "Genesis", "GMC", "Great Wall",
   "Haval", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Jetour", "Kia", "Lamborghini",
   "Land Rover", "Lexus", "Li Auto", "Lincoln", "Maserati", "Mazda", "Mercedes", "MG",
-  "Mini", "Mitsubishi", "Motorcycles", "NIO", "Nissan", "OFFROAD", "Other", "Peugeot", "Polaris",
-  "Porsche", "Renault", "Rolls Royce", "Rox", "Subaru", "Suzuki", "Tesla", "Toyota", "Volkswagen", "Volvo", "XPeng"
+  "Mini", "Mitsubishi", "Motorcycles", "NIO", "Nissan", "Offroad", "Other", "Peugeot", "Polaris",
+  "Porsche", "Renault", "Rolls Royce", "Rox", "Subaru", "Suzuki", "Tesla", "Toyota", "UTV", "Volkswagen", "Volvo", "XPeng"
 ] as const;
 
 // Car models by brand (for Automotive filtering)
