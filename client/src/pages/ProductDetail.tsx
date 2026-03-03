@@ -43,97 +43,25 @@ export default function ProductDetail() {
 
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
-  const touchStartTime = useRef<number>(0);
-  const isSwiping = useRef(false);
   const pageRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const bgRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('[data-testid="image-gallery-main"]') || target.closest('[data-testid="fullscreen-gallery"]')) {
       return;
     }
-    if (e.touches[0].clientX > 140) return;
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
-    touchStartTime.current = Date.now();
-    isSwiping.current = false;
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    const deltaX = e.touches[0].clientX - touchStartX.current;
-    const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current);
-    if (!isSwiping.current) {
-      if (deltaY > 30) {
-        touchStartX.current = null;
-        touchStartY.current = null;
-        return;
-      }
-      if (deltaX > 10) {
-        isSwiping.current = true;
-        if (contentRef.current) contentRef.current.style.transition = 'none';
-        if (overlayRef.current) {
-          overlayRef.current.style.display = 'block';
-          overlayRef.current.style.transition = 'none';
-        }
-        if (bgRef.current) bgRef.current.style.display = 'block';
-      }
-    }
-    if (isSwiping.current && deltaX > 0) {
-      const sw = window.innerWidth;
-      const progress = deltaX / sw;
-      if (contentRef.current) {
-        contentRef.current.style.transform = `translateX(${deltaX}px)`;
-        contentRef.current.style.boxShadow = '-4px 0 20px rgba(0,0,0,0.15)';
-        contentRef.current.style.borderRadius = '12px 0 0 12px';
-      }
-      if (overlayRef.current) {
-        overlayRef.current.style.opacity = String(0.35 * (1 - progress));
-      }
-    }
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null || !isSwiping.current) {
-      touchStartX.current = null;
-      touchStartY.current = null;
-      return;
-    }
+    if (touchStartX.current === null || touchStartY.current === null) return;
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    const elapsed = Date.now() - touchStartTime.current;
-    const velocity = deltaX / elapsed;
+    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
     touchStartX.current = null;
     touchStartY.current = null;
-    isSwiping.current = false;
-    const screenWidth = window.innerWidth;
-    if (deltaX > screenWidth * 0.3 || velocity > 0.5) {
-      if (contentRef.current) {
-        contentRef.current.style.transition = 'transform 0.28s cubic-bezier(0.2,0.9,0.3,1)';
-        contentRef.current.style.transform = `translateX(${screenWidth}px)`;
-      }
-      if (overlayRef.current) {
-        overlayRef.current.style.transition = 'opacity 0.28s ease-out';
-        overlayRef.current.style.opacity = '0';
-      }
-      setTimeout(() => window.history.back(), 280);
-    } else {
-      if (contentRef.current) {
-        contentRef.current.style.transition = 'transform 0.25s cubic-bezier(0.2,0.9,0.3,1)';
-        contentRef.current.style.transform = 'translateX(0)';
-        contentRef.current.style.boxShadow = 'none';
-        contentRef.current.style.borderRadius = '0';
-      }
-      if (overlayRef.current) {
-        overlayRef.current.style.transition = 'opacity 0.25s ease-out';
-        overlayRef.current.style.opacity = '0';
-        setTimeout(() => { if (overlayRef.current) overlayRef.current.style.display = 'none'; }, 250);
-      }
-      if (bgRef.current) {
-        setTimeout(() => { if (bgRef.current) bgRef.current.style.display = 'none'; }, 250);
-      }
+    if (deltaX > 80 && deltaY < 100) {
+      window.history.back();
     }
   }, []);
 
@@ -304,27 +232,7 @@ export default function ProductDetail() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background" ref={pageRef} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      <div
-        ref={bgRef}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 39,
-          display: 'none', pointerEvents: 'none',
-          background: '#111',
-        }}
-      />
-      <div
-        ref={overlayRef}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 40,
-          display: 'none', pointerEvents: 'none',
-          backgroundColor: 'rgba(0,0,0,0.35)',
-        }}
-      />
-      <div ref={contentRef} style={{
-        position: 'relative', zIndex: 41, backgroundColor: 'var(--background)',
-        minHeight: '100vh', willChange: 'transform',
-      }}>
+    <div className="min-h-screen bg-background" ref={pageRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <div className="container mx-auto px-4 py-6">
         <Button variant="ghost" className={`${isRTL ? 'pr-0' : 'pl-0'} hover:bg-transparent hover:text-accent text-base`} data-testid="button-back" onClick={() => window.history.back()}>
           <ArrowLeft className={`h-5 w-5 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} strokeWidth={2.5} /> {isRTL ? 'رجوع' : 'Back'}
@@ -517,7 +425,6 @@ export default function ProductDetail() {
             </div>
           </div>
         )}
-      </div>
       </div>
     </div>
   );
