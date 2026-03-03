@@ -537,13 +537,31 @@ export function setupSimpleAuth(app: Express) {
   // Register with phone + password (direct registration)
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const { phone, password, firstName, lastName, email } = req.body;
+      const { phone, password, firstName, lastName, email, firebaseIdToken } = req.body;
 
-      if (!phone || !password || !firstName || !lastName) {
-        return res.status(400).json({ message: "Phone, password, first name, and last name are required" });
+      if (!password || !firstName || !lastName) {
+        return res.status(400).json({ message: "Password, first name, and last name are required" });
       }
 
-      const normalizedPhone = normalizePhone(phone);
+      let normalizedPhone: string;
+
+      if (firebaseIdToken) {
+        try {
+          const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
+          const firebasePhone = decodedToken.phone_number;
+          if (!firebasePhone) {
+            return res.status(400).json({ message: "No phone number found in verification token" });
+          }
+          normalizedPhone = normalizePhone(firebasePhone);
+        } catch (err) {
+          console.error("Firebase token verification failed:", err);
+          return res.status(400).json({ message: "Phone verification failed. Please try again." });
+        }
+      } else if (phone) {
+        normalizedPhone = normalizePhone(phone);
+      } else {
+        return res.status(400).json({ message: "Phone number or verification is required" });
+      }
 
       if (normalizedPhone.length < 7) {
         return res.status(400).json({ message: "Phone number must be at least 7 digits" });

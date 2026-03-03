@@ -74,34 +74,18 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
     - Purpose: Firebase Cloud Messaging (FCM) for Android push notifications and Firebase Phone Authentication.
 - **Domain:** thesamanapp.com (managed via GoDaddy).
 
-## Future Feature: Firebase OTP Phone Verification (DISABLED - Re-enable when ready)
+## Firebase OTP Phone Verification (ENABLED in new app version)
 
-**Status:** Code removed from registration flow. Re-add when new app version is released on App Store.
-
-**What it does:** New users must verify their phone number via SMS OTP before account creation (prevents bots/fake accounts).
+**Status:** OTP verification is ACTIVE in the registration flow. Backend accepts BOTH flows for backward compatibility:
+- **New app (OTP flow):** User fills form → SMS OTP sent via Firebase → user enters 6-digit code → Firebase token verified on backend → account created
+- **Old app (direct flow):** User sends phone directly → account created (for users still on older App Store version)
 
 **Firebase project:** saman-car-spare-parts
 
-**Files to modify when re-enabling:**
-1. `client/src/pages/Auth.tsx` — Add back OTP step between form submit and account creation:
-   - Import `sendOTP`, `verifyOTP` from `@/lib/firebase`
-   - Add states: `otpStep`, `otpCode`, `otpDigits`, `isSendingOTP`, `isVerifyingOTP`, `pendingFormData`, `otpInputRefs`
-   - On register submit: call `sendOTP(phone)` → show OTP input screen → on verify call `verifyOTP(code)` → get `idToken` → send to backend
-   - Add `<div id="recaptcha-container"></div>` at bottom of page (required by Firebase)
-   - Import `ShieldCheck` from lucide-react for the OTP screen icon
-2. `client/src/hooks/use-auth.ts` — Change `RegisterParams.phone` back to `RegisterParams.firebaseIdToken` (string)
-3. `server/simpleAuth.ts` — In `/api/auth/register` endpoint:
-   - Accept `firebaseIdToken` instead of `phone`
-   - Use `admin.auth().verifyIdToken(firebaseIdToken)` to extract phone number
-   - Normalize the phone from the decoded token
-4. `client/src/lib/firebase.ts` — Already exists with `sendOTP()` and `verifyOTP()` functions using Firebase JS SDK
+**Key files:**
+1. `client/src/pages/Auth.tsx` — Registration triggers OTP via `sendOTP()`, shows 6-digit input screen, then calls `verifyOTP()` to get `idToken`, sends to backend
+2. `client/src/hooks/use-auth.ts` — `RegisterParams` accepts optional `phone` OR `firebaseIdToken`
+3. `server/simpleAuth.ts` — `/api/auth/register` accepts `firebaseIdToken` (verifies via `admin.auth().verifyIdToken()`) OR `phone` (direct, backward compatible)
+4. `client/src/lib/firebase.ts` — `sendOTP()` and `verifyOTP()` functions using Firebase JS SDK with invisible reCAPTCHA
 
-**Firebase config (already in client/src/lib/firebase.ts):**
-- API Key, Auth Domain, Project ID etc. for saman-car-spare-parts
-- Uses `RecaptchaVerifier` (invisible) for bot protection
-- `signInWithPhoneNumber()` for sending OTP
-- `confirm()` on the confirmation result to verify code and get `idToken`
-
-**Backend Firebase Admin SDK (already in server/simpleAuth.ts):**
-- Uses `FIREBASE_ADMIN_CREDENTIALS` secret for service account
-- `admin.auth().verifyIdToken()` to validate the Firebase ID token from frontend
+**Once old app version is fully phased out:** Remove the direct `phone` path from `/api/auth/register` so only verified OTP registrations are accepted.
