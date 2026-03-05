@@ -3385,6 +3385,50 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   }
   
+  app.post("/api/contact", rateLimit({ windowMs: 15 * 60 * 1000, max: 5 }), async (req, res) => {
+    try {
+      const { name, email, subject, message } = req.body;
+      if (!name || !email || !message) {
+        return res.status(400).json({ error: "Name, email, and message are required" });
+      }
+
+      const nodemailer = await import("nodemailer");
+      const transporter = nodemailer.default.createTransport({
+        service: "gmail",
+        auth: {
+          user: "Samanapp.help@gmail.com",
+          pass: process.env.SAMAN_EMAIL_PASSWORD,
+        },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
+      });
+
+      await transporter.sendMail({
+        from: '"Saman Marketplace" <Samanapp.help@gmail.com>',
+        to: "samanhelp@outlook.com",
+        replyTo: email,
+        subject: `Contact Form: ${subject || "No Subject"} - from ${name}`,
+        html: `
+          <h2>New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Subject:</strong> ${subject || "N/A"}</p>
+          <hr/>
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, "<br/>")}</p>
+          <hr/>
+          <p style="color: #888; font-size: 12px;">Sent from Saman Marketplace Contact Form</p>
+        `,
+      });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Contact form email error:", error);
+      res.status(500).json({ error: "Failed to send message. Please try again later." });
+    }
+  });
+
   // Run tasks on startup and every hour
   runScheduledTasks();
   setInterval(runScheduledTasks, 60 * 60 * 1000); // Run every hour

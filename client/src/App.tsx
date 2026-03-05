@@ -92,6 +92,8 @@ function Router() {
           <Route path="/privacy" component={Privacy} />
           <Route path="/cookies" component={Cookies} />
           <Route path="/contact" component={Contact} />
+          <Route path="/en/contact" component={Contact} />
+          <Route path="/en/contact/" component={Contact} />
           <Route path="/refund" component={Refund} />
           <Route path="/help" component={Help} />
           <Route path="/payment/success" component={PaymentSuccess} />

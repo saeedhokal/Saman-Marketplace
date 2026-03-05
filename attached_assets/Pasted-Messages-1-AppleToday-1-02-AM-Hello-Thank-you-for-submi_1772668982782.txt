@@ -1,0 +1,60 @@
+Messages (1)
+
+AppleToday 1:02 AM
+Hello, 
+
+Thank you for submitting an update to the app, Saman Marketplace, for review. We noticed some issues that require your attention. Please see below for additional information.
+
+If you have any questions, we are here to help. Reply to this message in App Store Connect and let us know.
+
+Review Environment
+Submission ID: 2f641f89-8de3-4ac1-965b-4a0db6871911
+Review date: March 04, 2026
+Review Device: iPad Air 11-inch (M3)
+Version reviewed: 1.3.2
+
+
+Guideline 2.1 - Information Needed
+
+The app binary includes the PassKit framework for implementing Apple Pay, but we were unable to verify any integration of Apple Pay within the app.
+
+Next Steps
+
+If the app integrates the functionality referenced above, indicate where in the app we can locate it.
+
+If the app does not include this functionality, indicate this information in the Review Notes section for each version of the app in App Store Connect when submitting for review.
+
+
+Guideline 1.5 - Safety
+Issue Description
+
+The Support URL provided in App Store Connect, https://thesamanapp.com/en/contact/, is currently not functional and/or displays an error. 
+
+See attached screenshot(s) for details.
+
+Next Steps
+
+Update the specified Support URL to direct users to a functional webpage with support information.
+
+Resources
+
+- Learn about Support URLs and other platform version information on App Store Connect Help.
+- Learn more about developer information requirements in guideline 1.5.
+
+Support
+- Reply to this message in your preferred language if you need assistance. If you need additional support, use the Contact Us module.
+- Consult with fellow developers and Apple engineers on the Apple Developer Forums.
+- Provide feedback on this message and your review experience by completing a short survey.
+
+Reply to App Review
+
+Date Submitted
+Mar 3, 2026 at 6:45 AM
+Submission ID
+2f641f89-8de3-4ac1-965b-4a0db6871911
+Submitted By
+Saeed Hokal
+Last Updated By
+Apple
+Cancel Submission
+App Store Connect
