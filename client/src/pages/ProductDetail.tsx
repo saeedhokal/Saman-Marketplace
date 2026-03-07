@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
@@ -127,6 +127,31 @@ export default function ProductDetail() {
 
   const formatWhatsAppNumber = (num: string) => {
     return num.replace(/[^0-9]/g, '');
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `https://thesamanapp.com/product/${id}`;
+    const shareTitle = product?.title || "Check out this listing on Saman Marketplace";
+    const shareText = product?.price 
+      ? `${shareTitle} - AED ${Number(product.price).toLocaleString()}`
+      : shareTitle;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Share failed:", err);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({ title: "Link Copied", description: "Listing link copied to clipboard." });
+      } catch {
+        toast({ variant: "destructive", title: "Error", description: "Could not copy link." });
+      }
+    }
   };
 
   const allImages = useMemo(() => {
@@ -256,15 +281,26 @@ export default function ProductDetail() {
               </div>
             )}
             
-            <Button
-              size="icon"
-              variant="secondary"
-              className={`absolute top-4 right-4 h-10 w-10 rounded-full shadow-lg z-10 border ${isFavorite ? 'bg-red-50 text-red-500 border-red-200' : 'bg-white text-gray-700 border-gray-200'}`}
-              onClick={handleToggleFavorite}
-              data-testid="button-favorite"
-            >
-              <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
-            </Button>
+            <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+              <Button
+                size="icon"
+                variant="secondary"
+                className={`h-10 w-10 rounded-full shadow-lg border ${isFavorite ? 'bg-red-50 text-red-500 border-red-200' : 'bg-white text-gray-700 border-gray-200'}`}
+                onClick={handleToggleFavorite}
+                data-testid="button-favorite"
+              >
+                <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
+              </Button>
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-10 w-10 rounded-full shadow-lg border bg-white text-gray-700 border-gray-200"
+                onClick={handleShare}
+                data-testid="button-share"
+              >
+                <Share2 className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-col justify-center">
