@@ -97,3 +97,20 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 4. `client/src/lib/firebase.ts` — `sendOTP()` and `verifyOTP()` functions using Firebase JS SDK with invisible reCAPTCHA
 
 **Once old app version is fully phased out:** Remove the direct `phone` path from `/api/auth/register` so only verified OTP registrations are accepted.
+
+## Pending for Next Build (v1.3.3+)
+
+### Deep Linking / Universal Links
+- **Purpose:** When users share listing links (e.g. `thesamanapp.com/product/123`), the link should open the app directly instead of the browser (if the app is installed).
+- **What's needed:**
+  1. **Apple Team ID** — need to ask user for this (found in Apple Developer account under Membership)
+  2. **Server side:** Serve `/.well-known/apple-app-site-association` (iOS) and `/.well-known/assetlinks.json` (Android) files from thesamanapp.com
+  3. **iOS native:** Add Associated Domains capability (`applinks:thesamanapp.com`) in Xcode/Codemagic entitlements
+  4. **Android native:** Add intent filters in `AndroidManifest.xml` for `thesamanapp.com` URLs
+  5. **Android signing:** Need SHA-256 fingerprint of the signing key for `assetlinks.json`
+- **Requires a new native build** — cannot be done with just a publish
+
+### Image Pinch-to-Zoom
+- **Issue:** Capacitor WKWebView blocks pinch-to-zoom by default. CSS `touch-action: pinch-zoom` and custom JS touch handlers both don't work.
+- **Fix needed:** Either configure WKWebView to allow zoom or use a Capacitor plugin for native image viewing
+- **Requires a new native build**
