@@ -2538,20 +2538,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ message: "Password reset successfully" });
   });
 
-  app.post("/api/internal/fix-user-phone-password", async (req, res) => {
-    const { secret, userId, phone, password } = req.body;
-    if (secret !== "saman-fix-2026-temp") {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-    const updates: any = {};
-    if (phone) updates.phone = normalizePhone(phone);
-    if (password) updates.password = await bcrypt.hash(password.trim(), 10);
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({ message: "Nothing to update" });
-    }
-    await db.update(users).set(updates).where(eq(users.id, userId));
-    res.json({ message: "User updated", phone: updates.phone });
-  });
 
   // Bootstrap: Clean up and delete all accounts with owner phone number
   app.delete("/api/bootstrap/cleanup-owner-accounts", async (req, res) => {
