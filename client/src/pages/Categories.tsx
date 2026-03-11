@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useLocation } from "wouter";
 import { useProducts } from "@/hooks/use-products";
 import { useLanguage } from "@/hooks/use-language";
 import { ProductCard } from "@/components/ProductCard";
@@ -36,31 +35,39 @@ type MainCategory = "automotive" | "spare-parts";
 type SortOption = "newest" | "oldest" | "price-low" | "price-high";
 
 export default function Categories() {
-  const [location] = useLocation();
   const { t, isRTL } = useLanguage();
 
-  const saved = useMemo(() => {
+  const initState = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    const hasTabParam = tab === "spare-parts" || tab === "automotive";
+
+    if (hasTabParam) {
+      sessionStorage.removeItem("categoriesFilters");
+      return { activeCategory: (tab as MainCategory) };
+    }
+
     try {
       const raw = sessionStorage.getItem("categoriesFilters");
       if (raw) return JSON.parse(raw);
     } catch {}
-    return null;
+    return {};
   }, []);
 
-  const [search, setSearch] = useState(saved?.search || "");
-  const [activeCategory, setActiveCategory] = useState<MainCategory>(saved?.activeCategory || "automotive");
-  const [activeSubCategory, setActiveSubCategory] = useState(saved?.activeSubCategory || "All");
-  const [activeModel, setActiveModel] = useState(saved?.activeModel || "All");
-  const [sortBy, setSortBy] = useState<SortOption>(saved?.sortBy || "newest");
+  const [search, setSearch] = useState(initState.search || "");
+  const [activeCategory, setActiveCategory] = useState<MainCategory>(initState.activeCategory || "automotive");
+  const [activeSubCategory, setActiveSubCategory] = useState(initState.activeSubCategory || "All");
+  const [activeModel, setActiveModel] = useState(initState.activeModel || "All");
+  const [sortBy, setSortBy] = useState<SortOption>(initState.sortBy || "newest");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [priceMin, setPriceMin] = useState(saved?.priceMin || "");
-  const [priceMax, setPriceMax] = useState(saved?.priceMax || "");
-  const [yearMin, setYearMin] = useState(saved?.yearMin || "");
-  const [yearMax, setYearMax] = useState(saved?.yearMax || "");
-  const [kmMin, setKmMin] = useState(saved?.kmMin || "");
-  const [kmMax, setKmMax] = useState(saved?.kmMax || "");
-  const [sellerType, setSellerType] = useState(saved?.sellerType || "all");
-  const [condition, setCondition] = useState(saved?.condition || "all");
+  const [priceMin, setPriceMin] = useState(initState.priceMin || "");
+  const [priceMax, setPriceMax] = useState(initState.priceMax || "");
+  const [yearMin, setYearMin] = useState(initState.yearMin || "");
+  const [yearMax, setYearMax] = useState(initState.yearMax || "");
+  const [kmMin, setKmMin] = useState(initState.kmMin || "");
+  const [kmMax, setKmMax] = useState(initState.kmMax || "");
+  const [sellerType, setSellerType] = useState(initState.sellerType || "all");
+  const [condition, setCondition] = useState(initState.condition || "all");
 
   useEffect(() => {
     sessionStorage.setItem("categoriesFilters", JSON.stringify({
@@ -68,20 +75,6 @@ export default function Categories() {
       priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition,
     }));
   }, [search, activeCategory, activeSubCategory, activeModel, sortBy, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get("tab");
-    if (tab === "spare-parts") {
-      setActiveCategory("spare-parts");
-      setActiveSubCategory("All");
-      setActiveModel("All");
-    } else if (tab === "automotive") {
-      setActiveCategory("automotive");
-      setActiveSubCategory("All");
-      setActiveModel("All");
-    }
-  }, [location]);
   
   const getMainCategoryFilter = () => {
     if (activeCategory === "spare-parts") return "Spare Parts";
