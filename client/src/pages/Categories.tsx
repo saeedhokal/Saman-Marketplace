@@ -34,23 +34,35 @@ import { Link } from "wouter";
 type MainCategory = "automotive" | "spare-parts";
 type SortOption = "newest" | "oldest" | "price-low" | "price-high";
 
+interface CategoryFilters {
+  search: string;
+  activeCategory: MainCategory;
+  activeSubCategory: string;
+  activeModel: string;
+  sortBy: SortOption;
+  priceMin: string;
+  priceMax: string;
+  yearMin: string;
+  yearMax: string;
+  kmMin: string;
+  kmMax: string;
+  sellerType: string;
+  condition: string;
+}
+
+let savedFilters: CategoryFilters | null = null;
+
 export default function Categories() {
   const { t, isRTL } = useLanguage();
 
   const initState = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    const hasTabParam = tab === "spare-parts" || tab === "automotive";
-
-    if (hasTabParam) {
-      sessionStorage.removeItem("categoriesFilters");
-      return { activeCategory: (tab as MainCategory) };
+    if (tab === "spare-parts" || tab === "automotive") {
+      savedFilters = null;
+      return { activeCategory: tab as MainCategory };
     }
-
-    try {
-      const raw = sessionStorage.getItem("categoriesFilters");
-      if (raw) return JSON.parse(raw);
-    } catch {}
+    if (savedFilters) return savedFilters;
     return {};
   }, []);
 
@@ -70,10 +82,10 @@ export default function Categories() {
   const [condition, setCondition] = useState(initState.condition || "all");
 
   useEffect(() => {
-    sessionStorage.setItem("categoriesFilters", JSON.stringify({
+    savedFilters = {
       search, activeCategory, activeSubCategory, activeModel, sortBy,
       priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition,
-    }));
+    };
   }, [search, activeCategory, activeSubCategory, activeModel, sortBy, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition]);
   
   const getMainCategoryFilter = () => {
