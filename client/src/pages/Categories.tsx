@@ -38,28 +38,48 @@ type SortOption = "newest" | "oldest" | "price-low" | "price-high";
 export default function Categories() {
   const [location] = useLocation();
   const { t, isRTL } = useLanguage();
-  const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<MainCategory>("automotive");
-  const [activeSubCategory, setActiveSubCategory] = useState("All");
-  const [activeModel, setActiveModel] = useState("All");
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
+
+  const saved = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem("categoriesFilters");
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return null;
+  }, []);
+
+  const [search, setSearch] = useState(saved?.search || "");
+  const [activeCategory, setActiveCategory] = useState<MainCategory>(saved?.activeCategory || "automotive");
+  const [activeSubCategory, setActiveSubCategory] = useState(saved?.activeSubCategory || "All");
+  const [activeModel, setActiveModel] = useState(saved?.activeModel || "All");
+  const [sortBy, setSortBy] = useState<SortOption>(saved?.sortBy || "newest");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [priceMin, setPriceMin] = useState("");
-  const [priceMax, setPriceMax] = useState("");
-  const [yearMin, setYearMin] = useState("");
-  const [yearMax, setYearMax] = useState("");
-  const [kmMin, setKmMin] = useState("");
-  const [kmMax, setKmMax] = useState("");
-  const [sellerType, setSellerType] = useState("all");
-  const [condition, setCondition] = useState("all");
+  const [priceMin, setPriceMin] = useState(saved?.priceMin || "");
+  const [priceMax, setPriceMax] = useState(saved?.priceMax || "");
+  const [yearMin, setYearMin] = useState(saved?.yearMin || "");
+  const [yearMax, setYearMax] = useState(saved?.yearMax || "");
+  const [kmMin, setKmMin] = useState(saved?.kmMin || "");
+  const [kmMax, setKmMax] = useState(saved?.kmMax || "");
+  const [sellerType, setSellerType] = useState(saved?.sellerType || "all");
+  const [condition, setCondition] = useState(saved?.condition || "all");
+
+  useEffect(() => {
+    sessionStorage.setItem("categoriesFilters", JSON.stringify({
+      search, activeCategory, activeSubCategory, activeModel, sortBy,
+      priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition,
+    }));
+  }, [search, activeCategory, activeSubCategory, activeModel, sortBy, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
     if (tab === "spare-parts") {
       setActiveCategory("spare-parts");
+      setActiveSubCategory("All");
+      setActiveModel("All");
     } else if (tab === "automotive") {
       setActiveCategory("automotive");
+      setActiveSubCategory("All");
+      setActiveModel("All");
     }
   }, [location]);
   
