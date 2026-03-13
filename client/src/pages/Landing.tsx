@@ -204,44 +204,9 @@ export default function Landing() {
             </Link>
           </div>
 
-        {/* For You Section - show skeleton while loading */}
-        {(isLoadingRecommended || recommendedProducts.length > 0) && (
-          <div className="mb-4 -mx-4 px-4 py-4 bg-gray-100/80 dark:bg-black/30 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('forYou')}</h2>
-              <Link href="/categories">
-                <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recommended">{t('viewAll')}</span>
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {isLoadingRecommended ? (
-                <>
-                  <SkeletonCard />
-                  <SkeletonCard />
-                  <SkeletonCard />
-                  <SkeletonCard />
-                  <div className="hidden md:block"><SkeletonCard /></div>
-                  <div className="hidden md:block"><SkeletonCard /></div>
-                  <div className="hidden md:block"><SkeletonCard /></div>
-                  <div className="hidden md:block"><SkeletonCard /></div>
-                </>
-              ) : (
-                recommendedProducts.slice(0, 12).map((product) => (
-                  <ProductCard 
-                    key={product.id} 
-                    product={product}
-                    sellerImageUrl={(product as any).sellerProfileImageUrl}
-                    showDate
-                  />
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Recent Posts Section */}
         {(isLoadingRecent || recentProducts.length > 0) && (
-          <div className="mb-0 -mx-4 px-4 py-4">
+          <div className="mb-4 -mx-4 px-4 py-4 bg-gray-100/80 dark:bg-black/30 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('recentPosts')}</h2>
               <Link href="/categories">
@@ -262,6 +227,41 @@ export default function Landing() {
                 </>
               ) : (
                 recentProducts.slice(0, 12).map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product}
+                    sellerImageUrl={(product as any).sellerProfileImageUrl}
+                    showDate
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* For You Section */}
+        {(isLoadingRecommended || recommendedProducts.length > 0) && (
+          <div className="mb-0 -mx-4 px-4 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('forYou')}</h2>
+              <Link href="/categories">
+                <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recommended">{t('viewAll')}</span>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {isLoadingRecommended ? (
+                <>
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                  <div className="hidden md:block"><SkeletonCard /></div>
+                </>
+              ) : (
+                recommendedProducts.slice(0, 12).map((product) => (
                   <ProductCard 
                     key={product.id} 
                     product={product}
