@@ -2539,15 +2539,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
 
-  app.post("/api/internal/list-users", async (req, res) => {
-    const { secret } = req.body;
-    if (secret !== "saman-fix-2026-temp") {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-    const allUsers = await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName, phone: users.phone, email: users.email, createdAt: users.createdAt }).from(users).orderBy(users.createdAt);
-    res.json({ total: allUsers.length, users: allUsers });
-  });
-
   // Bootstrap: Clean up and delete all accounts with owner phone number
   app.delete("/api/bootstrap/cleanup-owner-accounts", async (req, res) => {
     const ownerPhone = "971507242111";
