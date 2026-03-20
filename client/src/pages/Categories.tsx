@@ -96,16 +96,6 @@ export default function Categories() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const hasRestoredScroll = useRef(false);
-  useEffect(() => {
-    if (!isLoading && savedScrollY > 0 && !hasRestoredScroll.current) {
-      hasRestoredScroll.current = true;
-      requestAnimationFrame(() => {
-        window.scrollTo(0, savedScrollY);
-      });
-    }
-  }, [isLoading]);
-  
   const getMainCategoryFilter = () => {
     if (activeCategory === "spare-parts") return "Spare Parts";
     if (activeCategory === "automotive") return "Automotive";
@@ -117,6 +107,16 @@ export default function Categories() {
     mainCategory: getMainCategoryFilter(),
     subCategory: activeSubCategory !== "All" ? activeSubCategory : undefined,
   });
+
+  const hasRestoredScroll = useRef(false);
+  useEffect(() => {
+    if (!isLoading && savedScrollY > 0 && !hasRestoredScroll.current) {
+      hasRestoredScroll.current = true;
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedScrollY);
+      });
+    }
+  }, [isLoading]);
 
   const handleRefresh = useCallback(async () => {
     await refetch();
