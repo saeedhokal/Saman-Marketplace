@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useProducts } from "@/hooks/use-products";
 import { useLanguage } from "@/hooks/use-language";
 import { ProductCard } from "@/components/ProductCard";
@@ -51,6 +51,7 @@ interface CategoryFilters {
 }
 
 let savedFilters: CategoryFilters | null = null;
+let savedScrollY: number = 0;
 
 export default function Categories() {
   const { t, isRTL } = useLanguage();
@@ -60,6 +61,7 @@ export default function Categories() {
     const tab = params.get("tab");
     if (tab === "spare-parts" || tab === "automotive") {
       savedFilters = null;
+      savedScrollY = 0;
       return { activeCategory: tab as MainCategory };
     }
     if (savedFilters) return savedFilters;
@@ -87,6 +89,22 @@ export default function Categories() {
       priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition,
     };
   }, [search, activeCategory, activeSubCategory, activeModel, sortBy, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition]);
+
+  useEffect(() => {
+    const handleScroll = () => { savedScrollY = window.scrollY; };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const hasRestoredScroll = useRef(false);
+  useEffect(() => {
+    if (!isLoading && savedScrollY > 0 && !hasRestoredScroll.current) {
+      hasRestoredScroll.current = true;
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedScrollY);
+      });
+    }
+  }, [isLoading]);
   
   const getMainCategoryFilter = () => {
     if (activeCategory === "spare-parts") return "Spare Parts";
