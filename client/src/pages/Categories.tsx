@@ -91,9 +91,11 @@ export default function Categories() {
   }, [search, activeCategory, activeSubCategory, activeModel, sortBy, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition]);
 
   useEffect(() => {
-    const handleScroll = () => { savedScrollY = window.scrollY; };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const container = document.getElementById('main-scroll-container');
+    if (!container) return;
+    const handleScroll = () => { savedScrollY = container.scrollTop; };
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
   const getMainCategoryFilter = () => {
@@ -112,11 +114,13 @@ export default function Categories() {
   useEffect(() => {
     if (!isLoading && products && products.length > 0 && savedScrollY > 0 && !hasRestoredScroll.current) {
       hasRestoredScroll.current = true;
+      const container = document.getElementById('main-scroll-container');
+      if (!container) return;
       const tryRestore = (attempts: number) => {
         if (attempts <= 0) return;
         requestAnimationFrame(() => {
-          if (document.body.scrollHeight > savedScrollY) {
-            window.scrollTo(0, savedScrollY);
+          if (container.scrollHeight > savedScrollY) {
+            container.scrollTop = savedScrollY;
           } else {
             setTimeout(() => tryRestore(attempts - 1), 50);
           }
