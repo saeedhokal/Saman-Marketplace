@@ -110,13 +110,21 @@ export default function Categories() {
 
   const hasRestoredScroll = useRef(false);
   useEffect(() => {
-    if (!isLoading && savedScrollY > 0 && !hasRestoredScroll.current) {
+    if (!isLoading && products && products.length > 0 && savedScrollY > 0 && !hasRestoredScroll.current) {
       hasRestoredScroll.current = true;
-      requestAnimationFrame(() => {
-        window.scrollTo(0, savedScrollY);
-      });
+      const tryRestore = (attempts: number) => {
+        if (attempts <= 0) return;
+        requestAnimationFrame(() => {
+          if (document.body.scrollHeight > savedScrollY) {
+            window.scrollTo(0, savedScrollY);
+          } else {
+            setTimeout(() => tryRestore(attempts - 1), 50);
+          }
+        });
+      };
+      tryRestore(20);
     }
-  }, [isLoading]);
+  }, [isLoading, products]);
 
   const handleRefresh = useCallback(async () => {
     await refetch();
