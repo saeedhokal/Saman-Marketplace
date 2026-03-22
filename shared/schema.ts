@@ -495,6 +495,7 @@ export const products = pgTable("products", {
   rejectedAt: timestamp("rejected_at"), // Timestamp when rejected (for 7-day cleanup)
   expiresAt: timestamp("expires_at"), // Set to 1 month after approval
   expirationNotified: boolean("expiration_notified").default(false), // Track if expiry notification sent
+  views: integer("views").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

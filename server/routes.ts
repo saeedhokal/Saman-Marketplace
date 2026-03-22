@@ -456,6 +456,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(404).json({ message: "Product not found" });
     }
     
+    db.update(products).set({ views: sql`COALESCE(${products.views}, 0) + 1` }).where(eq(products.id, id)).execute().catch(() => {});
+
     // Attach seller profile image with cache-busting
     let sellerProfileImageUrl = null;
     if (product.sellerId) {

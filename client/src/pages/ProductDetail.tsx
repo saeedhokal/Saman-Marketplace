@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2 } from "lucide-react";
+import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2, Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
@@ -319,6 +319,13 @@ export default function ProductDetail() {
                   </span>
                 )}
               </div>
+
+              {user?.isAdmin && (
+                <div className="flex items-center gap-1.5 text-muted-foreground text-sm" data-testid="text-view-count">
+                  <Eye className="w-4 h-4" />
+                  <span>{(product as any).views || 0} views</span>
+                </div>
+              )}
 
               {product.location && (
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
