@@ -119,7 +119,7 @@ export function setupSimpleAuth(app: Express) {
     throw new Error("SESSION_SECRET environment variable is required");
   }
 
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const sessionTtl = 30 * 24 * 60 * 60 * 1000; // 30 days
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
@@ -141,6 +141,7 @@ export function setupSimpleAuth(app: Express) {
       secret: process.env.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
+      rolling: true,
       cookie: {
         httpOnly: true,
         secure: isProduction,
