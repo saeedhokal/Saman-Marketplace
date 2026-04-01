@@ -121,7 +121,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       latestVersion: "2.0.3",
       iosUrl: "https://apps.apple.com/app/saman-marketplace/id6744526430",
       androidUrl: "https://play.google.com/store/apps/details?id=com.saman.marketplace",
-      forceUpdate: false
+      forceUpdate: true
     });
   });
 
