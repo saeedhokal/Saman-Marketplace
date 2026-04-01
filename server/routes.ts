@@ -116,6 +116,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   setupSimpleAuth(app);
   registerObjectStorageRoutes(app);
 
+  app.get("/api/app-version", (_req, res) => {
+    res.json({
+      latestVersion: "2.0.3",
+      iosUrl: "https://apps.apple.com/app/saman-marketplace/id6744526430",
+      androidUrl: "https://play.google.com/store/apps/details?id=com.saman.marketplace",
+      forceUpdate: false
+    });
+  });
+
   // Public health check endpoint (no auth required) for deployment verification
   // In-memory log for Apple Pay session debugging (stores last 10 attempts)
   const applePaySessionLogs: Array<{timestamp: string, step: string, data: any}> = [];

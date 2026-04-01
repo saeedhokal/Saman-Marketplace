@@ -78,6 +78,10 @@ export const translations = {
     appInfo: "App Info",
     version: "Version",
     madeInUAE: "Made with care in the UAE",
+    updateAvailable: "Update Available",
+    updateMessage: "A new version of Saman is available. Update now for the best experience.",
+    updateNow: "Update Now",
+    later: "Later",
     
     // Sell
     sellItem: "Sell Item",
@@ -391,6 +395,10 @@ export const translations = {
     appInfo: "معلومات التطبيق",
     version: "الإصدار",
     madeInUAE: "صنع بحب في الإمارات",
+    updateAvailable: "تحديث متاح",
+    updateMessage: "إصدار جديد من سمان متاح. حدّث الآن للحصول على أفضل تجربة.",
+    updateNow: "حدّث الآن",
+    later: "لاحقاً",
     
     // Sell
     sellItem: "بيع منتج",
