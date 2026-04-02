@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
 import { useLanguage } from "@/hooks/use-language";
 import { motion, AnimatePresence } from "framer-motion";
 
-const CURRENT_VERSION = "2.0.3";
 const DISMISSED_KEY = "update_dismissed_version";
 
 function compareVersions(a: string, b: string): number {
@@ -30,11 +30,14 @@ export function UpdatePrompt() {
 
     const checkVersion = async () => {
       try {
+        const appInfo = await CapApp.getInfo();
+        const currentVersion = appInfo.version;
+
         const res = await fetch("/api/app-version");
         if (!res.ok) return;
         const data = await res.json();
 
-        if (compareVersions(data.latestVersion, CURRENT_VERSION) > 0) {
+        if (compareVersions(data.latestVersion, currentVersion) > 0) {
           const dismissed = localStorage.getItem(DISMISSED_KEY);
           if (dismissed === data.latestVersion && !data.forceUpdate) return;
 
