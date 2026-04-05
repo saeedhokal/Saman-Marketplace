@@ -263,10 +263,21 @@ export default function Auth() {
                   ref={(el) => { otpInputRefs.current[index] = el; }}
                   type="tel"
                   inputMode="numeric"
-                  maxLength={1}
+                  maxLength={index === 0 ? 6 : 1}
+                  autoComplete={index === 0 ? "one-time-code" : "off"}
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pasted = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 6);
+                    if (pasted.length > 0) {
+                      const newOtp = [...otpDigits];
+                      pasted.split("").forEach((d, i) => { if (i < 6) newOtp[i] = d; });
+                      setOtpDigits(newOtp);
+                      otpInputRefs.current[Math.min(pasted.length, 5)]?.focus();
+                    }
+                  }}
                   className="w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 bg-background text-foreground focus:outline-none focus:ring-2 transition-all"
                   style={{ 
                     borderColor: digit ? '#f97316' : '#444',
