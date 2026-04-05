@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar } from "lucide-react";
+import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar, Wifi } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link, useLocation } from "wouter";
 
@@ -134,6 +134,12 @@ export default function Admin() {
   const { data: allUsers = [] } = useQuery<UserData[]>({
     queryKey: ["/api/admin/users"],
     enabled: !!userInfo?.isAdmin,
+  });
+
+  const { data: onlineStats } = useQuery<{ total: number; web: number; ios: number; android: number }>({
+    queryKey: ["/api/admin/online-users"],
+    enabled: !!userInfo?.isAdmin,
+    refetchInterval: 15000,
   });
 
   const deleteUserMutation = useMutation({
@@ -400,7 +406,13 @@ export default function Admin() {
             <button className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back" onClick={() => window.history.back()}>
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h1 className="flex-1 text-center font-semibold text-lg pr-8">Admin Panel</h1>
+            <h1 className="flex-1 text-center font-semibold text-lg">Admin Panel</h1>
+            {onlineStats && (
+              <div className="flex items-center gap-1.5 bg-green-500/10 px-3 py-1.5 rounded-full" data-testid="online-users-badge">
+                <Wifi className="h-3.5 w-3.5 text-green-500 animate-pulse" />
+                <span className="text-sm font-semibold text-green-500" data-testid="text-online-count">{onlineStats.total}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -876,6 +888,33 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="users" className="space-y-4">
+            {onlineStats && (
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Wifi className="h-4 w-4 text-green-500 animate-pulse" />
+                      <span className="font-semibold text-sm">Online Now</span>
+                    </div>
+                    <span className="text-2xl font-bold text-green-500" data-testid="text-online-total">{onlineStats.total}</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-1 bg-blue-500/10 rounded-lg p-2 text-center">
+                      <p className="text-lg font-bold text-blue-500" data-testid="text-online-ios">{onlineStats.ios}</p>
+                      <p className="text-xs text-muted-foreground">iOS</p>
+                    </div>
+                    <div className="flex-1 bg-green-500/10 rounded-lg p-2 text-center">
+                      <p className="text-lg font-bold text-green-600" data-testid="text-online-android">{onlineStats.android}</p>
+                      <p className="text-xs text-muted-foreground">Android</p>
+                    </div>
+                    <div className="flex-1 bg-purple-500/10 rounded-lg p-2 text-center">
+                      <p className="text-lg font-bold text-purple-500" data-testid="text-online-web">{onlineStats.web}</p>
+                      <p className="text-xs text-muted-foreground">Web</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">

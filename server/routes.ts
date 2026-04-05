@@ -116,24 +116,32 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   setupSimpleAuth(app);
   registerObjectStorageRoutes(app);
 
-  app.get("/api/temp-delete-user/:phone", async (req, res) => {
-    const secret = req.query.secret;
-    if (secret !== "saman-delete-2026") return res.status(403).json({ error: "Forbidden" });
-    const phone = req.params.phone;
-    try {
-      const [user] = await db.select().from(users).where(eq(users.phone, phone));
-      if (!user) return res.status(404).json({ error: "User not found" });
-      await db.execute(sql`DELETE FROM sessions WHERE sess::text LIKE '%' || ${user.id} || '%'`);
-      await db.execute(sql`DELETE FROM device_tokens WHERE user_id = ${user.id}`);
-      await db.execute(sql`DELETE FROM notifications WHERE user_id = ${user.id}`);
-      await db.execute(sql`DELETE FROM favorites WHERE user_id = ${user.id}`);
-      await db.execute(sql`DELETE FROM user_views WHERE user_id = ${user.id}`);
-      await db.execute(sql`DELETE FROM transactions WHERE user_id = ${user.id}`);
-      await db.delete(users).where(eq(users.id, user.id));
-      res.json({ message: `User ${phone} deleted successfully`, userId: user.id });
-    } catch (e: any) {
-      res.status(500).json({ error: e.message });
+  const onlineUsers = new Map<string, { lastSeen: number; platform: string }>();
+
+  setInterval(() => {
+    const now = Date.now();
+    for (const [id, data] of onlineUsers) {
+      if (now - data.lastSeen > 60000) {
+        onlineUsers.delete(id);
+      }
     }
+  }, 30000);
+
+  app.post("/api/heartbeat", (req, res) => {
+    const sessionId = req.sessionID || req.headers['x-session-id'] as string || `anon-${req.ip}`;
+    const platform = (req.body?.platform as string) || "web";
+    onlineUsers.set(sessionId, { lastSeen: Date.now(), platform });
+    res.json({ ok: true });
+  });
+
+  app.get("/api/admin/online-users", isAuthenticated, (req, res) => {
+    let web = 0, ios = 0, android = 0;
+    for (const [, data] of onlineUsers) {
+      if (data.platform === "ios") ios++;
+      else if (data.platform === "android") android++;
+      else web++;
+    }
+    res.json({ total: onlineUsers.size, web, ios, android });
   });
 
   app.post("/api/log-otp-error", (req, res) => {
