@@ -9,6 +9,25 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import admin from "firebase-admin";
 
+function ensureFirebaseAdmin() {
+  if (admin.apps.length === 0) {
+    const creds = process.env.FIREBASE_ADMIN_CREDENTIALS;
+    if (creds) {
+      try {
+        const serviceAccount = JSON.parse(creds);
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+        });
+        console.log('Firebase Admin SDK initialized for OTP verification');
+      } catch (e) {
+        console.error('Failed to initialize Firebase Admin for OTP:', e);
+      }
+    } else {
+      console.error('FIREBASE_ADMIN_CREDENTIALS not set - OTP verification will fail');
+    }
+  }
+}
+
 declare module "express-session" {
   interface SessionData {
     userId?: string;
@@ -548,6 +567,7 @@ export function setupSimpleAuth(app: Express) {
 
       if (firebaseIdToken) {
         try {
+          ensureFirebaseAdmin();
           const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
           const firebasePhone = decodedToken.phone_number;
           if (!firebasePhone) {
