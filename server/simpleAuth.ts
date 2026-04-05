@@ -604,30 +604,40 @@ export function setupSimpleAuth(app: Express) {
         .from(users)
         .where(eq(users.phone, normalizedPhone));
 
-      if (existingUser) {
-        return res.status(400).json({ message: "Phone number already registered" });
-      }
-
-      // Hash password (no complexity requirements)
       const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Generate default profile image using name as seed
       const defaultProfileImage = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(firstName + ' ' + lastName)}&backgroundColor=f97316`;
 
-      // Create new user
-      const [user] = await db
-        .insert(users)
-        .values({
-          phone: normalizedPhone,
-          password: hashedPassword,
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          email: email?.trim() || null,
-          credits: 0,
-          isAdmin: false,
-          profileImageUrl: defaultProfileImage,
-        })
-        .returning();
+      let user;
+      if (existingUser && existingUser.password) {
+        return res.status(400).json({ message: "Phone number already registered" });
+      } else if (existingUser && !existingUser.password) {
+        [user] = await db
+          .update(users)
+          .set({
+            password: hashedPassword,
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            email: email?.trim() || existingUser.email,
+            profileImageUrl: existingUser.profileImageUrl || defaultProfileImage,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, existingUser.id))
+          .returning();
+      } else {
+        [user] = await db
+          .insert(users)
+          .values({
+            phone: normalizedPhone,
+            password: hashedPassword,
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            email: email?.trim() || null,
+            credits: 0,
+            isAdmin: false,
+            profileImageUrl: defaultProfileImage,
+          })
+          .returning();
+      }
 
       req.session.userId = user.id;
 
