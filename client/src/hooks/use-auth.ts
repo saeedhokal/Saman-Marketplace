@@ -83,11 +83,12 @@ interface RegisterParams {
 }
 
 async function loginFn(params: LoginParams): Promise<User> {
+  const platform = Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web';
   const response = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify(params),
+    body: JSON.stringify({ ...params, platform }),
   });
   
   if (!response.ok) {
@@ -101,11 +102,12 @@ async function loginFn(params: LoginParams): Promise<User> {
 }
 
 async function registerFn(params: RegisterParams): Promise<User> {
+  const platform = Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web';
   const response = await fetch("/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify(params),
+    body: JSON.stringify({ ...params, platform }),
   });
   
   if (!response.ok) {

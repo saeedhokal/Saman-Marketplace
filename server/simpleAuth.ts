@@ -303,10 +303,11 @@ export function setupSimpleAuth(app: Express) {
 
       req.session.userId = user.id;
 
+      const clientPlatform2 = req.body.platform;
       const ua2 = req.headers['user-agent'] || '';
-      const regPlatform = ua2.includes('iPhone') || ua2.includes('iPad') ? 'ios' : ua2.includes('Android') ? 'android' : 'web';
+      const otpPlatform = clientPlatform2 && ['ios', 'android', 'web'].includes(clientPlatform2) ? clientPlatform2 : (ua2.includes('iPhone') || ua2.includes('iPad') ? 'ios' : ua2.includes('Android') ? 'android' : 'web');
       const isNew = !user.createdAt || (Date.now() - new Date(user.createdAt).getTime() < 5000);
-      db.insert(loginEvents).values({ userId: user.id, phone: user.phone, platform: regPlatform, eventType: isNew ? 'register' : 'login' }).catch(() => {});
+      db.insert(loginEvents).values({ userId: user.id, phone: user.phone, platform: otpPlatform, eventType: isNew ? 'register' : 'login' }).catch(() => {});
 
       res.json({
         id: user.id,
@@ -367,8 +368,9 @@ export function setupSimpleAuth(app: Express) {
 
       req.session.userId = user.id;
 
+      const clientPlatform = req.body.platform;
       const ua = req.headers['user-agent'] || '';
-      const loginPlatform = ua.includes('iPhone') || ua.includes('iPad') ? 'ios' : ua.includes('Android') ? 'android' : 'web';
+      const loginPlatform = clientPlatform && ['ios', 'android', 'web'].includes(clientPlatform) ? clientPlatform : (ua.includes('iPhone') || ua.includes('iPad') ? 'ios' : ua.includes('Android') ? 'android' : 'web');
       db.insert(loginEvents).values({ userId: user.id, phone: user.phone, platform: loginPlatform, eventType: 'login' }).catch(() => {});
 
       res.json({
@@ -629,8 +631,9 @@ export function setupSimpleAuth(app: Express) {
 
       req.session.userId = user.id;
 
+      const clientPlatform3 = req.body.platform;
       const ua3 = req.headers['user-agent'] || '';
-      const regPlatform2 = ua3.includes('iPhone') || ua3.includes('iPad') ? 'ios' : ua3.includes('Android') ? 'android' : 'web';
+      const regPlatform2 = clientPlatform3 && ['ios', 'android', 'web'].includes(clientPlatform3) ? clientPlatform3 : (ua3.includes('iPhone') || ua3.includes('iPad') ? 'ios' : ua3.includes('Android') ? 'android' : 'web');
       db.insert(loginEvents).values({ userId: user.id, phone: user.phone, platform: regPlatform2, eventType: 'register' }).catch(() => {});
 
       res.json({
