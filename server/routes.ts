@@ -2266,16 +2266,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const userId = getCurrentUserId(req)!;
     
     try {
-      // Delete all user's products first
+      await db.execute(sql`DELETE FROM device_tokens WHERE user_id = ${userId}`);
+      await db.execute(sql`DELETE FROM notifications WHERE user_id = ${userId}`);
+      await db.execute(sql`DELETE FROM user_views WHERE user_id = ${userId}`);
       await storage.deleteUserProducts(userId);
-      
-      // Delete user favorites
       await storage.deleteUserFavorites(userId);
-      
-      // Delete user's transactions
       await storage.deleteUserTransactions(userId);
-      
-      // Delete the user account
       await storage.deleteUser(userId);
       
       // Destroy session
