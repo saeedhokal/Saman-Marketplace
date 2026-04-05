@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar, Wifi } from "lucide-react";
+import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar, Wifi, BarChart3, Smartphone, Monitor, UserPlus } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link, useLocation } from "wouter";
 
@@ -140,6 +140,22 @@ export default function Admin() {
     queryKey: ["/api/admin/online-users"],
     enabled: !!userInfo?.isAdmin,
     refetchInterval: 15000,
+  });
+
+  const [statsPeriod, setStatsPeriod] = useState<string>("week");
+
+  const { data: loginStats } = useQuery<{
+    period: string;
+    stats: Array<{ date: string; event_type: string; platform: string; count: string; unique_users: string }>;
+    totals: { total_events: string; total_logins: string; unique_users: string; registrations: string; ios: string; android: string; web: string };
+  }>({
+    queryKey: ["/api/admin/login-stats", statsPeriod],
+    queryFn: async () => {
+      const r = await fetch(`/api/admin/login-stats?period=${statsPeriod}`, { credentials: 'include' });
+      if (!r.ok) throw new Error('Failed to load stats');
+      return r.json();
+    },
+    enabled: !!userInfo?.isAdmin,
   });
 
   const deleteUserMutation = useMutation({
@@ -419,7 +435,7 @@ export default function Admin() {
 
       <div className="container mx-auto px-4 pt-4 max-w-6xl">
         <Tabs defaultValue="pending" className="space-y-4">
-          <TabsList className="grid grid-cols-6 w-full">
+          <TabsList className="grid grid-cols-7 w-full">
             <TabsTrigger value="pending" className="text-xs">
               Pending ({pendingListings?.length || 0})
             </TabsTrigger>
@@ -437,6 +453,9 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="settings" className="text-xs">
               Settings
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="text-xs">
+              Stats
             </TabsTrigger>
           </TabsList>
 
@@ -1331,6 +1350,131 @@ export default function Admin() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="stats" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <BarChart3 className="h-4 w-4" />
+                  Login Statistics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2" data-testid="stats-period-selector">
+                  {[
+                    { key: "today", label: "Today" },
+                    { key: "week", label: "7 Days" },
+                    { key: "month", label: "30 Days" },
+                    { key: "year", label: "Year" },
+                  ].map((p) => (
+                    <button
+                      key={p.key}
+                      onClick={() => setStatsPeriod(p.key)}
+                      className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
+                        statsPeriod === p.key
+                          ? "bg-orange-500 text-white"
+                          : "bg-secondary text-muted-foreground"
+                      }`}
+                      data-testid={`button-period-${p.key}`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                {loginStats?.totals && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-orange-500/10 rounded-xl p-3 text-center">
+                      <p className="text-2xl font-bold text-orange-500" data-testid="text-total-logins">
+                        {Number(loginStats.totals.total_logins).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Logins</p>
+                    </div>
+                    <div className="bg-violet-500/10 rounded-xl p-3 text-center">
+                      <p className="text-2xl font-bold text-violet-500" data-testid="text-unique-users">
+                        {Number(loginStats.totals.unique_users).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Unique Users</p>
+                    </div>
+                    <div className="bg-green-500/10 rounded-xl p-3 text-center">
+                      <p className="text-2xl font-bold text-green-500" data-testid="text-registrations">
+                        {Number(loginStats.totals.registrations).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        <UserPlus className="h-3 w-3 inline mr-1" />
+                        New Signups
+                      </p>
+                    </div>
+                    <div className="bg-blue-500/10 rounded-xl p-3 text-center">
+                      <div className="flex justify-center gap-3" data-testid="text-platform-breakdown">
+                        <div>
+                          <p className="text-lg font-bold text-blue-500">{Number(loginStats.totals.ios)}</p>
+                          <p className="text-[10px] text-muted-foreground">iOS</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-green-600">{Number(loginStats.totals.android)}</p>
+                          <p className="text-[10px] text-muted-foreground">Android</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-purple-500">{Number(loginStats.totals.web)}</p>
+                          <p className="text-[10px] text-muted-foreground">Web</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">By Platform</p>
+                    </div>
+                  </div>
+                )}
+
+                {loginStats?.stats && loginStats.stats.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold mb-2">Daily Breakdown</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {Object.entries(
+                        loginStats.stats.reduce<Record<string, { logins: number; registers: number; ios: number; android: number; web: number; unique: number }>>((acc, row) => {
+                          const d = row.date;
+                          if (!acc[d]) acc[d] = { logins: 0, registers: 0, ios: 0, android: 0, web: 0, unique: 0 };
+                          const count = Number(row.count);
+                          const unique = Number(row.unique_users);
+                          if (row.event_type === 'register') acc[d].registers += count;
+                          else acc[d].logins += count;
+                          if (row.platform === 'ios') acc[d].ios += count;
+                          else if (row.platform === 'android') acc[d].android += count;
+                          else acc[d].web += count;
+                          acc[d].unique = Math.max(acc[d].unique, unique);
+                          return acc;
+                        }, {})
+                      ).map(([date, data]) => (
+                        <div key={date} className="flex items-center justify-between bg-secondary/50 rounded-lg px-3 py-2" data-testid={`stat-row-${date}`}>
+                          <div>
+                            <p className="text-sm font-medium">{new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                            <div className="flex gap-2 text-[10px] text-muted-foreground">
+                              <span className="text-blue-500">{data.ios} iOS</span>
+                              <span className="text-green-600">{data.android} And</span>
+                              <span className="text-purple-500">{data.web} Web</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold">{data.logins + data.registers}</p>
+                            {data.registers > 0 && (
+                              <p className="text-[10px] text-green-500">+{data.registers} new</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {loginStats?.stats && loginStats.stats.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    No login data yet for this period.
+                    <br />
+                    <span className="text-xs">Stats will start tracking from now.</span>
                   </div>
                 )}
               </CardContent>

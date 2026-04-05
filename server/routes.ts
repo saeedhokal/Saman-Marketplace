@@ -5,7 +5,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products, deviceTokens, notifications, transactions, favorites, users, userViews } from "@shared/schema";
+import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, products, deviceTokens, notifications, transactions, favorites, users, userViews, loginEvents } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 import path from "path";
@@ -142,6 +142,53 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       else web++;
     }
     res.json({ total: onlineUsers.size, web, ios, android });
+  });
+
+  app.get("/api/admin/login-stats", isAuthenticated, async (req, res) => {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, (req.session as any).userId));
+      if (!user?.isAdmin) return res.status(403).json({ error: "Forbidden" });
+
+      const period = (req.query.period as string) || 'week';
+      let daysBack = 7;
+      if (period === 'today') daysBack = 1;
+      else if (period === 'week') daysBack = 7;
+      else if (period === 'month') daysBack = 30;
+      else if (period === 'year') daysBack = 365;
+
+      const since = new Date();
+      since.setDate(since.getDate() - daysBack);
+
+      const stats = await db.execute(sql`
+        SELECT 
+          DATE(created_at) as date,
+          event_type,
+          platform,
+          COUNT(*) as count,
+          COUNT(DISTINCT user_id) as unique_users
+        FROM login_events
+        WHERE created_at >= ${since}
+        GROUP BY DATE(created_at), event_type, platform
+        ORDER BY DATE(created_at) DESC
+      `);
+
+      const totals = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_events,
+          COUNT(*) FILTER (WHERE event_type = 'login') as total_logins,
+          COUNT(DISTINCT user_id) as unique_users,
+          COUNT(*) FILTER (WHERE event_type = 'register') as registrations,
+          COUNT(*) FILTER (WHERE platform = 'ios') as ios,
+          COUNT(*) FILTER (WHERE platform = 'android') as android,
+          COUNT(*) FILTER (WHERE platform = 'web') as web
+        FROM login_events
+        WHERE created_at >= ${since}
+      `);
+
+      res.json({ period, stats: stats.rows, totals: totals.rows[0] });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
   });
 
   app.post("/api/log-otp-error", (req, res) => {

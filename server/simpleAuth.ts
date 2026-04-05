@@ -2,7 +2,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "./db";
-import { users, otpCodes } from "@shared/models/auth";
+import { users, otpCodes, loginEvents } from "@shared/models/auth";
 import { eq, and, gt, desc, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
@@ -301,8 +301,12 @@ export function setupSimpleAuth(app: Express) {
           .returning();
       }
 
-      // Set session
       req.session.userId = user.id;
+
+      const ua2 = req.headers['user-agent'] || '';
+      const regPlatform = ua2.includes('iPhone') || ua2.includes('iPad') ? 'ios' : ua2.includes('Android') ? 'android' : 'web';
+      const isNew = !user.createdAt || (Date.now() - new Date(user.createdAt).getTime() < 5000);
+      db.insert(loginEvents).values({ userId: user.id, phone: user.phone, platform: regPlatform, eventType: isNew ? 'register' : 'login' }).catch(() => {});
 
       res.json({
         id: user.id,
@@ -311,7 +315,7 @@ export function setupSimpleAuth(app: Express) {
         lastName: user.lastName,
         credits: user.credits,
         isAdmin: user.isAdmin,
-        isNewUser: !user.createdAt || (Date.now() - new Date(user.createdAt).getTime() < 5000),
+        isNewUser: isNew,
       });
     } catch (error) {
       console.error("Verify OTP error:", error);
@@ -362,6 +366,10 @@ export function setupSimpleAuth(app: Express) {
       }
 
       req.session.userId = user.id;
+
+      const ua = req.headers['user-agent'] || '';
+      const loginPlatform = ua.includes('iPhone') || ua.includes('iPad') ? 'ios' : ua.includes('Android') ? 'android' : 'web';
+      db.insert(loginEvents).values({ userId: user.id, phone: user.phone, platform: loginPlatform, eventType: 'login' }).catch(() => {});
 
       res.json({
         id: user.id,
@@ -620,6 +628,10 @@ export function setupSimpleAuth(app: Express) {
         .returning();
 
       req.session.userId = user.id;
+
+      const ua3 = req.headers['user-agent'] || '';
+      const regPlatform2 = ua3.includes('iPhone') || ua3.includes('iPad') ? 'ios' : ua3.includes('Android') ? 'android' : 'web';
+      db.insert(loginEvents).values({ userId: user.id, phone: user.phone, platform: regPlatform2, eventType: 'register' }).catch(() => {});
 
       res.json({
         id: user.id,
