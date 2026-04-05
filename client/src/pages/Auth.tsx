@@ -72,22 +72,7 @@ export default function Auth() {
           } else if (error?.code === "auth/invalid-phone-number") {
             toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "رقم هاتف غير صالح" : "Invalid phone number format" });
           } else {
-            try {
-              await register({
-                phone: data.phone,
-                password: data.password,
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email || undefined,
-              });
-              toast({
-                title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
-                description: isRTL ? "تم إنشاء حسابك بنجاح" : "Your account has been created.",
-              });
-              setLocation("/");
-            } catch (regError: any) {
-              toast({ variant: "destructive", title: isRTL ? "خطأ" : "Registration failed", description: regError.message });
-            }
+            toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "فشل إرسال رمز التحقق. يرجى المحاولة مرة أخرى" : "Failed to send verification code. Please try again." });
           }
         } finally {
           setIsSendingOTP(false);
