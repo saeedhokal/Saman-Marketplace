@@ -22,10 +22,23 @@ function cleanupRecaptcha() {
     try { recaptchaVerifier.clear(); } catch {}
     recaptchaVerifier = null;
   }
-  const container = document.getElementById('recaptcha-container');
-  if (container) {
-    container.innerHTML = '';
+  const old = document.getElementById('recaptcha-container');
+  if (old) {
+    const parent = old.parentElement;
+    old.remove();
+    if (parent) {
+      const fresh = document.createElement('div');
+      fresh.id = 'recaptcha-container';
+      parent.appendChild(fresh);
+    }
   }
+
+  document.querySelectorAll('iframe[src*="recaptcha"]').forEach(el => {
+    try { el.remove(); } catch {}
+  });
+  document.querySelectorAll('.grecaptcha-badge').forEach(el => {
+    try { el.remove(); } catch {}
+  });
 }
 
 export async function sendOTP(phoneNumber: string): Promise<boolean> {
@@ -34,6 +47,13 @@ export async function sendOTP(phoneNumber: string): Promise<boolean> {
     console.log('[Firebase] Sending OTP to:', formattedPhone);
 
     cleanupRecaptcha();
+
+    let container = document.getElementById('recaptcha-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'recaptcha-container';
+      document.body.appendChild(container);
+    }
 
     recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       size: 'invisible',
