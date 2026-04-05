@@ -17,42 +17,46 @@ const auth = getAuth(app);
 let confirmationResult: ConfirmationResult | null = null;
 let recaptchaVerifier: RecaptchaVerifier | null = null;
 
-export function setupRecaptcha(elementId: string): RecaptchaVerifier {
+function cleanupRecaptcha() {
   if (recaptchaVerifier) {
-    recaptchaVerifier.clear();
+    try { recaptchaVerifier.clear(); } catch {}
+    recaptchaVerifier = null;
   }
-  recaptchaVerifier = new RecaptchaVerifier(auth, elementId, {
-    size: 'invisible',
-    callback: () => {},
-    'expired-callback': () => {
-      console.log('[Firebase] reCAPTCHA expired');
-    },
-  });
-  return recaptchaVerifier;
+  const container = document.getElementById('recaptcha-container');
+  if (container) {
+    container.innerHTML = '';
+  }
 }
 
 export async function sendOTP(phoneNumber: string): Promise<boolean> {
   try {
     const formattedPhone = formatPhoneForFirebase(phoneNumber);
     console.log('[Firebase] Sending OTP to:', formattedPhone);
-    const container = document.getElementById('recaptcha-container');
-    console.log('[Firebase] reCAPTCHA container found:', !!container);
-    const appVerifier = setupRecaptcha('recaptcha-container');
-    console.log('[Firebase] reCAPTCHA verifier created');
-    confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+
+    cleanupRecaptcha();
+
+    recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'invisible',
+      callback: () => {
+        console.log('[Firebase] reCAPTCHA solved');
+      },
+      'expired-callback': () => {
+        console.log('[Firebase] reCAPTCHA expired');
+        cleanupRecaptcha();
+      },
+    });
+
+    confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifier);
     console.log('[Firebase] OTP sent successfully');
     return true;
   } catch (error: any) {
-    console.error('[Firebase] Send OTP error:', error?.code, error?.message, JSON.stringify(error));
+    console.error('[Firebase] Send OTP error:', error?.code, error?.message);
     fetch('/api/log-otp-error', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: error?.code, message: error?.message, phone: phoneNumber })
     }).catch(() => {});
-    if (recaptchaVerifier) {
-      recaptchaVerifier.clear();
-      recaptchaVerifier = null;
-    }
+    cleanupRecaptcha();
     throw error;
   }
 }
