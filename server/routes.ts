@@ -116,6 +116,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   setupSimpleAuth(app);
   registerObjectStorageRoutes(app);
 
+  app.post("/api/log-otp-error", (req, res) => {
+    console.log("[OTP ERROR]", JSON.stringify(req.body));
+    res.json({ logged: true });
+  });
+
   app.get("/api/app-version", (_req, res) => {
     res.json({
       latestVersion: "2.0.3",
