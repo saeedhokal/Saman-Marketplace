@@ -127,10 +127,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   }, 30000);
 
+  const dailyVisitTracker = new Map<string, number>();
+
+  setInterval(() => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    for (const [key, ts] of dailyVisitTracker) {
+      if (ts < cutoff) dailyVisitTracker.delete(key);
+    }
+  }, 60 * 60 * 1000);
+
   app.post("/api/heartbeat", (req, res) => {
     const sessionId = req.sessionID || req.headers['x-session-id'] as string || `anon-${req.ip}`;
     const platform = (req.body?.platform as string) || "web";
     onlineUsers.set(sessionId, { lastSeen: Date.now(), platform });
+
+    const userId = (req.session as any)?.userId || req.headers['x-user-id'] as string;
+    if (userId) {
+      const today = new Date().toISOString().slice(0, 10);
+      const visitKey = `${userId}:${platform}:${today}`;
+      if (!dailyVisitTracker.has(visitKey)) {
+        dailyVisitTracker.set(visitKey, Date.now());
+        db.insert(loginEvents).values({ userId, platform, eventType: 'visit' }).catch(() => {});
+      }
+    }
+
     res.json({ ok: true });
   });
 
@@ -174,13 +194,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const totals = await db.execute(sql`
         SELECT 
-          COUNT(*) as total_events,
+          COUNT(*) FILTER (WHERE event_type = 'visit') as total_visits,
+          COUNT(DISTINCT user_id) FILTER (WHERE event_type = 'visit') as active_users,
           COUNT(*) FILTER (WHERE event_type = 'login') as total_logins,
-          COUNT(DISTINCT user_id) as unique_users,
           COUNT(*) FILTER (WHERE event_type = 'register') as registrations,
-          COUNT(*) FILTER (WHERE platform = 'ios') as ios,
-          COUNT(*) FILTER (WHERE platform = 'android') as android,
-          COUNT(*) FILTER (WHERE platform = 'web') as web
+          COUNT(*) FILTER (WHERE event_type = 'visit' AND platform = 'ios') as ios,
+          COUNT(*) FILTER (WHERE event_type = 'visit' AND platform = 'android') as android,
+          COUNT(*) FILTER (WHERE event_type = 'visit' AND platform = 'web') as web
         FROM login_events
         WHERE created_at >= ${since}
       `);

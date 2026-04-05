@@ -147,7 +147,7 @@ export default function Admin() {
   const { data: loginStats } = useQuery<{
     period: string;
     stats: Array<{ date: string; event_type: string; platform: string; count: string; unique_users: string }>;
-    totals: { total_events: string; total_logins: string; unique_users: string; registrations: string; ios: string; android: string; web: string };
+    totals: { total_visits: string; active_users: string; total_logins: string; registrations: string; ios: string; android: string; web: string };
   }>({
     queryKey: ["/api/admin/login-stats", statsPeriod],
     queryFn: async () => {
@@ -1361,7 +1361,7 @@ export default function Admin() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <BarChart3 className="h-4 w-4" />
-                  Login Statistics
+                  App Activity
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1390,16 +1390,16 @@ export default function Admin() {
                 {loginStats?.totals && (
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-orange-500/10 rounded-xl p-3 text-center">
-                      <p className="text-2xl font-bold text-orange-500" data-testid="text-total-logins">
-                        {Number(loginStats.totals.total_logins).toLocaleString()}
+                      <p className="text-2xl font-bold text-orange-500" data-testid="text-total-visits">
+                        {Number(loginStats.totals.total_visits).toLocaleString()}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">Logins</p>
+                      <p className="text-xs text-muted-foreground mt-1">App Opens</p>
                     </div>
                     <div className="bg-violet-500/10 rounded-xl p-3 text-center">
-                      <p className="text-2xl font-bold text-violet-500" data-testid="text-unique-users">
-                        {Number(loginStats.totals.unique_users).toLocaleString()}
+                      <p className="text-2xl font-bold text-violet-500" data-testid="text-active-users">
+                        {Number(loginStats.totals.active_users).toLocaleString()}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">Unique Users</p>
+                      <p className="text-xs text-muted-foreground mt-1">Active Users</p>
                     </div>
                     <div className="bg-green-500/10 rounded-xl p-3 text-center">
                       <p className="text-2xl font-bold text-green-500" data-testid="text-registrations">
@@ -1430,49 +1430,57 @@ export default function Admin() {
                   </div>
                 )}
 
-                {loginStats?.stats && loginStats.stats.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold mb-2">Daily Breakdown</h3>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {Object.entries(
-                        loginStats.stats.reduce<Record<string, { logins: number; registers: number; ios: number; android: number; web: number; unique: number }>>((acc, row) => {
-                          const d = row.date;
-                          if (!acc[d]) acc[d] = { logins: 0, registers: 0, ios: 0, android: 0, web: 0, unique: 0 };
-                          const count = Number(row.count);
-                          const unique = Number(row.unique_users);
-                          if (row.event_type === 'register') acc[d].registers += count;
-                          else acc[d].logins += count;
-                          if (row.platform === 'ios') acc[d].ios += count;
-                          else if (row.platform === 'android') acc[d].android += count;
-                          else acc[d].web += count;
-                          acc[d].unique = Math.max(acc[d].unique, unique);
-                          return acc;
-                        }, {})
-                      ).map(([date, data]) => (
-                        <div key={date} className="flex items-center justify-between bg-secondary/50 rounded-lg px-3 py-2" data-testid={`stat-row-${date}`}>
-                          <div>
-                            <p className="text-sm font-medium">{new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
-                            <div className="flex gap-2 text-[10px] text-muted-foreground">
-                              <span className="text-blue-500">{data.ios} iOS</span>
-                              <span className="text-green-600">{data.android} And</span>
-                              <span className="text-purple-500">{data.web} Web</span>
+                {loginStats?.stats && loginStats.stats.length > 0 && (() => {
+                  const grouped = loginStats.stats.reduce<Record<string, { visits: number; registers: number; logins: number; ios: number; android: number; web: number; unique: number }>>((acc, row) => {
+                    const d = row.date;
+                    if (!acc[d]) acc[d] = { visits: 0, registers: 0, logins: 0, ios: 0, android: 0, web: 0, unique: 0 };
+                    const count = Number(row.count);
+                    const unique = Number(row.unique_users);
+                    if (row.event_type === 'visit') {
+                      acc[d].visits += count;
+                      if (row.platform === 'ios') acc[d].ios += count;
+                      else if (row.platform === 'android') acc[d].android += count;
+                      else acc[d].web += count;
+                      acc[d].unique = Math.max(acc[d].unique, unique);
+                    } else if (row.event_type === 'register') {
+                      acc[d].registers += count;
+                    } else {
+                      acc[d].logins += count;
+                    }
+                    return acc;
+                  }, {});
+                  const entries = Object.entries(grouped).filter(([, d]) => d.visits > 0 || d.registers > 0);
+                  if (entries.length === 0) return null;
+                  return (
+                    <div>
+                      <h3 className="text-sm font-semibold mb-2">Daily Breakdown</h3>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {entries.map(([date, data]) => (
+                          <div key={date} className="flex items-center justify-between bg-secondary/50 rounded-lg px-3 py-2" data-testid={`stat-row-${date}`}>
+                            <div>
+                              <p className="text-sm font-medium">{new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                              <div className="flex gap-2 text-[10px] text-muted-foreground">
+                                <span className="text-blue-500">{data.ios} iOS</span>
+                                <span className="text-green-600">{data.android} And</span>
+                                <span className="text-purple-500">{data.web} Web</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-semibold">{data.visits} <span className="text-xs font-normal text-muted-foreground">users</span></p>
+                              {data.registers > 0 && (
+                                <p className="text-[10px] text-green-500">+{data.registers} new</p>
+                              )}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold">{data.logins + data.registers}</p>
-                            {data.registers > 0 && (
-                              <p className="text-[10px] text-green-500">+{data.registers} new</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
-                {loginStats?.stats && loginStats.stats.length === 0 && (
+                {(!loginStats?.stats || loginStats.stats.length === 0) && (
                   <div className="text-center py-8 text-muted-foreground text-sm">
-                    No login data yet for this period.
+                    No activity data yet for this period.
                     <br />
                     <span className="text-xs">Stats will start tracking from now.</span>
                   </div>
