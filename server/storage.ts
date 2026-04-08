@@ -106,20 +106,8 @@ export class DatabaseStorage implements IStorage {
   async getProducts(options?: { search?: string; mainCategory?: string; subCategory?: string }): Promise<Product[]> {
     const conditions = [
       or(
-        and(
-          eq(products.status, "approved"),
-          or(
-            eq(products.expiresAt, sql`NULL`),
-            sql`${products.expiresAt} > NOW()`
-          )
-        ),
-        and(
-          eq(products.status, "sold"),
-          or(
-            eq(products.expiresAt, sql`NULL`),
-            sql`${products.expiresAt} > NOW()`
-          )
-        )
+        eq(products.status, "approved"),
+        eq(products.status, "sold")
       )
     ];
 
@@ -252,11 +240,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async approveProduct(id: number): Promise<Product | undefined> {
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + 1); // 1 month from now
-    
     const [product] = await db.update(products)
-      .set({ status: "approved", expiresAt, rejectionReason: null })
+      .set({ status: "approved", rejectionReason: null })
       .where(eq(products.id, id))
       .returning();
     return product;
@@ -490,10 +475,6 @@ export class DatabaseStorage implements IStorage {
         or(
           eq(products.status, "approved"),
           eq(products.status, "sold")
-        ),
-        or(
-          sql`${products.expiresAt} IS NULL`,
-          sql`${products.expiresAt} > NOW()`
         )
       ))
       .orderBy(sql`CASE WHEN ${products.status} = 'sold' THEN 1 ELSE 0 END`, desc(products.createdAt))
@@ -536,10 +517,6 @@ export class DatabaseStorage implements IStorage {
         or(
           eq(products.status, "approved"),
           eq(products.status, "sold")
-        ),
-        or(
-          sql`${products.expiresAt} IS NULL`,
-          sql`${products.expiresAt} > NOW()`
         ),
         or(...categoryConditions)
       ))

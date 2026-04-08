@@ -3464,43 +3464,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         console.log(`[SCHEDULER] Deleted ${deletedRejected} old rejected listings`);
       }
       
-      // 2. Delete expired posts
-      const deletedExpired = await storage.deleteExpiredProducts();
-      if (deletedExpired > 0) {
-        console.log(`[SCHEDULER] Deleted ${deletedExpired} expired listings`);
-      }
+          // 2. Clear any remaining expiration dates (listings no longer expire)
+      await db.update(products)
+        .set({ expiresAt: null })
+        .where(sql`${products.expiresAt} IS NOT NULL`);
       
-      // 3. Send expiration notifications (1 day before)
-      const expiringProducts = await storage.getProductsExpiringTomorrow();
-      for (const product of expiringProducts) {
-        // Send in-app notification
-        await storage.createNotification({
-          userId: product.sellerId,
-          title: "Listing Expiring Soon",
-          message: `Your listing "${product.title}" expires tomorrow. Tap to renew it for another 30 days (uses 1 credit).`,
-          type: "listing_expiring",
-          relatedId: product.id,
-        });
-        
-        // Mark as notified
-        await storage.markExpirationNotified(product.id);
-        
-        // Send push notification
-        try {
-          const tokens = await db.select().from(deviceTokens).where(eq(deviceTokens.userId, product.sellerId));
-          for (const tokenRecord of tokens) {
-            await sendPushNotification(tokenRecord.fcmToken, {
-              title: "Listing Expiring Tomorrow",
-              body: `"${product.title}" expires tomorrow. Renew to keep it active!`,
-              data: { type: "listing_expiring", listingId: String(product.id) }
-            });
-          }
-        } catch (e) {
-          console.log("[SCHEDULER] Push notification failed:", e);
-        }
-        
-        console.log(`[SCHEDULER] Sent expiration notification for listing ${product.id}`);
-      }
+      // 3. Expiration notifications - disabled (listings no longer expire)
       
       console.log("[SCHEDULER] Scheduled tasks completed");
     } catch (error) {
