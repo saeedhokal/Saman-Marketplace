@@ -1,5 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -47,25 +47,47 @@ import Downloads from "@/pages/Downloads";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 
-function ScrollToTop() {
+const scrollPositions = new Map<string, number>();
+const detailPagePattern = /^\/product\//;
+const sellerPagePattern = /^\/seller\//;
+
+function isDetailPage(path: string) {
+  return detailPagePattern.test(path) || sellerPagePattern.test(path);
+}
+
+function ScrollManager() {
   const [location] = useLocation();
-  
+  const prevLocation = useRef(location);
+
   useEffect(() => {
     const el = document.getElementById('main-scroll-container');
-    if (el) {
+    if (!el) return;
+
+    const prev = prevLocation.current;
+    prevLocation.current = location;
+
+    if (isDetailPage(location)) {
+      scrollPositions.set(prev, el.scrollTop);
       el.scrollTo(0, 0);
+    } else if (isDetailPage(prev) && scrollPositions.has(location)) {
+      const saved = scrollPositions.get(location)!;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          el.scrollTo(0, saved);
+        });
+      });
     } else {
-      window.scrollTo(0, 0);
+      el.scrollTo(0, 0);
     }
   }, [location]);
-  
+
   return null;
 }
 
 function Router() {
   return (
     <>
-      <ScrollToTop />
+      <ScrollManager />
       <div className="shrink-0 bg-background" style={{ height: 'env(safe-area-inset-top)' }} />
       <div id="main-scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <Switch>
