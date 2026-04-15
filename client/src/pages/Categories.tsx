@@ -51,6 +51,7 @@ interface CategoryFilters {
 }
 
 let savedFilters: CategoryFilters | null = null;
+let savedScrollY: number = 0;
 
 export default function Categories() {
   const { t, isRTL } = useLanguage();
@@ -60,6 +61,7 @@ export default function Categories() {
     const tab = params.get("tab");
     if (tab === "spare-parts" || tab === "automotive") {
       savedFilters = null;
+      savedScrollY = 0;
       return { activeCategory: tab as MainCategory };
     }
     if (savedFilters) return savedFilters;
@@ -88,6 +90,14 @@ export default function Categories() {
     };
   }, [search, activeCategory, activeSubCategory, activeModel, sortBy, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition]);
 
+  useEffect(() => {
+    const container = document.getElementById('main-scroll-container');
+    if (!container) return;
+    const handleScroll = () => { savedScrollY = container.scrollTop; };
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const getMainCategoryFilter = () => {
     if (activeCategory === "spare-parts") return "Spare Parts";
     if (activeCategory === "automotive") return "Automotive";
@@ -99,6 +109,26 @@ export default function Categories() {
     mainCategory: getMainCategoryFilter(),
     subCategory: activeSubCategory !== "All" ? activeSubCategory : undefined,
   });
+
+  const hasRestoredScroll = useRef(false);
+  useEffect(() => {
+    if (!isLoading && products && products.length > 0 && savedScrollY > 0 && !hasRestoredScroll.current) {
+      hasRestoredScroll.current = true;
+      const container = document.getElementById('main-scroll-container');
+      if (!container) return;
+      const tryRestore = (attempts: number) => {
+        if (attempts <= 0) return;
+        requestAnimationFrame(() => {
+          if (container.scrollHeight > savedScrollY) {
+            container.scrollTop = savedScrollY;
+          } else {
+            setTimeout(() => tryRestore(attempts - 1), 50);
+          }
+        });
+      };
+      tryRestore(20);
+    }
+  }, [isLoading, products]);
 
   const handleRefresh = useCallback(async () => {
     await refetch();

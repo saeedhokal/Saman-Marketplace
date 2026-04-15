@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
@@ -12,10 +12,20 @@ import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
 
+let landingSavedScrollY: number = 0;
+
 export default function Landing() {
   const { user } = useAuth();
   const { t, isRTL, language, setLanguage } = useLanguage();
   const [, navigate] = useLocation();
+
+  useEffect(() => {
+    const container = document.getElementById('main-scroll-container');
+    if (!container) return;
+    const handleScroll = () => { landingSavedScrollY = container.scrollTop; };
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const [darkMode, setDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark');
@@ -45,6 +55,26 @@ export default function Landing() {
     refetchOnWindowFocus: true,
     staleTime: 30000,
   });
+
+  const hasRestoredScroll = useRef(false);
+  useEffect(() => {
+    if (!isLoadingRecent && recentProducts.length > 0 && landingSavedScrollY > 0 && !hasRestoredScroll.current) {
+      hasRestoredScroll.current = true;
+      const container = document.getElementById('main-scroll-container');
+      if (!container) return;
+      const tryRestore = (attempts: number) => {
+        if (attempts <= 0) return;
+        requestAnimationFrame(() => {
+          if (container.scrollHeight > landingSavedScrollY) {
+            container.scrollTop = landingSavedScrollY;
+          } else {
+            setTimeout(() => tryRestore(attempts - 1), 50);
+          }
+        });
+      };
+      tryRestore(20);
+    }
+  }, [isLoadingRecent, recentProducts]);
 
   // Skeleton card component for loading state
   const SkeletonCard = () => (
