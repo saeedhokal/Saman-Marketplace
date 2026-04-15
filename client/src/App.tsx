@@ -47,73 +47,90 @@ import Downloads from "@/pages/Downloads";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 
-const scrollPositions = new Map<string, number>();
-const detailPattern = /^\/(product|seller)\//;
+const overlayPattern = /^\/(product|seller)\//;
 
-function ScrollManager() {
+const lastListPage = { current: "" };
+
+function KeepAlive({ path, children }: { path: string; children: React.ReactNode }) {
+  const [location] = useLocation();
+  const hasRendered = useRef(false);
+  const isActive = location === path || location.startsWith(path + "?");
+  const isOverlay = overlayPattern.test(location);
+
+  if (isActive) {
+    hasRendered.current = true;
+    lastListPage.current = path;
+  }
+  if (!hasRendered.current) return null;
+
+  const isUnderOverlay = isOverlay && lastListPage.current === path;
+  const show = isActive || isUnderOverlay;
+
+  return (
+    <div style={{ display: show ? 'block' : 'none' }}>
+      {children}
+    </div>
+  );
+}
+
+function ScrollToTop() {
   const [location] = useLocation();
   const prevLocation = useRef(location);
 
   useEffect(() => {
-    const el = document.getElementById('main-scroll-container');
-    if (!el) return;
-
     const prev = prevLocation.current;
     prevLocation.current = location;
+    if (prev === location) return;
 
-    if (detailPattern.test(location)) {
-      scrollPositions.set(prev, el.scrollTop);
-      el.scrollTo(0, 0);
+    if (overlayPattern.test(location)) {
       return;
     }
 
-    if (detailPattern.test(prev) && scrollPositions.has(location)) {
-      const saved = scrollPositions.get(location)!;
-      if (saved <= 0) { return; }
-
-      const observer = new MutationObserver(() => {
-        if (el.scrollHeight >= saved) {
-          observer.disconnect();
-          el.scrollTo(0, saved);
-        }
-      });
-      observer.observe(el, { childList: true, subtree: true });
-
-      if (el.scrollHeight >= saved) {
-        observer.disconnect();
-        el.scrollTo(0, saved);
-      }
-
-      const timeout = setTimeout(() => {
-        observer.disconnect();
-        el.scrollTo(0, saved);
-      }, 3000);
-
-      return () => {
-        observer.disconnect();
-        clearTimeout(timeout);
-      };
+    if (overlayPattern.test(prev)) {
+      return;
     }
 
-    el.scrollTo(0, 0);
+    const el = document.getElementById('main-scroll-container');
+    if (el) el.scrollTo(0, 0);
   }, [location]);
 
   return null;
 }
 
+function OverlayDetail() {
+  const [location] = useLocation();
+  const isOverlay = overlayPattern.test(location);
+  if (!isOverlay) return null;
+
+  return (
+    <div className="absolute inset-0 z-50 bg-background overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+      <Switch>
+        <Route path="/product/:id" component={ProductDetail} />
+        <Route path="/seller/:sellerId" component={SellerProfile} />
+      </Switch>
+    </div>
+  );
+}
+
 function Router() {
   return (
     <>
-      <ScrollManager />
+      <ScrollToTop />
       <div className="shrink-0 bg-background" style={{ height: 'env(safe-area-inset-top)' }} />
-      <div id="main-scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+      <div id="main-scroll-container" className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-none" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <KeepAlive path="/">
+          <Landing />
+        </KeepAlive>
+        <KeepAlive path="/categories">
+          <Categories />
+        </KeepAlive>
         <Switch>
-          <Route path="/" component={Landing} />
-          <Route path="/categories" component={Categories} />
-          <Route path="/product/:id" component={ProductDetail} />
+          <Route path="/">{null}</Route>
+          <Route path="/categories">{null}</Route>
+          <Route path="/product/:id">{null}</Route>
+          <Route path="/seller/:sellerId">{null}</Route>
           <Route path="/sell" component={Sell} />
           <Route path="/edit/:id" component={EditListing} />
-          <Route path="/seller/:sellerId" component={SellerProfile} />
           <Route path="/favorites" component={Favorites} />
           <Route path="/my-listings" component={MyListings} />
           <Route path="/profile" component={Profile} />
@@ -144,6 +161,7 @@ function Router() {
           <Route path="/reset-password" component={ResetPassword} />
           <Route component={NotFound} />
         </Switch>
+        <OverlayDetail />
       </div>
     </>
   );
