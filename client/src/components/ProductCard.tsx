@@ -69,11 +69,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
               </div>
             )}
             
-            {showDate && formattedDate && (
-              <div className="absolute bottom-2 right-2 z-10 px-2 py-0.5 bg-black/60 rounded text-white text-xs">
-                {formattedDate}
-              </div>
-            )}
+            {/* Date temporarily hidden */}
           </div>
 
           <CardContent className="p-3 sm:p-4">
