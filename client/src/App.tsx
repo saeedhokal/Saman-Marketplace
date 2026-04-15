@@ -48,12 +48,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 
 const scrollPositions = new Map<string, number>();
-const detailPagePattern = /^\/product\//;
-const sellerPagePattern = /^\/seller\//;
-
-function isDetailPage(path: string) {
-  return detailPagePattern.test(path) || sellerPagePattern.test(path);
-}
+const detailPattern = /^\/(product|seller)\//;
 
 function ScrollManager() {
   const [location] = useLocation();
@@ -66,19 +61,41 @@ function ScrollManager() {
     const prev = prevLocation.current;
     prevLocation.current = location;
 
-    if (isDetailPage(location)) {
+    if (detailPattern.test(location)) {
       scrollPositions.set(prev, el.scrollTop);
       el.scrollTo(0, 0);
-    } else if (isDetailPage(prev) && scrollPositions.has(location)) {
-      const saved = scrollPositions.get(location)!;
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          el.scrollTo(0, saved);
-        });
-      });
-    } else {
-      el.scrollTo(0, 0);
+      return;
     }
+
+    if (detailPattern.test(prev) && scrollPositions.has(location)) {
+      const saved = scrollPositions.get(location)!;
+      if (saved <= 0) { return; }
+
+      const observer = new MutationObserver(() => {
+        if (el.scrollHeight >= saved) {
+          observer.disconnect();
+          el.scrollTo(0, saved);
+        }
+      });
+      observer.observe(el, { childList: true, subtree: true });
+
+      if (el.scrollHeight >= saved) {
+        observer.disconnect();
+        el.scrollTo(0, saved);
+      }
+
+      const timeout = setTimeout(() => {
+        observer.disconnect();
+        el.scrollTo(0, saved);
+      }, 3000);
+
+      return () => {
+        observer.disconnect();
+        clearTimeout(timeout);
+      };
+    }
+
+    el.scrollTo(0, 0);
   }, [location]);
 
   return null;
