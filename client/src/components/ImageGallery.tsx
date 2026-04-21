@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import useEmblaCarousel from "embla-carousel-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,87 +10,72 @@ interface ImageGalleryProps {
   initialIndex?: number;
 }
 
-const swipeVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 300 : -300,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction: number) => ({
-    x: direction < 0 ? 300 : -300,
-    opacity: 0,
-  }),
-};
+function GalleryImage({ src, alt, eager, className }: { src: string; alt: string; eager: boolean; className?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <>
+      {!loaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-secondary/40 via-secondary/20 to-secondary/40 animate-pulse" />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        draggable={false}
+        onLoad={() => setLoaded(true)}
+        className={`w-full h-full object-contain pointer-events-none select-none transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
+      />
+    </>
+  );
+}
 
 export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    startIndex: initialIndex,
+    loop: images.length > 1,
+    align: "center",
+    containScroll: "trimSnaps",
+    dragFree: false,
+  });
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [direction, setDirection] = useState(0);
-
-  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const isDragLocked = useRef(false);
-  const [dragOffset, setDragOffset] = useState(0);
-
-  const goToPrevious = useCallback(() => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  }, [images.length]);
-
-  const goToNext = useCallback(() => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  }, [images.length]);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (images.length <= 1) return;
-    if (e.touches.length === 1) {
-      touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
-      isDragLocked.current = false;
-    }
-  }, [images.length]);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchStartRef.current || e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - touchStartRef.current.x;
-    const dy = Math.abs(e.touches[0].clientY - touchStartRef.current.y);
-    if (!isDragLocked.current) {
-      if (dy > 20) { touchStartRef.current = null; setDragOffset(0); return; }
-      if (Math.abs(dx) > 8) isDragLocked.current = true;
-    }
-    if (isDragLocked.current) setDragOffset(dx);
-  }, []);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!touchStartRef.current) { setDragOffset(0); return; }
-    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
-    const elapsed = Date.now() - touchStartRef.current.time;
-    const velocity = Math.abs(dx) / elapsed;
-    touchStartRef.current = null;
-    isDragLocked.current = false;
-    if (Math.abs(dx) > 60 || velocity > 0.4) {
-      if (dx > 0) goToPrevious(); else goToNext();
-    }
-    setDragOffset(0);
-  }, [goToPrevious, goToNext]);
-
-  const handleImageClick = useCallback(() => {
-    if (Math.abs(dragOffset) < 5) setIsFullscreen(true);
-  }, [dragOffset]);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const didDragRef = useRef(false);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isFullscreen) {
-        if (e.key === "Escape") setIsFullscreen(false);
-        if (e.key === "ArrowLeft") goToPrevious();
-        if (e.key === "ArrowRight") goToNext();
-      }
+    if (!emblaApi) return;
+    const onSelect = () => setCurrentIndex(emblaApi.selectedScrollSnap());
+    emblaApi.on("select", onSelect);
+    onSelect();
+    return () => {
+      emblaApi.off("select", onSelect);
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen, goToPrevious, goToNext]);
+  }, [emblaApi]);
+
+  const scrollTo = useCallback((idx: number) => {
+    emblaApi?.scrollTo(idx);
+  }, [emblaApi]);
+
+  const goPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const goNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    didDragRef.current = false;
+  }, []);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragStartRef.current) return;
+    const dx = Math.abs(e.clientX - dragStartRef.current.x);
+    const dy = Math.abs(e.clientY - dragStartRef.current.y);
+    if (dx > 6 || dy > 6) didDragRef.current = true;
+  }, []);
+
+  const handleClick = useCallback(() => {
+    if (didDragRef.current) return;
+    setIsFullscreen(true);
+  }, []);
 
   if (images.length === 0) return null;
 
@@ -97,65 +83,59 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
     <>
       <div className="relative">
         <div
-          className="aspect-square w-full overflow-hidden rounded-2xl bg-secondary/30 cursor-pointer"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onClick={handleImageClick}
+          className="relative aspect-square w-full overflow-hidden rounded-2xl bg-secondary/30 shadow-md cursor-pointer"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onClick={handleClick}
           data-testid="image-gallery-main"
         >
-          <div className="w-full h-full relative">
-            <AnimatePresence initial={false} custom={direction} mode="popLayout">
-              <motion.img
-                key={currentIndex}
-                src={images[currentIndex]}
-                alt={`Image ${currentIndex + 1}`}
-                className="w-full h-full object-contain pointer-events-none absolute inset-0"
-                custom={direction}
-                variants={swipeVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ type: "tween", duration: 0.25, ease: "easeInOut" }}
-                draggable={false}
-                style={dragOffset !== 0 ? { transform: `translateX(${dragOffset}px)` } : undefined}
-              />
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {images.length > 1 && (
-          <>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm h-8 w-8"
-              onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
-              data-testid="button-prev-image"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm h-8 w-8"
-              onClick={(e) => { e.stopPropagation(); goToNext(); }}
-              data-testid="button-next-image"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {images.map((_, idx) => (
-                <button
+          <div ref={emblaRef} className="overflow-hidden h-full">
+            <div className="flex h-full touch-pan-y">
+              {images.map((img, idx) => (
+                <div
                   key={idx}
-                  onClick={(e) => { e.stopPropagation(); setDirection(idx > currentIndex ? 1 : -1); setCurrentIndex(idx); }}
-                  className={`w-2 h-2 rounded-full transition-all ${idx === currentIndex ? "bg-white w-4" : "bg-white/50"}`}
-                  data-testid={`dot-indicator-${idx}`}
-                />
+                  className="relative flex-[0_0_100%] min-w-0 h-full"
+                  data-testid={`gallery-slide-${idx}`}
+                >
+                  <GalleryImage src={img} alt={`Image ${idx + 1}`} eager={idx < 3} />
+                </div>
               ))}
             </div>
-          </>
-        )}
+          </div>
+
+          {images.length > 1 && (
+            <>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm h-8 w-8 z-10"
+                onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                data-testid="button-prev-image"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm h-8 w-8 z-10"
+                onClick={(e) => { e.stopPropagation(); goNext(); }}
+                data-testid="button-next-image"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                {images.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => { e.stopPropagation(); scrollTo(idx); }}
+                    className={`h-2 rounded-full transition-all ${idx === currentIndex ? "bg-white w-4" : "bg-white/50 w-2"}`}
+                    data-testid={`dot-indicator-${idx}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {images.length > 1 && (
@@ -163,11 +143,11 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
           {images.map((img, idx) => (
             <button
               key={idx}
-              onClick={() => { setDirection(idx > currentIndex ? 1 : -1); setCurrentIndex(idx); }}
+              onClick={() => scrollTo(idx)}
               className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${idx === currentIndex ? "border-accent" : "border-transparent"}`}
               data-testid={`thumbnail-${idx}`}
             >
-              <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+              <img src={img} alt={`Thumbnail ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
@@ -180,10 +160,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
               images={images}
               initialIndex={currentIndex}
               onClose={() => setIsFullscreen(false)}
-              onIndexChange={(idx) => {
-                setDirection(idx > currentIndex ? 1 : -1);
-                setCurrentIndex(idx);
-              }}
+              onIndexChange={(idx) => setCurrentIndex(idx)}
             />
           )}
         </AnimatePresence>,
@@ -201,71 +178,47 @@ interface FullscreenViewerProps {
 }
 
 function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: FullscreenViewerProps) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    startIndex: initialIndex,
+    loop: images.length > 1,
+    align: "center",
+    containScroll: "trimSnaps",
+  });
   const [index, setIndex] = useState(initialIndex);
-  const [direction, setDirection] = useState(0);
-  const zoomContainerRef = useRef<HTMLDivElement>(null);
 
-  const swipeStart = useRef<{ x: number; y: number; time: number } | null>(null);
-  const swipeLocked = useRef(false);
-  const [swipeDrag, setSwipeDrag] = useState(0);
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => {
+      const i = emblaApi.selectedScrollSnap();
+      setIndex(i);
+      onIndexChange(i);
+    };
+    emblaApi.on("select", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+    };
+  }, [emblaApi, onIndexChange]);
 
-  const goTo = useCallback((newIdx: number) => {
-    setDirection(newIdx > index ? 1 : -1);
-    setIndex(newIdx);
-    onIndexChange(newIdx);
-    if (zoomContainerRef.current) {
-      zoomContainerRef.current.scrollLeft = 0;
-      zoomContainerRef.current.scrollTop = 0;
-    }
-  }, [index, onIndexChange]);
+  const goPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const goNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+  const goTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi]);
 
-  const goPrev = useCallback(() => {
-    goTo(index === 0 ? images.length - 1 : index - 1);
-  }, [index, images.length, goTo]);
-
-  const goNext = useCallback(() => {
-    goTo(index === images.length - 1 ? 0 : index + 1);
-  }, [index, images.length, goTo]);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
-    const container = zoomContainerRef.current;
-    if (container && (container.scrollWidth > container.clientWidth || container.scrollHeight > container.clientHeight)) {
-      return;
-    }
-    swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
-    swipeLocked.current = false;
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!swipeStart.current || e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - swipeStart.current.x;
-    const dy = Math.abs(e.touches[0].clientY - swipeStart.current.y);
-    if (!swipeLocked.current) {
-      if (dy > 20) { swipeStart.current = null; setSwipeDrag(0); return; }
-      if (Math.abs(dx) > 10) swipeLocked.current = true;
-    }
-    if (swipeLocked.current) setSwipeDrag(dx);
-  }, []);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!swipeStart.current) { setSwipeDrag(0); return; }
-    const dx = e.changedTouches[0].clientX - swipeStart.current.x;
-    const elapsed = Date.now() - swipeStart.current.time;
-    const velocity = Math.abs(dx) / elapsed;
-    swipeStart.current = null;
-    swipeLocked.current = false;
-    if (images.length > 1 && (Math.abs(dx) > 60 || velocity > 0.4)) {
-      if (dx > 0) goPrev(); else goNext();
-    }
-    setSwipeDrag(0);
-  }, [images.length, goPrev, goNext]);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, goPrev, goNext]);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       className="fixed inset-0 z-[9999] bg-black"
       data-testid="fullscreen-gallery"
     >
@@ -283,44 +236,25 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
         {index + 1} / {images.length}
       </div>
 
-      <div
-        className="w-full h-full flex items-center justify-center"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div
-          ref={zoomContainerRef}
-          style={{
-            width: '100%',
-            height: '100%',
-            overflow: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <AnimatePresence initial={false} custom={direction} mode="popLayout">
-            <motion.img
-              key={index}
-              src={images[index]}
-              alt={`Image ${index + 1}`}
-              className="max-h-full object-contain select-none"
-              custom={direction}
-              variants={swipeVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ type: "tween", duration: 0.25, ease: "easeInOut" }}
-              draggable={false}
-              style={{
-                maxWidth: '100%',
-                touchAction: 'pinch-zoom',
-                transform: swipeDrag !== 0 ? `translateX(${swipeDrag}px)` : undefined,
-              }}
-            />
-          </AnimatePresence>
+      <div ref={emblaRef} className="overflow-hidden w-full h-full">
+        <div className="flex h-full touch-pan-y">
+          {images.map((img, idx) => (
+            <div
+              key={idx}
+              className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center"
+              data-testid={`fullscreen-slide-${idx}`}
+            >
+              <img
+                src={img}
+                alt={`Image ${idx + 1}`}
+                loading={Math.abs(idx - initialIndex) <= 1 ? "eager" : "lazy"}
+                decoding="async"
+                draggable={false}
+                className="max-w-full max-h-full object-contain select-none"
+                style={{ touchAction: "pinch-zoom" }}
+              />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -337,7 +271,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
               <button
                 key={idx}
                 onClick={() => goTo(idx)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${idx === index ? "bg-white w-6" : "bg-white/50"}`}
+                className={`h-2.5 rounded-full transition-all ${idx === index ? "bg-white w-6" : "bg-white/50 w-2.5"}`}
                 data-testid={`fullscreen-dot-${idx}`}
               />
             ))}
