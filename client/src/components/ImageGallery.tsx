@@ -10,33 +10,14 @@ interface ImageGalleryProps {
   initialIndex?: number;
 }
 
-function GalleryImage({ src, alt, eager, className }: { src: string; alt: string; eager: boolean; className?: string }) {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <>
-      {!loaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-secondary/40 via-secondary/20 to-secondary/40 animate-pulse" />
-      )}
-      <img
-        src={src}
-        alt={alt}
-        loading={eager ? "eager" : "lazy"}
-        decoding="async"
-        draggable={false}
-        onLoad={() => setLoaded(true)}
-        className={`w-full h-full object-contain pointer-events-none select-none transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
-      />
-    </>
-  );
-}
-
 export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     startIndex: initialIndex,
-    loop: images.length > 1,
-    align: "center",
+    loop: false,
+    align: "start",
     containScroll: "trimSnaps",
     dragFree: false,
+    duration: 22,
   });
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -97,7 +78,14 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
                   className="relative flex-[0_0_100%] min-w-0 h-full"
                   data-testid={`gallery-slide-${idx}`}
                 >
-                  <GalleryImage src={img} alt={`Image ${idx + 1}`} eager={idx < 3} />
+                  <img
+                    src={img}
+                    alt={`Image ${idx + 1}`}
+                    loading={idx < 2 ? "eager" : "lazy"}
+                    decoding="async"
+                    draggable={false}
+                    className="w-full h-full object-contain pointer-events-none select-none"
+                  />
                 </div>
               ))}
             </div>
@@ -105,30 +93,34 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
 
           {images.length > 1 && (
             <>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm h-8 w-8 z-10"
-                onClick={(e) => { e.stopPropagation(); goPrev(); }}
-                data-testid="button-prev-image"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm h-8 w-8 z-10"
-                onClick={(e) => { e.stopPropagation(); goNext(); }}
-                data-testid="button-next-image"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+              {currentIndex > 0 && (
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm h-8 w-8 z-10"
+                  onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                  data-testid="button-prev-image"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+              {currentIndex < images.length - 1 && (
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm h-8 w-8 z-10"
+                  onClick={(e) => { e.stopPropagation(); goNext(); }}
+                  data-testid="button-next-image"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 px-3 py-1 rounded-full bg-black/30 backdrop-blur-sm">
                 {images.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); scrollTo(idx); }}
-                    className={`h-2 rounded-full transition-all ${idx === currentIndex ? "bg-white w-4" : "bg-white/50 w-2"}`}
+                    className={`h-1.5 rounded-full transition-all ${idx === currentIndex ? "bg-white w-4" : "bg-white/60 w-1.5"}`}
                     data-testid={`dot-indicator-${idx}`}
                   />
                 ))}
@@ -180,35 +172,13 @@ interface FullscreenViewerProps {
   onIndexChange: (idx: number) => void;
 }
 
-function FullscreenImage({ src, alt, eager }: { src: string; alt: string; eager: boolean }) {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <>
-      {!loaded && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-12 h-12 rounded-full border-2 border-white/30 border-t-white/80 animate-spin" />
-        </div>
-      )}
-      <img
-        src={src}
-        alt={alt}
-        loading={eager ? "eager" : "lazy"}
-        decoding="async"
-        draggable={false}
-        onLoad={() => setLoaded(true)}
-        className={`max-w-full max-h-full object-contain select-none transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
-        style={{ touchAction: "pinch-zoom" }}
-      />
-    </>
-  );
-}
-
 function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: FullscreenViewerProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     startIndex: initialIndex,
-    loop: images.length > 1,
-    align: "center",
+    loop: false,
+    align: "start",
     containScroll: "trimSnaps",
+    duration: 22,
   });
   const [index, setIndex] = useState(initialIndex);
 
@@ -244,7 +214,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.18 }}
       className="fixed inset-0 z-[9999] bg-black"
       data-testid="fullscreen-gallery"
     >
@@ -270,10 +240,14 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
               className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center"
               data-testid={`fullscreen-slide-${idx}`}
             >
-              <FullscreenImage
+              <img
                 src={img}
                 alt={`Image ${idx + 1}`}
-                eager={Math.abs(idx - index) <= 1}
+                loading={Math.abs(idx - initialIndex) <= 1 ? "eager" : "lazy"}
+                decoding="async"
+                draggable={false}
+                className="max-w-full max-h-full object-contain select-none"
+                style={{ touchAction: "pinch-zoom" }}
               />
             </div>
           ))}
@@ -282,18 +256,22 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
 
       {images.length > 1 && (
         <>
-          <button className="absolute left-3 top-1/2 -translate-y-1/2 text-white/80 p-2 z-20" onClick={goPrev} data-testid="button-fullscreen-prev">
-            <ChevronLeft className="h-8 w-8" strokeWidth={2} />
-          </button>
-          <button className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 p-2 z-20" onClick={goNext} data-testid="button-fullscreen-next">
-            <ChevronRight className="h-8 w-8" strokeWidth={2} />
-          </button>
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          {index > 0 && (
+            <button className="absolute left-3 top-1/2 -translate-y-1/2 text-white/80 p-2 z-20" onClick={goPrev} data-testid="button-fullscreen-prev">
+              <ChevronLeft className="h-8 w-8" strokeWidth={2} />
+            </button>
+          )}
+          {index < images.length - 1 && (
+            <button className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 p-2 z-20" onClick={goNext} data-testid="button-fullscreen-next">
+              <ChevronRight className="h-8 w-8" strokeWidth={2} />
+            </button>
+          )}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm">
             {images.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => goTo(idx)}
-                className={`h-2.5 rounded-full transition-all ${idx === index ? "bg-white w-6" : "bg-white/50 w-2.5"}`}
+                className={`h-2 rounded-full transition-all ${idx === index ? "bg-white w-5" : "bg-white/50 w-2"}`}
                 data-testid={`fullscreen-dot-${idx}`}
               />
             ))}
