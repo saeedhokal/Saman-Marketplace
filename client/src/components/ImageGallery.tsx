@@ -160,7 +160,10 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
               images={images}
               initialIndex={currentIndex}
               onClose={() => setIsFullscreen(false)}
-              onIndexChange={(idx) => setCurrentIndex(idx)}
+              onIndexChange={(idx) => {
+                setCurrentIndex(idx);
+                emblaApi?.scrollTo(idx, true);
+              }}
             />
           )}
         </AnimatePresence>,
