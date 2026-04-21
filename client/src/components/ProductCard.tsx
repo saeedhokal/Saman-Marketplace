@@ -34,7 +34,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
     >
       <Link href={`/product/${product.id}`}>
         <Card className={`group h-full overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl ${isSold ? 'opacity-80' : ''}`}>
-          <div className="relative aspect-[4/3] md:aspect-square overflow-hidden bg-gray-100 dark:bg-slate-700/30">
+          <div className="relative aspect-[4/3] md:aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-slate-700/30">
             {product.imageUrl && !imageError ? (
               <img
                 src={product.imageUrl}
