@@ -180,6 +180,29 @@ interface FullscreenViewerProps {
   onIndexChange: (idx: number) => void;
 }
 
+function FullscreenImage({ src, alt, eager }: { src: string; alt: string; eager: boolean }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <>
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-12 h-12 rounded-full border-2 border-white/30 border-t-white/80 animate-spin" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        draggable={false}
+        onLoad={() => setLoaded(true)}
+        className={`max-w-full max-h-full object-contain select-none transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+        style={{ touchAction: "pinch-zoom" }}
+      />
+    </>
+  );
+}
+
 function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: FullscreenViewerProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     startIndex: initialIndex,
@@ -247,14 +270,10 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
               className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center"
               data-testid={`fullscreen-slide-${idx}`}
             >
-              <img
+              <FullscreenImage
                 src={img}
                 alt={`Image ${idx + 1}`}
-                loading={Math.abs(idx - initialIndex) <= 1 ? "eager" : "lazy"}
-                decoding="async"
-                draggable={false}
-                className="max-w-full max-h-full object-contain select-none"
-                style={{ touchAction: "pinch-zoom" }}
+                eager={Math.abs(idx - index) <= 1}
               />
             </div>
           ))}
