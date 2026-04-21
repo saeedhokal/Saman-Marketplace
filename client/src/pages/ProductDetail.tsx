@@ -270,7 +270,7 @@ export default function ProductDetail() {
             {allImages.length > 0 ? (
               <ImageGallery images={allImages} />
             ) : (
-              <div className="aspect-square rounded-xl overflow-hidden bg-secondary border border-border/50 flex items-center justify-center text-muted-foreground">
+              <div className="aspect-square rounded-2xl overflow-hidden bg-secondary border border-border/50 flex items-center justify-center text-muted-foreground">
                 No Image Available
               </div>
             )}

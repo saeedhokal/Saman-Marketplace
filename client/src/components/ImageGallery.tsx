@@ -97,7 +97,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
     <>
       <div className="relative">
         <div
-          className="aspect-square w-full overflow-hidden rounded-xl bg-secondary/30 cursor-pointer"
+          className="aspect-square w-full overflow-hidden rounded-2xl bg-secondary/30 cursor-pointer"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
