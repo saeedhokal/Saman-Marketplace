@@ -34,6 +34,15 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
     };
   }, [emblaApi]);
 
+  useEffect(() => {
+    const start = Math.max(0, currentIndex - 2);
+    const end = Math.min(images.length - 1, currentIndex + 2);
+    for (let i = start; i <= end; i++) {
+      const preload = new Image();
+      preload.src = images[i];
+    }
+  }, [currentIndex, images]);
+
   const scrollTo = useCallback((idx: number) => {
     emblaApi?.scrollTo(idx);
   }, [emblaApi]);
@@ -243,7 +252,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
               <img
                 src={img}
                 alt={`Image ${idx + 1}`}
-                loading={Math.abs(idx - initialIndex) <= 1 ? "eager" : "lazy"}
+                loading="eager"
                 decoding="async"
                 draggable={false}
                 className="max-w-full max-h-full object-contain select-none"
