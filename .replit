@@ -55,3 +55,7 @@ TELR_STORE_ID = "32400"
 REPLIT_DEPLOYMENT_URL = "https://thesamanapp.com"
 TELR_REMOTE_AUTH_KEY = "DdkLr~C8Nph^cpfK"
 TELR_WALLETS_AUTH_KEY = "spRZ^QWJ5P~MWJpV"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
