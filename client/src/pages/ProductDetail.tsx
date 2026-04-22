@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2, Eye } from "lucide-react";
+import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2, Eye, Calendar, Gauge, Tag, Car } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
@@ -334,6 +334,47 @@ export default function ProductDetail() {
                 </div>
               )}
             </div>
+
+            {(product.year || product.mileage || product.condition || product.model) && (
+              <div className="mb-6 grid grid-cols-2 gap-2" data-testid="product-specs">
+                {product.year && (
+                  <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-year">
+                    <Calendar className="h-4 w-4 text-accent shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{isRTL ? 'السنة' : 'Year'}</div>
+                      <div className="text-sm font-semibold truncate">{product.year}</div>
+                    </div>
+                  </div>
+                )}
+                {product.mileage != null && (
+                  <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-mileage">
+                    <Gauge className="h-4 w-4 text-accent shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{isRTL ? 'المسافة' : 'Mileage'}</div>
+                      <div className="text-sm font-semibold truncate">{product.mileage.toLocaleString()} {isRTL ? 'كم' : 'km'}</div>
+                    </div>
+                  </div>
+                )}
+                {product.condition && (
+                  <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-condition">
+                    <Tag className="h-4 w-4 text-accent shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{isRTL ? 'الحالة' : 'Condition'}</div>
+                      <div className="text-sm font-semibold truncate">{product.condition}</div>
+                    </div>
+                  </div>
+                )}
+                {product.model && (
+                  <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-model">
+                    <Car className="h-4 w-4 text-accent shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{isRTL ? 'الموديل' : 'Model'}</div>
+                      <div className="text-sm font-semibold truncate">{product.model}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
