@@ -26,7 +26,7 @@ export default function ProductDetail() {
   const addFavorite = useAddFavorite();
   const removeFavorite = useRemoveFavorite();
   const { toast } = useToast();
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
   
   // Translation state
   const [showTranslation, setShowTranslation] = useState(false);
@@ -182,8 +182,8 @@ export default function ProductDetail() {
       return;
     }
     
-    // Translate
-    const targetLang = getTargetLanguage(product.title);
+    // Translate to the user's current app language
+    const targetLang: "arabic" | "english" = language === "ar" ? "arabic" : "english";
     const result = await translateListing(
       product.title,
       product.description || "",
@@ -213,11 +213,10 @@ export default function ProductDetail() {
   // Get the language label for the button
   const getTranslationButtonLabel = () => {
     if (!product) return "";
-    const sourceLang = detectLanguage(product.title);
     if (showTranslation) {
-      return sourceLang === "arabic" ? "Show Arabic" : "Show English";
+      return language === "ar" ? "عرض الأصلي" : "Show original";
     }
-    return sourceLang === "arabic" ? "Translate to English" : "ترجم للعربية";
+    return language === "ar" ? "ترجم للعربية" : "Translate to English";
   };
 
   if (isLoading) {
