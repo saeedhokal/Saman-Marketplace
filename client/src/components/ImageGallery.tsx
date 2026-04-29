@@ -18,6 +18,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
     containScroll: "trimSnaps",
     dragFree: false,
     duration: 22,
+    direction: "ltr",
   });
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -79,7 +80,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
           onClick={handleClick}
           data-testid="image-gallery-main"
         >
-          <div ref={emblaRef} className="overflow-hidden h-full">
+          <div ref={emblaRef} className="overflow-hidden h-full" dir="ltr">
             <div className="flex h-full touch-pan-y">
               {images.map((img, idx) => (
                 <div
@@ -188,6 +189,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     align: "start",
     containScroll: "trimSnaps",
     duration: 22,
+    direction: "ltr",
   });
   const [index, setIndex] = useState(initialIndex);
 
@@ -241,7 +243,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
         {index + 1} / {images.length}
       </div>
 
-      <div ref={emblaRef} className="overflow-hidden w-full h-full">
+      <div ref={emblaRef} className="overflow-hidden w-full h-full" dir="ltr">
         <div className="flex h-full touch-pan-y">
           {images.map((img, idx) => (
             <div
