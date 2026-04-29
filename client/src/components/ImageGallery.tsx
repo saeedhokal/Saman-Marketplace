@@ -18,7 +18,6 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
     containScroll: "trimSnaps",
     dragFree: false,
     duration: 22,
-    direction: "ltr",
   });
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -71,7 +70,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
   if (images.length === 0) return null;
 
   return (
-    <>
+    <div dir="ltr">
       <div className="relative">
         <div
           className="relative aspect-square w-full overflow-hidden rounded-2xl bg-secondary/30 shadow-md cursor-pointer"
@@ -80,7 +79,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
           onClick={handleClick}
           data-testid="image-gallery-main"
         >
-          <div ref={emblaRef} className="overflow-hidden h-full" dir="ltr">
+          <div ref={emblaRef} className="overflow-hidden h-full">
             <div className="flex h-full touch-pan-y">
               {images.map((img, idx) => (
                 <div
@@ -171,7 +170,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
         </AnimatePresence>,
         document.body
       )}
-    </>
+    </div>
   );
 }
 
@@ -189,7 +188,6 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     align: "start",
     containScroll: "trimSnaps",
     duration: 22,
-    direction: "ltr",
   });
   const [index, setIndex] = useState(initialIndex);
 
@@ -227,6 +225,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
       exit={{ opacity: 0 }}
       transition={{ duration: 0.18 }}
       className="fixed inset-0 z-[9999] bg-black"
+      dir="ltr"
       data-testid="fullscreen-gallery"
     >
       <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-20" />
