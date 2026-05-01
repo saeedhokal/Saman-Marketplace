@@ -9,6 +9,10 @@ const H = 1350;
 const OUT_DIR = path.join(process.cwd(), "exports", "saman-deck-v3");
 const PNG_DIR = path.join(OUT_DIR, "instagram");
 const PDF_PATH = path.join(OUT_DIR, "saman-marketplace-deck-v3.pdf");
+const LOGO_PATH = path.join(OUT_DIR, "assets", "saman-logo-trim.png");
+const LOGO_B64 = `data:image/png;base64,${fs.readFileSync(LOGO_PATH).toString("base64")}`;
+// Trimmed logo dimensions (intrinsic): 309 x 163 → aspect ~1.896
+const LOGO_AR = 309 / 163;
 
 const xml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -260,6 +264,11 @@ function svgWrap(content: string) {
 
 // ---------- SLIDE 1: TITLE ----------
 function s1Title() {
+  const logoW = 720;
+  const logoH = logoW / LOGO_AR;
+  const logoX = (W - logoW) / 2;
+  const logoY = 360;
+
   const content = `
     <defs>
       <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
@@ -271,28 +280,26 @@ function s1Title() {
     ${subtleGrid(C.white, 0.025)}
 
     <!-- Subtle gears -->
-    ${iconGearOutline(W - 60, 220, 220, C.orange, 0.28, 2)}
-    ${iconGearOutline(W - 220, 140, 90, C.orange, 0.4, 2)}
+    ${iconGearOutline(W - 60, 220, 220, C.orange, 0.22, 2)}
+    ${iconGearOutline(W - 220, 140, 90, C.orange, 0.32, 2)}
+    ${iconGearOutline(-40, H - 240, 200, C.orange, 0.18, 2)}
 
-    <!-- Faint car silhouette bottom-left -->
-    ${iconCar(260, H - 280, 360, C.white, 0.06)}
+    <!-- Faint car silhouette bottom -->
+    ${iconCar(W / 2, H - 220, 460, C.white, 0.05)}
 
-    <!-- Logo mark -->
-    <g transform="translate(80 280)">
-      ${orangeBar(0, 0, 80, 8)}
-      <text x="0" y="60" font-family="${FONT}" font-size="34" font-weight="800" fill="${C.orange}" letter-spacing="8">SAMAN</text>
-    </g>
+    <!-- Logo image -->
+    <image href="${LOGO_B64}" x="${logoX}" y="${logoY}" width="${logoW}" height="${logoH}" preserveAspectRatio="xMidYMid meet"/>
 
-    <!-- Title -->
-    <text x="80" y="540" font-family="${FONT}" font-size="118" font-weight="900" fill="${C.white}" letter-spacing="-2">SAMAN</text>
-    <text x="80" y="660" font-family="${FONT}" font-size="118" font-weight="900" fill="${C.orange}" letter-spacing="-2">MARKETPLACE</text>
+    <!-- "Marketplace" wordmark beneath logo -->
+    <text x="${W / 2}" y="${logoY + logoH + 70}" text-anchor="middle" font-family="${FONT}" font-size="64" font-weight="900" fill="${C.white}" letter-spacing="14">MARKETPLACE</text>
+
+    <!-- Divider -->
+    <line x1="${W / 2 - 90}" y1="${logoY + logoH + 110}" x2="${W / 2 + 90}" y2="${logoY + logoH + 110}" stroke="${C.orange}" stroke-width="3"/>
 
     <!-- Subtitle -->
-    <line x1="80" y1="730" x2="280" y2="730" stroke="${C.white}" stroke-width="2" opacity="0.4"/>
-    <text x="80" y="800" font-family="${FONT}" font-size="38" font-weight="600" fill="${C.white}">Cars &amp; Spare Parts</text>
-    <text x="80" y="850" font-family="${FONT}" font-size="38" font-weight="600" fill="${C.white}">Advertising Platform</text>
+    <text x="${W / 2}" y="${logoY + logoH + 180}" text-anchor="middle" font-family="${FONT}" font-size="32" font-weight="600" fill="${C.white}">Cars &amp; Spare Parts Advertising Platform</text>
 
-    <text x="80" y="1000" font-family="${FONT}" font-size="22" font-weight="700" fill="${C.mute}" letter-spacing="4">FROM THE UAE · FOR THE UAE</text>
+    <text x="${W / 2}" y="${H - 180}" text-anchor="middle" font-family="${FONT}" font-size="22" font-weight="700" fill="${C.mute}" letter-spacing="6">FROM THE UAE · FOR THE UAE</text>
 
     ${footer(1, TOTAL)}
   `;
@@ -542,11 +549,13 @@ async function s7CTA() {
     <text x="80" y="510" font-family="${FONT}" font-size="28" font-weight="500" fill="${C.mute}">Download Saman Marketplace and</text>
     <text x="80" y="550" font-family="${FONT}" font-size="28" font-weight="500" fill="${C.mute}">list your cars or spare parts.</text>
 
-    <!-- Logo + name block -->
+    <!-- Logo block (matches QR card height) -->
     <g transform="translate(80 640)">
-      <rect width="220" height="220" rx="36" fill="${C.orange}"/>
-      <text x="110" y="118" text-anchor="middle" font-family="${FONT}" font-size="44" font-weight="900" fill="${C.white}" letter-spacing="3">SAMAN</text>
-      <text x="110" y="158" text-anchor="middle" font-family="${FONT}" font-size="16" font-weight="700" fill="${C.white}" opacity="0.85" letter-spacing="3">MARKETPLACE</text>
+      <rect width="320" height="240" rx="36" fill="${C.charcoal}" stroke="${C.nardoDark}" stroke-width="1"/>
+      <!-- Logo image (centered, scaled to fit width) -->
+      <image href="${LOGO_B64}" x="30" y="40" width="260" height="${260 / LOGO_AR}" preserveAspectRatio="xMidYMid meet"/>
+      <!-- Marketplace wordmark -->
+      <text x="160" y="210" text-anchor="middle" font-family="${FONT}" font-size="20" font-weight="900" fill="${C.white}" letter-spacing="6">MARKETPLACE</text>
     </g>
 
     <!-- QR card -->
