@@ -11,8 +11,8 @@ const PNG_DIR = path.join(OUT_DIR, "instagram");
 const PDF_PATH = path.join(OUT_DIR, "saman-marketplace-deck-v3.pdf");
 const LOGO_PATH = path.join(OUT_DIR, "assets", "saman-logo-hd-final.png");
 const LOGO_B64 = `data:image/png;base64,${fs.readFileSync(LOGO_PATH).toString("base64")}`;
-// Trimmed HD logo dimensions (intrinsic): 553 x 299 → aspect ~1.850
-const LOGO_AR = 553 / 299;
+// Trimmed HD logo dimensions (intrinsic): 551 x 300 → aspect ~1.837
+const LOGO_AR = 551 / 300;
 
 const xml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
