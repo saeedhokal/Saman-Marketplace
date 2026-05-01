@@ -143,7 +143,7 @@ title = "All 9 Instagram PNGs (bundle)"
 id = "Jf3jQf-wsktvV55GHS_JJ"
 uri = "file://exports/saman-deck-v3/saman-marketplace-deck-v3.pdf"
 type = "pdf"
-title = "Saman Marketplace Deck v3 (PDF)"
+title = "Updated Deck (PDF)"
 
 [[outputs]]
 id = "MTM0WagaujzJw_QbKIIGO"
@@ -191,7 +191,7 @@ title = "07 — CTA"
 id = "hNkdTrsX6p9ge0T1-aHHm"
 uri = "file://exports/saman-deck-v3/saman-instagram-slides-v3.tar.gz"
 type = "unspecified"
-title = "Instagram Slides Bundle (7 x 1080x1350 PNG)"
+title = "Updated Instagram Slides Bundle"
 
 [[outputs]]
 id = "lbcXj3FSv-1WDpmHVOWgj"
@@ -204,3 +204,9 @@ id = "jgCFc-K0Xjeu4Vm6GuQ1V"
 uri = "file://exports/saman-deck-v3/assets/saman-logo-vector.png"
 type = "image"
 title = "SAMAN Logo - Vector v1 (4268x1829, no artifacts)"
+
+[[outputs]]
+id = "V2886waeEzibbfqVFVmCE"
+uri = "file://exports/saman-deck-v3/assets/inspect-sharp-compare.png"
+type = "image"
+title = "Before / After - Sharpened Logo"
