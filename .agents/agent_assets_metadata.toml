@@ -161,13 +161,13 @@ title = "Slide 2 - What it is (footer line removed)"
 id = "Be2S17lew24cizY466c94"
 uri = "file://exports/saman-deck-v3/instagram/03-why.png"
 type = "image"
-title = "Slide 3 - Why Saman"
+title = "Slide 3 - Why Saman (4 reasons)"
 
 [[outputs]]
 id = "N--pBLEdHK7H5KcAn7-rm"
 uri = "file://exports/saman-deck-v3/instagram/04-how.png"
 type = "image"
-title = "Slide 4 - Two taps. That's it."
+title = "Slide 4 - Three taps (restored)"
 
 [[outputs]]
 id = "N4SL9033cLXhb7-ato4mY"
@@ -185,7 +185,7 @@ title = "Slide 6 - For parts sellers"
 id = "MVvykGyHHMilOngRAeyne"
 uri = "file://exports/saman-deck-v3/instagram/07-cta.png"
 type = "image"
-title = "Slide 7 - QR -> /downloads"
+title = "Slide 7 - URL fits inside button"
 
 [[outputs]]
 id = "hNkdTrsX6p9ge0T1-aHHm"
