@@ -198,3 +198,9 @@ id = "lbcXj3FSv-1WDpmHVOWgj"
 uri = "file://exports/saman-deck-v3/assets/logo-compare-5.png"
 type = "image"
 title = "Logo orange darkening - 5 levels"
+
+[[outputs]]
+id = "jgCFc-K0Xjeu4Vm6GuQ1V"
+uri = "file://exports/saman-deck-v3/assets/saman-logo-vector.png"
+type = "image"
+title = "SAMAN Logo - Vector v1 (4268x1829, no artifacts)"
