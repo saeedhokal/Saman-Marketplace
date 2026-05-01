@@ -72,3 +72,69 @@ id = "dzn9pRN2x65fPYNdE4Eyw"
 uri = "file://exports/saman-deck/saman-instagram-slides.tar.gz"
 type = "unspecified"
 title = "All 10 Instagram PNGs (bundle)"
+
+[[outputs]]
+id = "jF3eL-_UTZrvHsn4APJ1D"
+uri = "file://exports/saman-deck-v2/saman-marketplace-deck-v2.pdf"
+type = "pdf"
+title = "Saman v2 - 9-slide colorful PDF deck"
+
+[[outputs]]
+id = "UY2Kw_Onl2hYDkPc75q8z"
+uri = "file://exports/saman-deck-v2/instagram/01-cover.png"
+type = "image"
+title = "Slide 1 - Buy. Sell. Drive away."
+
+[[outputs]]
+id = "Yq69bGVe7pQM1Il9iCZLI"
+uri = "file://exports/saman-deck-v2/instagram/02-what.png"
+type = "image"
+title = "Slide 2 - The fastest way"
+
+[[outputs]]
+id = "MXxiYIVBNLAu1oSAH_TgB"
+uri = "file://exports/saman-deck-v2/instagram/03-free.png"
+type = "image"
+title = "Slide 3 - FREE right now"
+
+[[outputs]]
+id = "1xl30HShD1Nul0FdgdMK4"
+uri = "file://exports/saman-deck-v2/instagram/04-sell.png"
+type = "image"
+title = "Slide 4 - Got parts collecting dust?"
+
+[[outputs]]
+id = "95OA4QuyrTLKXpAe3CZjd"
+uri = "file://exports/saman-deck-v2/instagram/05-browse.png"
+type = "image"
+title = "Slide 5 - Hunting for that one part?"
+
+[[outputs]]
+id = "udG0TH2QSWGWWXnqMg8fH"
+uri = "file://exports/saman-deck-v2/instagram/06-why.png"
+type = "image"
+title = "Slide 6 - Built for the UAE crowd"
+
+[[outputs]]
+id = "Eg9RjiHdBN2LDG_yRLYzE"
+uri = "file://exports/saman-deck-v2/instagram/07-available.png"
+type = "image"
+title = "Slide 7 - Wherever you are"
+
+[[outputs]]
+id = "JrNYjVYq3bYbZaOV99Dpw"
+uri = "file://exports/saman-deck-v2/instagram/08-community.png"
+type = "image"
+title = "Slide 8 - Be part of the Saman crew"
+
+[[outputs]]
+id = "NWJl5jraiCWwkZjYerSFv"
+uri = "file://exports/saman-deck-v2/instagram/09-cta.png"
+type = "image"
+title = "Slide 9 - Don't scroll, start trading"
+
+[[outputs]]
+id = "EnacZyb3wZo8_LrK6WJzs"
+uri = "file://exports/saman-deck-v2/saman-instagram-slides-v2.tar.gz"
+type = "unspecified"
+title = "All 9 Instagram PNGs (bundle)"
