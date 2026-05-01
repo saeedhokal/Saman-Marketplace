@@ -1,0 +1,74 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "Sb2xbwstQo6_mBL2kDbFZ"
+uri = "file://exports/saman-deck/saman-marketplace-deck.pdf"
+type = "pdf"
+title = "Saman Marketplace - 10-slide PDF deck"
+
+[[outputs]]
+id = "w0nsBvsSOJVGtaBLOMWni"
+uri = "file://exports/saman-deck/instagram/01-cover.png"
+type = "image"
+title = "Slide 1 - Cover"
+
+[[outputs]]
+id = "OumhXtTEudoj82rFbk8Hb"
+uri = "file://exports/saman-deck/instagram/02-vision.png"
+type = "image"
+title = "Slide 2 - Bridging two communities"
+
+[[outputs]]
+id = "5yagWTIpD-ilaxSw-pGGU"
+uri = "file://exports/saman-deck/instagram/03-what.png"
+type = "image"
+title = "Slide 3 - What is Saman"
+
+[[outputs]]
+id = "X7SbftzUqRb5uDjrhsngy"
+uri = "file://exports/saman-deck/instagram/04-bilingual.png"
+type = "image"
+title = "Slide 4 - Arabic ↔ English"
+
+[[outputs]]
+id = "GZPznRhrB6l0DfFMOEs6f"
+uri = "file://exports/saman-deck/instagram/05-easy.png"
+type = "image"
+title = "Slide 5 - Easy to list"
+
+[[outputs]]
+id = "E1GpoIQhoVgs4T110YD7m"
+uri = "file://exports/saman-deck/instagram/06-credits.png"
+type = "image"
+title = "Slide 6 - Credit / subscription system"
+
+[[outputs]]
+id = "53UYkDthigTUAQRvNWXN3"
+uri = "file://exports/saman-deck/instagram/07-browse.png"
+type = "image"
+title = "Slide 7 - Search & filters"
+
+[[outputs]]
+id = "-MX6v44Dhu9R7IDE2fW7d"
+uri = "file://exports/saman-deck/instagram/08-trust.png"
+type = "image"
+title = "Slide 8 - Trust & safety"
+
+[[outputs]]
+id = "F6sqO0ToGL6H4V-ThM8qf"
+uri = "file://exports/saman-deck/instagram/09-available.png"
+type = "image"
+title = "Slide 9 - Available everywhere"
+
+[[outputs]]
+id = "zz7vi16NWBF1sIyLoa_oI"
+uri = "file://exports/saman-deck/instagram/10-cta.png"
+type = "image"
+title = "Slide 10 - Call to action"
+
+[[outputs]]
+id = "dzn9pRN2x65fPYNdE4Eyw"
+uri = "file://exports/saman-deck/saman-instagram-slides.tar.gz"
+type = "unspecified"
+title = "All 10 Instagram PNGs (bundle)"
