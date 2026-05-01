@@ -143,13 +143,13 @@ title = "All 9 Instagram PNGs (bundle)"
 id = "Jf3jQf-wsktvV55GHS_JJ"
 uri = "file://exports/saman-deck-v3/saman-marketplace-deck-v3.pdf"
 type = "pdf"
-title = "Saman v3 - Deeper orange + big logo (PDF)"
+title = "Saman v3 - Darker logo orange (PDF)"
 
 [[outputs]]
 id = "MTM0WagaujzJw_QbKIIGO"
 uri = "file://exports/saman-deck-v3/instagram/01-title.png"
 type = "image"
-title = "Slide 1 - Hero"
+title = "Slide 1 - Hero with darker logo"
 
 [[outputs]]
 id = "rqFT2DBcy-bFMKK71ztQp"
@@ -185,7 +185,7 @@ title = "Slide 6 - Parts"
 id = "MVvykGyHHMilOngRAeyne"
 uri = "file://exports/saman-deck-v3/instagram/07-cta.png"
 type = "image"
-title = "Slide 7 - Big logo CTA"
+title = "Slide 7 - CTA with darker logo"
 
 [[outputs]]
 id = "hNkdTrsX6p9ge0T1-aHHm"
