@@ -325,8 +325,6 @@ function s2What() {
     ${card(80, 840, W - 160, 130, iconSearch(0, 0, 90, C.orange), "Browse listings easily", "Search by make, model, or part")}
     ${card(80, 990, W - 160, 130, iconChat(0, 0, 100, C.white), "Connect directly", "Talk to buyers and sellers", true)}
 
-    <text x="${W / 2}" y="${H - 130}" text-anchor="middle" font-family="${FONT}" font-size="18" fill="${C.mute}" font-weight="600" letter-spacing="2">AN ADVERTISING PLATFORM · NOTHING MORE, NOTHING LESS</text>
-
     ${footer(2, TOTAL)}
   `;
   return svgWrap(content);
@@ -397,12 +395,11 @@ function s4How() {
     ${iconGearOutline(W - 40, 80, 180, C.orange, 0.18, 2)}
 
     ${eyebrow(80, 240, "How to post")}
-    <text x="80" y="320" font-family="${FONT}" font-size="74" font-weight="900" fill="${C.white}">Three taps.</text>
+    <text x="80" y="320" font-family="${FONT}" font-size="74" font-weight="900" fill="${C.white}">Two taps.</text>
     <text x="80" y="395" font-family="${FONT}" font-size="74" font-weight="900" fill="${C.orange}">That's it.</text>
 
-    ${step(1, 80, 510, W - 160, 200, iconCamera(0, 0, 90, C.orange), "Take a picture", "Snap a clear photo of your car or part")}
-    ${step(2, 80, 730, W - 160, 200, iconDoc(0, 0, 90, C.orange), "Add basic details", "Title, price, condition. Done.")}
-    ${step(3, 80, 950, W - 160, 200, iconCheck(0, 0, 70, C.orange), "Post your ad", "Goes live after a quick review")}
+    ${step(1, 80, 560, W - 160, 250, iconDoc(0, 0, 100, C.orange), "Add basic details", "Title, price, condition, photos. Done.")}
+    ${step(2, 80, 850, W - 160, 250, iconCheck(0, 0, 80, C.orange), "Post your ad", "Goes live after a quick review.")}
 
     ${footer(4, TOTAL)}
   `;
@@ -514,7 +511,7 @@ function s6Parts() {
 // ---------- SLIDE 7: CTA + QR ----------
 async function s7CTA() {
   // Generate QR for thesamanapp.com — keep its viewBox so we can nest it
-  const qrSvg = await QRCode.toString("https://thesamanapp.com", {
+  const qrSvg = await QRCode.toString("https://thesamanapp.com/downloads", {
     type: "svg",
     margin: 1,
     color: { dark: C.black, light: "#ffffff" },
@@ -557,7 +554,7 @@ async function s7CTA() {
       <rect width="320" height="320" rx="36" fill="${C.white}"/>
       <text x="160" y="42" text-anchor="middle" font-family="${FONT}" font-size="14" font-weight="800" fill="${C.black}" letter-spacing="3">SCAN TO DOWNLOAD</text>
       <svg x="40" y="60" width="240" height="210" viewBox="${qrViewBox}" preserveAspectRatio="xMidYMid meet">${qrInner}</svg>
-      <text x="160" y="298" text-anchor="middle" font-family="${FONT}" font-size="14" font-weight="700" fill="${C.black}" opacity="0.6">thesamanapp.com</text>
+      <text x="160" y="298" text-anchor="middle" font-family="${FONT}" font-size="14" font-weight="700" fill="${C.black}" opacity="0.6">thesamanapp.com/downloads</text>
     </g>
 
     <!-- Distribution row -->
@@ -570,9 +567,9 @@ async function s7CTA() {
       <text x="30" y="65" font-family="${FONT}" font-size="28" font-weight="900" fill="${C.black}">App Store</text>
     </g>
     <g transform="translate(380 950)">
-      <rect width="280" height="80" rx="16" fill="none" stroke="${C.white}" stroke-width="2"/>
+      <rect width="320" height="80" rx="16" fill="none" stroke="${C.white}" stroke-width="2"/>
       <text x="30" y="38" font-family="${FONT}" font-size="14" font-weight="600" fill="${C.mute}">Or visit</text>
-      <text x="30" y="65" font-family="${FONT}" font-size="22" font-weight="900" fill="${C.white}">thesamanapp.com</text>
+      <text x="30" y="65" font-family="${FONT}" font-size="20" font-weight="900" fill="${C.white}">thesamanapp.com/downloads</text>
     </g>
 
     ${footer(7, TOTAL)}

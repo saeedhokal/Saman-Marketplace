@@ -143,7 +143,7 @@ title = "All 9 Instagram PNGs (bundle)"
 id = "Jf3jQf-wsktvV55GHS_JJ"
 uri = "file://exports/saman-deck-v3/saman-marketplace-deck-v3.pdf"
 type = "pdf"
-title = "Saman v3 - 7-slide premium PDF deck"
+title = "Saman v3 - Updated PDF deck"
 
 [[outputs]]
 id = "MTM0WagaujzJw_QbKIIGO"
@@ -155,7 +155,7 @@ title = "Slide 1 - Title"
 id = "rqFT2DBcy-bFMKK71ztQp"
 uri = "file://exports/saman-deck-v3/instagram/02-what.png"
 type = "image"
-title = "Slide 2 - What it is"
+title = "Slide 2 - What it is (footer line removed)"
 
 [[outputs]]
 id = "Be2S17lew24cizY466c94"
@@ -167,7 +167,7 @@ title = "Slide 3 - Why Saman"
 id = "N--pBLEdHK7H5KcAn7-rm"
 uri = "file://exports/saman-deck-v3/instagram/04-how.png"
 type = "image"
-title = "Slide 4 - Three taps to post"
+title = "Slide 4 - Two taps. That's it."
 
 [[outputs]]
 id = "N4SL9033cLXhb7-ato4mY"
@@ -185,10 +185,10 @@ title = "Slide 6 - For parts sellers"
 id = "MVvykGyHHMilOngRAeyne"
 uri = "file://exports/saman-deck-v3/instagram/07-cta.png"
 type = "image"
-title = "Slide 7 - CTA + QR code"
+title = "Slide 7 - QR -> /downloads"
 
 [[outputs]]
 id = "hNkdTrsX6p9ge0T1-aHHm"
 uri = "file://exports/saman-deck-v3/saman-instagram-slides-v3.tar.gz"
 type = "unspecified"
-title = "All 7 Instagram PNGs (bundle)"
+title = "All 7 PNGs (bundle)"
