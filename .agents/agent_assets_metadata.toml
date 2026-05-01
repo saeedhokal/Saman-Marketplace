@@ -143,49 +143,49 @@ title = "All 9 Instagram PNGs (bundle)"
 id = "Jf3jQf-wsktvV55GHS_JJ"
 uri = "file://exports/saman-deck-v3/saman-marketplace-deck-v3.pdf"
 type = "pdf"
-title = "Saman v3 - HD logo (PDF)"
+title = "Saman v3 - Deeper orange + big logo (PDF)"
 
 [[outputs]]
 id = "MTM0WagaujzJw_QbKIIGO"
 uri = "file://exports/saman-deck-v3/instagram/01-title.png"
 type = "image"
-title = "Slide 1 - HD hero logo"
+title = "Slide 1 - Hero"
 
 [[outputs]]
 id = "rqFT2DBcy-bFMKK71ztQp"
 uri = "file://exports/saman-deck-v3/instagram/02-what.png"
 type = "image"
-title = "Slide 2 - What it is (footer line removed)"
+title = "Slide 2 - What"
 
 [[outputs]]
 id = "Be2S17lew24cizY466c94"
 uri = "file://exports/saman-deck-v3/instagram/03-why.png"
 type = "image"
-title = "Slide 3 - Why Saman (4 reasons)"
+title = "Slide 3 - Why"
 
 [[outputs]]
 id = "N--pBLEdHK7H5KcAn7-rm"
 uri = "file://exports/saman-deck-v3/instagram/04-how.png"
 type = "image"
-title = "Slide 4 - Three taps (restored)"
+title = "Slide 4 - How"
 
 [[outputs]]
 id = "N4SL9033cLXhb7-ato4mY"
 uri = "file://exports/saman-deck-v3/instagram/05-cars.png"
 type = "image"
-title = "Slide 5 - For car sellers"
+title = "Slide 5 - Cars"
 
 [[outputs]]
 id = "iinL-BLV1s4juFlkwY8f3"
 uri = "file://exports/saman-deck-v3/instagram/06-parts.png"
 type = "image"
-title = "Slide 6 - For parts sellers"
+title = "Slide 6 - Parts"
 
 [[outputs]]
 id = "MVvykGyHHMilOngRAeyne"
 uri = "file://exports/saman-deck-v3/instagram/07-cta.png"
 type = "image"
-title = "Slide 7 - HD logo in CTA card"
+title = "Slide 7 - Big logo CTA"
 
 [[outputs]]
 id = "hNkdTrsX6p9ge0T1-aHHm"

@@ -24,9 +24,9 @@ const C = {
   nardo: "#6F7372",
   nardoLight: "#8a8e8d",
   nardoDark: "#3a3c3c",
-  orange: "#d2461a",
-  orangeBright: "#e85e2c",
-  orangeDeep: "#a8350f",
+  orange: "#9c3412",
+  orangeBright: "#b8421a",
+  orangeDeep: "#7a2509",
   white: "#ffffff",
   offWhite: "#f5f5f4",
   mute: "#a3a4a5",
@@ -541,44 +541,45 @@ async function s7CTA() {
     ${iconGearOutline(W + 40, 80, 180, C.orange, 0.25, 2)}
     ${iconGearOutline(-60, H - 200, 220, C.orange, 0.2, 2)}
 
-    ${eyebrow(80, 240, "Get started")}
+    <!-- Big logo, centered, no card -->
+    ${(() => {
+      const logoW = 640;
+      const logoH = logoW / LOGO_AR;
+      const logoX = (W - logoW) / 2;
+      const logoY = 170;
+      return `
+      <image href="${LOGO_B64}" x="${logoX}" y="${logoY}" width="${logoW}" height="${logoH}" preserveAspectRatio="xMidYMid meet"/>
+      <line x1="${W / 2 - 60}" y1="${logoY + logoH + 32}" x2="${W / 2 + 60}" y2="${logoY + logoH + 32}" stroke="${C.orange}" stroke-width="4"/>
+      `;
+    })()}
 
-    <text x="80" y="340" font-family="${FONT}" font-size="84" font-weight="900" fill="${C.white}">Start posting</text>
-    <text x="80" y="425" font-family="${FONT}" font-size="84" font-weight="900" fill="${C.orange}">for free today.</text>
+    <!-- Headline -->
+    <text x="${W / 2}" y="690" text-anchor="middle" font-family="${FONT}" font-size="72" font-weight="900" fill="${C.white}">Start posting</text>
+    <text x="${W / 2}" y="770" text-anchor="middle" font-family="${FONT}" font-size="72" font-weight="900" fill="${C.orange}">for free today.</text>
 
-    <text x="80" y="510" font-family="${FONT}" font-size="28" font-weight="500" fill="${C.mute}">Download Saman Marketplace and</text>
-    <text x="80" y="550" font-family="${FONT}" font-size="28" font-weight="500" fill="${C.mute}">list your cars or spare parts.</text>
+    <text x="${W / 2}" y="840" text-anchor="middle" font-family="${FONT}" font-size="26" font-weight="500" fill="${C.mute}">Download Saman Marketplace and list your</text>
+    <text x="${W / 2}" y="876" text-anchor="middle" font-family="${FONT}" font-size="26" font-weight="500" fill="${C.mute}">cars or spare parts.</text>
 
-    <!-- Logo block (matches QR card height) -->
-    <g transform="translate(80 640)">
-      <rect width="320" height="240" rx="36" fill="${C.charcoal}" stroke="${C.nardoDark}" stroke-width="1"/>
-      <!-- Logo image (centered, scaled to fit width) -->
-      <image href="${LOGO_B64}" x="30" y="40" width="260" height="${260 / LOGO_AR}" preserveAspectRatio="xMidYMid meet"/>
-      <!-- Marketplace wordmark -->
-      <text x="160" y="210" text-anchor="middle" font-family="${FONT}" font-size="20" font-weight="900" fill="${C.white}" letter-spacing="6">MARKETPLACE</text>
+    <!-- QR card (right) -->
+    <g transform="translate(${W - 80 - 240} 940)">
+      <rect width="240" height="240" rx="28" fill="${C.white}"/>
+      <text x="120" y="36" text-anchor="middle" font-family="${FONT}" font-size="12" font-weight="800" fill="${C.black}" letter-spacing="3">SCAN TO DOWNLOAD</text>
+      <svg x="30" y="50" width="180" height="160" viewBox="${qrViewBox}" preserveAspectRatio="xMidYMid meet">${qrInner}</svg>
+      <text x="120" y="226" text-anchor="middle" font-family="${FONT}" font-size="12" font-weight="700" fill="${C.black}" opacity="0.6">thesamanapp.com/downloads</text>
     </g>
 
-    <!-- QR card -->
-    <g transform="translate(${W - 80 - 320} 640)">
-      <rect width="320" height="320" rx="36" fill="${C.white}"/>
-      <text x="160" y="42" text-anchor="middle" font-family="${FONT}" font-size="14" font-weight="800" fill="${C.black}" letter-spacing="3">SCAN TO DOWNLOAD</text>
-      <svg x="40" y="60" width="240" height="210" viewBox="${qrViewBox}" preserveAspectRatio="xMidYMid meet">${qrInner}</svg>
-      <text x="160" y="298" text-anchor="middle" font-family="${FONT}" font-size="14" font-weight="700" fill="${C.black}" opacity="0.6">thesamanapp.com/downloads</text>
-    </g>
-
-    <!-- Distribution row -->
-    <g transform="translate(80 900)">
-      <text x="0" y="30" font-family="${FONT}" font-size="20" font-weight="700" fill="${C.mute}" letter-spacing="2">AVAILABLE ON</text>
-    </g>
-    <g transform="translate(80 950)">
-      <rect width="280" height="80" rx="16" fill="${C.white}"/>
-      <text x="30" y="38" font-family="${FONT}" font-size="14" font-weight="600" fill="${C.black}">Download on the</text>
-      <text x="30" y="65" font-family="${FONT}" font-size="28" font-weight="900" fill="${C.black}">App Store</text>
-    </g>
-    <g transform="translate(380 950)">
-      <rect width="380" height="80" rx="16" fill="none" stroke="${C.white}" stroke-width="2"/>
-      <text x="24" y="38" font-family="${FONT}" font-size="14" font-weight="600" fill="${C.mute}">Or visit</text>
-      <text x="24" y="65" font-family="${FONT}" font-size="20" font-weight="900" fill="${C.white}">thesamanapp.com/downloads</text>
+    <!-- App Store + URL stack (left) -->
+    <g transform="translate(80 940)">
+      <text x="0" y="22" font-family="${FONT}" font-size="18" font-weight="700" fill="${C.mute}" letter-spacing="3">AVAILABLE ON</text>
+      <g transform="translate(0 40)">
+        <rect width="300" height="84" rx="16" fill="${C.white}"/>
+        <text x="30" y="38" font-family="${FONT}" font-size="14" font-weight="600" fill="${C.black}">Download on the</text>
+        <text x="30" y="68" font-family="${FONT}" font-size="30" font-weight="900" fill="${C.black}">App Store</text>
+      </g>
+      <g transform="translate(0 140)">
+        <rect width="400" height="60" rx="14" fill="none" stroke="${C.white}" stroke-width="2"/>
+        <text x="20" y="38" font-family="${FONT}" font-size="20" font-weight="900" fill="${C.white}">thesamanapp.com/downloads</text>
+      </g>
     </g>
 
     ${footer(7, TOTAL)}
