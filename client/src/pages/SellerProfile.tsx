@@ -4,10 +4,12 @@ import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Store, Calendar } from "lucide-react";
+import { ArrowLeft, Store, Calendar, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 
 type SellerInfo = {
   id: string;
@@ -21,13 +23,53 @@ type SellerInfo = {
 export default function SellerProfile() {
   const [, params] = useRoute("/seller/:sellerId");
   const sellerId = params?.sellerId || "";
-  
+  const { user, isLoading: authLoading } = useAuth();
+  const { isRTL } = useLanguage();
+
   const { data: products, isLoading, error } = useSellerProducts(sellerId);
-  
+
   const { data: sellerInfo, isLoading: sellerLoading } = useQuery<SellerInfo>({
     queryKey: ['/api/sellers', sellerId],
-    enabled: !!sellerId,
+    enabled: !!sellerId && !!user,
   });
+
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="container mx-auto max-w-md text-center py-20">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <Lock className="h-8 w-8 text-primary" />
+          </div>
+          <h2 className="font-display text-2xl font-bold text-foreground mb-2" data-testid="text-seller-locked-title">
+            {isRTL ? 'سجّل لعرض ملف البائع' : 'Log in to view this seller'}
+          </h2>
+          <p className="text-muted-foreground mb-6" data-testid="text-seller-locked-description">
+            {isRTL
+              ? 'أنشئ حسابًا أو سجّل دخولك لرؤية ملف البائع وقوائمه الأخرى.'
+              : 'Create an account or log in to see the seller and their other listings.'}
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { window.location.href = `/auth?returnTo=${encodeURIComponent(`/seller/${sellerId}`)}`; }}
+              data-testid="button-seller-locked-login"
+            >
+              {isRTL ? 'تسجيل الدخول' : 'Log in'}
+            </Button>
+            <Button
+              onClick={() => { window.location.href = `/auth?returnTo=${encodeURIComponent(`/seller/${sellerId}`)}&mode=signup`; }}
+              data-testid="button-seller-locked-signup"
+            >
+              {isRTL ? 'إنشاء حساب' : 'Sign up'}
+            </Button>
+          </div>
+          <Button variant="ghost" className="mt-6" onClick={() => window.history.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> {isRTL ? 'رجوع' : 'Back'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const getSellerDisplayName = () => {
     if (sellerInfo?.displayName) return sellerInfo.displayName;

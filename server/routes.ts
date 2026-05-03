@@ -525,7 +525,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   }
 
   // Helper to attach seller profile images to products
-  async function attachSellerImages(productsList: any[]) {
+  async function attachSellerImages(productsList: any[], req?: Request) {
+    // Hide seller identity (profile image) from logged-out visitors
+    if (req && !hasVerifiedUser(req)) {
+      return productsList.map(p => ({ ...p, sellerProfileImageUrl: null }));
+    }
     const sellerIds = Array.from(new Set(productsList.map(p => p.sellerId).filter(Boolean)));
     const sellerProfiles = await Promise.all(
       sellerIds.map(async (id) => {
@@ -548,7 +552,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const mainCategory = req.query.mainCategory as string | undefined;
     const subCategory = req.query.subCategory as string | undefined;
     const productsList = await storage.getProducts({ search, mainCategory, subCategory });
-    const productsWithSeller = await attachSellerImages(productsList);
+    const productsWithSeller = await attachSellerImages(productsList, req);
     res.json(stripContactFieldsList(req, productsWithSeller));
   });
 
@@ -557,7 +561,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     const limit = Math.min(Number(req.query.limit) || 10, 20);
     const productsList = await storage.getRecentProducts(limit);
-    const productsWithSeller = await attachSellerImages(productsList);
+    const productsWithSeller = await attachSellerImages(productsList, req);
     res.json(stripContactFieldsList(req, productsWithSeller));
   });
 
@@ -568,7 +572,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const sessionId = req.sessionID;
     const limit = Math.min(Number(req.query.limit) || 10, 20);
     const productsList = await storage.getRecommendedProducts(userId || undefined, sessionId, limit);
-    const productsWithSeller = await attachSellerImages(productsList);
+    const productsWithSeller = await attachSellerImages(productsList, req);
     res.json(stripContactFieldsList(req, productsWithSeller));
   });
 
@@ -581,9 +585,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     
     db.update(products).set({ views: sql`COALESCE(${products.views}, 0) + 1` }).where(eq(products.id, id)).execute().catch(() => {});
 
-    // Attach seller profile image with cache-busting
-    let sellerProfileImageUrl = null;
-    if (product.sellerId) {
+    // Attach seller profile image with cache-busting (hidden for logged-out visitors)
+    let sellerProfileImageUrl: string | null = null;
+    if (product.sellerId && hasVerifiedUser(req)) {
       const [seller] = await db.select({ profileImageUrl: users.profileImageUrl })
         .from(users).where(eq(users.id, product.sellerId));
       sellerProfileImageUrl = addCacheBuster(seller?.profileImageUrl || null);
@@ -607,6 +611,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(404).json({ message: "Seller not found" });
     }
     
+    // Logged-out visitors only get the count (so the listing page can show "X listings")
+    // — not the full list, to discourage scraping and gate "More from this seller".
+    if (!hasVerifiedUser(req)) {
+      return res.json([]);
+    }
+
     const products = await storage.getProductsBySeller(sellerId);
     res.json(stripContactFieldsList(req, products));
   });
@@ -808,8 +818,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
     
     if (!hasVerifiedUser(req)) {
-      const { phone, ...rest } = seller;
-      return res.json(rest);
+      // Hide identifying details from logged-out visitors
+      return res.json({
+        id: seller.id,
+        displayName: null,
+        firstName: null,
+        lastName: null,
+        profileImageUrl: null,
+        createdAt: seller.createdAt,
+        phone: null,
+        requiresAuth: true,
+      });
     }
     res.json(seller);
   });

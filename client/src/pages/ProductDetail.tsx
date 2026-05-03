@@ -501,36 +501,65 @@ export default function ProductDetail() {
         {/* Seller Info Section */}
         {product?.sellerId && (
           <div className="mt-12">
-            <Link href={`/seller/${product.sellerId}`}>
-              <Card className="p-4 hover-elevate cursor-pointer" data-testid="link-seller-profile">
+            {user ? (
+              <Link href={`/seller/${product.sellerId}`}>
+                <Card className="p-4 hover-elevate cursor-pointer" data-testid="link-seller-profile">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        {sellerInfo?.profileImageUrl ? (
+                          <AvatarImage src={sellerInfo.profileImageUrl} alt={getSellerDisplayName()} />
+                        ) : null}
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          <Store className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-foreground" data-testid="text-seller-name">
+                          {getSellerDisplayName()}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {sellerProducts ? `${sellerProducts.length} listing${sellerProducts.length !== 1 ? 's' : ''}` : 'View all listings'}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                </Card>
+              </Link>
+            ) : (
+              <Card
+                className="p-4 hover-elevate cursor-pointer"
+                onClick={() => setShowAuthPrompt(true)}
+                data-testid="card-seller-locked"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
-                      {sellerInfo?.profileImageUrl ? (
-                        <AvatarImage src={sellerInfo.profileImageUrl} alt={getSellerDisplayName()} />
-                      ) : null}
                       <AvatarFallback className="bg-primary/10 text-primary">
                         <Store className="h-5 w-5" />
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold text-foreground" data-testid="text-seller-name">
-                        {getSellerDisplayName()}
+                      <h3 className="font-semibold text-foreground" data-testid="text-seller-locked">
+                        {isRTL ? 'سجّل لعرض البائع' : 'Log in to view seller'}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {sellerProducts ? `${sellerProducts.length} listing${sellerProducts.length !== 1 ? 's' : ''}` : 'View all listings'}
+                        {isRTL
+                          ? 'أنشئ حسابًا لعرض ملف البائع وقوائمه الأخرى.'
+                          : 'Create an account to see the seller and their other listings.'}
                       </p>
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </div>
               </Card>
-            </Link>
+            )}
           </div>
         )}
 
-        {/* More from this seller */}
-        {sellerProducts && sellerProducts.filter(p => p.id !== id).length > 0 && (
+        {/* More from this seller — registered users only */}
+        {user && sellerProducts && sellerProducts.filter(p => p.id !== id).length > 0 && (
           <div className="mt-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-xl font-bold text-foreground">{isRTL ? 'المزيد من هذا البائع' : 'More from this seller'}</h2>
