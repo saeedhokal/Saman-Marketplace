@@ -34,6 +34,9 @@
   --input: 220 15% 88%;
   --ring: 24 95% 50%;
 
+  /* Slightly stronger card border for light-mode separation */
+  --card-border: 220 14% 82%;
+
   --radius: 0.75rem;
 
   --font-display: 'Outfit', sans-serif;
@@ -70,6 +73,9 @@
   --border: 220 15% 25%;
   --input: 220 15% 25%;
   --ring: 24 95% 50%;
+
+  /* Keep dark-mode card border equal to existing border token */
+  --card-border: 220 15% 25%;
 }
 
 @layer base {
@@ -128,6 +134,20 @@
   .card-hover {
     @apply transition-all duration-300 hover:translate-y-[-4px] hover:shadow-xl hover:shadow-accent/10;
   }
+}
+
+/* Light-mode card lift: slightly stronger border + very soft shadow.
+   Dark mode is unchanged. */
+:root .shadcn-card {
+  box-shadow:
+    0 1px 2px hsl(220 25% 20% / 0.04),
+    0 2px 6px hsl(220 25% 20% / 0.06);
+}
+.dark .shadcn-card {
+  box-shadow: none;
+}
+
+@layer utilities {
   
   .gradient-orange {
     background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
