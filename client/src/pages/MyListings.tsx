@@ -317,7 +317,7 @@ export default function MyListings() {
 
       {/* Portaled to body so position:fixed works (parent <main> has transform) */}
       {createPortal(
-        <div className="fixed left-0 right-0 px-4 pointer-events-none z-50" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="fixed left-0 right-0 px-4 pointer-events-none z-50" style={{ bottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
           <Link href="/sell" className="pointer-events-auto block">
             <Button className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-medium rounded-full shadow-lg" data-testid="button-add-listing">
               {t('addListing')}
