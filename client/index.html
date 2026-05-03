@@ -12,6 +12,16 @@
   <body style="margin: 0; padding: 0;">
     <script>
       (function() {
+        // Allow ?lang=en|ar in the URL to pre-select the app language so deep links
+        // (and previews) skip the language picker.
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var lang = params.get('lang');
+          if (lang === 'en' || lang === 'ar') {
+            localStorage.setItem('saman_language', lang);
+            localStorage.setItem('saman_language_selected', 'true');
+          }
+        } catch (e) {}
         var t = localStorage.getItem('theme');
         if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.classList.add('dark');
