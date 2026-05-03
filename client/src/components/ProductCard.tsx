@@ -31,9 +31,10 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      className="h-full"
     >
-      <Link href={`/product/${product.id}`}>
-        <Card className={`group h-full overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl ${isSold ? 'opacity-80' : ''}`}>
+      <Link href={`/product/${product.id}`} className="block h-full">
+        <Card className={`group h-full flex flex-col overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl ${isSold ? 'opacity-80' : ''}`}>
           <div className="relative aspect-[4/3] md:aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-slate-700/30">
             {product.imageUrl && !imageError ? (
               <img
@@ -73,7 +74,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
           </div>
 
           <CardContent className="p-3 sm:p-4">
-            <h3 className={`font-display text-sm sm:text-base font-bold leading-tight line-clamp-2 transition-colors ${isSold ? 'text-muted-foreground' : 'text-foreground group-hover:text-accent'}`}>
+            <h3 className={`font-display text-sm sm:text-base font-bold leading-tight line-clamp-2 min-h-[2.5rem] sm:min-h-[2.75rem] transition-colors ${isSold ? 'text-muted-foreground' : 'text-foreground group-hover:text-accent'}`}>
               {product.title}
             </h3>
           </CardContent>
