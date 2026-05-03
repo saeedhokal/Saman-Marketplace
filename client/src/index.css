@@ -140,8 +140,8 @@
    Dark mode is unchanged. */
 :root .shadcn-card {
   box-shadow:
-    0 1px 2px hsl(220 25% 20% / 0.04),
-    0 2px 6px hsl(220 25% 20% / 0.06);
+    0 1px 2px hsl(220 25% 20% / 0.06),
+    0 4px 10px hsl(220 25% 20% / 0.09);
 }
 .dark .shadcn-card {
   box-shadow: none;
