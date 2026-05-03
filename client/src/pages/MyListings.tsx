@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { Link, useLocation } from "wouter";
@@ -314,14 +315,17 @@ export default function MyListings() {
       </div>
     </PullToRefresh>
 
-      {/* Fixed button outside PullToRefresh to prevent jumping */}
-      <div className="fixed left-0 right-0 px-4 pointer-events-none z-50" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
-        <Link href="/sell" className="pointer-events-auto">
-          <Button className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-medium rounded-full shadow-lg" data-testid="button-add-listing">
-            {t('addListing')}
-          </Button>
-        </Link>
-      </div>
+      {/* Portaled to body so position:fixed works (parent <main> has transform) */}
+      {createPortal(
+        <div className="fixed left-0 right-0 px-4 pointer-events-none z-50" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+          <Link href="/sell" className="pointer-events-auto block">
+            <Button className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-medium rounded-full shadow-lg" data-testid="button-add-listing">
+              {t('addListing')}
+            </Button>
+          </Link>
+        </div>,
+        document.body
+      )}
 
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
