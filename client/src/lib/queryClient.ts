@@ -1,4 +1,25 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { Capacitor } from "@capacitor/core";
+
+const USER_ID_KEY = "saman_user_id";
+const AUTH_TOKEN_KEY = "saman_auth_token";
+
+// On native (Capacitor) clients session cookies don't persist; send the
+// signed auth token instead. Security-sensitive checks only trust the token.
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  try {
+    if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
+      const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+      if (token) headers["x-auth-token"] = token;
+      const id = window.localStorage.getItem(USER_ID_KEY);
+      if (id) headers["x-user-id"] = id;
+    }
+  } catch {
+    // localStorage may be unavailable; fall through
+  }
+  return headers;
+}
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -12,9 +33,11 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const headers: Record<string, string> = { ...getAuthHeaders() };
+  if (data) headers["Content-Type"] = "application/json";
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -31,6 +54,7 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
+      headers: getAuthHeaders(),
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

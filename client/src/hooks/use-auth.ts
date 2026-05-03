@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Capacitor } from '@capacitor/core';
 import type { User } from "@shared/models/auth";
+import { getAuthHeaders } from "@/lib/queryClient";
 
 const FCM_TOKEN_KEY = 'saman_fcm_token';
 const USER_ID_KEY = 'saman_user_id';
+const AUTH_TOKEN_KEY = 'saman_auth_token';
 
 // Store user ID in localStorage for iOS compatibility (session cookies don't work in Capacitor)
 function storeUserId(userId: string | null): void {
@@ -11,6 +13,14 @@ function storeUserId(userId: string | null): void {
     localStorage.setItem(USER_ID_KEY, userId);
   } else {
     localStorage.removeItem(USER_ID_KEY);
+  }
+}
+
+function storeAuthToken(token: string | null): void {
+  if (token) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
   }
 }
 
@@ -41,6 +51,7 @@ async function unregisterPushToken(): Promise<void> {
 async function fetchUser(): Promise<User | null> {
   const response = await fetch("/api/auth/user", {
     credentials: "include",
+    headers: getAuthHeaders(),
   });
 
   if (response.status === 401) {
@@ -56,15 +67,18 @@ async function fetchUser(): Promise<User | null> {
   const user = await response.json();
   // Store user ID for iOS compatibility
   storeUserId(user?.id || null);
+  if (user?.authToken) storeAuthToken(user.authToken);
   return user;
 }
 
 async function logoutFn(): Promise<void> {
   await unregisterPushToken();
   storeUserId(null); // Clear stored user ID
+  storeAuthToken(null);
   await fetch("/api/auth/logout", {
     method: "POST",
     credentials: "include",
+    headers: getAuthHeaders(),
   });
 }
 
@@ -98,6 +112,7 @@ async function loginFn(params: LoginParams): Promise<User> {
   
   const user = await response.json();
   storeUserId(user?.id || null);
+  if (user?.authToken) storeAuthToken(user.authToken);
   return user;
 }
 
@@ -117,6 +132,7 @@ async function registerFn(params: RegisterParams): Promise<User> {
   
   const user = await response.json();
   storeUserId(user?.id || null);
+  if (user?.authToken) storeAuthToken(user.authToken);
   return user;
 }
 
@@ -135,11 +151,22 @@ export function useAuth() {
   // 3. Actively fetching with no user data established
   const isAuthLoading = isLoading || (status === 'pending') || (fetchStatus === 'fetching' && user === undefined);
 
+  const invalidateAuthGatedQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/sellers"] });
+    queryClient.invalidateQueries({
+      predicate: (q) => {
+        const k = q.queryKey?.[0];
+        return typeof k === "string" && k.startsWith("/api/products");
+      },
+    });
+  };
+
   const logoutMutation = useMutation({
     mutationFn: logoutFn,
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/user"], null);
-      queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
+      invalidateAuthGatedQueries();
     },
   });
 
@@ -147,7 +174,7 @@ export function useAuth() {
     mutationFn: loginFn,
     onSuccess: (user) => {
       queryClient.setQueryData(["/api/auth/user"], user);
-      queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
+      invalidateAuthGatedQueries();
     },
   });
 
@@ -155,7 +182,7 @@ export function useAuth() {
     mutationFn: registerFn,
     onSuccess: (user) => {
       queryClient.setQueryData(["/api/auth/user"], user);
-      queryClient.invalidateQueries({ queryKey: ["/api/user/credits"] });
+      invalidateAuthGatedQueries();
     },
   });
 

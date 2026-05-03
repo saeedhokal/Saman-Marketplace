@@ -317,6 +317,7 @@ export function setupSimpleAuth(app: Express) {
         credits: user.credits,
         isAdmin: user.isAdmin,
         isNewUser: isNew,
+        authToken: issueAuthToken(user.id),
       });
     } catch (error) {
       console.error("Verify OTP error:", error);
@@ -382,6 +383,7 @@ export function setupSimpleAuth(app: Express) {
         credits: user.credits,
         isAdmin: user.isAdmin,
         profileImageUrl: user.profileImageUrl,
+        authToken: issueAuthToken(user.id),
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -655,6 +657,7 @@ export function setupSimpleAuth(app: Express) {
         credits: user.credits,
         isAdmin: user.isAdmin,
         profileImageUrl: user.profileImageUrl,
+        authToken: issueAuthToken(user.id),
       });
     } catch (error) {
       console.error("Register error:", error);
@@ -676,11 +679,13 @@ export function setupSimpleAuth(app: Express) {
   // Get current user
   app.get("/api/auth/user", async (req: Request, res: Response) => {
     try {
-      if (!req.session.userId) {
+      const verifiedId = getVerifiedUserId(req);
+      if (!verifiedId) {
         return res.status(401).json({ message: "Not authenticated" });
       }
+      if (!req.session.userId) req.session.userId = verifiedId;
 
-      const [user] = await db.select().from(users).where(eq(users.id, req.session.userId));
+      const [user] = await db.select().from(users).where(eq(users.id, verifiedId));
       if (!user) {
         return res.status(401).json({ message: "User not found" });
       }
@@ -719,4 +724,58 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
 // Helper to get current user ID from session or header
 export function getCurrentUserId(req: Request): string | undefined {
   return req.session.userId || req.headers['x-user-id'] as string;
+}
+
+// Signed auth token used for native-app auth where session cookies don't
+// reliably persist (Capacitor on iOS). Format: `${userId}.${expiryMs}.${hmac}`
+// where the hmac is sha256(userId + "." + expiryMs) signed with SESSION_SECRET.
+// Because the secret never leaves the server, a client cannot forge a token
+// for an arbitrary user id — even though user ids are public.
+const AUTH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days, matches session
+
+export function issueAuthToken(userId: string): string {
+  const secret = process.env.SESSION_SECRET!;
+  const expiresAt = Date.now() + AUTH_TOKEN_TTL_MS;
+  const payload = `${userId}.${expiresAt}`;
+  const hmac = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  return `${payload}.${hmac}`;
+}
+
+export function verifyAuthToken(token: string): string | null {
+  if (!token || typeof token !== 'string' || token.length > 512) return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [userId, expiryStr, providedHmac] = parts;
+  const expiresAt = Number(expiryStr);
+  if (!Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
+  const secret = process.env.SESSION_SECRET!;
+  const expectedHmac = crypto
+    .createHmac('sha256', secret)
+    .update(`${userId}.${expiryStr}`)
+    .digest('hex');
+  try {
+    const a = Buffer.from(providedHmac, 'hex');
+    const b = Buffer.from(expectedHmac, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  } catch {
+    return null;
+  }
+  return userId;
+}
+
+export function hasVerifiedUser(req: Request): boolean {
+  if (req.session.userId) return true;
+  const token = req.headers['x-auth-token'] as string | undefined;
+  if (token && verifyAuthToken(token)) return true;
+  return false;
+}
+
+export function getVerifiedUserId(req: Request): string | undefined {
+  if (req.session.userId) return req.session.userId;
+  const token = req.headers['x-auth-token'] as string | undefined;
+  if (token) {
+    const id = verifyAuthToken(token);
+    if (id) return id;
+  }
+  return undefined;
 }

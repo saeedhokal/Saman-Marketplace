@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { setupSimpleAuth, isAuthenticated, getCurrentUserId, normalizePhone } from "./simpleAuth";
+import { setupSimpleAuth, isAuthenticated, getCurrentUserId, normalizePhone, hasVerifiedUser } from "./simpleAuth";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
@@ -510,6 +510,20 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     return `${url}${separator}_t=${Date.now()}`;
   }
 
+  type WithContact = { phoneNumber?: string | null; whatsappNumber?: string | null };
+  type StripContact<T> = Omit<T, "phoneNumber" | "whatsappNumber">;
+
+  function stripContactFields<T extends WithContact>(req: Request, obj: T): T | StripContact<T> {
+    if (hasVerifiedUser(req)) return obj;
+    const { phoneNumber: _p, whatsappNumber: _w, ...rest } = obj;
+    return rest;
+  }
+
+  function stripContactFieldsList<T extends WithContact>(req: Request, list: T[]): Array<T | StripContact<T>> {
+    if (hasVerifiedUser(req)) return list;
+    return list.map(({ phoneNumber: _p, whatsappNumber: _w, ...rest }) => rest);
+  }
+
   // Helper to attach seller profile images to products
   async function attachSellerImages(productsList: any[]) {
     const sellerIds = Array.from(new Set(productsList.map(p => p.sellerId).filter(Boolean)));
@@ -535,7 +549,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const subCategory = req.query.subCategory as string | undefined;
     const productsList = await storage.getProducts({ search, mainCategory, subCategory });
     const productsWithSeller = await attachSellerImages(productsList);
-    res.json(productsWithSeller);
+    res.json(stripContactFieldsList(req, productsWithSeller));
   });
 
   // Public: Get recent products (must come before :id route)
@@ -544,7 +558,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const limit = Math.min(Number(req.query.limit) || 10, 20);
     const productsList = await storage.getRecentProducts(limit);
     const productsWithSeller = await attachSellerImages(productsList);
-    res.json(productsWithSeller);
+    res.json(stripContactFieldsList(req, productsWithSeller));
   });
 
   // Public: Get recommended products (must come before :id route)
@@ -555,7 +569,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const limit = Math.min(Number(req.query.limit) || 10, 20);
     const productsList = await storage.getRecommendedProducts(userId || undefined, sessionId, limit);
     const productsWithSeller = await attachSellerImages(productsList);
-    res.json(productsWithSeller);
+    res.json(stripContactFieldsList(req, productsWithSeller));
   });
 
   app.get(api.products.get.path, async (req, res) => {
@@ -575,7 +589,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       sellerProfileImageUrl = addCacheBuster(seller?.profileImageUrl || null);
     }
     
-    res.json({ ...product, sellerProfileImageUrl });
+    res.json(stripContactFields(req, { ...product, sellerProfileImageUrl }));
   });
 
   // Get products by seller (seller profile)
@@ -594,7 +608,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
     
     const products = await storage.getProductsBySeller(sellerId);
-    res.json(products);
+    res.json(stripContactFieldsList(req, products));
   });
 
   // ========================
@@ -726,24 +740,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         (sourceLanguage === "arabic" && targetLanguage === "arabic") ||
         (sourceLanguage === "english" && targetLanguage === "english")
       ) {
-        // Already in target language
         return res.json({
-          ...product,
+          ...stripContactFields(req, product),
           translatedTitle: product.title,
           translatedDescription: product.description,
           isTranslated: false
         });
       }
-      
+
       // Translate
       const translation = await translateListing(
         product.title,
         product.description || "",
         targetLanguage
       );
-      
+
       res.json({
-        ...product,
+        ...stripContactFields(req, product),
         translatedTitle: translation.title,
         translatedDescription: translation.description,
         isTranslated: true
@@ -794,6 +807,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(404).json({ message: "Seller not found" });
     }
     
+    if (!hasVerifiedUser(req)) {
+      const { phone, ...rest } = seller;
+      return res.json(rest);
+    }
     res.json(seller);
   });
 

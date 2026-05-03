@@ -16,6 +16,7 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/hooks/use-language";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -40,6 +41,21 @@ export default function ProductDetail() {
     setTranslatedTitle(null);
     setTranslatedDescription(null);
   }, [id]);
+
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  const goToAuth = (mode: "login" | "signup" = "signup") => {
+    const returnTo = `/product/${id}`;
+    const modeParam = mode === "signup" ? "&mode=signup" : "";
+    window.location.href = `/auth?returnTo=${encodeURIComponent(returnTo)}${modeParam}`;
+  };
+
+  const handleContactClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!user) {
+      e.preventDefault();
+      setShowAuthPrompt(true);
+    }
+  };
 
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -84,6 +100,11 @@ export default function ProductDetail() {
     queryKey: ['/api/sellers', product?.sellerId],
     enabled: !!product?.sellerId,
   });
+
+  const callNumber = product?.phoneNumber || sellerInfo?.phone || "";
+  const whatsappNumber = product?.whatsappNumber || sellerInfo?.phone || "";
+  const hasCallNumber = callNumber.replace(/[^0-9]/g, "").length > 0;
+  const hasWhatsappNumber = whatsappNumber.replace(/[^0-9]/g, "").length > 0;
 
   const getSellerDisplayName = () => {
     if (sellerInfo?.displayName) return sellerInfo.displayName;
@@ -402,36 +423,78 @@ export default function ProductDetail() {
             </div>
 
             <div className="flex items-center gap-3 mb-6">
-              <a 
-                href={`tel:${formatPhoneForCall(product.phoneNumber || sellerInfo?.phone || '')}`}
+              <a
+                href={user && hasCallNumber ? `tel:${formatPhoneForCall(callNumber)}` : '#'}
                 className="flex-1"
+                aria-disabled={user && !hasCallNumber ? true : undefined}
+                onClick={(e) => {
+                  if (user && !hasCallNumber) { e.preventDefault(); return; }
+                  handleContactClick(e);
+                }}
               >
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   className="w-full"
+                  disabled={user ? !hasCallNumber : false}
                   data-testid="button-call"
                 >
                   <Phone className="mr-2 h-4 w-4" /> Call
                 </Button>
               </a>
-              
-              <a 
-                href={`https://wa.me/${formatWhatsAppNumber(product.whatsappNumber || sellerInfo?.phone || '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
+
+              <a
+                href={user && hasWhatsappNumber ? `https://wa.me/${formatWhatsAppNumber(whatsappNumber)}` : '#'}
+                target={user && hasWhatsappNumber ? "_blank" : undefined}
+                rel={user && hasWhatsappNumber ? "noopener noreferrer" : undefined}
                 className="flex-1"
+                aria-disabled={user && !hasWhatsappNumber ? true : undefined}
+                onClick={(e) => {
+                  if (user && !hasWhatsappNumber) { e.preventDefault(); return; }
+                  handleContactClick(e);
+                }}
               >
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   className="w-full text-green-600 border-green-600 hover:bg-green-50"
+                  disabled={user ? !hasWhatsappNumber : false}
                   data-testid="button-whatsapp"
                 >
                   <SiWhatsapp className="mr-2 h-4 w-4" /> WhatsApp
                 </Button>
               </a>
             </div>
+
+            <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+              <DialogContent data-testid="dialog-auth-prompt">
+                <DialogHeader>
+                  <DialogTitle data-testid="text-auth-prompt-title">
+                    {isRTL ? 'سجّل للتواصل مع البائع' : 'Sign up to contact the seller'}
+                  </DialogTitle>
+                  <DialogDescription data-testid="text-auth-prompt-description">
+                    {isRTL
+                      ? 'أنشئ حسابًا أو سجّل دخولك للاتصال بالبائع أو إرسال رسالة عبر واتساب.'
+                      : 'Create an account or log in to call the seller or message them on WhatsApp.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="gap-2 sm:gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => goToAuth("login")}
+                    data-testid="button-auth-prompt-login"
+                  >
+                    {isRTL ? 'تسجيل الدخول' : 'Log in'}
+                  </Button>
+                  <Button
+                    onClick={() => goToAuth("signup")}
+                    data-testid="button-auth-prompt-signup"
+                  >
+                    {isRTL ? 'إنشاء حساب' : 'Sign up'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 

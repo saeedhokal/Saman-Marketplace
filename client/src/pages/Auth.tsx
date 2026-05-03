@@ -20,12 +20,28 @@ interface LoginFormValues {
   email: string;
 }
 
+function getReturnToPath(): string {
+  if (typeof window === "undefined") return "/";
+  const params = new URLSearchParams(window.location.search);
+  const returnTo = params.get("returnTo");
+  if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) {
+    return returnTo;
+  }
+  return "/";
+}
+
+function getInitialMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("mode") === "signup";
+}
+
 export default function Auth() {
   const [, setLocation] = useLocation();
   const { login, register, isLoggingIn, isRegistering, user } = useAuth();
+  const returnTo = getReturnToPath();
   const { toast } = useToast();
   const { t, isRTL } = useLanguage();
-  const [isNewUser, setIsNewUser] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(getInitialMode());
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
 
@@ -48,7 +64,7 @@ export default function Auth() {
 
   useEffect(() => {
     if (user) {
-      setLocation("/");
+      setLocation(returnTo);
     }
   }, [user, setLocation]);
 
@@ -83,7 +99,7 @@ export default function Auth() {
           title: "Welcome back!",
           description: "You have been logged in successfully.",
         });
-        setLocation("/");
+        setLocation(returnTo);
       }
     } catch (error: any) {
       if (error.message === "User not found" && !isNewUser) {
@@ -149,7 +165,7 @@ export default function Auth() {
         title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
         description: isRTL ? "تم إنشاء حسابك بنجاح" : "Your account has been created.",
       });
-      setLocation("/");
+      setLocation(returnTo);
     } catch (error: any) {
       console.error("OTP verify error:", error);
       let errorMsg = isRTL ? "رمز التحقق غير صحيح" : "Invalid verification code";
