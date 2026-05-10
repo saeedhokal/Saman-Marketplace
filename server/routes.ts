@@ -970,6 +970,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       whatsappNumber: req.body.whatsappNumber || product.whatsappNumber,
       status: "pending" as const,
       editedAt: new Date(),
+      views: 0,
     };
 
     const updated = await storage.updateProduct(id, updates);
