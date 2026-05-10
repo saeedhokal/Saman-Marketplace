@@ -585,8 +585,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
     // View counting: only for approved listings, never for the seller themselves,
     // and deduped per viewer (userId or sessionId) within the last 24 hours.
-    // Uses a single atomic CTE so concurrent requests from the same viewer can't
-    // both pass the dedup check and double-count.
+    // The single-statement CTE collapses the check + insert + increment into one
+    // round-trip, which dedupes refresh/revisit reliably. Two genuinely concurrent
+    // requests from the same viewer under default isolation could still both pass
+    // the WHERE NOT EXISTS — that's an acceptable edge case here. If we ever need
+    // strict guarantees, add a unique partial index on (product_id, user_id) /
+    // (product_id, session_id) bucketed by day.
     (async () => {
       try {
         if (product.status !== "approved") return;
