@@ -79,6 +79,8 @@ export default function Admin() {
     scheduledTime: "",
   });
   const [userSearch, setUserSearch] = useState("");
+  const [allListingsSearch, setAllListingsSearch] = useState("");
+  const [allListingsStatus, setAllListingsStatus] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [revenuePeriod, setRevenuePeriod] = useState<'day' | 'week' | 'month' | 'year' | 'all' | 'custom'>('all');
   const [customDateRange, setCustomDateRange] = useState({
     startDate: '',
@@ -651,29 +653,90 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="all" className="space-y-4">
-            {allLoading ? (
-              <div className="text-center py-10 text-muted-foreground">Loading...</div>
-            ) : !allListings?.length ? (
-              <Card>
-                <CardContent className="py-10 text-center text-muted-foreground">
-                  <p>No listings yet</p>
-                </CardContent>
-              </Card>
-            ) : (
-              allListings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onApprove={() => approveMutation.mutate(listing.id)}
-                  onReject={(reason) => rejectMutation.mutate({ id: listing.id, reason })}
-                  onDelete={(reason) => deleteMutation.mutate({ id: listing.id, reason })}
-                  onEdit={() => openEditDialog(listing)}
-                  showActions={listing.status === "pending"}
-                  showRemoveButton={true}
-                  getStatusBadge={getStatusBadge}
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by title, description, ID, category, location..."
+                  value={allListingsSearch}
+                  onChange={(e) => setAllListingsSearch(e.target.value)}
+                  className="pl-9 h-9"
+                  data-testid="input-all-listings-search"
                 />
-              ))
-            )}
+              </div>
+              <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+                {(["all", "pending", "approved", "rejected"] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setAllListingsStatus(s)}
+                    className={`flex-1 py-1.5 px-2 rounded-md text-xs font-medium capitalize transition-colors ${
+                      allListingsStatus === s ? "bg-background shadow-sm" : "text-muted-foreground"
+                    }`}
+                    data-testid={`button-filter-status-${s}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {(() => {
+              if (allLoading) {
+                return <div className="text-center py-10 text-muted-foreground">Loading...</div>;
+              }
+              if (!allListings?.length) {
+                return (
+                  <Card>
+                    <CardContent className="py-10 text-center text-muted-foreground">
+                      <p>No listings yet</p>
+                    </CardContent>
+                  </Card>
+                );
+              }
+              const search = allListingsSearch.trim().toLowerCase();
+              const filtered = allListings.filter((listing) => {
+                if (allListingsStatus !== "all" && listing.status !== allListingsStatus) return false;
+                if (!search) return true;
+                return (
+                  listing.title?.toLowerCase().includes(search) ||
+                  listing.description?.toLowerCase().includes(search) ||
+                  String(listing.id).includes(search) ||
+                  listing.mainCategory?.toLowerCase().includes(search) ||
+                  listing.subCategory?.toLowerCase().includes(search) ||
+                  listing.model?.toLowerCase().includes(search) ||
+                  listing.location?.toLowerCase().includes(search)
+                );
+              });
+              if (filtered.length === 0) {
+                return (
+                  <Card>
+                    <CardContent className="py-10 text-center text-muted-foreground">
+                      <p>No listings match your search</p>
+                    </CardContent>
+                  </Card>
+                );
+              }
+              return (
+                <>
+                  <p className="text-xs text-muted-foreground px-1">
+                    Showing {filtered.length} of {allListings.length}
+                  </p>
+                  {filtered.map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      onApprove={() => approveMutation.mutate(listing.id)}
+                      onReject={(reason) => rejectMutation.mutate({ id: listing.id, reason })}
+                      onDelete={(reason) => deleteMutation.mutate({ id: listing.id, reason })}
+                      onEdit={() => openEditDialog(listing)}
+                      showActions={listing.status === "pending"}
+                      showRemoveButton={true}
+                      getStatusBadge={getStatusBadge}
+                    />
+                  ))}
+                </>
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="packages" className="space-y-4">
