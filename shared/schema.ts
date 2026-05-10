@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users, appSettings } from "./models/auth";
@@ -557,7 +557,10 @@ export const userViews = pgTable("user_views", {
   mainCategory: text("main_category"),
   subCategory: text("sub_category"),
   viewedAt: timestamp("viewed_at").defaultNow(),
-});
+}, (table) => [
+  index("IDX_user_views_product_user").on(table.productId, table.userId),
+  index("IDX_user_views_product_session").on(table.productId, table.sessionId),
+]);
 
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,

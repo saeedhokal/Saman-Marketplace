@@ -582,8 +582,47 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    
-    db.update(products).set({ views: sql`COALESCE(${products.views}, 0) + 1` }).where(eq(products.id, id)).execute().catch(() => {});
+
+    // View counting: only for approved listings, never for the seller themselves,
+    // and deduped per viewer (userId or sessionId) within the last 24 hours.
+    // Uses a single atomic CTE so concurrent requests from the same viewer can't
+    // both pass the dedup check and double-count.
+    (async () => {
+      try {
+        if (product.status !== "approved") return;
+        const viewerId = getCurrentUserId(req);
+        if (viewerId && viewerId === product.sellerId) return;
+        const sessionId = req.sessionID || null;
+        if (!viewerId && !sessionId) return; // Can't dedupe without a key
+
+        const matchClause = viewerId
+          ? sql`user_id = ${viewerId}`
+          : sql`session_id = ${sessionId}`;
+        const insertUserId = viewerId ?? null;
+        const insertSessionId = viewerId ? null : sessionId;
+
+        // Single statement: INSERT only if no recent row exists, then bump views
+        // only when the insert actually happened. Atomic at the SQL level.
+        await db.execute(sql`
+          WITH inserted AS (
+            INSERT INTO user_views (user_id, session_id, product_id, main_category, sub_category, viewed_at)
+            SELECT ${insertUserId}, ${insertSessionId}, ${id}, ${product.mainCategory}, ${product.subCategory}, NOW()
+            WHERE NOT EXISTS (
+              SELECT 1 FROM user_views
+              WHERE product_id = ${id}
+                AND ${matchClause}
+                AND viewed_at > NOW() - INTERVAL '24 hours'
+            )
+            RETURNING 1
+          )
+          UPDATE products
+          SET views = COALESCE(views, 0) + 1
+          WHERE id = ${id} AND EXISTS (SELECT 1 FROM inserted)
+        `);
+      } catch (err) {
+        console.error("[view-count] failed for product", id, err);
+      }
+    })();
 
     // Attach seller profile image with cache-busting (hidden for logged-out visitors)
     let sellerProfileImageUrl: string | null = null;
