@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar, Wifi, BarChart3, Smartphone, Monitor, UserPlus } from "lucide-react";
+import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar, Wifi, BarChart3, Smartphone, Monitor, UserPlus, Key } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link, useLocation } from "wouter";
 
@@ -246,6 +246,21 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
       toast({ title: "Settings updated" });
+    },
+  });
+
+  const resetUserPasswordMutation = useMutation({
+    mutationFn: ({ userId, password }: { userId: string; password: string }) =>
+      apiRequest("POST", `/api/admin/user/${userId}/reset-password`, { password }),
+    onSuccess: (_data, vars) => {
+      toast({ title: "Password reset", description: `New password: ${vars.password}` });
+    },
+    onError: (err: any) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to reset password",
+        description: err?.message || "Please try again",
+      });
     },
   });
 
@@ -1074,21 +1089,43 @@ export default function Admin() {
                             )}
                           </div>
                         </div>
-                        {!user.isAdmin && (
+                        <div className="flex items-center gap-1">
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="text-destructive"
                             onClick={() => {
-                              if (confirm(`Are you sure you want to delete ${user.firstName || "this user"}'s account? This cannot be undone.`)) {
-                                deleteUserMutation.mutate(user.id);
+                              const newPwd = prompt(
+                                `Set a new password for ${user.firstName || user.phone || "this user"}:`,
+                                "1234"
+                              );
+                              if (newPwd && newPwd.trim().length > 0) {
+                                resetUserPasswordMutation.mutate({
+                                  userId: user.id,
+                                  password: newPwd.trim(),
+                                });
                               }
                             }}
-                            data-testid={`button-delete-user-${user.id}`}
+                            data-testid={`button-reset-password-${user.id}`}
+                            title="Reset password"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Key className="h-4 w-4" />
                           </Button>
-                        )}
+                          {!user.isAdmin && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-destructive"
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete ${user.firstName || "this user"}'s account? This cannot be undone.`)) {
+                                  deleteUserMutation.mutate(user.id);
+                                }
+                              }}
+                              data-testid={`button-delete-user-${user.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   {allUsers.length === 0 && (
