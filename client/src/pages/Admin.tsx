@@ -9,6 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar, Wifi, BarChart3, Smartphone, Monitor, UserPlus } from "lucide-react";
@@ -29,6 +39,19 @@ export default function Admin() {
   const [packageCategory, setPackageCategory] = useState<"Spare Parts" | "Automotive">("Spare Parts");
   const [editingPackage, setEditingPackage] = useState<SubscriptionPackage | null>(null);
   const [selectedListings, setSelectedListings] = useState<Set<number>>(new Set());
+  const [editingListing, setEditingListing] = useState<Product | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    price: "" as string,
+    mainCategory: "Spare Parts" as "Spare Parts" | "Automotive",
+    subCategory: "",
+    model: "",
+    year: "" as string,
+    mileage: "" as string,
+    condition: "" as string,
+    location: "",
+  });
   const [newPackage, setNewPackage] = useState({
     name: "",
     price: 0,
@@ -225,6 +248,60 @@ export default function Admin() {
       toast({ title: "Settings updated" });
     },
   });
+
+  const editListingMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      apiRequest("PATCH", `/api/admin/listings/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      setEditingListing(null);
+      toast({ title: "Listing updated" });
+    },
+    onError: (err: any) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to update",
+        description: err?.message || "Please try again",
+      });
+    },
+  });
+
+  const openEditDialog = (listing: Product) => {
+    setEditingListing(listing);
+    setEditForm({
+      title: listing.title || "",
+      description: listing.description || "",
+      price: listing.price != null ? String(listing.price) : "",
+      mainCategory: (listing.mainCategory as "Spare Parts" | "Automotive") || "Spare Parts",
+      subCategory: listing.subCategory || "",
+      model: listing.model || "",
+      year: listing.year != null ? String(listing.year) : "",
+      mileage: listing.mileage != null ? String(listing.mileage) : "",
+      condition: listing.condition || "",
+      location: listing.location || "",
+    });
+  };
+
+  const submitEdit = () => {
+    if (!editingListing) return;
+    editListingMutation.mutate({
+      id: editingListing.id,
+      data: {
+        title: editForm.title,
+        description: editForm.description,
+        price: editForm.price === "" ? null : Number(editForm.price),
+        mainCategory: editForm.mainCategory,
+        subCategory: editForm.subCategory,
+        model: editForm.model || null,
+        year: editForm.year === "" ? null : Number(editForm.year),
+        mileage: editForm.mileage === "" ? null : Number(editForm.mileage),
+        condition: editForm.condition || null,
+        location: editForm.location || null,
+      },
+    });
+  };
 
   const createBannerMutation = useMutation({
     mutationFn: (data: typeof newBanner) => apiRequest("POST", "/api/admin/banners", data),
@@ -547,6 +624,7 @@ export default function Admin() {
                   onApprove={() => approveMutation.mutate(listing.id)}
                   onReject={(reason) => rejectMutation.mutate({ id: listing.id, reason })}
                   onDelete={(reason) => deleteMutation.mutate({ id: listing.id, reason })}
+                  onEdit={() => openEditDialog(listing)}
                   showActions
                   getStatusBadge={getStatusBadge}
                   isSelected={selectedListings.has(listing.id)}
@@ -574,6 +652,7 @@ export default function Admin() {
                   onApprove={() => approveMutation.mutate(listing.id)}
                   onReject={(reason) => rejectMutation.mutate({ id: listing.id, reason })}
                   onDelete={(reason) => deleteMutation.mutate({ id: listing.id, reason })}
+                  onEdit={() => openEditDialog(listing)}
                   showActions={listing.status === "pending"}
                   showRemoveButton={true}
                   getStatusBadge={getStatusBadge}
@@ -1490,6 +1569,154 @@ export default function Admin() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={!!editingListing} onOpenChange={(open) => !open && setEditingListing(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Listing</DialogTitle>
+            <DialogDescription>
+              Update any field below. Changes save instantly and the listing stays in its current status.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium mb-1 block">Title</label>
+              <Input
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                data-testid="input-edit-title"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-medium mb-1 block">Description</label>
+              <Textarea
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                rows={4}
+                data-testid="input-edit-description"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium mb-1 block">Category</label>
+                <Select
+                  value={editForm.mainCategory}
+                  onValueChange={(v) =>
+                    setEditForm({ ...editForm, mainCategory: v as "Spare Parts" | "Automotive", subCategory: "" })
+                  }
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Spare Parts">Spare Parts</SelectItem>
+                    <SelectItem value="Automotive">Automotive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-medium mb-1 block">Sub-category</label>
+                <Select
+                  value={editForm.subCategory}
+                  onValueChange={(v) => setEditForm({ ...editForm, subCategory: v })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {(editForm.mainCategory === "Spare Parts"
+                      ? SPARE_PARTS_SUBCATEGORIES
+                      : AUTOMOTIVE_SUBCATEGORIES
+                    ).map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium mb-1 block">Price (AED)</label>
+                <Input
+                  type="number"
+                  value={editForm.price}
+                  onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                  placeholder="(optional)"
+                  data-testid="input-edit-price"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium mb-1 block">Model</label>
+                <Input
+                  value={editForm.model}
+                  onChange={(e) => setEditForm({ ...editForm, model: e.target.value })}
+                  placeholder="e.g. Land Cruiser"
+                />
+              </div>
+            </div>
+
+            {editForm.mainCategory === "Automotive" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Year</label>
+                  <Input
+                    type="number"
+                    value={editForm.year}
+                    onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
+                    placeholder="e.g. 2021"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Mileage (km)</label>
+                  <Input
+                    type="number"
+                    value={editForm.mileage}
+                    onChange={(e) => setEditForm({ ...editForm, mileage: e.target.value })}
+                    placeholder="e.g. 45000"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium mb-1 block">Condition</label>
+                <Select
+                  value={editForm.condition || "none"}
+                  onValueChange={(v) => setEditForm({ ...editForm, condition: v === "none" ? "" : v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">—</SelectItem>
+                    <SelectItem value="New">New</SelectItem>
+                    <SelectItem value="Used">Used</SelectItem>
+                    <SelectItem value="Refurbished">Refurbished</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-medium mb-1 block">Location</label>
+                <Input
+                  value={editForm.location}
+                  onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                  placeholder="e.g. Dubai"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingListing(null)}>Cancel</Button>
+            <Button
+              onClick={submitEdit}
+              disabled={editListingMutation.isPending}
+              data-testid="button-save-edit"
+            >
+              {editListingMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PullToRefresh>
   );
 }
@@ -1499,6 +1726,7 @@ function ListingCard({
   onApprove,
   onReject,
   onDelete,
+  onEdit,
   showActions,
   showRemoveButton = false,
   getStatusBadge,
@@ -1510,6 +1738,7 @@ function ListingCard({
   onApprove: () => void;
   onReject: (reason: string) => void;
   onDelete: (reason?: string) => void;
+  onEdit?: () => void;
   showActions: boolean;
   showRemoveButton?: boolean;
   getStatusBadge: (status: string) => JSX.Element;
@@ -1570,13 +1799,18 @@ function ListingCard({
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{listing.description}</p>
 
             {showActions && (
-              <div className="flex gap-2 mt-3">
+              <div className="flex flex-wrap gap-2 mt-3">
                 <Button size="sm" className="h-7 text-xs" onClick={onApprove}>
                   <Check className="h-3 w-3 mr-1" /> Approve
                 </Button>
                 <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowRejectForm(!showRejectForm)}>
                   <X className="h-3 w-3 mr-1" /> Reject
                 </Button>
+                {onEdit && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onEdit} data-testid={`button-edit-listing-${listing.id}`}>
+                    <Edit2 className="h-3 w-3 mr-1" /> Edit
+                  </Button>
+                )}
                 <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => onDelete()}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
@@ -1584,7 +1818,18 @@ function ListingCard({
             )}
 
             {showRemoveButton && !showActions && (
-              <div className="flex gap-2 mt-3">
+              <div className="flex flex-wrap gap-2 mt-3">
+                {onEdit && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={onEdit}
+                    data-testid={`button-edit-listing-${listing.id}`}
+                  >
+                    <Edit2 className="h-3 w-3 mr-1" /> Edit
+                  </Button>
+                )}
                 <Button 
                   size="sm" 
                   variant="destructive" 

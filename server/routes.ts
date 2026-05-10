@@ -2456,6 +2456,72 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(listings);
   });
 
+  // Admin edit a listing (no ownership check, no status reset)
+  app.patch("/api/admin/listings/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const product = await storage.getProduct(id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      const body = req.body || {};
+      const updates: Partial<typeof product> = {};
+
+      if (body.title !== undefined) {
+        if (typeof body.title !== "string" || body.title.trim().length < 3) {
+          return res.status(400).json({ message: "Title must be at least 3 characters" });
+        }
+        updates.title = body.title.trim();
+      }
+      if (body.description !== undefined) {
+        if (typeof body.description !== "string" || body.description.trim().length < 10) {
+          return res.status(400).json({ message: "Description must be at least 10 characters" });
+        }
+        updates.description = body.description.trim();
+      }
+      if (body.mainCategory !== undefined) updates.mainCategory = body.mainCategory;
+      if (body.subCategory !== undefined) updates.subCategory = body.subCategory;
+      if (updates.mainCategory && updates.subCategory) {
+        if (!isValidCategoryPair(updates.mainCategory, updates.subCategory)) {
+          return res.status(400).json({ message: "Invalid category-subcategory combination" });
+        }
+      }
+      if (body.model !== undefined) updates.model = body.model || null;
+      if (body.condition !== undefined) updates.condition = body.condition || null;
+      if (body.location !== undefined) updates.location = body.location || null;
+      if (body.phoneNumber !== undefined) updates.phoneNumber = body.phoneNumber || null;
+      if (body.whatsappNumber !== undefined) updates.whatsappNumber = body.whatsappNumber || null;
+      if (body.price !== undefined) {
+        const p = body.price === null || body.price === "" ? null : Number(body.price);
+        if (p !== null && (isNaN(p) || p < 0)) {
+          return res.status(400).json({ message: "Price must be a positive number" });
+        }
+        updates.price = p;
+      }
+      if (body.mileage !== undefined) {
+        const m = body.mileage === null || body.mileage === "" ? null : Number(body.mileage);
+        if (m !== null && (isNaN(m) || m < 0)) {
+          return res.status(400).json({ message: "Mileage must be a positive number" });
+        }
+        updates.mileage = m;
+      }
+      if (body.year !== undefined) {
+        const y = body.year === null || body.year === "" ? null : Number(body.year);
+        if (y !== null && (isNaN(y) || y < 1900 || y > new Date().getFullYear() + 1)) {
+          return res.status(400).json({ message: "Invalid year" });
+        }
+        updates.year = y;
+      }
+
+      const updated = await storage.updateProduct(id, updates);
+      res.json(updated);
+    } catch (err) {
+      console.error("Admin edit listing failed:", err);
+      res.status(500).json({ message: "Failed to update listing" });
+    }
+  });
+
   // Approve a listing
   app.post("/api/admin/listings/:id/approve", isAuthenticated, isAdmin, async (req, res) => {
     const id = Number(req.params.id);
