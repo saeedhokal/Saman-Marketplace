@@ -969,6 +969,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       phoneNumber: req.body.phoneNumber || product.phoneNumber,
       whatsappNumber: req.body.whatsappNumber || product.whatsappNumber,
       status: "pending" as const,
+      editedAt: new Date(),
     };
 
     const updated = await storage.updateProduct(id, updates);

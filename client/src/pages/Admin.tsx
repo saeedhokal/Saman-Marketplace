@@ -1894,8 +1894,25 @@ function ListingCard({
                   </p>
                 )}
               </div>
-              {getStatusBadge(listing.status)}
+              <div className="flex flex-col items-end gap-1">
+                {getStatusBadge(listing.status)}
+                {listing.editedAt && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] border-amber-500 text-amber-600 dark:text-amber-400"
+                    data-testid={`badge-edited-${listing.id}`}
+                  >
+                    <Edit2 className="h-2.5 w-2.5 mr-1" />
+                    Edited
+                  </Badge>
+                )}
+              </div>
             </div>
+            {listing.editedAt && (
+              <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                Re-submitted after edit · {new Date(listing.editedAt).toLocaleString()}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{listing.description}</p>
 
             {showActions && (

@@ -497,6 +497,7 @@ export const products = pgTable("products", {
   expirationNotified: boolean("expiration_notified").default(false), // Track if expiry notification sent
   views: integer("views").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  editedAt: timestamp("edited_at"), // Last time the seller edited this listing (null = never edited)
 });
 
 // Favorites table for saved items
