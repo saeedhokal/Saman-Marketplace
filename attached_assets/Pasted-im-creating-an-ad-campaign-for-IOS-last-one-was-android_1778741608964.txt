@@ -1,0 +1,83 @@
+im creating an ad campaign for IOS last one was android
+its emptty nothing to select
+this ?
+Thought for a couple of seconds
+
+On this screen, only keep “Conversions on an app” selected.
+
+Unselect Conversions from phone calls — that is not needed for your iOS app install campaign unless you want people to call you.
+
+So do this:
+
+Remove the check from Conversions from phone calls
+Keep Conversions on an app checked
+Click Set up inside Conversions on an app
+Then choose Download
+When it asks how to connect the app:
+Google Analytics = correct for iOS, but you need Firebase/GA4 connected
+Google Play = Android only, don’t use for iOS
+Third-party app analytics = only if you use AppsFlyer/Adjust/Branch
+
+For now, your problem is still the same: Google Ads has no iOS analytics source connected yet, so the iOS download conversion cannot be selected properly until Firebase/Google Analytics is connected to the iOS app.
+
+Thought for a couple of seconds
+
+Yes, you’re in the right place now.
+
+You already have Apple apps inside Firebase. For the iOS App Store campaign, use the app that matches your actual iOS bundle ID.
+
+From your screenshot you have:
+
+Apple apps
+
+saman (car spare part) ios → com.saman.ios
+Saman Ios → com.saeed.saman
+
+Your Capacitor app ID from before was likely:
+
+com.saeed.saman
+
+So most likely you should use Saman Ios — com.saeed.saman.
+
+Click Saman Ios under Apple apps, then do this:
+
+Download GoogleService-Info.plist
+Add that file into your iOS project
+Make sure Firebase Analytics SDK is installed in the iOS app
+Upload a new iOS build/TestFlight/App Store build
+Open the app on an iPhone
+Check Firebase Analytics → Realtime / DebugView
+Then go back to Google Ads and import the iOS first_open conversion
+
+Important: don’t use the Android app you currently selected in the screenshot. You are selected on Saman — com.saman under Android apps. For iOS you need to click the Apple app, preferably com.saeed.saman.
+
+Before doing anything, confirm your real iOS Bundle ID in App Store Connect or Xcode. The Firebase iOS app must match exactly.
+
+Thought for a second
+
+Yes — this confirms your real iOS Bundle ID is:
+
+com.saeed.saman
+
+So in Firebase, use/select this one:
+
+Saman Ios — com.saeed.saman
+
+Do not use:
+
+com.saman.ios
+because that does not match your App Store app.
+
+Also your Apple ID is:
+
+6744526430
+
+So in Firebase, open Saman Ios / com.saeed.saman, and make sure the App Store ID is added as:
+
+6744526430
+
+Then download:
+
+GoogleService-Info.plist
+
+After that, your developer needs to add that file into the iOS project and install Firebase Analytics. Once a new iOS build is uploaded and opened on an iPhone, Firebase should start receiving the iOS app data. Then Google Ads can import the iOS install conversion.
