@@ -54,9 +54,9 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **iOS Splash Screen:** Fullscreen with SAMAN logo + Dubai skyline.
 
 ## App Versioning
-- **Current Version:** 2.0.3 (views tracking, session improvements, OTP verification)
+- **Current Version:** 2.0.4 (Firebase Analytics for Google Ads iOS conversion tracking)
 - **iOS:** Version set in `codemagic.yaml` via `agvtool new-marketing-version`. Also in `ios/App/App.xcodeproj/project.pbxproj` (MARKETING_VERSION). Build number auto-incremented by Codemagic.
-- **Android:** Version in `android/app/build.gradle` — `versionName "2.0.3"`, `versionCode 18`.
+- **Android:** Version in `android/app/build.gradle` — `versionName "2.0.4"`, `versionCode 18`.
 - **In-app display:** `client/src/pages/Settings.tsx` shows version to users.
 - **IMPORTANT:** When bumping versions, update ALL of these files: `codemagic.yaml`, `project.pbxproj` (both Debug and Release), `build.gradle`, `Settings.tsx`.
 - **Apple rejects** builds where CFBundleShortVersionString matches a previously approved version — always increment.
@@ -79,7 +79,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
     - Model: gpt-5-mini
 - **Firebase:**
     - Project: saman-car-spare-parts
-    - Purpose: Firebase Cloud Messaging (FCM) for Android push notifications and Firebase Phone Authentication.
+    - Purpose: Firebase Cloud Messaging (FCM) for Android push notifications, Firebase Phone Authentication, and Firebase Analytics on iOS (used by Google Ads for install/event conversion tracking — bundle ID `com.saeed.saman`, App Store ID `6744526430`). Native iOS integration in `ios/App/Podfile` (`pod 'Firebase/Analytics'`) and `AppDelegate.swift` (`FirebaseApp.configure()`); `GoogleService-Info.plist` is bundled with the iOS target.
 - **Domain:** thesamanapp.com (managed via GoDaddy).
 
 ## Firebase OTP Phone Verification (ENABLED in new app version)
