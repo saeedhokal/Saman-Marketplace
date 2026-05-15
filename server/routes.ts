@@ -218,7 +218,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get("/api/app-version", (_req, res) => {
     res.json({
-      latestVersion: "2.0.3",
+      latestVersion: "2.0.4",
       iosUrl: "https://apps.apple.com/app/saman-marketplace/id6744526430",
       androidUrl: "https://play.google.com/store/apps/details?id=com.saman.marketplace",
       forceUpdate: true
