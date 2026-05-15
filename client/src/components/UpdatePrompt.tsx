@@ -37,11 +37,15 @@ export function UpdatePrompt() {
         if (!res.ok) return;
         const data = await res.json();
 
-        if (compareVersions(data.latestVersion, currentVersion) > 0) {
-          const dismissed = localStorage.getItem(DISMISSED_KEY);
-          if (dismissed === data.latestVersion && !data.forceUpdate) return;
+        const platform = Capacitor.getPlatform();
+        const platformLatest =
+          (platform === "ios" ? data.iosLatestVersion : data.androidLatestVersion) ||
+          data.latestVersion;
 
-          const platform = Capacitor.getPlatform();
+        if (compareVersions(platformLatest, currentVersion) > 0) {
+          const dismissed = localStorage.getItem(DISMISSED_KEY);
+          if (dismissed === platformLatest && !data.forceUpdate) return;
+
           setStoreUrl(platform === "ios" ? data.iosUrl : data.androidUrl);
           setForceUpdate(data.forceUpdate || false);
           setShowPrompt(true);
@@ -58,7 +62,13 @@ export function UpdatePrompt() {
     if (forceUpdate) return;
     fetch("/api/app-version")
       .then(r => r.json())
-      .then(data => localStorage.setItem(DISMISSED_KEY, data.latestVersion))
+      .then(data => {
+        const platform = Capacitor.getPlatform();
+        const platformLatest =
+          (platform === "ios" ? data.iosLatestVersion : data.androidLatestVersion) ||
+          data.latestVersion;
+        localStorage.setItem(DISMISSED_KEY, platformLatest);
+      })
       .catch(() => {});
     setShowPrompt(false);
   };

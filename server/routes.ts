@@ -218,7 +218,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get("/api/app-version", (_req, res) => {
     res.json({
-      latestVersion: "2.0.4",
+      // Per-platform latest versions — Play Store hasn't received 2.0.4 yet,
+      // so Android users should only be prompted up to 2.0.3.
+      iosLatestVersion: "2.0.4",
+      androidLatestVersion: "2.0.3",
+      // Kept for backward compatibility with older app builds that read
+      // `latestVersion` directly. Set to the lower of the two so older
+      // Android builds don't get sent to Play Store with nothing to install.
+      latestVersion: "2.0.3",
       iosUrl: "https://apps.apple.com/app/saman-marketplace/id6744526430",
       androidUrl: "https://play.google.com/store/apps/details?id=com.saman.marketplace",
       forceUpdate: true
