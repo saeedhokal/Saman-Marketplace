@@ -74,7 +74,12 @@ export function registerObjectStorageRoutes(app: Express): void {
     try {
       const objectPath = req.params[0];
       const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${objectPath}`);
-      await objectStorageService.downloadObject(objectFile, res);
+      const signedUrl = await objectStorageService.getSignedDownloadURL(objectFile);
+      // Cache the 302 redirect itself for ~5 days so browsers don't even
+      // re-ask our server. The signed URL is stable for 6+ days, so the
+      // cached redirect stays valid for the entire cache window.
+      res.set("Cache-Control", "public, max-age=432000, immutable");
+      return res.redirect(302, signedUrl);
     } catch (error) {
       console.error("Error serving object:", error);
       if (error instanceof ObjectNotFoundError) {

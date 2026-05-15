@@ -94,6 +94,29 @@ export class ObjectStorageService {
     return null;
   }
 
+  // Gets a signed GET URL for an object, valid for ttlSec (max 7 days per GCS V4).
+  // expires_at is rounded down to a stable boundary so repeated requests within
+  // the same window return the same signed URL — enabling browser/CDN caching.
+  async getSignedDownloadURL(
+    file: File,
+    ttlSec: number = 7 * 24 * 3600,
+  ): Promise<string> {
+    const bucketName = file.bucket.name;
+    const objectName = file.name;
+    // Round expires_at to a 6-day boundary so the signed URL is stable across
+    // requests within the same window (browsers can cache the resolved image).
+    const boundaryMs = 6 * 24 * 3600 * 1000;
+    const stableExpiresMs =
+      Math.floor((Date.now() + ttlSec * 1000) / boundaryMs) * boundaryMs +
+      boundaryMs;
+    return signObjectURLAt({
+      bucketName,
+      objectName,
+      method: "GET",
+      expiresAt: new Date(stableExpiresMs),
+    });
+  }
+
   // Downloads an object to the response.
   async downloadObject(file: File, res: Response, cacheTtlSec: number = 3600) {
     try {
@@ -260,6 +283,26 @@ function parseObjectPath(path: string): {
   };
 }
 
+async function signObjectURLAt({
+  bucketName,
+  objectName,
+  method,
+  expiresAt,
+}: {
+  bucketName: string;
+  objectName: string;
+  method: "GET" | "PUT" | "DELETE" | "HEAD";
+  expiresAt: Date;
+}): Promise<string> {
+  const request = {
+    bucket_name: bucketName,
+    object_name: objectName,
+    method,
+    expires_at: expiresAt.toISOString(),
+  };
+  return signObjectURLRequest(request);
+}
+
 async function signObjectURL({
   bucketName,
   objectName,
@@ -277,6 +320,15 @@ async function signObjectURL({
     method,
     expires_at: new Date(Date.now() + ttlSec * 1000).toISOString(),
   };
+  return signObjectURLRequest(request);
+}
+
+async function signObjectURLRequest(request: {
+  bucket_name: string;
+  object_name: string;
+  method: string;
+  expires_at: string;
+}): Promise<string> {
   const response = await fetch(
     `${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`,
     {
