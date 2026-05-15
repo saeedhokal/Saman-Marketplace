@@ -94,26 +94,21 @@ export class ObjectStorageService {
     return null;
   }
 
-  // Gets a signed GET URL for an object, valid for ttlSec (max 7 days per GCS V4).
-  // expires_at is rounded down to a stable boundary so repeated requests within
-  // the same window return the same signed URL — enabling browser/CDN caching.
-  async getSignedDownloadURL(
-    file: File,
-    ttlSec: number = 7 * 24 * 3600,
-  ): Promise<string> {
+  // Gets a signed GET URL for an object. The expiry is daily-stable (changes
+  // once per UTC day) and always 5-6 days in the future — well under the GCS
+  // V4 7-day maximum. This means repeated requests on the same day return the
+  // same signed URL, letting the browser cache the resolved image bytes too.
+  async getSignedDownloadURL(file: File): Promise<string> {
     const bucketName = file.bucket.name;
     const objectName = file.name;
-    // Round expires_at to a 6-day boundary so the signed URL is stable across
-    // requests within the same window (browsers can cache the resolved image).
-    const boundaryMs = 6 * 24 * 3600 * 1000;
-    const stableExpiresMs =
-      Math.floor((Date.now() + ttlSec * 1000) / boundaryMs) * boundaryMs +
-      boundaryMs;
+    const dayMs = 24 * 3600 * 1000;
+    const dayBoundary = Math.floor(Date.now() / dayMs) * dayMs;
+    const expiresAtMs = dayBoundary + 6 * dayMs;
     return signObjectURLAt({
       bucketName,
       objectName,
       method: "GET",
-      expiresAt: new Date(stableExpiresMs),
+      expiresAt: new Date(expiresAtMs),
     });
   }
 
