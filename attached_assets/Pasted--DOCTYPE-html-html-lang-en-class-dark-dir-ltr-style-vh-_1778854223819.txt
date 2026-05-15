@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" dir="ltr" style="--vh: 7.32px;"><head>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+    <title>Saman Marketplace - Buy & Sell Car Spare Parts in the UAE | سوق سامان - قطع غيار السيارات في الإمارات</title>
+    <meta name="description" content="Saman Marketplace (سوق سامان) is the UAE's marketplace for car spare parts, vehicles, and automotive accessories. Buy and sell new and used auto parts across Dubai, Abu Dhabi, Sharjah and the rest of the UAE. سوق سامان لبيع وشراء قطع غيار السيارات الجديدة والمستعملة في الإمارات." />
+    <meta name="keywords" content="UAE car spare parts, Dubai auto parts, used car parts UAE, buy car parts Dubai, sell car parts UAE, Saman, Souq Saman, automotive marketplace UAE, سوق سامان, قطع غيار السيارات, قطع غيار الإمارات, قطع غيار دبي" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://thesamanapp.com/" />
+    <link rel="alternate" hreflang="en-AE" href="https://thesamanapp.com/?lang=en" />
+    <link rel="alternate" hreflang="ar-AE" href="https://thesamanapp.com/?lang=ar" />
+    <link rel="alternate" hreflang="x-default" href="https://thesamanapp.com/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Saman Marketplace | سوق سامان" />
+    <meta property="og:title" content="Saman Marketplace - Buy & Sell Car Spare Parts in the UAE | سوق سامان - قطع غيار السيارات في الإمارات" />
+    <meta property="og:description" content="The UAE's marketplace for car spare parts, vehicles, and automotive accessories. سوق سامان لبيع وشراء قطع غيار السيارات في الإمارات." />
+    <meta property="og:url" content="https://thesamanapp.com/" />
+    <meta property="og:image" content="https://thesamanapp.com/favicon.png" />
+    <meta property="og:locale" content="en_AE" />
+    <meta property="og:locale:alternate" content="ar_AE" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Saman Marketplace | سوق سامان - Car Spare Parts in the UAE" />
+    <meta name="twitter:description" content="The UAE's marketplace for car spare parts, vehicles, and automotive accessories. سوق سامان للسيارات وقطع الغيار في الإمارات." />
+    <meta name="twitter:image" content="https://thesamanapp.com/favicon.png" />
+
+    <script src="https://apis.google.com/_/scs/abc-static/_/js/k=gapi.lb.en.ch0Jz-JlMrQ.O/m=gapi_iframes/rt=j/sv=1/d=1/ed=1/rs=AHpOoo_YD4KoV8fTh_kLhktsiThAm3yJ5A/cb=gapi.loaded_0?le=scs" async=""></script><script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Saman Marketplace",
+      "alternateName": ["سوق سامان", "Souq Saman"],
+      "url": "https://thesamanapp.com/",
+      "logo": "https://thesamanapp.com/favicon.png",
+      "description": "The UAE's marketplace for car spare parts, vehicles, and automotive accessories.",
+      "areaServed": {
+        "@type": "Country",
+        "name": "United Arab Emirates"
+      },
+      "sameAs": [
+        "https://apps.apple.com/app/saman-marketplace/id6744526430",
+        "https://play.google.com/store/apps/details?id=com.saman.marketplace"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Saman Marketplace",
+      "alternateName": "سوق سامان",
+      "url": "https://thesamanapp.com/",
+      "inLanguage": ["en-AE", "ar-AE"],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://thesamanapp.com/categories?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fira+Code:wght@300..700&family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Oxanium:wght@200..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-C5oFH_wR.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DC6E0gNl.css">
+  <script src="https://apis.google.com/js/api.js?onload=__iframefcb393531" type="text/javascript" charset="UTF-8" gapi_processed="true"></script></head>
+  <body style="margin: 0; padding: 0;">
+    <script>
+      (function() {
+        // Allow ?lang=en|ar in the URL to pre-select the app language so deep links
+        // (and previews) skip the language picker.
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var lang = params.get('lang');
+          if (lang === 'en' || lang === 'ar') {
+            localStorage.setItem('saman_language', lang);
+            localStorage.setItem('saman_language_selected', 'true');
+          }
+        } catch (e) {}
+        var t = localStorage.getItem('theme');
+        if (t !== 'light') {
+          document.documentElement.classList.add('dark');
+        }
+        function setVh() {
+          var vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty('--vh', vh + 'px');
+        }
+        setVh();
+        window.addEventListener('resize', setVh);
+        window.addEventListener('orientationchange', function() { setTimeout(setVh, 100); });
+      })();
+    </script>
+    <div id="root"><div role="region" aria-label="Notifications (F8)" tabindex="-1" style="pointer-events: none;"><ol tabindex="-1" class="fixed z-[100] flex max-h-screen w-full flex-col-reverse p-4 pointer-events-none sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]" style="top: max(env(safe-area-inset-top, 20px), 20px);"></ol></div><div class="min-h-screen flex items-center justify-center px-4 py-12" style="background: linear-gradient(135deg, rgb(26, 26, 26) 0%, rgb(45, 45, 45) 50%, rgb(61, 61, 61) 100%);"><div class="shadcn-card rounded-xl bg-card border-card-border text-card-foreground shadow-sm w-full max-w-md border-2 p-8" style="border-color: rgb(249, 115, 22);"><div class="text-center"><img src="/assets/saman-logo-BY3_pBMT.jpg" alt="Saman Marketplace" class="mx-auto mb-6 w-24 h-24 rounded-2xl object-cover shadow-lg" /><h1 class="text-2xl font-bold mb-2" style="color: rgb(138, 138, 138);">Choose Your Language</h1><p class="text-lg font-semibold mb-1" style="color: rgb(138, 138, 138);">اختر لغتك</p><p class="text-muted-foreground mb-8">Select your preferred language</p><div class="space-y-4"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover-elevate active-elevate-2 border border-primary-border min-h-9 px-4 py-2 w-full h-14 text-lg font-semibold bg-[#f97316] hover:bg-[#ea580c] text-white" data-testid="button-english">English</button><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover-elevate active-elevate-2 border border-primary-border min-h-9 px-4 py-2 w-full h-14 text-lg font-semibold bg-[#f97316] hover:bg-[#ea580c] text-white" data-testid="button-arabic" style="font-family: inherit;">العربية</button></div><p class="mt-6 text-sm text-muted-foreground">You can change this later in Settings</p><p class="text-sm text-muted-foreground" dir="rtl">يمكنك تغيير هذا لاحقاً من الإعدادات</p></div></div></div></div>
+  
+<iframe ng-non-bindable="" frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" tabindex="-1" vspace="0" width="100%" aria-hidden="true" id="I0_1778854175225" name="I0_1778854175225" src="https://saman-car-spare-parts.firebaseapp.com/__/auth/iframe?apiKey=AIzaSyDZ3yxWoX8AgxDtjZIbJtM3Zjt1gSAcN90&amp;appName=%5BDEFAULT%5D&amp;v=12.9.0&amp;eid=p&amp;usegapi=1&amp;jsh=m%3B%2F_%2Fscs%2Fabc-static%2F_%2Fjs%2Fk%3Dgapi.lb.en.ch0Jz-JlMrQ.O%2Fd%3D1%2Frs%3DAHpOoo_YD4KoV8fTh_kLhktsiThAm3yJ5A%2Fm%3D__features__#id=I0_1778854175225&amp;_gfid=I0_1778854175225&amp;parent=https%3A%2F%2Fthesamanapp.com&amp;pfname=&amp;rpctoken=86626694" style="position: absolute; top: -100px; width: 1px; height: 1px;"></iframe></body></html>
