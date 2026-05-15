@@ -152,26 +152,26 @@ export default function ProductDetail() {
 
   const handleShare = async () => {
     const shareUrl = `https://thesamanapp.com/product/${id}`;
-    const shareTitle = product?.title || "Check out this listing on Saman Marketplace";
-    const shareText = product?.price 
-      ? `${shareTitle} - AED ${Number(product.price).toLocaleString()}`
-      : shareTitle;
 
+    // Pass ONLY url to navigator.share — on iOS, including `text` causes the
+    // share sheet's "Copy" button to copy the text instead of the URL. With
+    // url-only, iOS pulls title/preview from the page's Open Graph tags and
+    // "Copy" reliably copies the link.
     if (navigator.share) {
       try {
-        await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
+        await navigator.share({ url: shareUrl });
+        return;
       } catch (err: any) {
-        if (err.name !== "AbortError") {
-          console.error("Share failed:", err);
-        }
+        if (err.name === "AbortError") return;
+        console.error("Share failed:", err);
+        // fall through to clipboard fallback
       }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        toast({ title: "Link Copied", description: "Listing link copied to clipboard." });
-      } catch {
-        toast({ variant: "destructive", title: "Error", description: "Could not copy link." });
-      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({ title: "Link Copied", description: "Listing link copied to clipboard." });
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: "Could not copy link." });
     }
   };
 
