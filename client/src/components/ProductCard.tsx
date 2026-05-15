@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Store, ImageOff } from "lucide-react";
 import { format } from "date-fns";
+import { bustObjectUrl } from "@/lib/bustObjectUrl";
 
 interface ProductCardProps {
   product: Product;
@@ -58,7 +59,7 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
                 )}
                 <img
                   ref={imgRef}
-                  src={product.imageUrl}
+                  src={bustObjectUrl(product.imageUrl)}
                   alt={product.title}
                   loading="lazy"
                   decoding="async"

@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/hooks/use-language";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { bustObjectUrl } from "@/lib/bustObjectUrl";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -184,7 +185,7 @@ export default function ProductDetail() {
         if (url && !images.includes(url)) images.push(url);
       });
     }
-    return images;
+    return images.map(bustObjectUrl);
   }, [product]);
 
   // Handle translation toggle
@@ -508,7 +509,7 @@ export default function ProductDetail() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
                         {sellerInfo?.profileImageUrl ? (
-                          <AvatarImage src={sellerInfo.profileImageUrl} alt={getSellerDisplayName()} />
+                          <AvatarImage src={bustObjectUrl(sellerInfo.profileImageUrl)} alt={getSellerDisplayName()} />
                         ) : null}
                         <AvatarFallback className="bg-primary/10 text-primary">
                           <Store className="h-5 w-5" />
@@ -584,7 +585,7 @@ export default function ProductDetail() {
                       <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow rounded-xl" data-testid={`card-product-${p.id}`}>
                         <div className="aspect-square overflow-hidden bg-secondary/30">
                           {p.imageUrl ? (
-                            <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
+                            <img src={bustObjectUrl(p.imageUrl)} alt={p.title} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Image</div>
                           )}
