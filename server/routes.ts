@@ -216,6 +216,35 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ logged: true });
   });
 
+  app.get("/robots.txt", (_req, res) => {
+    res.type("text/plain").send(
+      "User-agent: *\n" +
+      "Allow: /\n" +
+      "Disallow: /api/\n" +
+      "Disallow: /admin\n" +
+      "Disallow: /reset-password\n" +
+      "\n" +
+      "Sitemap: https://thesamanapp.com/sitemap.xml\n"
+    );
+  });
+
+  app.get("/sitemap.xml", (_req, res) => {
+    const today = new Date().toISOString().split("T")[0];
+    const urls = [
+      { loc: "https://thesamanapp.com/", priority: "1.0", changefreq: "daily" },
+      { loc: "https://thesamanapp.com/listings", priority: "0.9", changefreq: "hourly" },
+      { loc: "https://thesamanapp.com/auth", priority: "0.5", changefreq: "monthly" },
+    ];
+    const body =
+      `<?xml version="1.0" encoding="UTF-8"?>\n` +
+      `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+      urls.map(u =>
+        `  <url>\n    <loc>${u.loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`
+      ).join("\n") +
+      `\n</urlset>\n`;
+    res.type("application/xml").send(body);
+  });
+
   app.get("/api/app-version", (_req, res) => {
     res.json({
       // Per-platform latest versions — Play Store hasn't received 2.0.4 yet,
