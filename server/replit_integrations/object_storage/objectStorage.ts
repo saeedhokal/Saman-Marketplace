@@ -30,6 +30,11 @@ export const objectStorageClient = new Storage({
   projectId: "",
 });
 
+// Module-level cache of signed GET URLs, keyed by `${bucket}/${object}/${dayBoundary}`.
+// Cleared opportunistically when it grows past a soft cap; entries naturally
+// become stale at UTC midnight when the dayBoundary changes.
+const signedUrlCache: Map<string, string> = new Map();
+
 export class ObjectNotFoundError extends Error {
   constructor() {
     super("Object not found");
@@ -98,18 +103,32 @@ export class ObjectStorageService {
   // once per UTC day) and always 5-6 days in the future — well under the GCS
   // V4 7-day maximum. This means repeated requests on the same day return the
   // same signed URL, letting the browser cache the resolved image bytes too.
+  //
+  // Result is memoized in-process per (bucket, object, day) so repeat calls
+  // skip the sidecar signing round-trip (saves ~100-200ms per image).
   async getSignedDownloadURL(file: File): Promise<string> {
     const bucketName = file.bucket.name;
     const objectName = file.name;
     const dayMs = 24 * 3600 * 1000;
     const dayBoundary = Math.floor(Date.now() / dayMs) * dayMs;
     const expiresAtMs = dayBoundary + 6 * dayMs;
-    return signObjectURLAt({
+    const cacheKey = `${bucketName}/${objectName}/${dayBoundary}`;
+    const cached = signedUrlCache.get(cacheKey);
+    if (cached) return cached;
+    const url = await signObjectURLAt({
       bucketName,
       objectName,
       method: "GET",
       expiresAt: new Date(expiresAtMs),
     });
+    // Drop yesterday's keys so the cache doesn't grow forever.
+    if (signedUrlCache.size > 5000) {
+      for (const k of signedUrlCache.keys()) {
+        if (!k.endsWith(`/${dayBoundary}`)) signedUrlCache.delete(k);
+      }
+    }
+    signedUrlCache.set(cacheKey, url);
+    return url;
   }
 
   // Downloads an object to the response.

@@ -15,6 +15,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const isSold = product.status === "sold";
   const formattedPrice = new Intl.NumberFormat("en-AE", {
     style: "currency",
@@ -37,13 +38,25 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
         <Card className={`group h-full flex flex-col overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl ${isSold ? 'opacity-80' : ''}`}>
           <div className="relative aspect-[4/3] md:aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-slate-700/30">
             {product.imageUrl && !imageError ? (
-              <img
-                src={product.imageUrl}
-                alt={product.title}
-                className={`h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''}`}
-                style={{ objectPosition: '50% 60%' }}
-                onError={() => setImageError(true)}
-              />
+              <>
+                {!imageLoaded && (
+                  <div
+                    className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 dark:from-slate-700/40 dark:via-slate-800/40 dark:to-slate-700/40"
+                    aria-hidden="true"
+                    data-testid={`skeleton-image-${product.id}`}
+                  />
+                )}
+                <img
+                  src={product.imageUrl}
+                  alt={product.title}
+                  loading="lazy"
+                  decoding="async"
+                  className={`h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  style={{ objectPosition: '50% 60%' }}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => setImageError(true)}
+                />
+              </>
             ) : (
               <div className="flex h-full w-full items-center justify-center text-muted-foreground bg-secondary">
                 <ImageOff className="h-8 w-8" />
