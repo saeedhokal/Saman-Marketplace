@@ -170,6 +170,34 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
+// Cache-buster for /objects/ URLs in JSON API responses. Phones running OLDER
+// JS bundles (cached in WKWebView) don't have the client-side bustObjectUrl
+// helper, so we inject `?_=v3` here on the server. This forces a brand-new URL
+// the browser has never cached, bypassing any stale cached redirects from the
+// previous broken GCS-expiry deploy. Bump the version if we ever need to do
+// this again.
+const OBJECT_CACHE_BUSTER = "v3";
+function bustObjectUrlsInPlace(value: any): any {
+  if (value == null) return value;
+  if (typeof value === "string") {
+    if (value.startsWith("/objects/") && !value.includes("_=")) {
+      return value.includes("?")
+        ? `${value}&_=${OBJECT_CACHE_BUSTER}`
+        : `${value}?_=${OBJECT_CACHE_BUSTER}`;
+    }
+    return value;
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) value[i] = bustObjectUrlsInPlace(value[i]);
+    return value;
+  }
+  if (typeof value === "object") {
+    for (const k of Object.keys(value)) value[k] = bustObjectUrlsInPlace(value[k]);
+    return value;
+  }
+  return value;
+}
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -177,6 +205,10 @@ app.use((req, res, next) => {
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
+    // Only rewrite for API responses (not /objects/ itself or other endpoints).
+    if (path.startsWith("/api")) {
+      bodyJson = bustObjectUrlsInPlace(bodyJson);
+    }
     capturedJsonResponse = bodyJson;
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
