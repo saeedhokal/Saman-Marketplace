@@ -17,6 +17,11 @@ export function serveStatic(app: Express) {
   // inject per-page SEO (e.g. product JSON-LD) when applicable.
   app.use("/{*path}", async (req, res) => {
     const indexPath = path.resolve(distPath, "index.html");
+    // Explicitly tell crawlers the page is indexable. Defensive: the HTML
+    // already has <meta name="robots" content="index, follow"> but some
+    // SEO auditors check the HTTP header too.
+    res.setHeader("X-Robots-Tag", "index, follow");
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
     try {
       const seo = await buildSeoHeadForUrl(req.originalUrl);
       if (seo) {
