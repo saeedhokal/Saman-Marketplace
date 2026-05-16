@@ -11,7 +11,10 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath, { dotfiles: 'allow' }));
+  // `index: false` disables auto-serving index.html for "/". We route all
+  // HTML responses through the catch-all below so SEO injection and the
+  // X-Robots-Tag / Cache-Control headers are applied consistently.
+  app.use(express.static(distPath, { dotfiles: 'allow', index: false }));
 
   // fall through to index.html if the file doesn't exist;
   // inject per-page SEO (e.g. product JSON-LD) when applicable.
