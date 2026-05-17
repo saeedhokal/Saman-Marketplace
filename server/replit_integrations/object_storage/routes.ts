@@ -75,13 +75,17 @@ export function registerObjectStorageRoutes(app: Express): void {
       const objectPath = req.params[0];
       const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${objectPath}`);
       const signedUrl = await objectStorageService.getSignedDownloadURL(objectFile);
-      // Cache the 302 redirect for ~20 hours in the browser and allow shared
-      // caches/CDNs to serve stale-while-revalidate for 7 days. The signed
-      // URL is daily-stable, so the cached redirect always resolves correctly
-      // until the next UTC midnight.
+      // Cache the 302 redirect for ~20 hours. The redirect points to a signed
+      // GCS URL that expires in 5-6 days, so 20h is always safely inside the
+      // signed-URL lifetime.
+      //
+      // IMPORTANT: do NOT add stale-while-revalidate here. SWR would let
+      // browsers serve a stale redirect for days AFTER the underlying signed
+      // URL has already expired — that was the cause of "images occasionally
+      // break" for users who opened the app 5-7 days after first loading it.
       res.set(
         "Cache-Control",
-        "public, max-age=72000, s-maxage=72000, stale-while-revalidate=604800",
+        "public, max-age=72000, s-maxage=72000",
       );
       return res.redirect(302, signedUrl);
     } catch (error) {
