@@ -1,0 +1,123 @@
+We need to harden the image-loading fix for our React + Vite + Express + Capacitor iOS marketplace app.
+
+Context:
+- App is React 18 + Vite + Express TypeScript, deployed on Replit.
+- Capacitor iOS wrapper loads the live app via server.url: https://thesamanapp.com.
+- Product images are stored in Google Cloud Storage.
+- DB stores permanent paths like /objects/uploads/<uuid>, not signed URLs.
+- Server endpoint GET /objects/(.*) generates a fresh signed GCS URL and returns a 302 redirect.
+- Previous bug: iOS WKWebView had stale cached signed GCS URLs from an old expiry-window issue. Some older images broke only on one physical iPhone, while fresh devices/incognito worked fine.
+- We already added cache busting with ?_=v3 and a retryObjectImg onError helper.
+- The current retry approach is valid, but I want it polished and the redirect cache tightened.
+
+Please make these changes:
+
+1. Improve the retryObjectImg helper in:
+client/src/lib/bustObjectUrl.ts
+
+Current idea:
+- Keep bustObjectUrl behavior: only add ?_=v3 to URLs starting with /objects/ if they do not already contain _=.
+- Improve retryObjectImg so it:
+  - Retries only once using data-retried="1".
+  - Only acts on image src values that contain /objects/.
+  - Uses URL + searchParams instead of src.split("?")[0], so future query params are preserved.
+  - Sets _=r<Date.now()> to force a unique cache key.
+  - Has a safe fallback using split("?")[0] if URL parsing fails.
+
+Target implementation:
+
+export function retryObjectImg(e: React.SyntheticEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+
+  if (img.dataset.retried === "1") return;
+
+  const src = img.getAttribute("src") || "";
+  if (!src.includes("/objects/")) return;
+
+  img.dataset.retried = "1";
+
+  try {
+    const url = new URL(src, window.location.origin);
+    url.searchParams.set("_", `r${Date.now()}`);
+    img.src = url.pathname + url.search;
+  } catch {
+    const base = src.split("?")[0];
+    img.src = `${base}?_=r${Date.now()}`;
+  }
+}
+
+2. Make sure every <img> or AvatarImage rendering /objects/* images uses:
+- bustObjectUrl(...) for the src
+- retryObjectImg for onError
+
+Please verify these files:
+- client/src/components/ProductCard.tsx
+- client/src/components/ImageGallery.tsx
+- client/src/pages/ProductDetail.tsx
+
+ProductCard should preserve the final fallback behavior:
+- First error: call retryObjectImg(e)
+- Second error after data-retried is already "1": setImageError(true)
+
+Use logic like:
+
+onError={(e) => {
+  if (e.currentTarget.dataset.retried === "1") {
+    setImageError(true);
+  } else {
+    retryObjectImg(e);
+  }
+}}
+
+ImageGallery can use:
+onError={retryObjectImg}
+
+ProductDetail:
+- seller avatar should use bustObjectUrl(sellerInfo.profileImageUrl) and onError={retryObjectImg}
+- sub-product/listing card images should use bustObjectUrl(p.imageUrl) and onError={retryObjectImg}
+
+3. Tighten the /objects/* redirect Cache-Control header in the Express server.
+
+Find the route:
+GET /objects/(.*)
+
+It currently generates a signed GCS URL and returns a 302 redirect.
+
+Change the redirect response Cache-Control from:
+Cache-Control: public, max-age=72000, s-maxage=72000
+
+to:
+Cache-Control: public, max-age=300, s-maxage=300
+
+Reason:
+- The signed GCS URL lasts around 5–6 days, but mobile WebViews can behave badly with stale cached redirects/final signed URLs.
+- A 5-minute redirect cache still helps performance but dramatically reduces the blast radius if a stale or bad redirect ever gets cached.
+- Do not use no-store unless necessary; 300 seconds is the preferred balance.
+
+4. Make sure Express correctly handles URLs like:
+/objects/uploads/<uuid>?_=r123456789
+
+The query string must not affect object lookup. The object path should still resolve as uploads/<uuid>.
+
+5. Do not proxy image bytes through Express right now.
+
+Keep the current 302 redirect architecture. Proxying is a possible long-term solution but not needed now because it increases server bandwidth/load and removes the direct GCS efficiency.
+
+6. Optional but recommended: add lightweight logging for image retries.
+
+At minimum, add a console warning inside retryObjectImg before changing img.src:
+
+console.warn("Retrying object image after load failure", { src });
+
+Do not spam logs repeatedly because retry only happens once per image element.
+
+7. After changes, run a quick code review and tell me:
+- Which files were changed.
+- Whether ProductCard still falls back to the ImageOff placeholder after the retry fails.
+- Whether ImageGallery thumbnails, main image, and fullscreen image all retry correctly.
+- Whether ProductDetail seller avatar and sub-product images retry correctly.
+- Whether /objects/* redirect cache is now 300 seconds.
+- Whether any TypeScript or lint issues appeared.
+
+Goal:
+We want a production-safe iOS WKWebView self-healing image fix. A broken /objects/* image should silently retry once using a unique cache-busting URL, then fall back only if the second attempt fails.

@@ -83,9 +83,12 @@ export function registerObjectStorageRoutes(app: Express): void {
       // browsers serve a stale redirect for days AFTER the underlying signed
       // URL has already expired — that was the cause of "images occasionally
       // break" for users who opened the app 5-7 days after first loading it.
+      // 5 minutes: short enough that a stale/bad redirect self-heals quickly
+      // on mobile WebViews, long enough to still benefit performance for
+      // back-to-back requests within a session.
       res.set(
         "Cache-Control",
-        "public, max-age=72000, s-maxage=72000",
+        "public, max-age=300, s-maxage=300",
       );
       return res.redirect(302, signedUrl);
     } catch (error) {

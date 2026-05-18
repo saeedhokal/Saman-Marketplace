@@ -22,6 +22,13 @@ export function retryObjectImg(e: React.SyntheticEvent<HTMLImageElement>) {
   const src = img.getAttribute("src") || "";
   if (!src.includes("/objects/")) return;
   img.dataset.retried = "1";
-  const stripped = src.split("?")[0];
-  img.src = `${stripped}?_=r${Date.now()}`;
+  console.warn("Retrying object image after load failure", { src });
+  try {
+    const url = new URL(src, window.location.origin);
+    url.searchParams.set("_", `r${Date.now()}`);
+    img.src = url.pathname + url.search;
+  } catch {
+    const base = src.split("?")[0];
+    img.src = `${base}?_=r${Date.now()}`;
+  }
 }
