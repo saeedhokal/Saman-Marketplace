@@ -1,10 +1,39 @@
+import { useEffect, useMemo, useState } from "react";
 import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
 import samanLogo from "@assets/ChatGPT_Image_Feb_4,_2026,_03_33_07_PM_1770204799107.png";
 import { SiApple, SiGoogleplay } from "react-icons/si";
 
+type Platform = "ios" | "android" | "other";
+
+function detectPlatform(): Platform {
+  if (typeof navigator === "undefined") return "other";
+  const ua = navigator.userAgent || "";
+  if (/iPad|iPhone|iPod/.test(ua)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return "other";
+}
+
+// Fire a TikTok pixel event if the pixel is loaded. Safe no-op otherwise.
+function ttq(event: string, params?: Record<string, unknown>) {
+  const w = window as any;
+  if (w && w.ttq && typeof w.ttq.track === "function") {
+    try { w.ttq.track(event, params); } catch {}
+  }
+}
+
 export default function Downloads() {
   const appStoreUrl = "https://apps.apple.com/kh/app/saman-marketplace/id6744526430";
   const playStoreUrl = "https://play.google.com/store/apps/details?id=com.saman.marketplace&referrer=utm_source%3Dappbrain%26utm_medium%3Dappbrain_web%26utm_campaign%3Dappbrain_web";
+
+  const [platform, setPlatform] = useState<Platform>("other");
+  useEffect(() => {
+    setPlatform(detectPlatform());
+    // Track landing as a TikTok pixel "ViewContent" so the ad gets attribution.
+    ttq("ViewContent", { content_id: "downloads_page" });
+  }, []);
+
+  const showApple = platform === "ios" || platform === "other";
+  const showGoogle = platform === "android" || platform === "other";
 
   return (
     <div className="min-h-screen relative flex items-center justify-center">
@@ -32,33 +61,39 @@ export default function Downloads() {
           </p>
           
           <div className="space-y-4">
-            <a
-              href={appStoreUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-black rounded-xl text-white font-medium hover:bg-black/80 transition-colors"
-              data-testid="link-app-store"
-            >
-              <SiApple className="w-7 h-7" />
-              <div className="text-left">
-                <div className="text-xs text-white/70">Download on the</div>
-                <div className="text-lg font-semibold">App Store</div>
-              </div>
-            </a>
-            
-            <a
-              href={playStoreUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-black rounded-xl text-white font-medium hover:bg-black/80 transition-colors"
-              data-testid="link-play-store"
-            >
-              <SiGoogleplay className="w-6 h-6" />
-              <div className="text-left">
-                <div className="text-xs text-white/70">Get it on</div>
-                <div className="text-lg font-semibold">Google Play</div>
-              </div>
-            </a>
+            {showApple && (
+              <a
+                href={appStoreUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => ttq("ClickButton", { content_id: "app_store" })}
+                className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-black rounded-xl text-white font-medium hover:bg-black/80 transition-colors"
+                data-testid="link-app-store"
+              >
+                <SiApple className="w-7 h-7" />
+                <div className="text-left">
+                  <div className="text-xs text-white/70">Download on the</div>
+                  <div className="text-lg font-semibold">App Store</div>
+                </div>
+              </a>
+            )}
+
+            {showGoogle && (
+              <a
+                href={playStoreUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => ttq("ClickButton", { content_id: "play_store" })}
+                className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-black rounded-xl text-white font-medium hover:bg-black/80 transition-colors"
+                data-testid="link-play-store"
+              >
+                <SiGoogleplay className="w-6 h-6" />
+                <div className="text-left">
+                  <div className="text-xs text-white/70">Get it on</div>
+                  <div className="text-lg font-semibold">Google Play</div>
+                </div>
+              </a>
+            )}
           </div>
         </div>
         
