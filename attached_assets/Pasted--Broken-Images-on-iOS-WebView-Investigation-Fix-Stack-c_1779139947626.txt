@@ -1,0 +1,123 @@
+# Broken Images on iOS WebView — Investigation & Fix
+
+## Stack context
+- **App:** React 18 + Vite + Express (TypeScript) marketplace, deployed on Replit
+- **Mobile:** Capacitor v7 iOS wrapper, `server.url: https://thesamanapp.com` (WebView loads the live web app directly)
+- **Images:** Google Cloud Storage. Path stored in Postgres as `/objects/uploads/<uuid>`. Server endpoint `GET /objects/(.*)` responds with a 302 redirect to a freshly-signed GCS URL on each request.
+
+## The symptom
+User opened the app on her iPhone (live App Store build). The two most recent listings loaded fine. Older listings showed broken image icons. The issue only appears on her physical device — fresh visits from other devices and incognito browsers work normally. She wants assurance no other user will hit this.
+
+## Architecture investigation (read-only, via an explorer subagent)
+
+Confirmed via codebase search:
+
+1. **Storage**: `POST /api/uploads/request-url` calls `objectStorageService.normalizeObjectEntityPath(uploadURL)` and returns a permanent path like `/objects/uploads/<uuid>`. The client posts that string to `POST /api/products`, which writes it into `products.imageUrl` (text) and `products.imageUrls` (text[]) in Postgres. **Signed URLs are never persisted in the DB.**
+2. **Serving**: `app.get(/^\/objects\/(.*)/, ...)` retrieves the GCS file via `objectStorageService.getObjectEntityFile`, generates a signed URL with ~5–6 day expiry, and returns a 302 redirect. Response carries `Cache-Control: public, max-age=72000, s-maxage=72000` (20h, comfortably less than the signed-URL lifetime).
+3. **Cleanup**: `deleteExpiredProducts` and `deleteOldRejectedProducts` only delete Postgres rows — they don't touch GCS. So old listings' image bytes are still in the bucket.
+4. **DB diff between old and new listings**: none. All rows store `/objects/...` paths the same way.
+
+**Conclusion**: the storage/serving pipeline is healthy. New requests always get a fresh signed URL within seconds.
+
+## Earlier fixes that already shipped (during prior sessions)
+- Removed `stale-while-revalidate=604800` from the `/objects/(.*)` redirect's `Cache-Control` (it was allowing phones to serve stale redirects past the signed URL's expiry).
+- Server-side `bustObjectUrlsInPlace` middleware in `server/index.ts` wraps `res.json` for `/api/*` and appends `?_=v3` to every `/objects/...` URL in JSON responses (skipped if `_=` already present).
+- Client-side `bustObjectUrl(url)` helper in `client/src/lib/bustObjectUrl.ts` does the same on URLs that arrived without it. Used in `ProductCard`, `ProductDetail` (gallery, sub-products, seller avatar).
+
+## Why the user still sees broken images
+
+iOS WKWebView keeps a private image-byte cache keyed on the **resolved final URL** (the signed GCS URL the 302 redirected to). Timeline:
+1. Months ago, during the 12-day-expiry bug window, her phone resolved `/objects/abc` → `signed_url_A`, downloaded the bytes, cached them under `signed_url_A`.
+2. `signed_url_A` later expired in GCS.
+3. The redirect-layer cache eventually flushed, but the image-bytes cache entry still exists, and WKWebView short-circuits the network request for that URL.
+4. When the request *does* go to GCS, the expired signature returns an error and the `<img>` paints broken.
+
+Fresh App Store users with empty caches don't have any stale entries → they request `/objects/abc` → get a fresh signed URL → image loads. So the symptom is real on her device, but the population at risk is essentially "users who used the app heavily during the old expiry bug window."
+
+## The fix shipped this session: self-healing image retry
+
+A defense-in-depth so any cause of a broken `/objects/*` image (stale cache, network blip, signed-URL race, anything) silently recovers.
+
+### `client/src/lib/bustObjectUrl.ts`
+
+```ts
+const CACHE_BUSTER = "v3";
+
+export function bustObjectUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  if (!url.startsWith("/objects/")) return url;
+  if (url.includes("_=")) return url;
+  return url.includes("?") ? `${url}&_=${CACHE_BUSTER}` : `${url}?_=${CACHE_BUSTER}`;
+}
+
+// Self-healing onError handler for <img> tags pointing at /objects/ URLs.
+// If the image fails to load (stale browser cache, expired signed URL, network
+// blip), retry ONCE with a unique timestamp that bypasses every cache layer.
+// Tag the element with data-retried so we don't loop forever on truly missing
+// images.
+export function retryObjectImg(e: React.SyntheticEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+  if (img.dataset.retried === "1") return;
+  const src = img.getAttribute("src") || "";
+  if (!src.includes("/objects/")) return;
+  img.dataset.retried = "1";
+  const stripped = src.split("?")[0];
+  img.src = `${stripped}?_=r${Date.now()}`;
+}
+```
+
+### Wired into every `<img>` rendering `/objects/*` URLs
+
+`client/src/components/ProductCard.tsx` — preserves final `ImageOff` fallback:
+```tsx
+onError={(e) => {
+  if (e.currentTarget.dataset.retried === "1") {
+    setImageError(true);
+  } else {
+    retryObjectImg(e);
+  }
+}}
+```
+
+`client/src/components/ImageGallery.tsx` — three `<img>` tags (main carousel, thumbnails, fullscreen):
+```tsx
+onError={retryObjectImg}
+```
+
+`client/src/pages/ProductDetail.tsx` — seller avatar + sub-product cards:
+```tsx
+<AvatarImage src={bustObjectUrl(sellerInfo.profileImageUrl)} ... onError={retryObjectImg} />
+<img src={bustObjectUrl(p.imageUrl)} ... onError={retryObjectImg} />
+```
+
+(shadcn's `AvatarImage` spreads `{...props}` to `AvatarPrimitive.Image`, so `onError` reaches the underlying `<img>`.)
+
+## Why the retry actually breaks the stale-cache cycle
+
+The retry URL is `/objects/<path>?_=r<Date.now()>`. Compared to the previous `?_=v3`:
+- **New cache key** at the browser-cache layer → forces a re-request to the server.
+- Server returns a **new 302 → newly-signed GCS URL** (different signature/expires query params).
+- WKWebView treats it as a brand-new image URL and downloads fresh bytes.
+- All in one round-trip after the first failed paint — user just sees a brief flash.
+
+## Loop prevention
+- `data-retried="1"` set before the new `img.src` assignment.
+- Second `onError` on the same element no-ops (in `ImageGallery`) or transitions to the `imageError` fallback (in `ProductCard`).
+
+## Code review verdict (architect subagent, includeGitDiff)
+All five verification points passed:
+1. Single-retry guarantee — pass
+2. `ProductCard` final fallback preserved — pass
+3. `AvatarImage` correctly forwards `onError` — pass
+4. `?_=r<Date.now()>` bypasses the 20h redirect cache and downstream caches — pass
+5. No infinite-loop risk — pass
+
+Suggested follow-ups from the review (not yet done):
+- Playwright/Cypress test asserting exactly one retry then fallback in `ProductCard`.
+- Manual QA pass on iOS WKWebView for stale-redirect recovery.
+- Optional metric/log when the retry path is hit, to measure real-world frequency.
+
+## Open questions for second opinion
+1. Is there a stronger fix worth considering — e.g. **proxying image bytes through `/objects/*`** instead of 302-redirecting, so the browser-cache key is always the permanent path and signed URLs never reach the client at all? Tradeoff: server bandwidth + no CDN benefit, vs. eliminating an entire class of stale-signed-URL bugs.
+2. Should the `/objects/*` redirect `Cache-Control` be tightened further (e.g. `max-age=300`) to limit blast radius if a bad signed URL ever escapes?
+3. Anything obviously wrong with treating the unique timestamp (`Date.now()`) as a sufficient bypass — any cache layer (Cloudflare, GCS edge, iOS) where a fresh querystring wouldn't force a re-resolve?
