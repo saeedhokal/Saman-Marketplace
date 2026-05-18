@@ -55,6 +55,7 @@ TELR_STORE_ID = "32400"
 REPLIT_DEPLOYMENT_URL = "https://thesamanapp.com"
 TELR_REMOTE_AUTH_KEY = "DdkLr~C8Nph^cpfK"
 TELR_WALLETS_AUTH_KEY = "spRZ^QWJ5P~MWJpV"
+VITE_TIKTOK_PIXEL_ID = "D85JJLBC77UDS4G4LTG0"
 
 [postMerge]
 path = "scripts/post-merge.sh"
