@@ -4,6 +4,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { retryObjectImg } from "@/lib/bustObjectUrl";
 
 interface ImageGalleryProps {
   images: string[];
@@ -92,6 +93,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
                     alt={`Image ${idx + 1}`}
                     loading={idx < 2 ? "eager" : "lazy"}
                     decoding="async"
+                    onError={retryObjectImg}
                     draggable={false}
                     className="w-full h-full object-contain pointer-events-none select-none"
                   />
@@ -148,7 +150,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
               className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${idx === currentIndex ? "border-accent" : "border-transparent"}`}
               data-testid={`thumbnail-${idx}`}
             >
-              <img src={img} alt={`Thumbnail ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+              <img src={img} alt={`Thumbnail ${idx + 1}`} loading="lazy" decoding="async" onError={retryObjectImg} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
@@ -256,6 +258,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
                 loading="eager"
                 decoding="async"
                 draggable={false}
+                onError={retryObjectImg}
                 className="max-w-full max-h-full object-contain select-none"
                 style={{ touchAction: "pinch-zoom" }}
               />

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Store, ImageOff } from "lucide-react";
 import { format } from "date-fns";
-import { bustObjectUrl } from "@/lib/bustObjectUrl";
+import { bustObjectUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 
 interface ProductCardProps {
   product: Product;
@@ -66,7 +66,13 @@ export function ProductCard({ product, sellerImageUrl, showDate }: ProductCardPr
                   className={`h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   style={{ objectPosition: '50% 60%' }}
                   onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageError(true)}
+                  onError={(e) => {
+                    if (e.currentTarget.dataset.retried === "1") {
+                      setImageError(true);
+                    } else {
+                      retryObjectImg(e);
+                    }
+                  }}
                 />
               </>
             ) : (

@@ -10,3 +10,18 @@ export function bustObjectUrl(url: string | null | undefined): string {
   if (url.includes("_=")) return url;
   return url.includes("?") ? `${url}&_=${CACHE_BUSTER}` : `${url}?_=${CACHE_BUSTER}`;
 }
+
+// Self-healing onError handler for <img> tags pointing at /objects/ URLs.
+// If the image fails to load (stale browser cache, expired signed URL, network
+// blip), retry ONCE with a unique timestamp that bypasses every cache layer.
+// Tag the element with data-retried so we don't loop forever on truly missing
+// images.
+export function retryObjectImg(e: React.SyntheticEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+  if (img.dataset.retried === "1") return;
+  const src = img.getAttribute("src") || "";
+  if (!src.includes("/objects/")) return;
+  img.dataset.retried = "1";
+  const stripped = src.split("?")[0];
+  img.src = `${stripped}?_=r${Date.now()}`;
+}
