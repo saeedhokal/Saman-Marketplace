@@ -220,6 +220,18 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, goPrev, goNext]);
 
+  useEffect(() => {
+    if (!images?.length) return;
+    const targets = [index - 1, index, index + 1].filter(
+      (i) => i >= 0 && i < images.length,
+    );
+    targets.forEach((i) => {
+      const img = new Image();
+      img.src = images[i];
+      if (img.decode) img.decode().catch(() => {});
+    });
+  }, [index, images]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -245,21 +257,21 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
       </div>
 
       <div ref={emblaRef} className="overflow-hidden w-full h-full" dir="ltr">
-        <div className="flex h-full touch-pan-y">
+        <div className="flex h-full touch-pan-y transform-gpu will-change-transform backface-hidden">
           {images.map((img, idx) => (
             <div
               key={idx}
-              className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center"
+              className="relative flex-[0_0_100%] min-w-0 h-full"
               data-testid={`fullscreen-slide-${idx}`}
             >
               <img
                 src={img}
                 alt={`Image ${idx + 1}`}
-                loading="eager"
+                loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
                 decoding="async"
                 draggable={false}
                 onError={retryObjectImg}
-                className="max-w-full max-h-full object-contain pointer-events-none select-none"
+                className="w-full h-full object-contain pointer-events-none select-none"
               />
             </div>
           ))}

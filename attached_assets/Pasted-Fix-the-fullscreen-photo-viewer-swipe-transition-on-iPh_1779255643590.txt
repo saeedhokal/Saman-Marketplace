@@ -1,0 +1,133 @@
+Fix the fullscreen photo viewer swipe transition on iPhone. Right now swiping left/right between fullscreen images feels bulky / choppy, not smooth like the normal gallery.
+
+Current relevant code uses Embla:
+
+const [emblaRef, emblaApi] = useEmblaCarousel({
+  startIndex: initialIndex,
+  loop: false,
+  align: "start",
+  containScroll: "trimSnaps",
+  dragFree: false,
+  duration: 22,
+});
+
+Fullscreen images use:
+
+<img
+  src={img}
+  alt={`Image ${idx + 1}`}
+  loading="eager"
+  decoding="async"
+  draggable={false}
+  onError={retryObjectImg}
+  className="max-w-full max-h-full object-contain pointer-events-none select-none"
+/>
+
+And the layout is:
+
+<div ref={emblaRef} className="overflow-hidden w-full h-full" dir="ltr">
+  <div className="flex h-full touch-pan-y">
+    {images.map((img, idx) => (
+      <div
+        key={idx}
+        className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center"
+      >
+        <img ... />
+      </div>
+    ))}
+  </div>
+</div>
+
+Please improve the fullscreen photo viewer so the swipe feels smooth and native on iPhone.
+
+What I want fixed:
+
+1. Make horizontal swiping in fullscreen smooth, lightweight, and responsive.
+2. Avoid the image itself interfering with gestures.
+3. Remove anything that causes heavy repainting or bulky transition feel.
+4. Preload the current image plus previous/next image so the next photo is already decoded before the swipe.
+5. Keep pinch zoom possible only if it does not break normal swiping. If pinch zoom is causing the choppy feel, remove it for now.
+6. Do not affect the normal listing/gallery carousel unless needed.
+7. Make sure the fullscreen Embla carousel is separate from the thumbnail/listing carousel if they currently share state/config.
+
+Suggested technical changes:
+
+- For fullscreen Embla, try this config:
+
+const [fullscreenEmblaRef, fullscreenEmblaApi] = useEmblaCarousel({
+  startIndex: initialIndex,
+  loop: false,
+  align: "center",
+  dragFree: false,
+  skipSnaps: false,
+  duration: 18,
+  watchDrag: true,
+});
+
+- Remove `containScroll: "trimSnaps"` from fullscreen if it makes edge dragging feel stiff.
+- Use GPU-friendly classes on the Embla container and slides:
+  - `transform-gpu`
+  - `will-change-transform`
+  - `backface-hidden`
+  - `translate-z-0` if needed
+- Make every slide exactly 100% viewport width:
+  - `flex-[0_0_100%]`
+  - `min-w-0`
+  - `w-full`
+  - `h-full`
+- Make the fullscreen wrapper use stable viewport height on iPhone:
+  - `h-[100dvh]`
+  - not just `h-screen` if safe-area/toolbar causes resizing.
+- Image should use:
+  - `pointer-events-none`
+  - `select-none`
+  - `draggable={false}`
+  - `decoding="async"`
+  - `loading={idx === initialIndex || Math.abs(idx - initialIndex) <= 1 ? "eager" : "lazy"}`
+- Do not put `touchAction: "pinch-zoom"` directly on the image if it hurts horizontal swipe. Prefer gesture handling on the carousel container:
+  - container: `touch-pan-y`
+  - image: `pointer-events-none`
+- Add a preload effect for adjacent images:
+
+useEffect(() => {
+  if (!images?.length) return;
+
+  const indexesToPreload = [
+    selectedIndex,
+    selectedIndex - 1,
+    selectedIndex + 1,
+  ].filter((i) => i >= 0 && i < images.length);
+
+  indexesToPreload.forEach((i) => {
+    const image = new Image();
+    image.src = images[i];
+    if (image.decode) {
+      image.decode().catch(() => {});
+    }
+  });
+}, [images, selectedIndex]);
+
+- Track selectedIndex from Embla:
+
+useEffect(() => {
+  if (!fullscreenEmblaApi) return;
+
+  const updateSelected = () => {
+    setSelectedIndex(fullscreenEmblaApi.selectedScrollSnap());
+  };
+
+  updateSelected();
+  fullscreenEmblaApi.on("select", updateSelected);
+  fullscreenEmblaApi.on("reInit", updateSelected);
+
+  return () => {
+    fullscreenEmblaApi.off("select", updateSelected);
+    fullscreenEmblaApi.off("reInit", updateSelected);
+  };
+}, [fullscreenEmblaApi]);
+
+- Make sure opening fullscreen at `initialIndex` does not cause a visible jump. After modal opens and Embla is ready, call:
+  - `fullscreenEmblaApi.scrollTo(initialIndex, true)`
+  - then `fullscreenEmblaApi.reInit()` if necessary.
+
+Please inspect the existing fullscreen image viewer component and apply these fixes cleanly. The end result should feel closer to the iPhone Photos app: light, smooth, no laggy/bulky slide feeling, and no broken image gesture behavior.
