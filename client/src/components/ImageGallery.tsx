@@ -188,32 +188,101 @@ interface FullscreenViewerProps {
 }
 
 function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: FullscreenViewerProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    startIndex: initialIndex,
-    loop: false,
-    align: "start",
-    dragFree: false,
-    skipSnaps: false,
-    duration: 18,
-  });
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [index, setIndex] = useState(initialIndex);
+  const indexRef = useRef(initialIndex);
+  const onIndexChangeRef = useRef(onIndexChange);
+  const rafRef = useRef<number | null>(null);
+  const programmaticUntilRef = useRef(0);
+  const initialAlignDoneRef = useRef(false);
 
   useEffect(() => {
-    if (!emblaApi) return;
-    const onSelect = () => {
-      const i = emblaApi.selectedScrollSnap();
-      setIndex(i);
-      onIndexChange(i);
-    };
-    emblaApi.on("select", onSelect);
-    return () => {
-      emblaApi.off("select", onSelect);
-    };
-  }, [emblaApi, onIndexChange]);
+    onIndexChangeRef.current = onIndexChange;
+  }, [onIndexChange]);
 
-  const goPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const goNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-  const goTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi]);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    initialAlignDoneRef.current = false;
+    indexRef.current = initialIndex;
+    setIndex(initialIndex);
+    let cancelled = false;
+    let attempts = 0;
+    const tryAlign = () => {
+      if (cancelled) return;
+      const w = el.clientWidth;
+      if (w > 0) {
+        el.scrollLeft = initialIndex * w;
+        programmaticUntilRef.current = Date.now() + 200;
+        initialAlignDoneRef.current = true;
+        return;
+      }
+      if (attempts++ < 30) {
+        window.requestAnimationFrame(tryAlign);
+      }
+    };
+    tryAlign();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialIndex]);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      if (rafRef.current !== null) return;
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null;
+        if (!initialAlignDoneRef.current) return;
+        if (Date.now() < programmaticUntilRef.current) return;
+        const w = el.clientWidth;
+        if (w <= 0) return;
+        const i = Math.round(el.scrollLeft / w);
+        const clamped = Math.max(0, Math.min(images.length - 1, i));
+        if (clamped !== indexRef.current) {
+          indexRef.current = clamped;
+          setIndex(clamped);
+          onIndexChangeRef.current(clamped);
+        }
+      });
+    };
+
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", handleScroll);
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [images.length]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      el.scrollLeft = indexRef.current * el.clientWidth;
+    };
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
+  }, []);
+
+  const scrollToIndex = useCallback((i: number, smooth: boolean) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const clamped = Math.max(0, Math.min(images.length - 1, i));
+    el.scrollTo({ left: clamped * el.clientWidth, behavior: smooth ? "smooth" : "auto" });
+  }, [images.length]);
+
+  const goPrev = useCallback(() => scrollToIndex(indexRef.current - 1, true), [scrollToIndex]);
+  const goNext = useCallback(() => scrollToIndex(indexRef.current + 1, true), [scrollToIndex]);
+  const goTo = useCallback((i: number) => scrollToIndex(i, true), [scrollToIndex]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -244,6 +313,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
       data-testid="fullscreen-gallery"
       style={{ height: "100dvh" }}
     >
+      <style>{`.saman-fullscreen-scroller::-webkit-scrollbar { display: none; width: 0; height: 0; }`}</style>
       <div className="absolute top-0 left-0 right-0 h-16 bg-black/40 pointer-events-none z-20" />
 
       <button
@@ -259,38 +329,47 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
       </div>
 
       <div
-        ref={emblaRef}
-        className="overflow-hidden w-full h-full"
+        ref={scrollerRef}
+        className="saman-fullscreen-scroller w-full h-full overflow-x-auto overflow-y-hidden flex"
         dir="ltr"
-        style={{ height: "100dvh", touchAction: "pan-y" }}
+        style={{
+          height: "100dvh",
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorX: "contain",
+          scrollbarWidth: "none",
+          touchAction: "pan-x",
+        }}
       >
-        <div
-          className="flex h-full touch-pan-y transform-gpu backface-hidden"
-          style={{ willChange: "transform" }}
-        >
-          {images.map((img, idx) => {
-            const shouldRenderImage = Math.abs(idx - index) <= 2;
-            return (
-              <div
-                key={idx}
-                className="relative flex-[0_0_100%] min-w-0 h-full"
-                data-testid={`fullscreen-slide-${idx}`}
-              >
-                {shouldRenderImage ? (
-                  <img
-                    src={getFullscreenImageUrl(img)}
-                    alt={`Image ${idx + 1}`}
-                    loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
-                    decoding="async"
-                    draggable={false}
-                    onError={retryObjectImg}
-                    className="w-full h-full object-contain pointer-events-none select-none"
-                  />
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
+        {images.map((img, idx) => {
+          const shouldRenderImage = Math.abs(idx - index) <= 2;
+          return (
+            <div
+              key={idx}
+              className="relative h-full"
+              style={{
+                flex: "0 0 100%",
+                width: "100%",
+                minWidth: "100%",
+                scrollSnapAlign: "center",
+                scrollSnapStop: "normal",
+              }}
+              data-testid={`fullscreen-slide-${idx}`}
+            >
+              {shouldRenderImage ? (
+                <img
+                  src={getFullscreenImageUrl(img)}
+                  alt={`Image ${idx + 1}`}
+                  loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
+                  decoding="async"
+                  draggable={false}
+                  onError={retryObjectImg}
+                  className="w-full h-full object-contain pointer-events-none select-none"
+                />
+              ) : null}
+            </div>
+          );
+        })}
       </div>
 
       {images.length > 1 && (

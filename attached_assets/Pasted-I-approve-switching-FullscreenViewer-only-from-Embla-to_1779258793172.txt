@@ -1,0 +1,203 @@
+I approve switching FullscreenViewer only from Embla to native CSS scroll-snap.
+
+The current diagnosis makes sense:
+- Drag now tracks smoothly.
+- The remaining issue is only after finger release.
+- Embla’s JS-driven snap animation feels artificial over a full-screen distance in iOS WKWebView.
+- The smaller in-page gallery can stay on Embla because the travel distance is small and already feels good.
+- Fullscreen should use iOS native scrolling/momentum instead.
+
+Please implement this only in client/src/components/ImageGallery.tsx inside FullscreenViewer. Do not touch the normal in-page gallery.
+
+Use native horizontal scroll-snap for fullscreen:
+
+- Outer fullscreen modal stays portaled to document.body.
+- Keep plain fixed div, no Framer Motion.
+- Keep resized fullscreen images using getFullscreenImageUrl(img), currently ?w=1400&q=80.
+- Keep only current ±2 img elements rendered.
+- Keep slide wrapper divs mounted for all images.
+- Keep existing close button, counter, arrows, dots, and styling.
+
+Recommended scroller:
+
+const scrollerRef = useRef<HTMLDivElement | null>(null);
+
+<div
+  ref={scrollerRef}
+  className="w-full h-full overflow-x-auto overflow-y-hidden flex"
+  style={{
+    height: "100dvh",
+    scrollSnapType: "x mandatory",
+    WebkitOverflowScrolling: "touch",
+    overscrollBehaviorX: "contain",
+    scrollbarWidth: "none",
+    touchAction: "pan-x",
+  }}
+>
+  {images.map((img, idx) => {
+    const shouldRenderImage = Math.abs(idx - index) <= 2;
+
+    return (
+      <div
+        key={idx}
+        className="relative flex-[0_0_100%] h-full"
+        style={{
+          width: "100%",
+          minWidth: "100%",
+          scrollSnapAlign: "center",
+          scrollSnapStop: "normal",
+        }}
+      >
+        {shouldRenderImage ? (
+          <img
+            src={getFullscreenImageUrl(img)}
+            alt={`Image ${idx + 1}`}
+            loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
+            decoding="async"
+            draggable={false}
+            onError={retryObjectImg}
+            className="w-full h-full object-contain pointer-events-none select-none"
+            style={{
+              WebkitUserSelect: "none",
+              userSelect: "none",
+              WebkitTouchCallout: "none",
+            }}
+          />
+        ) : null}
+      </div>
+    );
+  })}
+</div>
+
+Important change:
+Use scrollSnapStop: "normal" first, NOT "always".
+
+Reason:
+scroll-snap-stop: always can make fast flicks feel trapped, because it may force the scroll to stop at every slide. For an iPhone Photos-like feel, users should be able to flick naturally. Start with normal. Only test "always" if fast swipes skip too many images.
+
+Initial position:
+When fullscreen opens, set the scroll position instantly:
+
+useEffect(() => {
+  if (!isFullscreen) return;
+
+  const el = scrollerRef.current;
+  if (!el) return;
+
+  requestAnimationFrame(() => {
+    el.scrollTo({
+      left: initialIndex * el.clientWidth,
+      behavior: "auto",
+    });
+    setIndex(initialIndex);
+  });
+}, [isFullscreen, initialIndex]);
+
+Index tracking:
+Use a requestAnimationFrame-throttled scroll listener. This is fine and lightweight because it only calculates scrollLeft / clientWidth. Do not use IntersectionObserver here; it can lag behind native scrolling and is less direct for a paging viewer.
+
+useEffect(() => {
+  const el = scrollerRef.current;
+  if (!el || !isFullscreen) return;
+
+  let raf = 0;
+
+  const onScroll = () => {
+    if (raf) return;
+
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+
+      const width = el.clientWidth || 1;
+      const nextIndex = Math.round(el.scrollLeft / width);
+
+      if (nextIndex >= 0 && nextIndex < images.length) {
+        setIndex((current) => (current === nextIndex ? current : nextIndex));
+      }
+    });
+  };
+
+  el.addEventListener("scroll", onScroll, { passive: true });
+
+  return () => {
+    el.removeEventListener("scroll", onScroll);
+    if (raf) cancelAnimationFrame(raf);
+  };
+}, [isFullscreen, images.length]);
+
+Arrows and dots:
+Use native scrollTo:
+
+const scrollToIndex = useCallback((targetIndex: number, behavior: ScrollBehavior = "smooth") => {
+  const el = scrollerRef.current;
+  if (!el) return;
+
+  const clampedIndex = Math.max(0, Math.min(targetIndex, images.length - 1));
+
+  el.scrollTo({
+    left: clampedIndex * el.clientWidth,
+    behavior,
+  });
+
+  setIndex(clampedIndex);
+}, [images.length]);
+
+For arrows/dots:
+scrollToIndex(idx, "smooth")
+
+For opening/re-aligning:
+scrollToIndex(initialIndex, "auto")
+
+Resize/orientation change:
+Re-align instantly to current index:
+
+useEffect(() => {
+  if (!isFullscreen) return;
+
+  const realign = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    el.scrollTo({
+      left: index * el.clientWidth,
+      behavior: "auto",
+    });
+  };
+
+  window.addEventListener("resize", realign);
+  window.addEventListener("orientationchange", realign);
+
+  return () => {
+    window.removeEventListener("resize", realign);
+    window.removeEventListener("orientationchange", realign);
+  };
+}, [isFullscreen, index]);
+
+Hide scrollbar for WebKit:
+Add either a Tailwind utility if already available, or CSS:
+
+.fullscreen-scroll-snap::-webkit-scrollbar {
+  display: none;
+}
+
+Then add className:
+
+className="fullscreen-scroll-snap w-full h-full overflow-x-auto overflow-y-hidden flex"
+
+Touch-action:
+Use touchAction: "pan-x" on the scroller. That is correct for the fullscreen viewer because this screen is dedicated to horizontal photo paging. If iOS gesture behavior feels weird, test removing touchAction entirely, but start with pan-x.
+
+Do not put touch-action on the img.
+Keep img pointer-events-none.
+
+Preloading:
+Keep the existing preload effect, but make sure it preloads getFullscreenImageUrl(images[i]), not original images.
+
+Do not use Embla inside FullscreenViewer anymore after this change.
+Remove fullscreen Embla ref/api code from FullscreenViewer only.
+Leave the in-page gallery Embla untouched.
+
+Expected result:
+- Drag should stay smooth.
+- Release should feel more native because iOS owns the momentum + snap.
+- The transition should feel closer to iPhone Photos than any JS carousel snap.
