@@ -1,0 +1,489 @@
+Problem: Fullscreen image viewer on iPhone swipes feel heavy/bulky. The smaller in-page gallery feels smooth, but fullscreen does not.
+
+Tech:
+- React 18
+- Vite
+- embla-carousel-react
+- Framer Motion
+- Tailwind
+- Capacitor v7 iOS WKWebView
+- File: client/src/components/ImageGallery.tsx
+- Component: FullscreenViewer
+
+Current issue:
+The fullscreen carousel uses Embla inside a createPortal to document.body. It is wrapped in Framer Motion motion.div, fixed full viewport, black background, gradient overlay, close button, counter pill, arrows, and dot indicators. Images are large car photos from Google Cloud Storage, often around 2–4 MB each.
+
+The normal in-page gallery uses a small aspect-square container and feels smooth. The fullscreen one feels heavy/bulky when swiping left/right on iPhone.
+
+Already tried, but no improvement felt:
+- Removed style={{ touchAction: "pinch-zoom" }} from img
+- Added pointer-events-none to img
+- Added adjacent-image preloading with .decode()
+- Added transform-gpu / will-change-transform / backface-hidden to Embla track
+- Changed slide layout to match smooth detail-page gallery
+- Changed img from max-w-full max-h-full to w-full h-full
+- Set loading="lazy" for non-adjacent images
+
+Please inspect and improve the FullscreenViewer in client/src/components/ImageGallery.tsx.
+
+Ranked diagnosis:
+1. Most likely bottleneck: fullscreen is animating huge original images across the full iPhone viewport inside WKWebView. Even if JPEG is only 2–4 MB, decoded bitmap memory can be much larger. A 4000x3000 image is roughly 48 MB decoded. Swiping between multiple decoded full-res images can feel heavy.
+2. Framer Motion wrapper may be contributing because the fullscreen modal is a large fixed compositing layer containing huge images, overlays, buttons, and an inner transforming Embla track.
+3. The top gradient overlay may contribute to repaint/compositing cost on iOS WKWebView.
+4. position: fixed + portal can be a WebKit performance trap, but do not move away from portal first. Test layer promotion first.
+5. containScroll: "trimSnaps" is probably not the root cause, but remove it from fullscreen because it can make edge dragging feel stiff.
+6. CSS scroll-snap should only be tested after image resizing. If full-res images are the bottleneck, scroll-snap may still feel heavy.
+
+Main goal:
+Make fullscreen photo swiping feel closer to iPhone Photos: light, smooth, responsive, no bulky drag feel.
+
+Please apply these changes in order.
+
+1. Use a fullscreen-specific Embla config
+
+Replace the fullscreen Embla config with:
+
+const [emblaRef, emblaApi] = useEmblaCarousel({
+  startIndex: initialIndex,
+  loop: false,
+  align: "start",
+  dragFree: false,
+  skipSnaps: false,
+  duration: 18,
+});
+
+Do not use this in fullscreen:
+
+containScroll: "trimSnaps"
+
+Keep the normal in-page gallery unchanged unless necessary.
+
+2. Temporarily remove Framer Motion from the fullscreen viewer
+
+Replace AnimatePresence / motion.div in FullscreenViewer with a plain div for performance testing.
+
+Replace this pattern:
+
+<AnimatePresence>
+  {isFullscreen && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      className="fixed inset-0 z-[9999] bg-black"
+      dir="ltr"
+    >
+
+With:
+
+{isFullscreen && (
+  <div
+    className="fixed inset-0 z-[9999] bg-black transform-gpu backface-hidden isolate"
+    dir="ltr"
+    style={{
+      height: "100dvh",
+      WebkitTransform: "translate3d(0,0,0)",
+      transform: "translate3d(0,0,0)",
+      WebkitBackfaceVisibility: "hidden",
+      backfaceVisibility: "hidden",
+      contain: "layout paint size",
+    }}
+  >
+
+And close it with:
+
+  </div>
+)}
+
+Do not use AnimatePresence for this fullscreen test. If smoothness improves, we can re-add a very simple CSS opacity fade later.
+
+3. Temporarily remove the gradient overlay
+
+Remove this while testing:
+
+<div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-20" />
+
+If we still need a top shade, replace with the lighter solid version:
+
+<div className="absolute top-0 left-0 right-0 h-16 bg-black/40 pointer-events-none z-20" />
+
+The gradient may be forcing extra repaint/compositing cost on iOS WKWebView.
+
+4. Add layer isolation to the fullscreen modal and carousel
+
+Use this structure for the fullscreen carousel:
+
+<div
+  ref={emblaRef}
+  className="overflow-hidden w-full h-full transform-gpu backface-hidden"
+  dir="ltr"
+  style={{
+    height: "100dvh",
+    WebkitTransform: "translate3d(0,0,0)",
+    transform: "translate3d(0,0,0)",
+    WebkitBackfaceVisibility: "hidden",
+    backfaceVisibility: "hidden",
+    touchAction: "pan-y",
+  }}
+>
+  <div
+    className="flex h-full touch-pan-y transform-gpu backface-hidden"
+    style={{
+      willChange: "transform",
+      WebkitTransform: "translate3d(0,0,0)",
+      transform: "translate3d(0,0,0)",
+      WebkitBackfaceVisibility: "hidden",
+      backfaceVisibility: "hidden",
+    }}
+  >
+    {images.map((img, idx) => {
+      const shouldRenderImage = Math.abs(idx - index) <= 2;
+
+      return (
+        <div
+          key={idx}
+          className="relative flex-[0_0_100%] w-full min-w-0 h-full transform-gpu backface-hidden"
+          style={{
+            WebkitBackfaceVisibility: "hidden",
+            backfaceVisibility: "hidden",
+          }}
+        >
+          {shouldRenderImage ? (
+            <img
+              src={getFullscreenImageUrl(img)}
+              alt={`Image ${idx + 1}`}
+              loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
+              decoding="async"
+              draggable={false}
+              onError={retryObjectImg}
+              className="w-full h-full object-contain pointer-events-none select-none"
+              style={{
+                WebkitUserSelect: "none",
+                userSelect: "none",
+                WebkitTouchCallout: "none",
+              }}
+            />
+          ) : null}
+        </div>
+      );
+    })}
+  </div>
+</div>
+
+Important:
+- Only keep will-change on the moving Embla track.
+- Do not add will-change everywhere forever because it can increase memory pressure.
+- Keep pointer-events-none on images.
+- Keep draggable={false}.
+- Keep touchAction: "pan-y" on carousel container, not pinch-zoom on the image.
+
+5. Render only nearby fullscreen images
+
+Even if loading is lazy, mounting many fullscreen <img> elements can still add memory/compositing pressure.
+
+Use this logic:
+
+const shouldRenderImage = Math.abs(idx - index) <= 2;
+
+Only render the img when shouldRenderImage is true. Keep the slide div itself mounted so Embla slide widths stay correct.
+
+6. Preload resized fullscreen variants, not original images
+
+Add or update this helper:
+
+function getFullscreenImageUrl(src: string) {
+  // TODO: adjust to match the server image resize endpoint.
+  // The goal is to avoid using original 2–4 MB uploads in fullscreen.
+  if (src.startsWith("/objects/uploads/")) {
+    return `${src}?w=2000&q=82`;
+  }
+
+  return src;
+}
+
+Then update the preload effect to use the resized fullscreen URL:
+
+useEffect(() => {
+  if (!images?.length) return;
+
+  const targets = [index - 1, index, index + 1].filter(
+    (i) => i >= 0 && i < images.length,
+  );
+
+  targets.forEach((i) => {
+    const image = new Image();
+    image.src = getFullscreenImageUrl(images[i]);
+
+    if (image.decode) {
+      image.decode().catch(() => {});
+    }
+  });
+}, [index, images]);
+
+Important:
+If the backend currently ignores ?w=2000&q=82, implement server-side resizing or a resized-object endpoint. The current redirect endpoint may just sign the original GCS object, which will not fix the real issue.
+
+7. Add server-side resized fullscreen image variants
+
+Please inspect the existing image/object endpoint. Current images come from Google Cloud Storage through /objects/uploads/... and likely redirect to signed GCS URLs.
+
+Add support so fullscreen can request a resized version, for example:
+
+/objects/uploads/<id>?w=2000&q=82
+
+Server should return a resized optimized image, not the original file.
+
+Recommended fullscreen output:
+- max width: 1800–2000px
+- quality: 80–85
+- format: WebP if safely supported, otherwise JPEG
+- strip metadata
+- cache aggressively
+- keep original only for download/original view, not for swipe animation
+
+Recommended variants:
+- listing/thumbnail: 600–1000px wide
+- fullscreen: 1800–2000px wide
+- original: only if needed
+
+If using sharp, implement resize without enlarging:
+
+resize({
+  width: 2000,
+  withoutEnlargement: true,
+})
+
+Then encode:
+
+.webp({ quality: 82 })
+
+or fallback:
+
+.jpeg({ quality: 82, mozjpeg: true })
+
+Cache resized results if possible so the server does not resize every request.
+
+8. Keep selected index synced with Embla
+
+Use:
+
+useEffect(() => {
+  if (!emblaApi) return;
+
+  const updateSelected = () => {
+    setIndex(emblaApi.selectedScrollSnap());
+  };
+
+  updateSelected();
+  emblaApi.on("select", updateSelected);
+  emblaApi.on("reInit", updateSelected);
+
+  return () => {
+    emblaApi.off("select", updateSelected);
+    emblaApi.off("reInit", updateSelected);
+  };
+}, [emblaApi]);
+
+9. Make sure opening fullscreen does not jump
+
+After fullscreen opens and Embla is ready, ensure it starts at initialIndex without visible animation:
+
+useEffect(() => {
+  if (!isFullscreen || !emblaApi) return;
+
+  emblaApi.scrollTo(initialIndex, true);
+  emblaApi.reInit();
+}, [isFullscreen, emblaApi, initialIndex]);
+
+If reInit after scrollTo causes issues, test the order:
+
+emblaApi.reInit();
+emblaApi.scrollTo(initialIndex, true);
+
+10. Full test version structure
+
+Use this as the test version for FullscreenViewer:
+
+const [emblaRef, emblaApi] = useEmblaCarousel({
+  startIndex: initialIndex,
+  loop: false,
+  align: "start",
+  dragFree: false,
+  skipSnaps: false,
+  duration: 18,
+});
+
+function getFullscreenImageUrl(src: string) {
+  if (src.startsWith("/objects/uploads/")) {
+    return `${src}?w=2000&q=82`;
+  }
+
+  return src;
+}
+
+useEffect(() => {
+  if (!emblaApi) return;
+
+  const updateSelected = () => {
+    setIndex(emblaApi.selectedScrollSnap());
+  };
+
+  updateSelected();
+  emblaApi.on("select", updateSelected);
+  emblaApi.on("reInit", updateSelected);
+
+  return () => {
+    emblaApi.off("select", updateSelected);
+    emblaApi.off("reInit", updateSelected);
+  };
+}, [emblaApi]);
+
+useEffect(() => {
+  if (!isFullscreen || !emblaApi) return;
+
+  emblaApi.scrollTo(initialIndex, true);
+  emblaApi.reInit();
+}, [isFullscreen, emblaApi, initialIndex]);
+
+useEffect(() => {
+  if (!images?.length) return;
+
+  const targets = [index - 1, index, index + 1].filter(
+    (i) => i >= 0 && i < images.length,
+  );
+
+  targets.forEach((i) => {
+    const image = new Image();
+    image.src = getFullscreenImageUrl(images[i]);
+
+    if (image.decode) {
+      image.decode().catch(() => {});
+    }
+  });
+}, [index, images]);
+
+return createPortal(
+  <>
+    {isFullscreen && (
+      <div
+        className="fixed inset-0 z-[9999] bg-black transform-gpu backface-hidden isolate"
+        dir="ltr"
+        style={{
+          height: "100dvh",
+          WebkitTransform: "translate3d(0,0,0)",
+          transform: "translate3d(0,0,0)",
+          WebkitBackfaceVisibility: "hidden",
+          backfaceVisibility: "hidden",
+          contain: "layout paint size",
+        }}
+      >
+        {/* Test without gradient first. If smooth, re-add this instead of gradient:
+        <div className="absolute top-0 left-0 right-0 h-16 bg-black/40 pointer-events-none z-20" />
+        */}
+
+        {/* Keep existing close button, counter pill, arrows, and dots, but make sure they are not doing heavy animation while swiping. */}
+
+        <div
+          ref={emblaRef}
+          className="overflow-hidden w-full h-full transform-gpu backface-hidden"
+          dir="ltr"
+          style={{
+            height: "100dvh",
+            WebkitTransform: "translate3d(0,0,0)",
+            transform: "translate3d(0,0,0)",
+            WebkitBackfaceVisibility: "hidden",
+            backfaceVisibility: "hidden",
+            touchAction: "pan-y",
+          }}
+        >
+          <div
+            className="flex h-full touch-pan-y transform-gpu backface-hidden"
+            style={{
+              willChange: "transform",
+              WebkitTransform: "translate3d(0,0,0)",
+              transform: "translate3d(0,0,0)",
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+            }}
+          >
+            {images.map((img, idx) => {
+              const shouldRenderImage = Math.abs(idx - index) <= 2;
+
+              return (
+                <div
+                  key={idx}
+                  className="relative flex-[0_0_100%] w-full min-w-0 h-full transform-gpu backface-hidden"
+                  style={{
+                    WebkitBackfaceVisibility: "hidden",
+                    backfaceVisibility: "hidden",
+                  }}
+                >
+                  {shouldRenderImage ? (
+                    <img
+                      src={getFullscreenImageUrl(img)}
+                      alt={`Image ${idx + 1}`}
+                      loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
+                      decoding="async"
+                      draggable={false}
+                      onError={retryObjectImg}
+                      className="w-full h-full object-contain pointer-events-none select-none"
+                      style={{
+                        WebkitUserSelect: "none",
+                        userSelect: "none",
+                        WebkitTouchCallout: "none",
+                      }}
+                    />
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    )}
+  </>,
+  document.body,
+);
+
+11. Optional test: CSS scroll-snap only after resizing images
+
+Do not switch first. Only test this if resized images + simplified modal still feel bulky.
+
+Test version:
+
+<div
+  className="fixed inset-0 z-[9999] bg-black overflow-x-auto flex snap-x snap-mandatory"
+  style={{
+    height: "100dvh",
+    WebkitOverflowScrolling: "touch",
+    scrollBehavior: "smooth",
+  }}
+>
+  {images.map((img, idx) => (
+    <div
+      key={idx}
+      className="snap-center shrink-0 w-screen h-[100dvh]"
+    >
+      <img
+        src={getFullscreenImageUrl(img)}
+        className="w-full h-full object-contain pointer-events-none select-none"
+        draggable={false}
+      />
+    </div>
+  ))}
+</div>
+
+Only compare this after the image size issue is fixed.
+
+Final recommendation:
+Ship in this order:
+1. Add server-side resized fullscreen images capped around 1800–2000px.
+2. Preload resized fullscreen variants, not originals.
+3. Render only current ±2 fullscreen images.
+4. Remove Framer Motion from the fullscreen viewer or replace it later with simple CSS opacity after performance is fixed.
+5. Remove the gradient overlay or replace it with a simple solid translucent top bar.
+6. Use fullscreen-specific Embla config without containScroll.
+7. Keep the portal unless testing proves it is the problem.
+
+The highest-confidence fix is not more CSS. The highest-confidence fix is to stop animating full-resolution 2–4 MB car photos across the entire iPhone viewport inside Capacitor iOS WKWebView.
