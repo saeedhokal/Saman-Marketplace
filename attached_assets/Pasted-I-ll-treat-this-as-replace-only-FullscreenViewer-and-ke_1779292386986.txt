@@ -1,0 +1,583 @@
+I’ll treat this as “replace only FullscreenViewer” and keep the rest of ImageGallery.tsx untouched. I’m going to avoid a native-scroll hybrid because once iOS momentum starts, cleanly overriding it is unreliable in WKWebView.
+
+I found the main trap: the transition problem is probably not only WebKit batching. Your code also updates React index immediately on release, which can re-render the guarded slides during the same frame as the release animation.
+
+Thought for 1m 4s
+
+Your Attempt 3 feels instant mainly because the release animation is not being given a clean “painted start state.”
+
+You drag with:
+
+transition = "none";
+transform = currentDragPx;
+
+Then on pointerup, in the same task/frame, you do:
+
+transition = "transform 340ms ...";
+transform = targetPx;
+
+In iOS WebKit, that can be batched so the browser only sees the final transform, not “start transform → animate to target.” CSS transitions only animate when the browser observes a property changing between states with a transition active. MDN describes transitions as the browser interpolating between states, including states changed dynamically by JavaScript.
+
+Also important: your settleTo() immediately does:
+
+setIndex(clamped);
+onIndexChange(clamped);
+
+That means React may re-render your guarded slide tree in the same frame you are trying to start the transform animation. On iPhone Safari/WKWebView, this can make the compositor treat the track like a new layout state and the slide appears to “teleport.”
+
+The best fix is: do not use CSS transition for the release. Use Web Animations API with explicit from and to transforms, and only update React index after the animation finishes.
+
+PhotoSwipe v5 is probably the closest off-the-shelf “mobile gallery” library; its own docs say v5 improved animation performance and touch gesture fluidity, and it is designed as a dialog/lightbox. But it expects predefined image dimensions and brings its own UI/zoom assumptions, so it is not a clean drop-in for your exact guarded custom viewer.
+
+Swiper can be configured with fixed speed, and it has cssMode using CSS Scroll Snap, but that brings you back to the same native snap behavior you already disliked.
+
+Use this pattern instead.
+
+function FullscreenViewer({
+  images,
+  initialIndex,
+  onClose,
+  onIndexChange,
+}: {
+  images: string[];
+  initialIndex: number;
+  onClose: () => void;
+  onIndexChange: (index: number) => void;
+}) {
+  const [index, setIndex] = React.useState(initialIndex);
+  const [pendingRenderIndex, setPendingRenderIndex] = React.useState<number | null>(null);
+
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const trackRef = React.useRef<HTMLDivElement | null>(null);
+
+  const indexRef = React.useRef(initialIndex);
+  const widthRef = React.useRef(0);
+  const currentXRef = React.useRef(0);
+
+  const draggingRef = React.useRef(false);
+  const activePointerIdRef = React.useRef<number | null>(null);
+  const startXRef = React.useRef(0);
+  const startYRef = React.useRef(0);
+  const lastXRef = React.useRef(0);
+  const lastTRef = React.useRef(0);
+  const velocityRef = React.useRef(0);
+  const dragOffsetRef = React.useRef(0);
+  const lockedAxisRef = React.useRef<"x" | "y" | null>(null);
+
+  const animationRef = React.useRef<Animation | null>(null);
+
+  const SWIPE_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+  const SWIPE_DURATION_MS = 340;
+
+  const total = images.length;
+
+  const clampIndex = React.useCallback(
+    (value: number) => Math.max(0, Math.min(total - 1, value)),
+    [total]
+  );
+
+  const getWidth = React.useCallback(() => {
+    const w = containerRef.current?.clientWidth || window.innerWidth || 1;
+    widthRef.current = w;
+    return w;
+  }, []);
+
+  const setX = React.useCallback((x: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    currentXRef.current = x;
+    track.style.transform = `translate3d(${x}px, 0, 0)`;
+  }, []);
+
+  const cancelAnimation = React.useCallback(() => {
+    const anim = animationRef.current;
+    if (anim) {
+      anim.cancel();
+      animationRef.current = null;
+    }
+  }, []);
+
+  const commitIndex = React.useCallback(
+    (nextIndex: number) => {
+      indexRef.current = nextIndex;
+      setIndex(nextIndex);
+      setPendingRenderIndex(null);
+      onIndexChange(nextIndex);
+    },
+    [onIndexChange]
+  );
+
+  const animateToIndex = React.useCallback(
+    (targetIndexRaw: number, animated = true) => {
+      const track = trackRef.current;
+      if (!track) return;
+
+      const targetIndex = clampIndex(targetIndexRaw);
+      const w = getWidth();
+
+      cancelAnimation();
+
+      const fromX = currentXRef.current;
+      const toX = -targetIndex * w;
+
+      setPendingRenderIndex(targetIndex);
+
+      // Important: lock the current visual transform as inline style first.
+      track.style.transition = "none";
+      track.style.willChange = "transform";
+      track.style.transform = `translate3d(${fromX}px, 0, 0)`;
+      currentXRef.current = fromX;
+
+      if (!animated || Math.abs(fromX - toX) < 0.5) {
+        setX(toX);
+        commitIndex(targetIndex);
+        return;
+      }
+
+      // WAAPI is more reliable here than flipping CSS transition none -> active.
+      // It gets explicit keyframes, so WebKit does not need to infer the start state.
+      const anim = track.animate(
+        [
+          { transform: `translate3d(${fromX}px, 0, 0)` },
+          { transform: `translate3d(${toX}px, 0, 0)` },
+        ],
+        {
+          duration: SWIPE_DURATION_MS,
+          easing: SWIPE_EASE,
+          fill: "both",
+        }
+      );
+
+      animationRef.current = anim;
+
+      anim.onfinish = () => {
+        if (animationRef.current !== anim) return;
+
+        animationRef.current = null;
+
+        // Commit the final transform as normal inline style.
+        // Then cancel the animation so future drags start from a real style value.
+        setX(toX);
+        anim.cancel();
+
+        commitIndex(targetIndex);
+      };
+
+      anim.oncancel = () => {
+        if (animationRef.current === anim) {
+          animationRef.current = null;
+        }
+      };
+    },
+    [cancelAnimation, clampIndex, commitIndex, getWidth, setX]
+  );
+
+  const jumpToIndex = React.useCallback(
+    (targetIndexRaw: number) => {
+      const targetIndex = clampIndex(targetIndexRaw);
+      animateToIndex(targetIndex, true);
+    },
+    [animateToIndex, clampIndex]
+  );
+
+  React.useEffect(() => {
+    indexRef.current = initialIndex;
+    setIndex(initialIndex);
+    setPendingRenderIndex(initialIndex);
+
+    let raf = 0;
+    let tries = 0;
+
+    const align = () => {
+      const w = containerRef.current?.clientWidth || 0;
+
+      if (!w && tries < 10) {
+        tries += 1;
+        raf = requestAnimationFrame(align);
+        return;
+      }
+
+      const realW = getWidth();
+      const x = -initialIndex * realW;
+
+      cancelAnimation();
+      setX(x);
+      setPendingRenderIndex(null);
+    };
+
+    raf = requestAnimationFrame(align);
+
+    return () => cancelAnimationFrame(raf);
+  }, [initialIndex, getWidth, cancelAnimation, setX]);
+
+  React.useEffect(() => {
+    const preloadIndexes = [
+      index - 2,
+      index - 1,
+      index,
+      index + 1,
+      index + 2,
+    ].filter((i) => i >= 0 && i < total);
+
+    let cancelled = false;
+
+    preloadIndexes.forEach((i) => {
+      const img = new Image();
+      img.src = getFullscreenImageUrl(images[i]);
+
+      if (img.decode) {
+        img.decode().catch(() => {
+          // Ignore decode failures; browser will still try normal image load.
+        });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      void cancelled;
+    };
+  }, [images, index, total]);
+
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        jumpToIndex(indexRef.current - 1);
+      }
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        jumpToIndex(indexRef.current + 1);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [jumpToIndex, onClose]);
+
+  React.useEffect(() => {
+    const onResize = () => {
+      if (draggingRef.current) return;
+
+      const w = getWidth();
+      const x = -indexRef.current * w;
+
+      cancelAnimation();
+      setX(x);
+    };
+
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, [cancelAnimation, getWidth, setX]);
+
+  React.useEffect(() => {
+    return () => {
+      cancelAnimation();
+    };
+  }, [cancelAnimation]);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (draggingRef.current) return;
+
+    const container = containerRef.current;
+    const track = trackRef.current;
+    if (!container || !track) return;
+
+    cancelAnimation();
+
+    const w = container.clientWidth || window.innerWidth || 1;
+    widthRef.current = w;
+
+    draggingRef.current = true;
+    activePointerIdRef.current = e.pointerId;
+
+    startXRef.current = e.clientX;
+    startYRef.current = e.clientY;
+    lastXRef.current = e.clientX;
+    lastTRef.current = performance.now();
+
+    velocityRef.current = 0;
+    dragOffsetRef.current = 0;
+    lockedAxisRef.current = null;
+
+    track.style.transition = "none";
+    track.style.willChange = "transform";
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    if (activePointerIdRef.current !== e.pointerId) return;
+
+    const dx = e.clientX - startXRef.current;
+    const dy = e.clientY - startYRef.current;
+
+    if (lockedAxisRef.current === null) {
+      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+        lockedAxisRef.current = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
+      } else {
+        return;
+      }
+    }
+
+    if (lockedAxisRef.current === "y") return;
+
+    e.preventDefault();
+
+    const now = performance.now();
+    const dt = Math.max(1, now - lastTRef.current);
+    const instantVelocity = (e.clientX - lastXRef.current) / dt;
+
+    velocityRef.current = velocityRef.current * 0.6 + instantVelocity * 0.4;
+    lastXRef.current = e.clientX;
+    lastTRef.current = now;
+
+    const w = widthRef.current || getWidth();
+
+    let offset = dx;
+
+    // iPhone-like edge resistance.
+    if (indexRef.current === 0 && dx > 0) {
+      offset = dx * 0.35;
+    }
+
+    if (indexRef.current === total - 1 && dx < 0) {
+      offset = dx * 0.35;
+    }
+
+    dragOffsetRef.current = offset;
+
+    const x = -indexRef.current * w + offset;
+    setX(x);
+  };
+
+  const finishPointer = (
+    e: React.PointerEvent<HTMLDivElement>,
+    cancelled: boolean
+  ) => {
+    if (!draggingRef.current) return;
+    if (activePointerIdRef.current !== e.pointerId) return;
+
+    draggingRef.current = false;
+
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Pointer capture may already be gone.
+    }
+
+    activePointerIdRef.current = null;
+
+    if (cancelled || lockedAxisRef.current !== "x") {
+      animateToIndex(indexRef.current, true);
+      return;
+    }
+
+    const w = widthRef.current || getWidth();
+    const dragOffset = dragOffsetRef.current;
+    const velocity = velocityRef.current;
+
+    const distanceThreshold = w * 0.18;
+    const velocityThreshold = 0.35;
+
+    let target = indexRef.current;
+
+    if (dragOffset <= -distanceThreshold || velocity <= -velocityThreshold) {
+      target += 1;
+    } else if (dragOffset >= distanceThreshold || velocity >= velocityThreshold) {
+      target -= 1;
+    }
+
+    target = clampIndex(target);
+
+    animateToIndex(target, true);
+  };
+
+  const shouldRenderSlide = (slideIndex: number) => {
+    const current = index;
+    const pending = pendingRenderIndex;
+
+    if (Math.abs(slideIndex - current) <= 2) return true;
+    if (pending !== null && Math.abs(slideIndex - pending) <= 2) return true;
+
+    return false;
+  };
+
+  const canGoPrev = indexRef.current > 0;
+  const canGoNext = indexRef.current < total - 1;
+
+  const viewer = (
+    <div
+      className="fixed inset-0 z-[9999] bg-black text-white overflow-hidden select-none"
+      style={{
+        height: "100dvh",
+        touchAction: "none",
+        WebkitUserSelect: "none",
+        userSelect: "none",
+      }}
+    >
+      <div
+        ref={containerRef}
+        className="absolute inset-0 overflow-hidden bg-black"
+        style={{
+          height: "100dvh",
+          touchAction: "none",
+          contain: "layout paint size",
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={(e) => finishPointer(e, false)}
+        onPointerCancel={(e) => finishPointer(e, true)}
+        onLostPointerCapture={(e) => {
+          if (draggingRef.current && activePointerIdRef.current === e.pointerId) {
+            finishPointer(e, true);
+          }
+        }}
+      >
+        <div
+          ref={trackRef}
+          className="flex h-full"
+          style={{
+            width: `${total * 100}%`,
+            height: "100dvh",
+            transform: `translate3d(${-initialIndex * 100}%, 0, 0)`,
+            willChange: "transform",
+          }}
+        >
+          {images.map((img, idx) => (
+            <div
+              key={`${idx}-${img}`}
+              className="relative h-full flex items-center justify-center bg-black"
+              style={{
+                flex: "0 0 100vw",
+                width: "100vw",
+                height: "100dvh",
+              }}
+            >
+              {shouldRenderSlide(idx) ? (
+                <img
+                  src={getFullscreenImageUrl(img)}
+                  alt=""
+                  draggable={false}
+                  className="pointer-events-none select-none object-contain"
+                  style={{
+                    width: "100%",
+                    height: "100dvh",
+                    WebkitUserSelect: "none",
+                    userSelect: "none",
+                    WebkitTouchCallout: "none",
+                  }}
+                />
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="absolute left-0 right-0 top-0 z-20 h-16 bg-black/40 flex items-center justify-between px-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className="h-10 w-10 rounded-full bg-black/40 text-white flex items-center justify-center text-2xl leading-none"
+          aria-label="Close fullscreen viewer"
+        >
+          ×
+        </button>
+
+        <div className="text-sm font-medium tabular-nums">
+          {index + 1} / {total}
+        </div>
+      </div>
+
+      {total > 1 ? (
+        <>
+          <button
+            type="button"
+            onClick={() => jumpToIndex(indexRef.current - 1)}
+            disabled={!canGoPrev}
+            className="absolute left-3 top-1/2 z-20 -translate-y-1/2 h-11 w-11 rounded-full bg-black/35 text-white text-3xl leading-none flex items-center justify-center disabled:opacity-25"
+            aria-label="Previous photo"
+          >
+            ‹
+          </button>
+
+          <button
+            type="button"
+            onClick={() => jumpToIndex(indexRef.current + 1)}
+            disabled={!canGoNext}
+            className="absolute right-3 top-1/2 z-20 -translate-y-1/2 h-11 w-11 rounded-full bg-black/35 text-white text-3xl leading-none flex items-center justify-center disabled:opacity-25"
+            aria-label="Next photo"
+          >
+            ›
+          </button>
+
+          <div className="absolute bottom-5 left-0 right-0 z-20 flex items-center justify-center gap-1.5">
+            {images.map((_, dotIndex) => (
+              <button
+                key={dotIndex}
+                type="button"
+                onClick={() => jumpToIndex(dotIndex)}
+                className={
+                  dotIndex === index
+                    ? "h-2 w-2 rounded-full bg-white"
+                    : "h-2 w-2 rounded-full bg-white/40"
+                }
+                aria-label={`Go to photo ${dotIndex + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+
+  return createPortal(viewer, document.body);
+}
+
+One important detail: I set touchAction: "none" on the fullscreen viewer. For this specific fullscreen modal, that is better than pan-y. You are not scrolling the page behind it, and you want full ownership of the horizontal gesture. If you want to allow vertical swipe-to-close later, then you can build that yourself inside the same pointer system.
+
+If you still want the CSS transition version, the correct WebKit-safe pattern is this:
+
+function cssTransitionTo(track: HTMLElement, fromX: number, toX: number) {
+  track.style.transition = "none";
+  track.style.transform = `translate3d(${fromX}px, 0, 0)`;
+
+  // Force WebKit to observe the no-transition start state.
+  track.getBoundingClientRect();
+
+  requestAnimationFrame(() => {
+    track.style.transition =
+      "transform 340ms cubic-bezier(0.32, 0.72, 0, 1)";
+    track.style.transform = `translate3d(${toX}px, 0, 0)`;
+  });
+}
+
+But I would not use that for your case. WAAPI is cleaner because it does not depend on WebKit noticing a transition flip from none to active in the same release frame.
+
+Do not try to keep native CSS scroll-snap and override fast flicks with scrollTo({ behavior: "smooth" }). By the time touchend fires, iOS may already have native momentum/snap in progress. You can fight it by temporarily disabling overflow, reading scrollLeft, then restoring and programmatically scrolling, but that usually causes exactly the kind of “jump then animate” feeling you are trying to remove.
+
+The key changes versus your current Attempt 3 are:
+
+WAAPI release animation with explicit from and to.
+No setIndex() until animation finishes.
+Guarded slides render around both current index and pending target index.
+Cancel previous animations before drag/dot/arrow input.
+Commit final transform into inline style after animation finishes, then cancel the animation object.
+
+That should stop the iPhone “instant snap” caused by WebKit batching plus React re-render timing.
