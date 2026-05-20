@@ -1,10 +1,18 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import useEmblaCarousel from "embla-carousel-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { retryObjectImg } from "@/lib/bustObjectUrl";
+
+function getFullscreenImageUrl(src: string): string {
+  if (!src) return src;
+  if (src.startsWith("/objects/")) {
+    const sep = src.includes("?") ? "&" : "?";
+    return `${src}${sep}w=2000&q=82`;
+  }
+  return src;
+}
 
 interface ImageGalleryProps {
   images: string[];
@@ -156,20 +164,16 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
         </div>
       )}
 
-      {createPortal(
-        <AnimatePresence>
-          {isFullscreen && (
-            <FullscreenViewer
-              images={images}
-              initialIndex={currentIndex}
-              onClose={() => setIsFullscreen(false)}
-              onIndexChange={(idx) => {
-                setCurrentIndex(idx);
-                emblaApi?.scrollTo(idx, true);
-              }}
-            />
-          )}
-        </AnimatePresence>,
+      {isFullscreen && createPortal(
+        <FullscreenViewer
+          images={images}
+          initialIndex={currentIndex}
+          onClose={() => setIsFullscreen(false)}
+          onIndexChange={(idx) => {
+            setCurrentIndex(idx);
+            emblaApi?.scrollTo(idx, true);
+          }}
+        />,
         document.body
       )}
     </div>
@@ -227,22 +231,19 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     );
     targets.forEach((i) => {
       const img = new Image();
-      img.src = images[i];
+      img.src = getFullscreenImageUrl(images[i]);
       if (img.decode) img.decode().catch(() => {});
     });
   }, [index, images]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
+    <div
       className="fixed inset-0 z-[9999] bg-black"
       dir="ltr"
       data-testid="fullscreen-gallery"
+      style={{ height: "100dvh" }}
     >
-      <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-20" />
+      <div className="absolute top-0 left-0 right-0 h-16 bg-black/40 pointer-events-none z-20" />
 
       <button
         className="absolute top-[env(safe-area-inset-top,24px)] right-4 z-30 text-white p-2 hover:bg-white/10 rounded-full transition-colors"
@@ -256,25 +257,38 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
         {index + 1} / {images.length}
       </div>
 
-      <div ref={emblaRef} className="overflow-hidden w-full h-full" dir="ltr">
-        <div className="flex h-full touch-pan-y transform-gpu will-change-transform backface-hidden">
-          {images.map((img, idx) => (
-            <div
-              key={idx}
-              className="relative flex-[0_0_100%] min-w-0 h-full"
-              data-testid={`fullscreen-slide-${idx}`}
-            >
-              <img
-                src={img}
-                alt={`Image ${idx + 1}`}
-                loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
-                decoding="async"
-                draggable={false}
-                onError={retryObjectImg}
-                className="w-full h-full object-contain pointer-events-none select-none"
-              />
-            </div>
-          ))}
+      <div
+        ref={emblaRef}
+        className="overflow-hidden w-full h-full"
+        dir="ltr"
+        style={{ height: "100dvh", touchAction: "pan-y" }}
+      >
+        <div
+          className="flex h-full touch-pan-y transform-gpu backface-hidden"
+          style={{ willChange: "transform" }}
+        >
+          {images.map((img, idx) => {
+            const shouldRenderImage = Math.abs(idx - index) <= 2;
+            return (
+              <div
+                key={idx}
+                className="relative flex-[0_0_100%] min-w-0 h-full"
+                data-testid={`fullscreen-slide-${idx}`}
+              >
+                {shouldRenderImage ? (
+                  <img
+                    src={getFullscreenImageUrl(img)}
+                    alt={`Image ${idx + 1}`}
+                    loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
+                    decoding="async"
+                    draggable={false}
+                    onError={retryObjectImg}
+                    className="w-full h-full object-contain pointer-events-none select-none"
+                  />
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -302,6 +316,6 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
           </div>
         </>
       )}
-    </motion.div>
+    </div>
   );
 }

@@ -1,5 +1,55 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
+import sharp from "sharp";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+
+type ResizedEntry = { body: Buffer; contentType: string };
+const RESIZE_CACHE_MAX_ENTRIES = 60;
+const RESIZE_CACHE_MAX_BYTES = 80 * 1024 * 1024;
+let resizedCacheBytes = 0;
+const resizedCache = new Map<string, ResizedEntry>();
+
+function cacheGet(key: string): ResizedEntry | undefined {
+  const entry = resizedCache.get(key);
+  if (!entry) return undefined;
+  resizedCache.delete(key);
+  resizedCache.set(key, entry);
+  return entry;
+}
+
+function cacheEvictOne() {
+  const oldestKey = resizedCache.keys().next().value;
+  if (oldestKey === undefined) return;
+  const oldest = resizedCache.get(oldestKey);
+  resizedCache.delete(oldestKey);
+  if (oldest) resizedCacheBytes -= oldest.body.length;
+}
+
+function cacheSet(key: string, entry: ResizedEntry) {
+  while (
+    resizedCache.size >= RESIZE_CACHE_MAX_ENTRIES ||
+    resizedCacheBytes + entry.body.length > RESIZE_CACHE_MAX_BYTES
+  ) {
+    if (resizedCache.size === 0) break;
+    cacheEvictOne();
+  }
+  resizedCache.set(key, entry);
+  resizedCacheBytes += entry.body.length;
+}
+
+function parseResizeParams(req: Request): { width: number; quality: number } | null {
+  const widthRaw = req.query.w;
+  if (typeof widthRaw !== "string") return null;
+  const width = parseInt(widthRaw, 10);
+  if (!Number.isFinite(width) || width <= 0) return null;
+  const clampedWidth = Math.min(Math.max(width, 64), 3000);
+  const qualityRaw = req.query.q;
+  let quality = 82;
+  if (typeof qualityRaw === "string") {
+    const q = parseInt(qualityRaw, 10);
+    if (Number.isFinite(q)) quality = Math.min(Math.max(q, 40), 95);
+  }
+  return { width: clampedWidth, quality };
+}
 
 /**
  * Register object storage routes for file uploads.
@@ -74,6 +124,32 @@ export function registerObjectStorageRoutes(app: Express): void {
     try {
       const objectPath = req.params[0];
       const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${objectPath}`);
+
+      const resize = parseResizeParams(req);
+      if (resize) {
+        const accept = (req.headers.accept as string) || "";
+        const useWebp = accept.includes("image/webp");
+        const format = useWebp ? "webp" : "jpeg";
+        const cacheKey = `${objectPath}|${resize.width}|${resize.quality}|${format}`;
+        let entry = cacheGet(cacheKey);
+        if (!entry) {
+          const [buffer] = await objectFile.download();
+          const pipeline = sharp(buffer)
+            .rotate()
+            .resize({ width: resize.width, withoutEnlargement: true });
+          const body = useWebp
+            ? await pipeline.webp({ quality: resize.quality }).toBuffer()
+            : await pipeline.jpeg({ quality: resize.quality, mozjpeg: true }).toBuffer();
+          entry = { body, contentType: useWebp ? "image/webp" : "image/jpeg" };
+          cacheSet(cacheKey, entry);
+        }
+        res.set("Content-Type", entry.contentType);
+        res.set("Cache-Control", "public, max-age=31536000, immutable");
+        res.set("Vary", "Accept");
+        res.set("Content-Length", String(entry.body.length));
+        return res.end(entry.body);
+      }
+
       const signedUrl = await objectStorageService.getSignedDownloadURL(objectFile);
       // Cache the 302 redirect for ~20 hours. The redirect points to a signed
       // GCS URL that expires in 5-6 days, so 20h is always safely inside the
