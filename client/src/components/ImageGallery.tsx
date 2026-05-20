@@ -352,7 +352,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
                 width: "100%",
                 minWidth: "100%",
                 scrollSnapAlign: "center",
-                scrollSnapStop: "normal",
+                scrollSnapStop: "always",
               }}
               data-testid={`fullscreen-slide-${idx}`}
             >
