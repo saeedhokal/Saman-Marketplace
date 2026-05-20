@@ -9,7 +9,7 @@ function getFullscreenImageUrl(src: string): string {
   if (!src) return src;
   if (src.startsWith("/objects/")) {
     const sep = src.includes("?") ? "&" : "?";
-    return `${src}${sep}w=2000&q=82`;
+    return `${src}${sep}w=1400&q=80`;
   }
   return src;
 }
@@ -192,8 +192,9 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     startIndex: initialIndex,
     loop: false,
     align: "start",
-    containScroll: "trimSnaps",
-    duration: 22,
+    dragFree: false,
+    skipSnaps: false,
+    duration: 18,
   });
   const [index, setIndex] = useState(initialIndex);
 
