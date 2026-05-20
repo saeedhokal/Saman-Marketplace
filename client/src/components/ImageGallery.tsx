@@ -187,34 +187,65 @@ interface FullscreenViewerProps {
   onIndexChange: (idx: number) => void;
 }
 
+const SWIPE_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+const SWIPE_DURATION_MS = 340;
+
 function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: FullscreenViewerProps) {
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
   const [index, setIndex] = useState(initialIndex);
   const indexRef = useRef(initialIndex);
+  const widthRef = useRef(0);
   const onIndexChangeRef = useRef(onIndexChange);
-  const rafRef = useRef<number | null>(null);
-  const programmaticUntilRef = useRef(0);
-  const initialAlignDoneRef = useRef(false);
+
+  const draggingRef = useRef(false);
+  const activePointerRef = useRef<number | null>(null);
+  const startXRef = useRef(0);
+  const startYRef = useRef(0);
+  const lockedAxisRef = useRef<"x" | "y" | null>(null);
+  const lastXRef = useRef(0);
+  const lastTRef = useRef(0);
+  const velocityRef = useRef(0);
+  const dragOffsetRef = useRef(0);
 
   useEffect(() => {
     onIndexChangeRef.current = onIndexChange;
   }, [onIndexChange]);
 
+  const setTrackTransform = useCallback((px: number, animated: boolean) => {
+    const t = trackRef.current;
+    if (!t) return;
+    t.style.transition = animated
+      ? `transform ${SWIPE_DURATION_MS}ms ${SWIPE_EASE}`
+      : "none";
+    t.style.transform = `translate3d(${px}px, 0, 0)`;
+  }, []);
+
+  const settleTo = useCallback((targetIndex: number, animated: boolean) => {
+    const clamped = Math.max(0, Math.min(images.length - 1, targetIndex));
+    const w = widthRef.current || containerRef.current?.clientWidth || 0;
+    if (w > 0) widthRef.current = w;
+    setTrackTransform(-clamped * w, animated);
+    if (clamped !== indexRef.current) {
+      indexRef.current = clamped;
+      setIndex(clamped);
+      onIndexChangeRef.current(clamped);
+    }
+  }, [images.length, setTrackTransform]);
+
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    initialAlignDoneRef.current = false;
     indexRef.current = initialIndex;
     setIndex(initialIndex);
     let cancelled = false;
     let attempts = 0;
     const tryAlign = () => {
       if (cancelled) return;
-      const w = el.clientWidth;
+      const c = containerRef.current;
+      if (!c) return;
+      const w = c.clientWidth;
       if (w > 0) {
-        el.scrollLeft = initialIndex * w;
-        programmaticUntilRef.current = Date.now() + 200;
-        initialAlignDoneRef.current = true;
+        widthRef.current = w;
+        setTrackTransform(-initialIndex * w, false);
         return;
       }
       if (attempts++ < 30) {
@@ -225,45 +256,18 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     return () => {
       cancelled = true;
     };
-  }, [initialIndex]);
-
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    const handleScroll = () => {
-      if (rafRef.current !== null) return;
-      rafRef.current = window.requestAnimationFrame(() => {
-        rafRef.current = null;
-        if (!initialAlignDoneRef.current) return;
-        if (Date.now() < programmaticUntilRef.current) return;
-        const w = el.clientWidth;
-        if (w <= 0) return;
-        const i = Math.round(el.scrollLeft / w);
-        const clamped = Math.max(0, Math.min(images.length - 1, i));
-        if (clamped !== indexRef.current) {
-          indexRef.current = clamped;
-          setIndex(clamped);
-          onIndexChangeRef.current(clamped);
-        }
-      });
-    };
-
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-      if (rafRef.current !== null) {
-        window.cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-    };
-  }, [images.length]);
+  }, [initialIndex, setTrackTransform]);
 
   useEffect(() => {
     const handleResize = () => {
-      const el = scrollerRef.current;
-      if (!el) return;
-      el.scrollLeft = indexRef.current * el.clientWidth;
+      const c = containerRef.current;
+      if (!c) return;
+      const w = c.clientWidth;
+      if (w <= 0) return;
+      widthRef.current = w;
+      if (!draggingRef.current) {
+        setTrackTransform(-indexRef.current * w, false);
+      }
     };
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleResize);
@@ -271,18 +275,100 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleResize);
     };
+  }, [setTrackTransform]);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (draggingRef.current) return;
+    const c = containerRef.current;
+    if (!c) return;
+    const w = c.clientWidth;
+    if (w > 0) widthRef.current = w;
+    draggingRef.current = true;
+    activePointerRef.current = e.pointerId;
+    startXRef.current = e.clientX;
+    startYRef.current = e.clientY;
+    lockedAxisRef.current = null;
+    lastXRef.current = e.clientX;
+    lastTRef.current = performance.now();
+    velocityRef.current = 0;
+    dragOffsetRef.current = 0;
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
+    const tr = trackRef.current;
+    if (tr) tr.style.transition = "none";
   }, []);
 
-  const scrollToIndex = useCallback((i: number, smooth: boolean) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const clamped = Math.max(0, Math.min(images.length - 1, i));
-    el.scrollTo({ left: clamped * el.clientWidth, behavior: smooth ? "smooth" : "auto" });
-  }, [images.length]);
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current || activePointerRef.current !== e.pointerId) return;
+    const dx = e.clientX - startXRef.current;
+    const dy = e.clientY - startYRef.current;
+    if (lockedAxisRef.current === null) {
+      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+        lockedAxisRef.current = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
+      } else {
+        return;
+      }
+    }
+    if (lockedAxisRef.current === "y") return;
 
-  const goPrev = useCallback(() => scrollToIndex(indexRef.current - 1, true), [scrollToIndex]);
-  const goNext = useCallback(() => scrollToIndex(indexRef.current + 1, true), [scrollToIndex]);
-  const goTo = useCallback((i: number) => scrollToIndex(i, true), [scrollToIndex]);
+    dragOffsetRef.current = dx;
+    const now = performance.now();
+    const dt = now - lastTRef.current;
+    if (dt > 0) {
+      const inst = (e.clientX - lastXRef.current) / dt;
+      velocityRef.current = velocityRef.current * 0.6 + inst * 0.4;
+    }
+    lastXRef.current = e.clientX;
+    lastTRef.current = now;
+
+    const w = widthRef.current || 1;
+    let offset = dx;
+    if (indexRef.current === 0 && dx > 0) offset = dx * 0.35;
+    if (indexRef.current === images.length - 1 && dx < 0) offset = dx * 0.35;
+    setTrackTransform(-indexRef.current * w + offset, false);
+  }, [images.length, setTrackTransform]);
+
+  const finishDrag = useCallback((e: React.PointerEvent<HTMLDivElement>, cancelled: boolean) => {
+    if (!draggingRef.current || activePointerRef.current !== e.pointerId) return;
+    draggingRef.current = false;
+    activePointerRef.current = null;
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {}
+
+    if (cancelled || lockedAxisRef.current !== "x") {
+      settleTo(indexRef.current, true);
+      return;
+    }
+
+    const w = widthRef.current || 1;
+    const dx = dragOffsetRef.current;
+    const v = velocityRef.current;
+    const distanceThreshold = w * 0.18;
+    const velocityThreshold = 0.35;
+
+    let target = indexRef.current;
+    if (dx <= -distanceThreshold || v <= -velocityThreshold) {
+      target = indexRef.current + 1;
+    } else if (dx >= distanceThreshold || v >= velocityThreshold) {
+      target = indexRef.current - 1;
+    }
+    settleTo(target, true);
+  }, [settleTo]);
+
+  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    finishDrag(e, false);
+  }, [finishDrag]);
+
+  const handlePointerCancel = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    finishDrag(e, true);
+  }, [finishDrag]);
+
+  const goPrev = useCallback(() => settleTo(indexRef.current - 1, true), [settleTo]);
+  const goNext = useCallback(() => settleTo(indexRef.current + 1, true), [settleTo]);
+  const goTo = useCallback((i: number) => settleTo(i, true), [settleTo]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -313,7 +399,6 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
       data-testid="fullscreen-gallery"
       style={{ height: "100dvh" }}
     >
-      <style>{`.saman-fullscreen-scroller::-webkit-scrollbar { display: none; width: 0; height: 0; }`}</style>
       <div className="absolute top-0 left-0 right-0 h-16 bg-black/40 pointer-events-none z-20" />
 
       <button
@@ -329,47 +414,53 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
       </div>
 
       <div
-        ref={scrollerRef}
-        className="saman-fullscreen-scroller w-full h-full overflow-x-auto overflow-y-hidden flex"
+        ref={containerRef}
+        className="w-full h-full overflow-hidden"
         dir="ltr"
-        style={{
-          height: "100dvh",
-          scrollSnapType: "x mandatory",
-          WebkitOverflowScrolling: "touch",
-          overscrollBehaviorX: "contain",
-          scrollbarWidth: "none",
-          touchAction: "pan-x",
-        }}
+        style={{ height: "100dvh", touchAction: "pan-y" }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
-        {images.map((img, idx) => {
-          const shouldRenderImage = Math.abs(idx - index) <= 2;
-          return (
-            <div
-              key={idx}
-              className="relative h-full"
-              style={{
-                flex: "0 0 100%",
-                width: "100%",
-                minWidth: "100%",
-                scrollSnapAlign: "center",
-                scrollSnapStop: "always",
-              }}
-              data-testid={`fullscreen-slide-${idx}`}
-            >
-              {shouldRenderImage ? (
-                <img
-                  src={getFullscreenImageUrl(img)}
-                  alt={`Image ${idx + 1}`}
-                  loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
-                  decoding="async"
-                  draggable={false}
-                  onError={retryObjectImg}
-                  className="w-full h-full object-contain pointer-events-none select-none"
-                />
-              ) : null}
-            </div>
-          );
-        })}
+        <div
+          ref={trackRef}
+          className="flex h-full"
+          style={{
+            width: "100%",
+            height: "100dvh",
+            willChange: "transform",
+            transform: "translate3d(0,0,0)",
+          }}
+        >
+          {images.map((img, idx) => {
+            const shouldRenderImage = Math.abs(idx - index) <= 2;
+            return (
+              <div
+                key={idx}
+                className="relative h-full"
+                style={{
+                  flex: "0 0 100%",
+                  width: "100%",
+                  minWidth: "100%",
+                }}
+                data-testid={`fullscreen-slide-${idx}`}
+              >
+                {shouldRenderImage ? (
+                  <img
+                    src={getFullscreenImageUrl(img)}
+                    alt={`Image ${idx + 1}`}
+                    loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
+                    decoding="async"
+                    draggable={false}
+                    onError={retryObjectImg}
+                    className="w-full h-full object-contain pointer-events-none select-none"
+                  />
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {images.length > 1 && (
