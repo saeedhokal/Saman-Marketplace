@@ -259,8 +259,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
                 decoding="async"
                 draggable={false}
                 onError={retryObjectImg}
-                className="max-w-full max-h-full object-contain select-none"
-                style={{ touchAction: "pinch-zoom" }}
+                className="max-w-full max-h-full object-contain pointer-events-none select-none"
               />
             </div>
           ))}
