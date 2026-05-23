@@ -47,6 +47,8 @@ import PaymentCancelled from "@/pages/PaymentCancelled";
 import PaymentDeclined from "@/pages/PaymentDeclined";
 import Downloads from "@/pages/Downloads";
 import ResetPassword from "@/pages/ResetPassword";
+import { SeoLandingPage } from "@/pages/SeoLanding";
+import { SEO_PAGES } from "@shared/seo-pages";
 import NotFound from "@/pages/not-found";
 
 function ScrollToTop() {
@@ -114,6 +116,11 @@ function Router() {
           <Route path="/payment/declined" component={PaymentDeclined} />
           <Route path="/downloads" component={Downloads} />
           <Route path="/reset-password" component={ResetPassword} />
+          {SEO_PAGES.map((page) => (
+            <Route key={page.path} path={page.path}>
+              <SeoLandingPage page={page} />
+            </Route>
+          ))}
           <Route component={NotFound} />
         </Switch>
       </div>
@@ -134,6 +141,13 @@ function DesktopNavMenuWrapper() {
   const hide = location === '/downloads' || location.startsWith('/reset-password') || location.startsWith('/auth');
   if (hide) return null;
   return <DesktopNavMenu />;
+}
+
+function BottomNavWrapperWithSeo() {
+  const [location] = useLocation();
+  const isSeoLanding = SEO_PAGES.some((p) => p.path === location);
+  if (isSeoLanding) return null;
+  return <BottomNavWrapper />;
 }
 
 function DeepLinkHandler() {
@@ -189,7 +203,7 @@ function AppContent() {
         <Router />
         <StickyDownloadAppCTA />
         <DesktopNavMenuWrapper />
-        <BottomNavWrapper />
+        <BottomNavWrapperWithSeo />
       </div>
     </PushNotificationProvider>
   );

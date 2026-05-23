@@ -324,6 +324,52 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
           </div>
         </section>
 
+        {/* ===== SEO internal links ===== */}
+        <section className="py-14 border-t border-gray-200/60 dark:border-white/10">
+          <h2 className="text-2xl lg:text-3xl font-extrabold text-gray-900 dark:text-white mb-2 text-center">
+            {ar ? "تصفّح حسب الفئة" : "Explore Saman Marketplace"}
+          </h2>
+          <p className="text-center text-gray-600 dark:text-white/60 mb-8 text-sm">
+            {ar
+              ? "صفحات مخصّصة لأكثر عمليات البحث شيوعاً في الإمارات"
+              : "Dedicated pages for the most-searched needs across the UAE"}
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {(ar
+              ? [
+                  { href: "/ar/spare-parts-dubai", title: "قطع غيار في دبي", desc: "محركات، هياكل، إضاءة، جنوط" },
+                  { href: "/ar/used-car-parts-uae", title: "قطع غيار مستعملة في الإمارات", desc: "إعلانات من كل الإمارات" },
+                  { href: "/ar/car-parts-dubai", title: "قطع غيار السيارات دبي", desc: "OEM وبدائل لكل الماركات" },
+                  { href: "/ar/sell-car-parts-uae", title: "بيع قطع غيار", desc: "مجاناً، بدون عمولات" },
+                  { href: "/ar/used-cars-uae", title: "سيارات مستعملة في الإمارات", desc: "خليجي وغير خليجي" },
+                  { href: "/ar/sell-car-dubai", title: "بِع سيارتك في دبي", desc: "تواصل مباشر مع المشتري" },
+                ]
+              : [
+                  { href: "/spare-parts-dubai", title: "Spare parts in Dubai", desc: "Engines, body, lights, rims" },
+                  { href: "/used-car-parts-uae", title: "Used car parts in UAE", desc: "Listings from all emirates" },
+                  { href: "/car-parts-dubai", title: "Car parts in Dubai", desc: "OEM & aftermarket, every brand" },
+                  { href: "/sell-car-parts-uae", title: "Sell car parts in UAE", desc: "Free, zero commissions" },
+                  { href: "/used-cars-uae", title: "Used cars in UAE", desc: "GCC & non-GCC, real listings" },
+                  { href: "/sell-car-dubai", title: "Sell your car in Dubai", desc: "Direct buyer contact" },
+                ]
+            ).map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                data-testid={`seo-home-link-${l.href}`}
+              >
+                <div className="group rounded-2xl p-4 bg-white dark:bg-white/5 border border-gray-200/60 dark:border-white/10 hover:border-orange-400/60 hover:shadow-sm transition-colors cursor-pointer flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white text-sm">{l.title}</div>
+                    <div className="text-xs text-gray-500 dark:text-white/50 mt-0.5">{l.desc}</div>
+                  </div>
+                  <span className="text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity text-xl">→</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {/* ===== Trust strip ===== */}
         <section className="py-12 border-t border-gray-200/60 dark:border-white/10">
           <div className="flex flex-wrap gap-x-10 gap-y-4 justify-center text-sm font-medium text-gray-600 dark:text-white/70">
