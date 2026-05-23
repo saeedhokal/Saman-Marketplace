@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/BottomNav";
+import { DesktopNavMenu } from "@/components/DesktopNavMenu";
 import { LanguageProvider, useLanguage } from "@/hooks/use-language";
 import { PushNotificationProvider } from "@/components/PushNotificationProvider";
 import { App as CapApp } from "@capacitor/app";
@@ -128,6 +129,13 @@ function BottomNavWrapper() {
   return <BottomNav />;
 }
 
+function DesktopNavMenuWrapper() {
+  const [location] = useLocation();
+  const hide = location === '/downloads' || location.startsWith('/reset-password') || location.startsWith('/auth');
+  if (hide) return null;
+  return <DesktopNavMenu />;
+}
+
 function DeepLinkHandler() {
   const [, setLocation] = useLocation();
   
@@ -180,6 +188,7 @@ function AppContent() {
       <div className="flex flex-col bg-background" style={{ height: 'var(--app-height)' }}>
         <Router />
         <StickyDownloadAppCTA />
+        <DesktopNavMenuWrapper />
         <BottomNavWrapper />
       </div>
     </PushNotificationProvider>
