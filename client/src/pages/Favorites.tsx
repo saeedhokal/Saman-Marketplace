@@ -45,11 +45,9 @@ export default function Favorites() {
   return (
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background py-8 px-4">
       <div className="container mx-auto max-w-6xl">
-        <Link href="/">
-          <Button variant="ghost" className="mb-6" data-testid="button-back">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to listings
-          </Button>
-        </Link>
+        <Button variant="ghost" className="mb-6" data-testid="button-back" onClick={() => window.history.length > 1 ? window.history.back() : (window.location.href = "/")}>
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back to listings
+        </Button>
 
         <div className="flex items-center gap-3 mb-8">
           <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center">

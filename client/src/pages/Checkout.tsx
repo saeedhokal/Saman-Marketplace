@@ -538,11 +538,9 @@ export default function Checkout() {
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">
-            <Link href="/profile/subscription">
-              <button className={`p-2 ${isRTL ? '-mr-2' : '-ml-2'} rounded-lg hover:bg-secondary transition-colors`} data-testid="button-back">
-                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
-              </button>
-            </Link>
+            <button type="button" onClick={() => window.history.length > 1 ? window.history.back() : (window.location.href = "/profile/subscription")} className={`p-2 ${isRTL ? '-mr-2' : '-ml-2'} rounded-lg hover:bg-secondary transition-colors`} data-testid="button-back">
+              <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
+            </button>
             <h1 className={`flex-1 text-center font-semibold text-lg ${isRTL ? 'pl-8' : 'pr-8'}`}>{t("checkout")}</h1>
           </div>
         </div>

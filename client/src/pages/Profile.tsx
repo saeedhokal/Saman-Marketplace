@@ -73,11 +73,9 @@ export default function Profile() {
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="relative flex items-center justify-center h-14">
-            <Link href="/" className={`absolute ${isRTL ? 'right-0' : 'left-0'}`}>
-              <button className="p-2 rounded-lg hover:bg-secondary transition-colors" data-testid="button-back">
-                <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
-              </button>
-            </Link>
+            <button type="button" onClick={() => window.history.length > 1 ? window.history.back() : (window.location.href = "/")} className={`absolute ${isRTL ? 'right-0' : 'left-0'} p-2 rounded-lg hover:bg-secondary transition-colors`} data-testid="button-back">
+              <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
+            </button>
             <h1 className="font-semibold text-lg">{t('account')}</h1>
           </div>
         </div>
