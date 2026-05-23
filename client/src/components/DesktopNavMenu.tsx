@@ -65,7 +65,7 @@ export function DesktopNavMenu() {
   return (
     <>
       <div
-        className={`hidden md:block fixed top-4 z-[60] ${isRTL ? "left-4" : "right-4"}`}
+        className={`hidden md:block fixed top-6 z-[60] ${isRTL ? "left-8 lg:left-12" : "right-8 lg:right-12"}`}
         data-testid="desktop-nav-menu"
       >
         <DropdownMenu>
