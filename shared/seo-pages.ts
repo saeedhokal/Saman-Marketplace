@@ -47,14 +47,21 @@ const AR_RELATED = [
   { text: "بيع سيارتك في دبي", href: "/ar/sell-car-dubai" },
 ];
 
-function en(slug: string, page: Omit<SeoPage, "slug" | "lang" | "path" | "altLangPath" | "related">): SeoPage {
+function en(
+  slug: string,
+  page: Omit<SeoPage, "slug" | "lang" | "path" | "altLangPath" | "related"> & {
+    related?: { text: string; href: string }[];
+    altLangPath?: string;
+  }
+): SeoPage {
+  const { related, altLangPath, ...rest } = page;
   return {
     slug,
     lang: "en",
     path: `/${slug}`,
-    altLangPath: `/ar/${slug}`,
-    related: EN_RELATED.filter((r) => r.href !== `/${slug}`),
-    ...page,
+    altLangPath: altLangPath ?? `/ar/${slug}`,
+    related: related ?? EN_RELATED.filter((r) => r.href !== `/${slug}`),
+    ...rest,
   };
 }
 
@@ -542,6 +549,289 @@ export const SEO_PAGES: SeoPage[] = [
     ],
     primaryCta: { text: "تصفّح السيارات", href: "/categories?main=Cars" },
     secondaryCta: { text: "بِع سيارتك", href: "/sell" },
+  }),
+
+  // ===== Location pages (cars for sale by emirate) =====
+  en("cars-for-sale-dubai", {
+    title: "Cars for Sale in Dubai | Saman Marketplace",
+    metaDescription:
+      "Cars for sale in Dubai on Saman Marketplace — used and new vehicles listed by owners and dealers across Dubai, with prices in AED, GCC/non-GCC specs, and direct seller contact.",
+    h1: "Cars for Sale in Dubai",
+    intro:
+      "Looking for cars for sale in Dubai? Saman Marketplace lists used and new vehicles from owners and dealers across the city — Toyota, Nissan, Lexus, Mercedes, BMW, Land Rover, Porsche and more. Every listing shows the price in AED, year, mileage, spec, and the seller's contact details.",
+    keywords: [
+      "cars for sale Dubai",
+      "used cars for sale Dubai",
+      "Dubai car listings",
+      "cars in Dubai",
+    ],
+    sections: [
+      {
+        heading: "Browse cars listed in Dubai",
+        body: "Filter by make, model, year, body type or price. Every car listing on Saman includes real photos, mileage, GCC or non-GCC spec, and an AED price. Sellers are based in Dubai but you can buy from anywhere in the UAE.",
+      },
+      {
+        heading: "Buy directly from the seller",
+        body: "There's no commission and no middleman on Saman. You contact the seller directly through the app — message, call or WhatsApp — and agree the deal yourself.",
+      },
+      {
+        heading: "Selling a car in Dubai",
+        body: "If you're the seller, listing your car in Dubai is free during the launch period. Just upload photos, set a price in AED, add the year/mileage/spec, and the listing goes live across the UAE after a quick review.",
+      },
+    ],
+    faqs: [
+      { q: "Where can I find cars for sale in Dubai?", a: "Saman Marketplace lists cars for sale in Dubai from individual owners and dealers. You can browse and filter from any device." },
+      { q: "Are prices in AED?", a: "Yes, every car price on Saman is shown in AED." },
+      { q: "Can I see GCC vs non-GCC spec?", a: "Yes. Every listing is tagged GCC or non-GCC so you can filter before contacting the seller." },
+    ],
+    primaryCta: { text: "Browse Cars in Dubai", href: "/categories?main=Cars" },
+    secondaryCta: { text: "Sell Your Car", href: "/sell" },
+    altLangPath: "/cars-for-sale-dubai",
+    related: [
+      { text: "Cars for sale in Sharjah", href: "/cars-for-sale-sharjah" },
+      { text: "Cars for sale in Abu Dhabi", href: "/cars-for-sale-abu-dhabi" },
+      { text: "Cars for sale in UAE", href: "/cars-for-sale-uae" },
+      { text: "Sell your car in Dubai", href: "/sell-car-dubai" },
+      { text: "Used cars in UAE", href: "/used-cars-uae" },
+    ],
+  }),
+
+  en("cars-for-sale-sharjah", {
+    title: "Cars for Sale in Sharjah | Saman Marketplace",
+    metaDescription:
+      "Cars for sale in Sharjah on Saman Marketplace — used and new vehicles from owners and dealers in Sharjah, with AED prices, GCC/non-GCC spec, and direct seller contact.",
+    h1: "Cars for Sale in Sharjah",
+    intro:
+      "Saman Marketplace lists cars for sale in Sharjah from local owners and dealers. Whether you want a daily driver from Al Nahda, a 4x4 from Industrial Area, or a family SUV from Muwailih, you'll find real listings with photos, AED prices and direct seller contact.",
+    keywords: ["cars for sale Sharjah", "used cars Sharjah", "Sharjah car listings"],
+    sections: [
+      { heading: "Used and new cars in Sharjah", body: "From sedans and SUVs to pickups and 4x4s — Toyota, Nissan, Mitsubishi, Hyundai, Kia, BMW, Mercedes and more — Saman covers the major brands you'll find on Sharjah roads." },
+      { heading: "Honest listings, AED prices", body: "Every car shows mileage, year, spec (GCC/non-GCC), photos, and a price in AED. No bait listings, no hidden costs." },
+      { heading: "Sell a car in Sharjah", body: "Listing a car for sale in Sharjah on Saman is free. Your ad is visible to buyers across the UAE, not just Sharjah." },
+    ],
+    faqs: [
+      { q: "Where can I find cars for sale in Sharjah?", a: "Saman Marketplace lists cars for sale in Sharjah from owners and dealers, with photos and AED prices." },
+      { q: "Can buyers from outside Sharjah see my listing?", a: "Yes. A Sharjah listing is visible to buyers across the UAE." },
+    ],
+    primaryCta: { text: "Browse Cars in Sharjah", href: "/categories?main=Cars" },
+    secondaryCta: { text: "Sell Your Car", href: "/sell" },
+    altLangPath: "/cars-for-sale-sharjah",
+    related: [
+      { text: "Cars for sale in Dubai", href: "/cars-for-sale-dubai" },
+      { text: "Cars for sale in Abu Dhabi", href: "/cars-for-sale-abu-dhabi" },
+      { text: "Cars for sale in UAE", href: "/cars-for-sale-uae" },
+      { text: "Used cars in UAE", href: "/used-cars-uae" },
+    ],
+  }),
+
+  en("cars-for-sale-abu-dhabi", {
+    title: "Cars for Sale in Abu Dhabi | Saman Marketplace",
+    metaDescription:
+      "Cars for sale in Abu Dhabi on Saman Marketplace — used and new vehicles from owners and dealers in Abu Dhabi, with AED prices, GCC/non-GCC spec, and direct seller contact.",
+    h1: "Cars for Sale in Abu Dhabi",
+    intro:
+      "Saman Marketplace lists cars for sale in Abu Dhabi from owners and dealers across the capital — Khalifa City, Mussafah, Al Reem, Al Raha, and beyond. Browse by make, model, year and price, all in AED, and contact the seller directly.",
+    keywords: ["cars for sale Abu Dhabi", "used cars Abu Dhabi", "Abu Dhabi car listings"],
+    sections: [
+      { heading: "Used and new in Abu Dhabi", body: "Sedans, SUVs, pickups and 4x4s from major brands — Toyota, Nissan, Lexus, Land Rover, Mercedes, BMW, GMC and more — listed by sellers across Abu Dhabi." },
+      { heading: "AED prices, real photos", body: "Every Abu Dhabi listing on Saman includes real photos, year, mileage, spec, and a price in AED. No fake leads or middlemen." },
+      { heading: "Sell a car in Abu Dhabi", body: "Listing is free during the launch period. Your ad reaches buyers across the UAE from the moment it goes live." },
+    ],
+    faqs: [
+      { q: "Where can I find cars for sale in Abu Dhabi?", a: "Saman Marketplace lists cars for sale in Abu Dhabi from individual owners and dealers." },
+      { q: "Are listings GCC spec?", a: "Each listing is tagged GCC or non-GCC so you can filter before contacting the seller." },
+    ],
+    primaryCta: { text: "Browse Cars in Abu Dhabi", href: "/categories?main=Cars" },
+    secondaryCta: { text: "Sell Your Car", href: "/sell" },
+    altLangPath: "/cars-for-sale-abu-dhabi",
+    related: [
+      { text: "Cars for sale in Dubai", href: "/cars-for-sale-dubai" },
+      { text: "Cars for sale in Sharjah", href: "/cars-for-sale-sharjah" },
+      { text: "Cars for sale in UAE", href: "/cars-for-sale-uae" },
+      { text: "Used cars in UAE", href: "/used-cars-uae" },
+    ],
+  }),
+
+  en("cars-for-sale-uae", {
+    title: "Cars for Sale in UAE | Used & New Cars on Saman Marketplace",
+    metaDescription:
+      "Cars for sale in the UAE on Saman Marketplace. Browse used and new vehicles from owners and dealers across Dubai, Abu Dhabi, Sharjah and the rest of the Emirates — AED prices, direct seller contact.",
+    h1: "Cars for Sale in the UAE",
+    intro:
+      "Saman Marketplace brings cars for sale in the UAE into one app. Used and new vehicles, from city sedans to desert-ready 4x4s, listed by owners and dealers across Dubai, Abu Dhabi, Sharjah, Ajman, Ras Al Khaimah, Umm Al Quwain and Fujairah — all with AED prices and direct seller contact.",
+    keywords: ["cars for sale UAE", "used cars UAE", "new cars UAE", "UAE car listings"],
+    sections: [
+      { heading: "One marketplace for the whole UAE", body: "No more jumping between WhatsApp groups, Facebook pages and a dozen websites. Saman lists cars for sale from every emirate in one searchable app." },
+      { heading: "Every major brand", body: "Toyota, Nissan, Lexus, Mercedes-Benz, BMW, Audi, Land Rover, Range Rover, Porsche, Honda, Hyundai, Kia, Ford, Chevrolet, Mitsubishi, Infiniti, GMC and more." },
+      { heading: "Honest, direct, free", body: "Listings are free during the launch period. There's no commission on sales and no middleman — buyer and seller talk directly through the app." },
+    ],
+    faqs: [
+      { q: "Where can I find cars for sale in the UAE?", a: "Saman Marketplace lists cars for sale across the UAE — Dubai, Abu Dhabi, Sharjah and other emirates — all in one app." },
+      { q: "Is Saman free?", a: "Browsing is free for everyone. Posting a car for sale is also free during the launch period and there are no commissions on sales." },
+    ],
+    primaryCta: { text: "Browse Cars in UAE", href: "/categories?main=Cars" },
+    secondaryCta: { text: "Sell Your Car", href: "/sell" },
+    altLangPath: "/cars-for-sale-uae",
+    related: [
+      { text: "Cars for sale in Dubai", href: "/cars-for-sale-dubai" },
+      { text: "Cars for sale in Sharjah", href: "/cars-for-sale-sharjah" },
+      { text: "Cars for sale in Abu Dhabi", href: "/cars-for-sale-abu-dhabi" },
+      { text: "Used cars in UAE", href: "/used-cars-uae" },
+      { text: "Sell your car in Dubai", href: "/sell-car-dubai" },
+    ],
+  }),
+
+  en("sell-car-online-dubai", {
+    title: "Sell Your Car Online in Dubai | Free Listings on Saman Marketplace",
+    metaDescription:
+      "Sell your car online in Dubai on Saman Marketplace. Free listings, AED prices, direct buyer contact, no commissions. Reach UAE buyers in minutes.",
+    h1: "Sell Your Car Online in Dubai",
+    intro:
+      "Selling a car in Dubai shouldn't take weeks or cost a commission. Saman Marketplace lets you sell your car online in Dubai for free — upload photos, set a price in AED, fill in year and mileage, and your listing is live for buyers across the UAE.",
+    keywords: ["sell car online Dubai", "sell my car Dubai online", "Dubai online car selling"],
+    sections: [
+      { heading: "How it works", body: "Create an account, tap +, upload photos, fill in the details (make, model, year, mileage, GCC spec, description), set your price in AED, submit. The listing goes live after a quick review." },
+      { heading: "Why sell online with Saman", body: "No commission. No fees per listing. No middleman. Buyers contact you directly through the app, by call or WhatsApp." },
+      { heading: "Reach the whole UAE", body: "A Dubai listing is visible to buyers in Abu Dhabi, Sharjah, Ajman, Ras Al Khaimah, Umm Al Quwain and Fujairah — not just one city." },
+    ],
+    faqs: [
+      { q: "Is it free to sell my car online in Dubai?", a: "Yes — posting your car for sale on Saman is free during the launch period and there are no commissions on the sale." },
+      { q: "How long does it take for my listing to go live?", a: "Listings are reviewed by Saman and typically go live within a few hours." },
+    ],
+    primaryCta: { text: "List Your Car for Free", href: "/sell" },
+    secondaryCta: { text: "Browse Cars in Dubai", href: "/cars-for-sale-dubai" },
+    altLangPath: "/sell-car-online-dubai",
+    related: [
+      { text: "Sell your car in Dubai", href: "/sell-car-dubai" },
+      { text: "Sell your car online in UAE", href: "/sell-car-online-uae" },
+      { text: "Cars for sale in Dubai", href: "/cars-for-sale-dubai" },
+      { text: "Sell car parts in UAE", href: "/sell-car-parts-uae" },
+    ],
+  }),
+
+  en("sell-car-online-uae", {
+    title: "Sell Your Car Online in UAE | Free on Saman Marketplace",
+    metaDescription:
+      "Sell your car online in the UAE on Saman Marketplace. Free listings across Dubai, Abu Dhabi and Sharjah. AED prices, direct contact, no middlemen, no commissions.",
+    h1: "Sell Your Car Online in the UAE",
+    intro:
+      "Saman Marketplace is the simplest way to sell your car online in the UAE. List for free, reach buyers in Dubai, Abu Dhabi, Sharjah and every other emirate, and keep 100% of the sale. No middleman, no commission, no upsells.",
+    keywords: ["sell car online UAE", "sell my car UAE online", "UAE online car selling"],
+    sections: [
+      { heading: "Free and fast", body: "Posting is free during the launch period. Take photos with your phone, set a price in AED, add the basics, and submit — the listing goes live after a quick review." },
+      { heading: "Buyer talks to you directly", body: "Buyers reach you through the app, on WhatsApp or by call. No order routing, no fake middlemen — you control the deal." },
+      { heading: "Available across the UAE", body: "Saman covers all seven emirates. Sellers in Dubai, Abu Dhabi, Sharjah, Ajman, RAK, UAQ and Fujairah all use the same marketplace." },
+    ],
+    faqs: [
+      { q: "Is selling a car online in the UAE free on Saman?", a: "Yes — posting is free and there are no commissions on the sale during the launch period." },
+      { q: "Can I edit or pause my listing?", a: "Yes. You can edit, pause, renew or delete your listing from the My Listings page in the app." },
+    ],
+    primaryCta: { text: "List Your Car for Free", href: "/sell" },
+    secondaryCta: { text: "Browse Cars in UAE", href: "/cars-for-sale-uae" },
+    altLangPath: "/sell-car-online-uae",
+    related: [
+      { text: "Sell your car online in Dubai", href: "/sell-car-online-dubai" },
+      { text: "Sell your car in Dubai", href: "/sell-car-dubai" },
+      { text: "Cars for sale in UAE", href: "/cars-for-sale-uae" },
+      { text: "Sell car parts in UAE", href: "/sell-car-parts-uae" },
+    ],
+  }),
+
+  // ===== Alternative pages (mention competitors fairly, no claims) =====
+  en("dubizzle-alternative-uae", {
+    title: "Dubizzle Alternative for Cars and Spare Parts in the UAE | Saman Marketplace",
+    metaDescription:
+      "Looking for another place to buy and sell cars and car spare parts in the UAE? Saman Marketplace is a UAE-focused automotive marketplace — free listings, AED prices, direct contact with the seller.",
+    h1: "Looking for a Dubizzle Alternative in the UAE?",
+    intro:
+      "If you're looking for another place to list or find cars and car spare parts in the UAE, Saman Marketplace is one of the options. Saman is a UAE-focused automotive marketplace where users post cars, spare parts, wheels, tyres, accessories and other automotive items, with prices in AED and direct contact between buyer and seller.",
+    keywords: ["Dubizzle alternative UAE", "alternative to Dubizzle", "UAE automotive marketplace"],
+    sections: [
+      {
+        heading: "What Saman focuses on",
+        body: "Saman Marketplace is built specifically for the UAE automotive market — cars and spare parts. It isn't a general classifieds app for furniture or jobs, which keeps the experience focused: faster search, cleaner categories, and listings reviewed before they go live.",
+      },
+      {
+        heading: "How Saman works",
+        body: "Browse cars and spare parts by category, make, model or city. Every listing shows the AED price, photos and the seller's contact details. There's no commission on sales and no middleman between buyer and seller.",
+      },
+      {
+        heading: "Free to post during launch",
+        body: "During the launch period, posting a listing on Saman is free for both individual sellers and dealers. You keep 100% of the sale.",
+      },
+    ],
+    faqs: [
+      { q: "Is Saman the same as Dubizzle?", a: "No. Dubizzle is a general classifieds platform. Saman Marketplace is a separate app focused on cars and car spare parts in the UAE." },
+      { q: "Can I post a car for sale on Saman if I already listed it elsewhere?", a: "Yes. You can list your car on Saman in addition to any other platform you use — it's a separate marketplace with its own audience in the UAE." },
+      { q: "Does Saman charge commissions?", a: "No, Saman does not charge a commission on sales. Posting is free during the launch period." },
+    ],
+    primaryCta: { text: "Try Saman — Download App", href: "/downloads" },
+    secondaryCta: { text: "Browse Cars in UAE", href: "/cars-for-sale-uae" },
+    altLangPath: "/dubizzle-alternative-uae",
+    related: [
+      { text: "Dubizzle alternative in Dubai", href: "/dubizzle-alternative-dubai" },
+      { text: "DubiCars alternative in UAE", href: "/dubicars-alternative-uae" },
+      { text: "Cars for sale in UAE", href: "/cars-for-sale-uae" },
+      { text: "Used cars in UAE", href: "/used-cars-uae" },
+      { text: "Spare parts in Dubai", href: "/spare-parts-dubai" },
+    ],
+  }),
+
+  en("dubizzle-alternative-dubai", {
+    title: "Dubizzle Alternative in Dubai | Saman Marketplace",
+    metaDescription:
+      "Looking for another platform to buy and sell cars or car spare parts in Dubai? Saman Marketplace is a UAE-focused automotive marketplace with free listings, AED prices and direct seller contact.",
+    h1: "Looking for a Dubizzle Alternative in Dubai?",
+    intro:
+      "If you're searching for another place to list cars or car spare parts in Dubai, Saman Marketplace is one of the options. Saman is a UAE automotive marketplace where users in Dubai post cars, spare parts, wheels, tyres and accessories — with prices in AED and direct contact between buyer and seller.",
+    keywords: ["Dubizzle alternative Dubai", "alternative to Dubizzle Dubai", "Dubai automotive marketplace"],
+    sections: [
+      { heading: "Built for the Dubai automotive market", body: "Saman is focused on cars and car spare parts, which makes it useful for buyers and sellers in Dubai who don't want to scroll through unrelated categories. Listings are reviewed before they go live to keep the marketplace clean." },
+      { heading: "How buyers and sellers connect", body: "Sellers post photos, an AED price and contact details. Buyers message, call or WhatsApp directly. There's no order routing and no commission on the sale." },
+      { heading: "Free during the launch period", body: "Posting a listing in Dubai is free for individual sellers and dealers. You keep 100% of the sale." },
+    ],
+    faqs: [
+      { q: "Is Saman a Dubizzle competitor?", a: "Saman Marketplace is a separate UAE-focused app for cars and car spare parts. Dubizzle is a general classifieds platform. They are different products run by different companies." },
+      { q: "Can dealers in Dubai use Saman?", a: "Yes. Both individual sellers and licensed dealers in Dubai can list cars and spare parts on Saman." },
+    ],
+    primaryCta: { text: "Try Saman — Download App", href: "/downloads" },
+    secondaryCta: { text: "Browse Cars in Dubai", href: "/cars-for-sale-dubai" },
+    altLangPath: "/dubizzle-alternative-dubai",
+    related: [
+      { text: "Dubizzle alternative in UAE", href: "/dubizzle-alternative-uae" },
+      { text: "DubiCars alternative in UAE", href: "/dubicars-alternative-uae" },
+      { text: "Cars for sale in Dubai", href: "/cars-for-sale-dubai" },
+      { text: "Sell your car in Dubai", href: "/sell-car-dubai" },
+      { text: "Spare parts in Dubai", href: "/spare-parts-dubai" },
+    ],
+  }),
+
+  en("dubicars-alternative-uae", {
+    title: "DubiCars Alternative for UAE Car Listings | Saman Marketplace",
+    metaDescription:
+      "Looking for another place to list or find cars in the UAE? Saman Marketplace is a UAE automotive app with free listings, AED prices, direct buyer/seller contact and a focus on cars and spare parts.",
+    h1: "Looking for a DubiCars Alternative in the UAE?",
+    intro:
+      "If you're looking for another platform to buy or sell cars in the UAE, Saman Marketplace is one of the options. Saman is a UAE-focused automotive marketplace covering both cars and spare parts, with prices in AED and direct contact between buyer and seller.",
+    keywords: ["DubiCars alternative UAE", "alternative to DubiCars", "UAE car marketplace"],
+    sections: [
+      { heading: "Cars and spare parts in one app", body: "Saman covers both vehicles and car spare parts, so the same app works for buyers shopping for their next car and for owners looking for parts or accessories." },
+      { heading: "Free listings during launch", body: "Posting a car or part on Saman is free during the launch period. There are no commissions on sales and no fees per listing." },
+      { heading: "Direct buyer/seller contact", body: "Buyers contact sellers directly through the app, by call or WhatsApp. No middleman, no order routing." },
+    ],
+    faqs: [
+      { q: "Is Saman the same company as DubiCars?", a: "No. Saman Marketplace is a separate product run by a different company. It is a UAE-focused automotive marketplace for both cars and car spare parts." },
+      { q: "Can dealers list cars on Saman?", a: "Yes. Both individual sellers and licensed dealers can list cars on Saman." },
+    ],
+    primaryCta: { text: "Try Saman — Download App", href: "/downloads" },
+    secondaryCta: { text: "Browse Cars in UAE", href: "/cars-for-sale-uae" },
+    altLangPath: "/dubicars-alternative-uae",
+    related: [
+      { text: "Dubizzle alternative in UAE", href: "/dubizzle-alternative-uae" },
+      { text: "Dubizzle alternative in Dubai", href: "/dubizzle-alternative-dubai" },
+      { text: "Cars for sale in UAE", href: "/cars-for-sale-uae" },
+      { text: "Used cars in UAE", href: "/used-cars-uae" },
+    ],
   }),
 
   ar("sell-car-dubai", {

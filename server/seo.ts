@@ -181,14 +181,17 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
   // 1) SEO landing pages (EN + AR)
   const landing = findSeoPageByPath(url.split("?")[0].split("#")[0]);
   if (landing) {
+    // Only emit an alt-lang hreflang if there's a real sibling in the other
+    // language. Pages where altLangPath === path are single-language pages.
+    const hasAltLang = landing.altLangPath !== landing.path;
     return {
       jsonLd: buildLandingJsonLd(landing),
       title: landing.title,
       description: landing.metaDescription,
       canonical: seoPageAbsoluteUrl(landing),
       bodyContent: buildLandingBodyContent(landing),
-      altLangUrl: seoPageAltUrl(landing),
-      altLangCode: landing.lang === "ar" ? "en-AE" : "ar-AE",
+      altLangUrl: hasAltLang ? seoPageAltUrl(landing) : undefined,
+      altLangCode: hasAltLang ? (landing.lang === "ar" ? "en-AE" : "ar-AE") : undefined,
       htmlLang: landing.lang === "ar" ? "ar" : "en",
       htmlDir: landing.lang === "ar" ? "rtl" : "ltr",
     };
@@ -271,19 +274,23 @@ export function injectSeoIntoHtml(html: string, seo: SeoHead): string {
       `<meta name="twitter:image" content="${escapeAttr(seo.ogImage)}" />`
     );
   }
-  if (seo.altLangUrl && seo.altLangCode && seo.canonical) {
-    // For SEO landing pages, strip the template's generic hreflang tags
-    // (which point at /?lang=…) and emit a clean self + alt + x-default set
-    // for THIS page. Avoids "Duplicate hreflang for ar-AE" in Search Console.
+  // For any SEO landing page, replace the template's generic hreflang block
+  // (which points at /?lang=…) with one that's correct for THIS URL.
+  if (seo.canonical && (seo.altLangUrl || seo.htmlLang)) {
     out = out.replace(/\s*<link rel="alternate" hreflang="[^"]*"[^>]*\/>/gi, "");
-    const selfCode = seo.altLangCode === "ar-AE" ? "en-AE" : "ar-AE";
-    const alternates =
-      `<link rel="alternate" hreflang="${selfCode}" href="${escapeAttr(seo.canonical)}" />\n    ` +
-      `<link rel="alternate" hreflang="${seo.altLangCode}" href="${escapeAttr(seo.altLangUrl)}" />\n    ` +
-      `<link rel="alternate" hreflang="x-default" href="${escapeAttr(seo.canonical)}" />`;
+    const selfCode = seo.altLangCode
+      ? (seo.altLangCode === "ar-AE" ? "en-AE" : "ar-AE")
+      : (seo.htmlLang === "ar" ? "ar-AE" : "en-AE");
+    const lines = [
+      `<link rel="alternate" hreflang="${selfCode}" href="${escapeAttr(seo.canonical)}" />`,
+    ];
+    if (seo.altLangUrl && seo.altLangCode) {
+      lines.push(`<link rel="alternate" hreflang="${seo.altLangCode}" href="${escapeAttr(seo.altLangUrl)}" />`);
+    }
+    lines.push(`<link rel="alternate" hreflang="x-default" href="${escapeAttr(seo.canonical)}" />`);
     out = out.replace(
       /(<link rel="canonical"[^>]*\/>)/i,
-      `$1\n    ${alternates}`
+      `$1\n    ${lines.join("\n    ")}`
     );
   }
   if (seo.htmlLang) {

@@ -368,6 +368,53 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
               </Link>
             ))}
           </div>
+
+          {!ar && (
+            <>
+              <h3 className="mt-12 mb-4 text-lg font-bold text-gray-900 dark:text-white text-center">
+                Cars for sale across the UAE
+              </h3>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {[
+                  { href: "/cars-for-sale-dubai", text: "Cars for sale in Dubai" },
+                  { href: "/cars-for-sale-sharjah", text: "Cars for sale in Sharjah" },
+                  { href: "/cars-for-sale-abu-dhabi", text: "Cars for sale in Abu Dhabi" },
+                  { href: "/cars-for-sale-uae", text: "Cars for sale in UAE" },
+                  { href: "/sell-car-online-dubai", text: "Sell car online in Dubai" },
+                  { href: "/sell-car-online-uae", text: "Sell car online in UAE" },
+                ].map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    data-testid={`seo-home-link-${l.href}`}
+                    className="px-4 py-2 rounded-full text-sm bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-white/80 border border-gray-200/60 dark:border-white/10 hover:border-orange-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                  >
+                    {l.text}
+                  </Link>
+                ))}
+              </div>
+
+              <h3 className="mt-10 mb-4 text-lg font-bold text-gray-900 dark:text-white text-center">
+                Looking for another UAE marketplace?
+              </h3>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {[
+                  { href: "/dubizzle-alternative-uae", text: "Dubizzle alternative — UAE" },
+                  { href: "/dubizzle-alternative-dubai", text: "Dubizzle alternative — Dubai" },
+                  { href: "/dubicars-alternative-uae", text: "DubiCars alternative — UAE" },
+                ].map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    data-testid={`seo-home-link-${l.href}`}
+                    className="px-4 py-2 rounded-full text-sm bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-white/80 border border-gray-200/60 dark:border-white/10 hover:border-orange-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                  >
+                    {l.text}
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
         </section>
 
         {/* ===== Trust strip ===== */}
