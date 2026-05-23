@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProductCard } from "@/components/ProductCard";
 import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
 import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
+import { DesktopLanding } from "@/components/DesktopLanding";
 import { useListingView } from "@/hooks/use-listing-view";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { queryClient } from "@/lib/queryClient";
@@ -21,7 +22,7 @@ export default function Landing() {
   const { user } = useAuth();
   const { t, isRTL, language, setLanguage } = useLanguage();
   const [, navigate] = useLocation();
-  const { density, gridClasses } = useListingView();
+  const { density, gridClasses, isNative } = useListingView();
 
   useEffect(() => {
     const container = document.getElementById('main-scroll-container');
@@ -120,7 +121,14 @@ export default function Landing() {
       {/* Dark overlay for readability - only in dark mode */}
       <div className="fixed inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 pointer-events-none dark:opacity-100 opacity-0 transition-opacity duration-500" style={{ pointerEvents: 'none' }} />
       
-      <PullToRefresh onRefresh={handleRefresh} className="relative z-10">
+      {/* Desktop-only redesigned landing — hidden on small screens and inside the native app */}
+      {!isNative && (
+        <div className="hidden md:block relative z-10">
+          <DesktopLanding recentProducts={recentProducts} isLoadingRecent={isLoadingRecent} />
+        </div>
+      )}
+
+      <PullToRefresh onRefresh={handleRefresh} className={`relative z-10 ${!isNative ? "md:hidden" : ""}`}>
         <div className="container mx-auto px-4 pt-2">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
