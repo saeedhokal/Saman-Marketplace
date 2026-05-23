@@ -1,5 +1,22 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "AKDZ8XbC8EJYkPaLGK6te"
+uri = "file://client/src/assets/phone-screen-1.png"
+type = "image"
+title = "saman app listings feed"
+
+[[generated]]
+id = "ESV86-47HIxtb_a4IBytJ"
+uri = "file://client/src/assets/phone-screen-2.png"
+type = "image"
+title = "saman search results clean"
+
+[[generated]]
+id = "63hl10nrfxLQ-sYgTE-Jp"
+uri = "file://client/src/assets/phone-screen-3.png"
+type = "image"
+title = "saman product detail clean"
 
 [[outputs]]
 id = "Sb2xbwstQo6_mBL2kDbFZ"

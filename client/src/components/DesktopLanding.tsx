@@ -9,9 +9,9 @@ import { useLanguage } from "@/hooks/use-language";
 import type { Product } from "@shared/schema";
 
 import samanLogo from "@/assets/images/saman-logo-transparent.png";
-import phone1 from "@assets/IMG_1429_1771073659044.png";
-import phone2 from "@assets/IMG_1430_1771073659044.png";
-import phone3 from "@assets/IMG_1433_1771073842661.png";
+import phone1 from "@/assets/phone-screen-2.png";
+import phone2 from "@/assets/phone-screen-3.png";
+import phone3 from "@/assets/phone-screen-1.png";
 
 const APP_STORE_URL = "https://apps.apple.com/app/id6744526430";
 const PLAY_STORE_URL =
@@ -359,8 +359,7 @@ function PhoneFrame({ src, highlight }: { src: string; highlight?: boolean }) {
       }
     >
       <div className="w-full h-full rounded-[28px] overflow-hidden bg-black relative">
-        <img src={src} alt="Saman app screenshot" className="w-full h-full object-cover" />
-        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-20 h-4 rounded-full bg-black" />
+        <img src={src} alt="Saman app screenshot" className="w-full h-full object-cover object-top" />
       </div>
     </div>
   );
