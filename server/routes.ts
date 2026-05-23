@@ -564,21 +564,40 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   async function attachSellerImages(productsList: any[], req?: Request) {
     // Hide seller identity (profile image) from logged-out visitors
     if (req && !hasVerifiedUser(req)) {
-      return productsList.map(p => ({ ...p, sellerProfileImageUrl: null }));
+      return productsList.map(p => ({
+        ...p,
+        sellerProfileImageUrl: null,
+        sellerFirstName: null,
+        sellerLastName: null,
+        sellerDisplayName: null,
+      }));
     }
     const sellerIds = Array.from(new Set(productsList.map(p => p.sellerId).filter(Boolean)));
     const sellerProfiles = await Promise.all(
       sellerIds.map(async (id) => {
-        const [user] = await db.select({ id: users.id, profileImageUrl: users.profileImageUrl })
-          .from(users).where(eq(users.id, id));
+        const [user] = await db.select({
+          id: users.id,
+          profileImageUrl: users.profileImageUrl,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          displayName: users.displayName,
+        }).from(users).where(eq(users.id, id));
         return user;
       })
     );
-    const sellerMap = new Map(sellerProfiles.filter(Boolean).map(s => [s.id, addCacheBuster(s.profileImageUrl)]));
-    return productsList.map(p => ({
-      ...p,
-      sellerProfileImageUrl: sellerMap.get(p.sellerId) || null
-    }));
+    const sellerMap = new Map(
+      sellerProfiles.filter(Boolean).map(s => [s.id, s])
+    );
+    return productsList.map(p => {
+      const s = sellerMap.get(p.sellerId);
+      return {
+        ...p,
+        sellerProfileImageUrl: s ? addCacheBuster(s.profileImageUrl) : null,
+        sellerFirstName: s?.firstName || null,
+        sellerLastName: s?.lastName || null,
+        sellerDisplayName: s?.displayName || null,
+      };
+    });
   }
 
   // Products API - include seller profile image
@@ -1043,6 +1062,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       imageUrls: req.body.imageUrls || null,
       mileage: req.body.mileage || null,
       year: req.body.year || null,
+      spec: (req.body.spec && (["GCC","US","Japan","Europe","Canada","Korea","Other"] as const).includes(req.body.spec))
+        ? req.body.spec
+        : null,
       price: req.body.price || null,
       location: req.body.location || product.location,
       phoneNumber: req.body.phoneNumber || product.phoneNumber,

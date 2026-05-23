@@ -8,11 +8,14 @@ import { Store, ImageOff } from "lucide-react";
 import { format } from "date-fns";
 import { bustObjectUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import type { Density } from "@/hooks/use-listing-view";
-import { cn } from "@/lib/utils";
+import { cn, getInitial } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
   sellerImageUrl?: string | null;
+  sellerFirstName?: string | null;
+  sellerLastName?: string | null;
+  sellerDisplayName?: string | null;
   showDate?: boolean;
   density?: Density;
 }
@@ -27,7 +30,7 @@ const DENSITY_STYLES: Record<Density, {
   soldText: string;
 }> = {
   large: {
-    image: "aspect-[16/10]",
+    image: "aspect-[16/10] [&_img]:!object-contain [&_img]:!object-center bg-gray-50 dark:bg-slate-800/40",
     title: "text-base sm:text-lg",
     price: "text-lg sm:text-xl",
     padding: "p-4 sm:p-5",
@@ -64,7 +67,16 @@ const DENSITY_STYLES: Record<Density, {
   },
 };
 
-export function ProductCard({ product, sellerImageUrl, showDate, density = "default" }: ProductCardProps) {
+export function ProductCard({
+  product,
+  sellerImageUrl,
+  sellerFirstName,
+  sellerLastName,
+  sellerDisplayName,
+  showDate,
+  density = "default",
+}: ProductCardProps) {
+  const sellerInitial = getInitial(sellerDisplayName, sellerFirstName, sellerLastName);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -138,19 +150,19 @@ export function ProductCard({ product, sellerImageUrl, showDate, density = "defa
               </div>
             )}
             
-            {sellerImageUrl && (
-              <div className="absolute top-2 left-2 z-10">
-                <Avatar className={cn("border-2 border-white shadow-md", styles.avatar)}>
-                  <AvatarImage 
-                    src={sellerImageUrl.replace('/svg?', '/png?')} 
-                    alt="Seller"
+            <div className="absolute top-2 left-2 z-10">
+              <Avatar className={cn("border-2 border-white shadow-md", styles.avatar)}>
+                {sellerImageUrl ? (
+                  <AvatarImage
+                    src={sellerImageUrl.replace('/svg?', '/png?')}
+                    alt={sellerDisplayName || sellerFirstName || "Seller"}
                   />
-                  <AvatarFallback className="bg-accent/20">
-                    <Store className="h-3 w-3 text-accent" />
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            )}
+                ) : null}
+                <AvatarFallback className="bg-[#f97316] text-white text-xs font-semibold">
+                  {sellerInitial || <Store className="h-3 w-3" />}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             
             {/* Date temporarily hidden */}
           </div>

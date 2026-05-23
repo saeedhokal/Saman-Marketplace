@@ -99,6 +99,9 @@ export default function Favorites() {
                   key={product.id} 
                   product={product}
                   sellerImageUrl={(product as any).sellerProfileImageUrl}
+                    sellerFirstName={(product as any).sellerFirstName}
+                    sellerLastName={(product as any).sellerLastName}
+                    sellerDisplayName={(product as any).sellerDisplayName}
                   showDate
                   density={density}
                 />

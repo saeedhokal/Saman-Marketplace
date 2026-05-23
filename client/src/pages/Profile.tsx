@@ -4,6 +4,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitial } from "@/lib/utils";
 import {
   ArrowLeft, User, Bell, CreditCard, History, Package, Settings,
   FileText, Shield, HelpCircle, Trash2, ChevronRight, LogOut, Heart
@@ -88,7 +89,7 @@ export default function Profile() {
           <Avatar className="h-24 w-24 mb-4">
             <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "Profile"} />
             <AvatarFallback className="bg-gray-200 dark:bg-[#3a4553] text-gray-700 dark:text-white text-2xl font-semibold">
-              {user.firstName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
+              {getInitial((user as any).displayName, user.firstName, user.lastName, user.email) || "U"}
             </AvatarFallback>
           </Avatar>
           <h2 className="text-xl font-bold" data-testid="text-username">

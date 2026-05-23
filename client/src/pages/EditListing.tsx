@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useUpload } from "@/hooks/use-upload";
 import { useAuth } from "@/hooks/use-auth";
-import { insertProductSchema, CAR_MODELS, type Product } from "@shared/schema";
+import { insertProductSchema, CAR_MODELS, PRODUCT_SPEC_OPTIONS, type Product } from "@shared/schema";
 import { 
   Form, 
   FormControl, 
@@ -75,6 +75,7 @@ export default function EditListing() {
       imageUrls: [],
       mileage: undefined,
       year: undefined,
+      spec: undefined,
       price: undefined,
     },
   });
@@ -91,6 +92,7 @@ export default function EditListing() {
         imageUrls: listing.imageUrls || [],
         mileage: listing.mileage || undefined,
         year: listing.year || undefined,
+        spec: ((listing as any).spec as any) || undefined,
         price: listing.price || undefined,
       });
       const images = listing.imageUrls?.length ? listing.imageUrls : (listing.imageUrl ? [listing.imageUrl] : []);
@@ -423,6 +425,41 @@ export default function EditListing() {
                   />
 
                   {isAutomotive && (
+                    <>
+                    <FormField
+                      control={form.control}
+                      name="spec"
+                      render={({ field }) => {
+                        const labelsAr: Record<string, string> = {
+                          GCC: "خليجي",
+                          US: "وارد أمريكا",
+                          Japan: "وارد اليابان",
+                          Europe: "وارد أوروبا",
+                          Canada: "وارد كندا",
+                          Korea: "وارد كوريا",
+                          Other: "أخرى",
+                        };
+                        return (
+                          <FormItem>
+                            <FormLabel>Spec / المواصفات</FormLabel>
+                            <FormControl>
+                              <select
+                                className="w-full h-12 px-3 rounded-lg border border-border bg-background text-foreground"
+                                data-testid="select-spec"
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value || undefined)}
+                              >
+                                <option value="">Select spec / اختر المواصفات</option>
+                                {PRODUCT_SPEC_OPTIONS.map((opt) => (
+                                  <option key={opt} value={opt}>{opt} — {labelsAr[opt]}</option>
+                                ))}
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -466,6 +503,7 @@ export default function EditListing() {
                         )}
                       />
                     </div>
+                    </>
                   )}
 
                   <FormField

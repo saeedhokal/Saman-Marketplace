@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import QRCode from "qrcode";
-import { Apple, Download as DownloadIcon, Upload, MessageCircle, Car, Wrench, Cog, Check, Smartphone } from "lucide-react";
+import { Apple, Download as DownloadIcon, Upload, MessageCircle, Car, Wrench, Cog, Check, Smartphone, Globe, Moon, Sun } from "lucide-react";
 import { SiGoogleplay } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { useLanguage } from "@/hooks/use-language";
 import type { Product } from "@shared/schema";
 
-import samanLogo from "@/assets/images/saman-logo.jpg";
+import samanLogo from "@/assets/images/saman-logo-transparent.png";
 import phone1 from "@assets/IMG_1429_1771073659044.png";
 import phone2 from "@assets/IMG_1430_1771073659044.png";
 import phone3 from "@assets/IMG_1433_1771073842661.png";
@@ -23,9 +23,25 @@ interface DesktopLandingProps {
 }
 
 export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandingProps) {
-  const { isRTL, language } = useLanguage();
+  const { isRTL, language, setLanguage } = useLanguage();
   const ar = language === "ar";
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const [darkMode, setDarkMode] = useState(() =>
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+  );
+
+  const toggleDarkMode = useCallback(() => {
+    const root = document.documentElement;
+    const isDark = root.classList.contains("dark");
+    if (isDark) {
+      root.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    } else {
+      root.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    }
+    setDarkMode(!isDark);
+  }, []);
 
   useEffect(() => {
     const url = typeof window !== "undefined"
@@ -48,7 +64,7 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
         {/* ===== Top nav (logo + actions) ===== */}
         <nav className="flex items-center justify-between py-6">
           <Link href="/" className="flex items-center gap-3">
-            <img src={samanLogo} alt="Saman Marketplace" className="h-10 w-10 rounded-xl object-cover" />
+            <img src={samanLogo} alt="Saman Marketplace" className="h-10 w-10 object-contain" />
             <span className="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight">
               Saman Marketplace
             </span>
@@ -64,12 +80,35 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
                 {ar ? "بيع" : "Sell"}
               </Button>
             </Link>
-            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2.5 rounded-full bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/20 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+              data-testid="desktop-nav-theme-toggle"
+              aria-label="Toggle theme"
+            >
+              {darkMode ? (
+                <Sun className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <Moon className="h-5 w-5 text-gray-600" />
+              )}
+            </button>
+            <button
+              onClick={() => setLanguage(language === "en" ? "ar" : "en")}
+              className="relative p-2.5 rounded-full bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/20 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+              data-testid="desktop-nav-language-toggle"
+              aria-label="Toggle language"
+            >
+              <Globe className="h-5 w-5 text-gray-600 dark:text-white" />
+              <span className="absolute -bottom-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#f97316] text-white text-[9px] font-bold px-0.5">
+                {language === "en" ? "ع" : "EN"}
+              </span>
+            </button>
+            <Link href="/downloads" data-testid="desktop-nav-download">
               <Button className="bg-[#f97316] hover:bg-orange-600 text-white rounded-full px-5">
                 <DownloadIcon className="h-4 w-4 mr-1.5" />
                 {ar ? "حمّل التطبيق" : "Download App"}
               </Button>
-            </a>
+            </Link>
           </div>
         </nav>
 
@@ -91,20 +130,20 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
             </p>
             <p className="mt-6 text-lg text-gray-600 dark:text-white/70 max-w-xl">
               {ar
-                ? "تواصل مباشر بين البائعين والمشترين. إعلانات مجانية، بدون عمولات، تجربة سهلة على الهاتف."
-                : "Connect directly with buyers and sellers across the UAE. Free listings, no commissions, a clean mobile-first experience."}
+                ? "حمّل التطبيق للتجربة الكاملة، أو انشر إعلانك مباشرة من الموقع — بدون عمولات وبدون وسطاء."
+                : "Get the full experience in the app, or post your listing right here from the website — no commissions, no middlemen."}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" data-testid="hero-cta-download">
-                <Button size="lg" className="bg-[#f97316] hover:bg-orange-600 text-white rounded-full px-7 h-12 text-base font-semibold shadow-lg shadow-orange-500/30">
-                  <DownloadIcon className="h-5 w-5 mr-2" />
-                  {ar ? "حمّل التطبيق" : "Download App"}
-                </Button>
-              </a>
               <Link href="/sell" data-testid="hero-cta-sell">
-                <Button size="lg" variant="outline" className="rounded-full px-7 h-12 text-base font-semibold border-2 border-gray-300 dark:border-white/30 dark:text-white">
+                <Button size="lg" className="bg-[#f97316] hover:bg-orange-600 text-white rounded-full px-7 h-12 text-base font-semibold shadow-lg shadow-orange-500/30">
                   {ar ? "أضف إعلانك مجاناً" : "Post for Free"}
+                </Button>
+              </Link>
+              <Link href="/downloads" data-testid="hero-cta-download">
+                <Button size="lg" variant="outline" className="rounded-full px-7 h-12 text-base font-semibold border-2 border-gray-300 dark:border-white/30 dark:text-white">
+                  <DownloadIcon className="h-5 w-5 mr-2" />
+                  {ar ? "أو حمّل التطبيق" : "Or download the app"}
                 </Button>
               </Link>
             </div>
@@ -228,6 +267,9 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
                   key={p.id}
                   product={p}
                   sellerImageUrl={(p as any).sellerProfileImageUrl}
+                  sellerFirstName={(p as any).sellerFirstName}
+                  sellerLastName={(p as any).sellerLastName}
+                  sellerDisplayName={(p as any).sellerDisplayName}
                   density="compact"
                 />
               ))}

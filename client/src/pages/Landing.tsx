@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, ChevronRight, Car, Wrench, Globe, Moon, Sun } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitial } from "@/lib/utils";
 import { ProductCard } from "@/components/ProductCard";
 import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
 import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
@@ -178,7 +179,7 @@ export default function Landing() {
                 <Avatar className="h-9 w-9 border-2 border-gray-200 dark:border-white/30">
                   <AvatarImage src={user?.profileImageUrl || undefined} />
                   <AvatarFallback className="bg-gray-100 dark:bg-white/20 text-gray-700 dark:text-white text-sm backdrop-blur-md">
-                    {user?.firstName?.charAt(0) || 'G'}
+                    {getInitial((user as any)?.displayName, user?.firstName, user?.lastName, user?.email) || 'G'}
                   </AvatarFallback>
                 </Avatar>
               </Link>
@@ -278,6 +279,9 @@ export default function Landing() {
                     key={product.id} 
                     product={product}
                     sellerImageUrl={(product as any).sellerProfileImageUrl}
+                    sellerFirstName={(product as any).sellerFirstName}
+                    sellerLastName={(product as any).sellerLastName}
+                    sellerDisplayName={(product as any).sellerDisplayName}
                     showDate
                     density={density}
                   />
@@ -314,6 +318,9 @@ export default function Landing() {
                     key={product.id} 
                     product={product}
                     sellerImageUrl={(product as any).sellerProfileImageUrl}
+                    sellerFirstName={(product as any).sellerFirstName}
+                    sellerLastName={(product as any).sellerLastName}
+                    sellerDisplayName={(product as any).sellerDisplayName}
                     showDate
                     density={density}
                   />

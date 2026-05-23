@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUpload } from "@/hooks/use-upload";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitial } from "@/lib/utils";
 
 type UserProfile = {
   id: string;
@@ -158,8 +159,8 @@ export default function ProfileDetails() {
                   {profile?.profileImageUrl ? (
                     <AvatarImage src={profile.profileImageUrl} alt="Profile" />
                   ) : null}
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    <Store className="h-10 w-10" />
+                  <AvatarFallback className="bg-[#f97316] text-white text-3xl font-semibold">
+                    {getInitial((profile as any)?.displayName, profile?.firstName, profile?.lastName, (profile as any)?.email) || <Store className="h-10 w-10" />}
                   </AvatarFallback>
                 </Avatar>
                 <button

@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitial } from "@/lib/utils";
 import { Plus, LogOut, Menu, Heart, Shield, Coins } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import samanLogo from "@/assets/saman-logo.jpg";
@@ -77,7 +78,7 @@ export function Navbar() {
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "User"} />
                       <AvatarFallback className="bg-primary/5 text-primary">
-                        {user.firstName?.charAt(0) || "U"}
+                        {getInitial((user as any).displayName, user.firstName, user.lastName, (user as any).email) || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -153,7 +154,7 @@ export function Navbar() {
                       <div className="flex items-center gap-3 mb-4">
                         <Avatar>
                           <AvatarImage src={user.profileImageUrl || undefined} />
-                          <AvatarFallback>{user.firstName?.charAt(0)}</AvatarFallback>
+                          <AvatarFallback>{getInitial((user as any).displayName, user.firstName, user.lastName, (user as any).email)}</AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">{user.firstName}</p>

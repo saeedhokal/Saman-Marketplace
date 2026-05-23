@@ -4,7 +4,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2, Eye, Calendar, Gauge, Tag, Car } from "lucide-react";
+import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2, Eye, Calendar, Gauge, Tag, Car, Globe } from "lucide-react";
+import { getInitial } from "@/lib/utils";
+import { PRODUCT_SPEC_LABELS_AR, type ProductSpec } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
@@ -356,7 +358,7 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {(product.year || product.mileage || product.condition || product.model) && (
+            {(product.year || product.mileage || product.condition || product.model || (product as any).spec) && (
               <div className="mb-6 grid grid-cols-2 gap-2" data-testid="product-specs">
                 {product.year && (
                   <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-year">
@@ -391,6 +393,19 @@ export default function ProductDetail() {
                     <div className="min-w-0">
                       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{isRTL ? 'الموديل' : 'Model'}</div>
                       <div className="text-sm font-semibold truncate">{product.model}</div>
+                    </div>
+                  </div>
+                )}
+                {(product as any).spec && (
+                  <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-spec">
+                    <Globe className="h-4 w-4 text-accent shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{isRTL ? 'المواصفات' : 'Spec'}</div>
+                      <div className="text-sm font-semibold truncate">
+                        {isRTL
+                          ? (PRODUCT_SPEC_LABELS_AR[(product as any).spec as ProductSpec] || (product as any).spec)
+                          : (product as any).spec}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -511,8 +526,8 @@ export default function ProductDetail() {
                         {sellerInfo?.profileImageUrl ? (
                           <AvatarImage src={bustObjectUrl(sellerInfo.profileImageUrl)} alt={getSellerDisplayName()} onError={retryObjectImg} />
                         ) : null}
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          <Store className="h-5 w-5" />
+                        <AvatarFallback className="bg-[#f97316] text-white font-semibold">
+                          {getInitial(getSellerDisplayName()) || <Store className="h-5 w-5" />}
                         </AvatarFallback>
                       </Avatar>
                       <div>

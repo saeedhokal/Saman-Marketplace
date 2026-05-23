@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCreateProduct } from "@/hooks/use-products";
 import { useUpload } from "@/hooks/use-upload";
 import { useAuth } from "@/hooks/use-auth";
-import { insertProductSchema, CAR_MODELS } from "@shared/schema";
+import { insertProductSchema, CAR_MODELS, PRODUCT_SPEC_OPTIONS } from "@shared/schema";
 import { 
   Form, 
   FormControl, 
@@ -74,6 +74,7 @@ export default function Sell() {
       imageUrls: [],
       mileage: undefined,
       year: undefined,
+      spec: undefined,
       price: undefined,
     },
   });
@@ -441,6 +442,32 @@ export default function Sell() {
                   />
 
                   {isAutomotive && (
+                    <>
+                    <FormField
+                      control={form.control}
+                      name="spec"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("spec")}</FormLabel>
+                          <FormControl>
+                            <select
+                              className="w-full h-12 px-3 rounded-lg border border-border bg-background text-foreground"
+                              data-testid="select-spec"
+                              value={field.value || ""}
+                              onChange={(e) => field.onChange(e.target.value || undefined)}
+                            >
+                              <option value="">{t("specPlaceholder")}</option>
+                              {PRODUCT_SPEC_OPTIONS.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {t(`spec${opt}` as any)}
+                                </option>
+                              ))}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -484,6 +511,7 @@ export default function Sell() {
                         )}
                       />
                     </div>
+                    </>
                   )}
 
                   <FormField

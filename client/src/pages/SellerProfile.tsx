@@ -3,6 +3,7 @@ import { useSellerProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitial } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Store, Calendar, Lock } from "lucide-react";
 import { Link } from "wouter";
@@ -138,8 +139,8 @@ export default function SellerProfile() {
             {sellerInfo?.profileImageUrl ? (
               <AvatarImage src={sellerInfo.profileImageUrl} alt={getSellerDisplayName()} />
             ) : null}
-            <AvatarFallback className="bg-primary/10 text-primary text-xl">
-              <Store className="h-8 w-8" />
+            <AvatarFallback className="bg-[#f97316] text-white text-xl font-semibold">
+              {getInitial(sellerInfo?.displayName, sellerInfo?.firstName, sellerInfo?.lastName) || <Store className="h-8 w-8" />}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -181,6 +182,9 @@ export default function SellerProfile() {
                   key={product.id} 
                   product={product} 
                   sellerImageUrl={sellerInfo?.profileImageUrl}
+                  sellerFirstName={sellerInfo?.firstName}
+                  sellerLastName={sellerInfo?.lastName}
+                  sellerDisplayName={(sellerInfo as any)?.displayName}
                   showDate
                   density={density}
                 />

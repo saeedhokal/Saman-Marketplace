@@ -490,6 +490,7 @@ export const products = pgTable("products", {
   // Automotive-specific fields
   mileage: integer("mileage"), // in kilometers
   year: integer("year"), // manufacture year
+  spec: text("spec"), // Import origin: GCC, US, Japan, Europe, Canada, Korea, Other
   status: text("status").default("pending").notNull(), // pending, approved, rejected
   rejectionReason: text("rejection_reason"),
   rejectedAt: timestamp("rejected_at"), // Timestamp when rejected (for 7-day cleanup)
@@ -572,7 +573,30 @@ export const insertProductSchema = createInsertSchema(products).omit({
 }).extend({
   mileage: z.number().optional(),
   year: z.number().optional(),
+  spec: z.enum(["GCC", "US", "Japan", "Europe", "Canada", "Korea", "Other"]).optional(),
 });
+
+export const PRODUCT_SPEC_OPTIONS = [
+  "GCC",
+  "US",
+  "Japan",
+  "Europe",
+  "Canada",
+  "Korea",
+  "Other",
+] as const;
+
+export type ProductSpec = typeof PRODUCT_SPEC_OPTIONS[number];
+
+export const PRODUCT_SPEC_LABELS_AR: Record<ProductSpec, string> = {
+  GCC: "خليجي",
+  US: "وارد أمريكا",
+  Japan: "وارد اليابان",
+  Europe: "وارد أوروبا",
+  Canada: "وارد كندا",
+  Korea: "وارد كوريا",
+  Other: "أخرى",
+};
 
 export const insertFavoriteSchema = createInsertSchema(favorites).omit({
   id: true,
