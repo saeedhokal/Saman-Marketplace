@@ -10,6 +10,9 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
+import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
+import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
+import { useListingView } from "@/hooks/use-listing-view";
 
 type SellerInfo = {
   id: string;
@@ -25,6 +28,7 @@ export default function SellerProfile() {
   const sellerId = params?.sellerId || "";
   const { user, isLoading: authLoading } = useAuth();
   const { isRTL } = useLanguage();
+  const { density, gridClasses } = useListingView();
 
   const { data: products, isLoading, error } = useSellerProducts(sellerId);
 
@@ -163,16 +167,26 @@ export default function SellerProfile() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-            {products.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                sellerImageUrl={sellerInfo?.profileImageUrl}
-                showDate
-              />
-            ))}
-          </div>
+          <>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <ListingViewSwitcher />
+              <div className="flex items-center gap-2">
+                <DownloadAppButton variant="compact" />
+                <ActionsDropdown />
+              </div>
+            </div>
+            <div className={gridClasses}>
+              {products.map((product) => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  sellerImageUrl={sellerInfo?.profileImageUrl}
+                  showDate
+                  density={density}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

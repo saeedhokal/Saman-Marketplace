@@ -9,6 +9,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
 import { Button } from "@/components/ui/button";
+import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
+import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
+import { useListingView } from "@/hooks/use-listing-view";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,6 +58,7 @@ let savedScrollY: number = 0;
 
 export default function Categories() {
   const { t, isRTL } = useLanguage();
+  const { density, gridClasses } = useListingView();
 
   const initState = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -542,6 +546,13 @@ export default function Categories() {
           )}
         </div>
 
+        <div className={`flex items-center justify-between gap-2 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <ListingViewSwitcher />
+          <div className="flex items-center gap-2">
+            <DownloadAppButton variant="compact" />
+            <ActionsDropdown />
+          </div>
+        </div>
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-accent" />
@@ -558,7 +569,7 @@ export default function Categories() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+              className={gridClasses}
             >
               {filteredAndSortedProducts.map((product, index) => (
                 <motion.div
@@ -571,6 +582,7 @@ export default function Categories() {
                     product={product} 
                     sellerImageUrl={(product as any).sellerProfileImageUrl}
                     showDate
+                    density={density}
                   />
                 </motion.div>
               ))}

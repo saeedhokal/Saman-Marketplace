@@ -8,10 +8,14 @@ import { Link } from "wouter";
 import { useEffect, useCallback } from "react";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { queryClient } from "@/lib/queryClient";
+import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
+import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
+import { useListingView } from "@/hooks/use-listing-view";
 
 export default function Favorites() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { data: favorites, isLoading } = useFavorites();
+  const { density, gridClasses } = useListingView();
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -81,16 +85,26 @@ export default function Favorites() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {favorites?.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product}
-                sellerImageUrl={(product as any).sellerProfileImageUrl}
-                showDate
-              />
-            ))}
-          </div>
+          <>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <ListingViewSwitcher />
+              <div className="flex items-center gap-2">
+                <DownloadAppButton variant="compact" />
+                <ActionsDropdown />
+              </div>
+            </div>
+            <div className={gridClasses}>
+              {favorites?.map((product) => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product}
+                  sellerImageUrl={(product as any).sellerProfileImageUrl}
+                  showDate
+                  density={density}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </PullToRefresh>

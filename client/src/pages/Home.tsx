@@ -9,6 +9,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
 import { Button } from "@/components/ui/button";
+import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
+import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
+import { useListingView } from "@/hooks/use-listing-view";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +37,7 @@ type MainCategory = "automotive" | "spare-parts";
 type SortOption = "newest" | "oldest" | "price-low" | "price-high";
 
 export default function Home() {
+  const { density, gridClasses } = useListingView();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<MainCategory>("automotive");
   const [activeSubCategory, setActiveSubCategory] = useState("All");
@@ -464,6 +468,13 @@ export default function Home() {
       </div>
 
       <main className="container mx-auto px-4 pb-8">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <ListingViewSwitcher />
+          <div className="flex items-center gap-2">
+            <DownloadAppButton variant="compact" />
+            <ActionsDropdown />
+          </div>
+        </div>
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-accent" />
@@ -480,7 +491,7 @@ export default function Home() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+              className={gridClasses}
             >
               {filteredAndSortedProducts.map((product, index) => (
                 <motion.div
@@ -493,6 +504,7 @@ export default function Home() {
                     product={product} 
                     sellerImageUrl={(product as any).sellerProfileImageUrl}
                     showDate
+                    density={density}
                   />
                 </motion.div>
               ))}

@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Search, Bell, ChevronRight, Car, Wrench, Globe, Moon, Sun } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProductCard } from "@/components/ProductCard";
+import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
+import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
+import { useListingView } from "@/hooks/use-listing-view";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
@@ -18,6 +21,7 @@ export default function Landing() {
   const { user } = useAuth();
   const { t, isRTL, language, setLanguage } = useLanguage();
   const [, navigate] = useLocation();
+  const { density, gridClasses } = useListingView();
 
   useEffect(() => {
     const container = document.getElementById('main-scroll-container');
@@ -160,6 +164,8 @@ export default function Landing() {
                   </span>
                 )}
               </button>
+              <DownloadAppButton variant="compact" />
+              <ActionsDropdown />
               <Link href="/profile">
                 <Avatar className="h-9 w-9 border-2 border-gray-200 dark:border-white/30">
                   <AvatarImage src={user?.profileImageUrl || undefined} />
@@ -237,13 +243,16 @@ export default function Landing() {
         {/* Recent Posts Section */}
         {(isLoadingRecent || recentProducts.length > 0) && (
           <div className="mb-4 -mx-4 px-4 py-4 bg-gray-100/80 dark:bg-black/30 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3 gap-2">
               <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('recentPosts')}</h2>
-              <Link href="/categories">
-                <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recent">{t('viewAll')}</span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <ListingViewSwitcher />
+                <Link href="/categories">
+                  <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recent">{t('viewAll')}</span>
+                </Link>
+              </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className={gridClasses}>
               {isLoadingRecent ? (
                 <>
                   <SkeletonCard />
@@ -262,6 +271,7 @@ export default function Landing() {
                     product={product}
                     sellerImageUrl={(product as any).sellerProfileImageUrl}
                     showDate
+                    density={density}
                   />
                 ))
               )}
@@ -278,7 +288,7 @@ export default function Landing() {
                 <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recommended">{t('viewAll')}</span>
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className={gridClasses}>
               {isLoadingRecommended ? (
                 <>
                   <SkeletonCard />
@@ -297,6 +307,7 @@ export default function Landing() {
                     product={product}
                     sellerImageUrl={(product as any).sellerProfileImageUrl}
                     showDate
+                    density={density}
                   />
                 ))
               )}
