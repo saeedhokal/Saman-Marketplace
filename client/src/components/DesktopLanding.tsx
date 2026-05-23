@@ -184,8 +184,8 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
             <StepCard
               num="01"
               icon={<DownloadIcon className="h-6 w-6" />}
-              title={ar ? "حمّل التطبيق" : "Download the app"}
-              desc={ar ? "متاح على آب ستور وجوجل بلاي." : "Available on the App Store and Google Play."}
+              title={ar ? "حمّل التطبيق أو سجّل دخولك" : "Download the app or log in"}
+              desc={ar ? "حمّل من آب ستور أو جوجل بلاي، أو سجّل دخولك من الموقع وانشر إعلانك من جهازك مباشرة." : "Get it on the App Store or Google Play — or just log in here and post straight from your desktop."}
             />
             <StepCard
               num="02"
