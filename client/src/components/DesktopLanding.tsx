@@ -368,7 +368,7 @@ function PhoneFrame({ src, highlight }: { src: string; highlight?: boolean }) {
 
 function StepCard({ num, icon, title, desc }: { num: string; icon: React.ReactNode; title: string; desc: string }) {
   return (
-    <div className="relative rounded-3xl p-7 bg-white dark:bg-white/5 border border-gray-200/60 dark:border-white/10 hover:border-orange-400/60 transition-colors">
+    <div className="relative rounded-3xl p-7 bg-white dark:bg-white/5 border border-gray-200/60 dark:border-white/10 hover:border-orange-400/60 transition-colors cursor-default select-none">
       <span className="absolute top-5 right-5 text-5xl font-black text-gray-100 dark:text-white/5 select-none">{num}</span>
       <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mb-4">
         {icon}
