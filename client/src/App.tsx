@@ -11,6 +11,7 @@ import { App as CapApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { Heartbeat } from "@/components/Heartbeat";
+import { StickyDownloadAppCTA } from "@/components/WebChromeActions";
 
 import Landing from "@/pages/Landing";
 import LanguageSelect from "@/pages/LanguageSelect";
@@ -178,6 +179,7 @@ function AppContent() {
       <Heartbeat />
       <div className="flex flex-col bg-background" style={{ height: 'var(--app-height)' }}>
         <Router />
+        <StickyDownloadAppCTA />
         <BottomNavWrapper />
       </div>
     </PushNotificationProvider>

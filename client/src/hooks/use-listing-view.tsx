@@ -107,13 +107,16 @@ export function useListingView() {
           return "grid grid-cols-2 gap-3";
       }
     }
+    // Strict per-task contract: Large=2 cards, Default=3 cards, Compact=4 cards.
+    // We keep `grid-cols-2` on mobile (<sm) for Default/Compact so phones aren't
+    // forced into one tiny column when viewing the responsive web layout.
     switch (view) {
       case "large":
-        return "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6";
+        return "grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6";
       case "compact":
-        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3";
+        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3";
       default:
-        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4";
+        return "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4";
     }
   })();
 
