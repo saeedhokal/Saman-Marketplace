@@ -49,15 +49,15 @@ const DENSITY_STYLES: Record<Density, {
   },
   compact: {
     image: "aspect-square",
-    title: "text-xs sm:text-sm",
+    title: "text-[11px] sm:text-sm leading-tight line-clamp-3",
     price: "text-sm sm:text-base",
     padding: "p-2 sm:p-2.5",
-    titleMin: "min-h-[2.25rem]",
+    titleMin: "min-h-[2.6rem]",
     avatar: "h-6 w-6",
     soldText: "text-2xl",
   },
   single: {
-    image: "aspect-[16/10]",
+    image: "aspect-[16/10] [&_img]:!object-contain [&_img]:!object-center bg-gray-50 dark:bg-slate-800/40",
     title: "text-base",
     price: "text-lg",
     padding: "p-4",
