@@ -30,7 +30,7 @@ const DENSITY_STYLES: Record<Density, {
   soldText: string;
 }> = {
   large: {
-    image: "aspect-[16/10] [&_img]:!object-contain [&_img]:!object-center bg-gray-50 dark:bg-slate-800/40",
+    image: "aspect-[16/10] bg-gray-50 dark:bg-slate-800/40",
     title: "text-base sm:text-lg",
     price: "text-lg sm:text-xl",
     padding: "p-4 sm:p-5",
@@ -39,7 +39,7 @@ const DENSITY_STYLES: Record<Density, {
     soldText: "text-5xl",
   },
   default: {
-    image: "aspect-[4/3] md:aspect-square [&_img]:!object-contain [&_img]:!object-center bg-gray-50 dark:bg-slate-800/40",
+    image: "aspect-[4/3] md:aspect-square bg-gray-50 dark:bg-slate-800/40",
     title: "text-sm sm:text-base",
     price: "text-base sm:text-lg",
     padding: "p-3 sm:p-4",
@@ -48,7 +48,7 @@ const DENSITY_STYLES: Record<Density, {
     soldText: "text-4xl",
   },
   compact: {
-    image: "aspect-square [&_img]:!object-contain [&_img]:!object-center bg-gray-50 dark:bg-slate-800/40",
+    image: "aspect-square bg-gray-50 dark:bg-slate-800/40",
     title: "text-[11px] sm:text-sm leading-tight line-clamp-3",
     price: "text-sm sm:text-base",
     padding: "p-2 sm:p-2.5",
@@ -57,7 +57,7 @@ const DENSITY_STYLES: Record<Density, {
     soldText: "text-2xl",
   },
   single: {
-    image: "aspect-[16/10] [&_img]:!object-contain [&_img]:!object-center bg-gray-50 dark:bg-slate-800/40",
+    image: "aspect-[16/10] bg-gray-50 dark:bg-slate-800/40",
     title: "text-base",
     price: "text-lg",
     padding: "p-4",
@@ -79,8 +79,18 @@ export function ProductCard({
   const sellerInitial = getInitial(sellerDisplayName, sellerFirstName, sellerLastName);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  // "portrait" means the photo is noticeably taller than wide (e.g. 9:16
+  // phone photos). For those we crop-fill the card with a top-biased focus
+  // so the subject stays visible. Wide/square photos still letterbox with
+  // object-contain so nothing gets cut off.
+  const [isPortrait, setIsPortrait] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const styles = DENSITY_STYLES[density] ?? DENSITY_STYLES.default;
+
+  const detectOrientation = (el: HTMLImageElement | null) => {
+    if (!el || !el.naturalWidth || !el.naturalHeight) return;
+    setIsPortrait(el.naturalHeight > el.naturalWidth * 1.1);
+  };
 
   // If the image is already cached, the browser may finish loading it before
   // React attaches the onLoad handler. Check `complete` after mount so we
@@ -88,6 +98,7 @@ export function ProductCard({
   useEffect(() => {
     if (imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0) {
       setImageLoaded(true);
+      detectOrientation(imgRef.current);
     }
   }, [product.imageUrl]);
   const isSold = product.status === "sold";
@@ -126,8 +137,16 @@ export function ProductCard({
                   alt={product.title}
                   loading="lazy"
                   decoding="async"
-                  className={`h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                  onLoad={() => setImageLoaded(true)}
+                  className={`h-full w-full transition-all duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  style={
+                    isPortrait
+                      ? { objectFit: 'cover', objectPosition: '50% 25%' }
+                      : { objectFit: 'contain', objectPosition: 'center' }
+                  }
+                  onLoad={(e) => {
+                    setImageLoaded(true);
+                    detectOrientation(e.currentTarget);
+                  }}
                   onError={(e) => {
                     if (e.currentTarget.dataset.retried === "1") {
                       setImageError(true);
