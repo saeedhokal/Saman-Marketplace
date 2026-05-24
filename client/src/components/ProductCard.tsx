@@ -89,7 +89,10 @@ export function ProductCard({
 
   const detectOrientation = (el: HTMLImageElement | null) => {
     if (!el || !el.naturalWidth || !el.naturalHeight) return;
-    setIsPortrait(el.naturalHeight > el.naturalWidth * 1.1);
+    // Only treat clearly tall phone photos (9:16-ish, ratio >= ~1.5) as
+    // portrait. Slightly tall photos still letterbox so we don't crop
+    // subjects (car roofs, etc.) out of the frame.
+    setIsPortrait(el.naturalHeight >= el.naturalWidth * 1.5);
   };
 
   // If the image is already cached, the browser may finish loading it before
@@ -140,7 +143,7 @@ export function ProductCard({
                   className={`h-full w-full transition-all duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   style={
                     isPortrait
-                      ? { objectFit: 'cover', objectPosition: '50% 25%' }
+                      ? { objectFit: 'cover', objectPosition: 'center' }
                       : { objectFit: 'contain', objectPosition: 'center' }
                   }
                   onLoad={(e) => {
