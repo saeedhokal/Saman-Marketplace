@@ -79,20 +79,21 @@ export function ProductCard({
   const sellerInitial = getInitial(sellerDisplayName, sellerFirstName, sellerLastName);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  // "portrait" means the photo is noticeably taller than wide (e.g. 9:16
-  // phone photos). For those we crop-fill the card with a top-biased focus
-  // so the subject stays visible. Wide/square photos still letterbox with
-  // object-contain so nothing gets cut off.
-  const [isPortrait, setIsPortrait] = useState(false);
+  // "extreme" = photo is much taller (e.g. 9:16 phone) or much wider
+  // (e.g. 16:9 widescreen) than the card. In those cases letterboxing
+  // leaves big empty bars, so we crop-fill instead. Mid-aspect photos
+  // (closer to 4:3 / 1:1) still use object-contain so nothing is cut.
+  const [useCoverFit, setUseCoverFit] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const styles = DENSITY_STYLES[density] ?? DENSITY_STYLES.default;
 
   const detectOrientation = (el: HTMLImageElement | null) => {
     if (!el || !el.naturalWidth || !el.naturalHeight) return;
-    // Only treat clearly tall phone photos (9:16-ish, ratio >= ~1.5) as
-    // portrait. Slightly tall photos still letterbox so we don't crop
-    // subjects (car roofs, etc.) out of the frame.
-    setIsPortrait(el.naturalHeight >= el.naturalWidth * 1.5);
+    const w = el.naturalWidth;
+    const h = el.naturalHeight;
+    const isTallPortrait = h >= w * 1.5;
+    const isWideLandscape = w >= h * 1.5;
+    setUseCoverFit(isTallPortrait || isWideLandscape);
   };
 
   // If the image is already cached, the browser may finish loading it before
@@ -142,7 +143,7 @@ export function ProductCard({
                   decoding="async"
                   className={`h-full w-full transition-all duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   style={
-                    isPortrait
+                    useCoverFit
                       ? { objectFit: 'cover', objectPosition: 'center' }
                       : { objectFit: 'contain', objectPosition: 'center' }
                   }
