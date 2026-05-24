@@ -21,16 +21,31 @@ const Avatar = React.forwardRef<
 ))
 Avatar.displayName = AvatarPrimitive.Root.displayName
 
+// DiceBear's "initials" avatar service (api.dicebear.com/.../initials/...)
+// only supports Latin characters. For Arabic-named users it returns a blank
+// or broken image, which then renders inside the orange circle as an empty
+// or placeholder glyph. We drop these URLs so the AvatarFallback (initials
+// generated locally, Unicode-safe) renders instead.
+function isUnsupportedAvatarUrl(src: unknown): boolean {
+  if (typeof src !== "string") return false;
+  return /api\.dicebear\.com\/.+\/initials\//i.test(src);
+}
+
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image
-    ref={ref}
-    className={cn("aspect-square h-full w-full", className)}
-    {...props}
-  />
-))
+>(({ className, src, ...props }, ref) => {
+  const safeSrc = isUnsupportedAvatarUrl(src) ? undefined : src;
+  if (!safeSrc) return null;
+  return (
+    <AvatarPrimitive.Image
+      ref={ref}
+      src={safeSrc}
+      className={cn("aspect-square h-full w-full", className)}
+      {...props}
+    />
+  );
+})
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
 
 const AvatarFallback = React.forwardRef<

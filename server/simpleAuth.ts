@@ -272,11 +272,8 @@ export function setupSimpleAuth(app: Express) {
         .where(eq(users.phone, normalizedPhone));
 
       if (!user) {
-        // Generate default profile image using name or phone as seed
-        const seed = firstName || normalizedPhone;
-        const defaultProfileImage = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(seed)}&backgroundColor=f97316`;
-        
-        // Create new user
+        // Create new user — leave profileImageUrl null so the client renders
+        // locally-generated initials (Unicode-safe, works for Arabic names).
         [user] = await db
           .insert(users)
           .values({
@@ -285,7 +282,7 @@ export function setupSimpleAuth(app: Express) {
             lastName: lastName || null,
             credits: 0,
             isAdmin: false,
-            profileImageUrl: defaultProfileImage,
+            profileImageUrl: null,
           })
           .returning();
       } else if (firstName || lastName) {
@@ -607,7 +604,8 @@ export function setupSimpleAuth(app: Express) {
         .where(eq(users.phone, normalizedPhone));
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      const defaultProfileImage = `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(firstName + ' ' + lastName)}&backgroundColor=f97316`;
+      // Leave profileImageUrl null so the client renders locally-generated
+      // initials (Unicode-safe, works for Arabic names).
 
       let user;
       if (existingUser && existingUser.password) {
@@ -620,7 +618,7 @@ export function setupSimpleAuth(app: Express) {
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             email: email?.trim() || existingUser.email,
-            profileImageUrl: existingUser.profileImageUrl || defaultProfileImage,
+            profileImageUrl: existingUser.profileImageUrl ?? null,
             updatedAt: new Date(),
           })
           .where(eq(users.id, existingUser.id))
@@ -636,7 +634,7 @@ export function setupSimpleAuth(app: Express) {
             email: email?.trim() || null,
             credits: 0,
             isAdmin: false,
-            profileImageUrl: defaultProfileImage,
+            profileImageUrl: null,
           })
           .returning();
       }
