@@ -39,7 +39,7 @@ const DENSITY_STYLES: Record<Density, {
     soldText: "text-5xl",
   },
   default: {
-    image: "aspect-[4/3] md:aspect-square",
+    image: "aspect-[4/3] md:aspect-square [&_img]:!object-contain [&_img]:!object-center bg-gray-50 dark:bg-slate-800/40",
     title: "text-sm sm:text-base",
     price: "text-base sm:text-lg",
     padding: "p-3 sm:p-4",
@@ -48,7 +48,7 @@ const DENSITY_STYLES: Record<Density, {
     soldText: "text-4xl",
   },
   compact: {
-    image: "aspect-square",
+    image: "aspect-square [&_img]:!object-contain [&_img]:!object-center bg-gray-50 dark:bg-slate-800/40",
     title: "text-[11px] sm:text-sm leading-tight line-clamp-3",
     price: "text-sm sm:text-base",
     padding: "p-2 sm:p-2.5",
@@ -127,7 +127,6 @@ export function ProductCard({
                   loading="lazy"
                   decoding="async"
                   className={`h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                  style={{ objectPosition: '50% 60%' }}
                   onLoad={() => setImageLoaded(true)}
                   onError={(e) => {
                     if (e.currentTarget.dataset.retried === "1") {
