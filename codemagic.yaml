@@ -82,6 +82,14 @@ workflows:
           EXPORT_PATH="$CM_BUILD_DIR/build/ios/ipa"
           mkdir -p "$EXPORT_PATH"
 
+          # Codemagic exposes the App Store Connect API private key as the
+          # variable APP_STORE_CONNECT_PRIVATE_KEY (the key content). xcodebuild
+          # needs a file path, so write it out.
+          AUTH_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8"
+          mkdir -p "$(dirname "$AUTH_KEY_PATH")"
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > "$AUTH_KEY_PATH"
+          chmod 600 "$AUTH_KEY_PATH"
+
           # Archive with Automatic signing + -allowProvisioningUpdates so Xcode
           # talks to App Store Connect API and creates/refreshes a profile that
           # matches the current entitlements (incl. Associated Domains).
@@ -90,7 +98,7 @@ workflows:
             -configuration Release \
             -archivePath "$ARCHIVE_PATH" \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$APP_STORE_CONNECT_PRIVATE_KEY_PATH" \
+            -authenticationKeyPath "$AUTH_KEY_PATH" \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
             DEVELOPMENT_TEAM=KQ542Q98H2 \
@@ -117,7 +125,7 @@ workflows:
             -exportPath "$EXPORT_PATH" \
             -exportOptionsPlist /tmp/ExportOptions.plist \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$APP_STORE_CONNECT_PRIVATE_KEY_PATH" \
+            -authenticationKeyPath "$AUTH_KEY_PATH" \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
     
