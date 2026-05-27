@@ -56,6 +56,16 @@ workflows:
           keychain initialize
           keychain add-certificates
           xcode-project use-profiles
+          # DEBUG: Show every provisioning profile that was downloaded and its details
+          echo "=== Provisioning profiles in keychain dir ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || true
+          for p in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            [ -f "$p" ] || continue
+            echo ""
+            echo "--- Profile file: $p ---"
+            security cms -D -i "$p" 2>/dev/null | grep -A1 -E "<key>(Name|AppIDName|application-identifier|com.apple.developer.associated-domains|UUID)</key>" || true
+          done
+          echo "=== End provisioning profile dump ==="
       
       - name: Set version and build number
         script: |
