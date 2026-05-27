@@ -63,11 +63,17 @@ workflows:
           echo "APP_STORE_CONNECT_PRIVATE_KEY length: ${#APP_STORE_CONNECT_PRIVATE_KEY}"
           echo "======================================="
 
-          # Fetch (or create) a fresh App Store distribution profile for the
-          # bundle id. --create makes a NEW profile if no current one matches
-          # the App ID's capabilities (incl. Associated Domains). This also
-          # downloads the distribution certificate and writes both into the
-          # keychain and the standard provisioning profiles directory.
+          # Explicitly create a brand-new Apple Distribution certificate.
+          # Codemagic CLI generates the private key locally on the build
+          # machine, submits a CSR to App Store Connect, downloads the signed
+          # cert, and saves BOTH (cert + private key) into the keychain.
+          # This sidesteps the "fetch existing cert without private key" trap.
+          app-store-connect certificates create \
+            --type IOS_DISTRIBUTION \
+            --save || echo "Cert create returned non-zero (may already exist) — continuing"
+
+          # Now fetch (or create) the App Store distribution profile. Since
+          # the cert above is in keychain, fetch-signing-files will reuse it.
           app-store-connect fetch-signing-files "com.saeed.saman" \
             --type IOS_APP_STORE \
             --create

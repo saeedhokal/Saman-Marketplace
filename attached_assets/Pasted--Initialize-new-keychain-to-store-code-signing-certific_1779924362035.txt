@@ -1,0 +1,33 @@
+
+Initialize new keychain to store code signing certificates at /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db
+Create keychain /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db timeout to "no timeout"
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db to system default keychain
+Unlock keychain /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db
+=== App Store Connect env var check ===
+APP_STORE_CONNECT_KEY_IDENTIFIER set? YESKN3B9AFDJM
+APP_STORE_CONNECT_ISSUER_ID set? YES32714e0d-e5a7-4f25-ba01-507c7cb1c271
+APP_STORE_CONNECT_PRIVATE_KEY length: 72
+=======================================
+Cannot save Signing Certificates without certificate private key
+
+
+Build failed :|
+Step 8 script `Set up code signing` exited with status code 1
+Initialize new keychain to store code signing certificates at /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db
+Create keychain /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db timeout to "no timeout"
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db to system default keychain
+Unlock keychain /Users/builder/Library/codemagic-cli-tools/keychains/27-05-26_iaj2f0f4.keychain-db
+=== App Store Connect env var check ===
+APP_STORE_CONNECT_KEY_IDENTIFIER set? YESKN3B9AFDJM
+APP_STORE_CONNECT_ISSUER_ID set? YES32714e0d-e5a7-4f25-ba01-507c7cb1c271
+APP_STORE_CONNECT_PRIVATE_KEY length: 72
+=======================================
+Cannot save Signing Certificates without certificate private key
+
+
+Build failed :|
+Step 8 script `Set up code signing` exited with status code 1
+
+Set version and build number
