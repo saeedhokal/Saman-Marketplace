@@ -19,7 +19,7 @@ PORT = "5000"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["node", "./dist/index.cjs"]
+run = ["npm", "run", "dev"]
 build = ["npm", "run", "build"]
 
 [workflows]
@@ -56,6 +56,9 @@ REPLIT_DEPLOYMENT_URL = "https://thesamanapp.com"
 TELR_REMOTE_AUTH_KEY = "DdkLr~C8Nph^cpfK"
 TELR_WALLETS_AUTH_KEY = "spRZ^QWJ5P~MWJpV"
 VITE_TIKTOK_PIXEL_ID = "D85JJLBC77UDS4G4LTG0"
+
+[userenv.production]
+ANDROID_APP_SHA256 = "6C:E7:86:A4:DF:29:48:A4:AA:E2:98:9F:FF:54:25:01:84:88:36:E2:57:31:E3:D4:CB:E3:83:44:87:73:49:63"
 
 [postMerge]
 path = "scripts/post-merge.sh"
