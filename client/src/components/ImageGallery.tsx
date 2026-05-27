@@ -214,6 +214,68 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
   const animationRef = useRef<Animation | null>(null);
   const onIndexChangeRef = useRef(onIndexChange);
 
+  // ===== Pinch zoom state (FullscreenViewer only) =====
+  // Active image gets a transform (scale + translate) applied directly
+  // to the <img> element via ref so we don't trigger React re-renders
+  // during gestures. Transform always resets to identity when the
+  // index changes or the viewer closes.
+  const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
+  const transformRef = useRef({ scale: 1, tx: 0, ty: 0 });
+
+  // Multi-pointer tracking for pinch
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchActiveRef = useRef(false);
+  const pinchStartDistRef = useRef(0);
+  const pinchStartCenterRef = useRef({ x: 0, y: 0 });
+  const pinchStartTransformRef = useRef({ scale: 1, tx: 0, ty: 0 });
+
+  // Single-pointer pan when already zoomed in
+  const panActiveRef = useRef(false);
+  const panStartRef = useRef({ x: 0, y: 0 });
+  const panBaseRef = useRef({ tx: 0, ty: 0 });
+
+  const MIN_SCALE = 1;
+  const MAX_SCALE = 4;
+
+  const applyTransform = useCallback(() => {
+    const img = imageRefs.current[indexRef.current];
+    if (!img) return;
+    const { scale, tx, ty } = transformRef.current;
+    img.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${scale})`;
+    img.style.willChange = scale === 1 ? "auto" : "transform";
+  }, []);
+
+  const clampPan = useCallback((tx: number, ty: number, scale: number) => {
+    const w = containerRef.current?.clientWidth || window.innerWidth || 1;
+    const h = containerRef.current?.clientHeight || window.innerHeight || 1;
+    // With scale > 1, image overflows viewport by (scale-1) on each axis.
+    // Max pan = half of that overflow so edges stay in view.
+    const maxX = Math.max(0, ((scale - 1) * w) / 2);
+    const maxY = Math.max(0, ((scale - 1) * h) / 2);
+    return {
+      tx: Math.max(-maxX, Math.min(maxX, tx)),
+      ty: Math.max(-maxY, Math.min(maxY, ty)),
+    };
+  }, []);
+
+  const resetTransform = useCallback((targetIdx: number, animated = false) => {
+    const img = imageRefs.current[targetIdx];
+    if (img) {
+      img.style.transition = animated ? "transform 220ms ease-out" : "none";
+      img.style.transform = "translate3d(0,0,0) scale(1)";
+      if (animated) {
+        window.setTimeout(() => {
+          if (img) img.style.transition = "none";
+        }, 240);
+      } else {
+        img.style.willChange = "auto";
+      }
+    }
+    if (targetIdx === indexRef.current) {
+      transformRef.current = { scale: 1, tx: 0, ty: 0 };
+    }
+  }, []);
+
   useEffect(() => {
     onIndexChangeRef.current = onIndexChange;
   }, [onIndexChange]);
@@ -247,7 +309,25 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
   }, []);
 
   const commitIndex = useCallback((nextIndex: number) => {
+    // Reset transform on both old and new active image so we never
+    // carry a zoomed state across slides.
+    const oldIdx = indexRef.current;
+    if (oldIdx !== nextIndex) {
+      const oldImg = imageRefs.current[oldIdx];
+      if (oldImg) {
+        oldImg.style.transition = "none";
+        oldImg.style.transform = "translate3d(0,0,0) scale(1)";
+        oldImg.style.willChange = "auto";
+      }
+    }
     indexRef.current = nextIndex;
+    transformRef.current = { scale: 1, tx: 0, ty: 0 };
+    const newImg = imageRefs.current[nextIndex];
+    if (newImg) {
+      newImg.style.transition = "none";
+      newImg.style.transform = "translate3d(0,0,0) scale(1)";
+      newImg.style.willChange = "auto";
+    }
     setIndex(nextIndex);
     setPendingRenderIndex(null);
     onIndexChangeRef.current(nextIndex);
@@ -382,8 +462,52 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     return () => { cancelAnimation(); };
   }, [cancelAnimation]);
 
+  const cancelSwipe = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    if (activePointerIdRef.current !== null) {
+      try { e.currentTarget.releasePointerCapture(activePointerIdRef.current); } catch {}
+    }
+    activePointerIdRef.current = null;
+    animateToIndex(indexRef.current, true);
+  };
+
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    // Always track the pointer so we know how many fingers are down
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    // ===== Pinch starts when a second finger touches down =====
+    if (pointersRef.current.size === 2) {
+      cancelSwipe(e);
+      panActiveRef.current = false;
+
+      const pts = Array.from(pointersRef.current.values());
+      const p1 = pts[0];
+      const p2 = pts[1];
+      pinchStartDistRef.current = Math.max(1, Math.hypot(p1.x - p2.x, p1.y - p2.y));
+      pinchStartCenterRef.current = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+      pinchStartTransformRef.current = { ...transformRef.current };
+      pinchActiveRef.current = true;
+
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+      return;
+    }
+
+    // ===== Pan when already zoomed (single finger after zoom) =====
+    if (transformRef.current.scale > 1.01) {
+      cancelSwipe(e);
+      panActiveRef.current = true;
+      panStartRef.current = { x: e.clientX, y: e.clientY };
+      panBaseRef.current = { tx: transformRef.current.tx, ty: transformRef.current.ty };
+      const img = imageRefs.current[indexRef.current];
+      if (img) img.style.transition = "none";
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+      return;
+    }
+
+    // ===== Swipe (existing behavior, only at scale 1) =====
     if (draggingRef.current) return;
 
     const container = containerRef.current;
@@ -412,6 +536,51 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Update tracked pointer position
+    if (pointersRef.current.has(e.pointerId)) {
+      pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    // ===== Pinch =====
+    if (pinchActiveRef.current) {
+      if (pointersRef.current.size < 2) return;
+      const pts = Array.from(pointersRef.current.values());
+      const p1 = pts[0];
+      const p2 = pts[1];
+      const dist = Math.max(1, Math.hypot(p1.x - p2.x, p1.y - p2.y));
+      const center = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+
+      const scaleRatio = dist / pinchStartDistRef.current;
+      // Strict clamp to [MIN_SCALE, MAX_SCALE] per spec — no elastic zone.
+      const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, pinchStartTransformRef.current.scale * scaleRatio));
+
+      const dx = center.x - pinchStartCenterRef.current.x;
+      const dy = center.y - pinchStartCenterRef.current.y;
+      const clamped = clampPan(
+        pinchStartTransformRef.current.tx + dx,
+        pinchStartTransformRef.current.ty + dy,
+        newScale
+      );
+      transformRef.current = { scale: newScale, tx: clamped.tx, ty: clamped.ty };
+      applyTransform();
+      return;
+    }
+
+    // ===== Pan when zoomed =====
+    if (panActiveRef.current) {
+      const dx = e.clientX - panStartRef.current.x;
+      const dy = e.clientY - panStartRef.current.y;
+      const clamped = clampPan(
+        panBaseRef.current.tx + dx,
+        panBaseRef.current.ty + dy,
+        transformRef.current.scale
+      );
+      transformRef.current = { scale: transformRef.current.scale, tx: clamped.tx, ty: clamped.ty };
+      applyTransform();
+      return;
+    }
+
+    // ===== Swipe (existing) =====
     if (!draggingRef.current) return;
     if (activePointerIdRef.current !== e.pointerId) return;
 
@@ -446,11 +615,66 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
   };
 
   const finishPointer = (e: React.PointerEvent<HTMLDivElement>, cancelled: boolean) => {
+    // Remove this pointer from tracking
+    pointersRef.current.delete(e.pointerId);
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+
+    // ===== End of pinch =====
+    if (pinchActiveRef.current) {
+      if (pointersRef.current.size >= 2) return; // shouldn't happen but be safe
+
+      // If only one finger remains, leave pinch and hand off to pan
+      // (so user keeps controlling the zoomed image without lifting).
+      if (pointersRef.current.size === 1 && transformRef.current.scale > 1.01) {
+        pinchActiveRef.current = false;
+        const remaining = Array.from(pointersRef.current.entries())[0];
+        if (remaining) {
+          panActiveRef.current = true;
+          panStartRef.current = { x: remaining[1].x, y: remaining[1].y };
+          panBaseRef.current = { tx: transformRef.current.tx, ty: transformRef.current.ty };
+        }
+        return;
+      }
+
+      // Both fingers up — finalize zoom state
+      pinchActiveRef.current = false;
+      const finalScale = transformRef.current.scale;
+      const img = imageRefs.current[indexRef.current];
+      if (finalScale <= 1.02) {
+        // Snap back to identity with a short animation
+        if (img) {
+          img.style.transition = "transform 220ms ease-out";
+          img.style.transform = "translate3d(0,0,0) scale(1)";
+          img.style.willChange = "auto";
+        }
+        transformRef.current = { scale: 1, tx: 0, ty: 0 };
+        window.setTimeout(() => {
+          if (img && transformRef.current.scale === 1) img.style.transition = "none";
+        }, 240);
+      } else {
+        // Clamp to pan bounds in case we drifted past edges during pinch
+        const clamped = clampPan(transformRef.current.tx, transformRef.current.ty, finalScale);
+        transformRef.current = { scale: finalScale, tx: clamped.tx, ty: clamped.ty };
+        applyTransform();
+      }
+      return;
+    }
+
+    // ===== End of pan =====
+    if (panActiveRef.current) {
+      panActiveRef.current = false;
+      // If user has lifted to pan-with-zero-scale, snap back to identity
+      if (transformRef.current.scale <= 1.01) {
+        resetTransform(indexRef.current, true);
+      }
+      return;
+    }
+
+    // ===== End of swipe (existing) =====
     if (!draggingRef.current) return;
     if (activePointerIdRef.current !== e.pointerId) return;
 
     draggingRef.current = false;
-    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
     activePointerIdRef.current = null;
 
     if (cancelled || lockedAxisRef.current !== "x") {
@@ -533,6 +757,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
             >
               {shouldRenderSlide(idx) ? (
                 <img
+                  ref={(el) => { imageRefs.current[idx] = el; }}
                   src={getFullscreenImageUrl(img)}
                   alt={`Image ${idx + 1}`}
                   loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
@@ -546,6 +771,7 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
                     WebkitUserSelect: "none",
                     userSelect: "none",
                     WebkitTouchCallout: "none",
+                    transformOrigin: "center center",
                   }}
                 />
               ) : null}
