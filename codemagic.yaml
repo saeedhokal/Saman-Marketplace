@@ -55,17 +55,12 @@ workflows:
         script: |
           keychain initialize
           keychain add-certificates
-          xcode-project use-profiles
-          # DEBUG: Show every provisioning profile that was downloaded and its details
-          echo "=== Provisioning profiles in keychain dir ==="
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || true
-          for p in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
-            [ -f "$p" ] || continue
-            echo ""
-            echo "--- Profile file: $p ---"
-            security cms -D -i "$p" 2>/dev/null | grep -A1 -E "<key>(Name|AppIDName|application-identifier|com.apple.developer.associated-domains|UUID)</key>" || true
-          done
-          echo "=== End provisioning profile dump ==="
+          # NOTE: we intentionally do NOT run `xcode-project use-profiles` here.
+          # That command picks a stale/bad cached profile ("Saeed Distrubution 2")
+          # missing the Associated Domains entitlement. Instead, the Build IPA
+          # step below uses xcodebuild with -allowProvisioningUpdates, which
+          # lets Xcode auto-create a fresh profile via App Store Connect API
+          # that includes all current capabilities on the App ID.
       
       - name: Set version and build number
         script: |
@@ -82,9 +77,49 @@ workflows:
       
       - name: Build IPA
         script: |
-          xcode-project build-ipa \
-            --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+          set -e
+          ARCHIVE_PATH="$CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive"
+          EXPORT_PATH="$CM_BUILD_DIR/build/ios/ipa"
+          mkdir -p "$EXPORT_PATH"
+
+          # Archive with Automatic signing + -allowProvisioningUpdates so Xcode
+          # talks to App Store Connect API and creates/refreshes a profile that
+          # matches the current entitlements (incl. Associated Domains).
+          xcodebuild -workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -archivePath "$ARCHIVE_PATH" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$APP_STORE_CONNECT_PRIVATE_KEY_PATH" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
+            DEVELOPMENT_TEAM=KQ542Q98H2 \
+            CODE_SIGN_STYLE=Automatic \
+            archive
+
+          # Export the .ipa from the archive.
+          cat > /tmp/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>KQ542Q98H2</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>compileBitcode</key><false/>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$APP_STORE_CONNECT_PRIVATE_KEY_PATH" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
     
     artifacts:
       - build/ios/ipa/*.ipa

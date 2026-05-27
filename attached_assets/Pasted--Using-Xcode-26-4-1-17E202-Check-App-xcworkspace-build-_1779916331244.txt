@@ -1,0 +1,23 @@
+
+Using Xcode 26.4.1 (17E202)
+Check App.xcworkspace build settings
+Execute "xcodebuild -workspace /Users/builder/clone/ios/App/App.xcworkspace -scheme App -showBuildSettings"
+
+Archive App.xcworkspace
+Execute "xcodebuild -workspace /Users/builder/clone/ios/App/App.xcworkspace -scheme App -archivePath /Users/builder/clone/build/ios/xcarchive/App_xo3v4itb.xcarchive archive COMPILER_INDEX_STORE_ENABLE=NO DEVELOPMENT_TEAM=KQ542Q98H2 'CODE_SIGN_IDENTITY=iPhone Distribution' CODE_SIGN_STYLE=Manual"
+
+    Run script build phase '[CP] Copy XCFrameworks' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'FirebaseAnalytics' from project 'Pods')
+    Run script build phase '[CP] Copy XCFrameworks' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'GoogleAppMeasurement' from project 'Pods')
+    Run script build phase '[CP] Embed Pods Frameworks' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'App' from project 'App')
+    Run script build phase '[CP] Copy XCFrameworks' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'GoogleAdsOnDeviceConversion' from project 'Pods')
+Failed to archive /Users/builder/clone/ios/App/App.xcworkspace
+
+
+Build failed :|
+Step 10 script `Build IPA` exited with status code 65
+
+Publishing
+1s
+Cleaning up
+< 1s
+Step 10 script `Build IPA` exited with status code 65
