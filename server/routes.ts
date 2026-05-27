@@ -1508,7 +1508,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         },
       };
       
-      console.log("[CHECKOUT-REDIRECT] Request data:", JSON.stringify(telrData, null, 2));
+      console.log("[CHECKOUT-REDIRECT] Submitting order", { cartId: telrData.order?.cartid, ref: telrData.order?.ref, amount: telrData.order?.amount });
 
       const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
         method: "POST",
@@ -2059,7 +2059,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(400).json({ message: "Payment gateway not configured" });
     }
     
-    console.log("[ApplePay] Using Remote API auth key:", telrAuthKey ? "SET" : "MISSING");
+    console.log("[ApplePay] Remote API credentials configured");
 
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     const cartId = `SAMAN-AP-${userId}-${packageId}-${Date.now()}`;
