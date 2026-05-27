@@ -1,0 +1,108 @@
+Analyzing private key storage issues (5 seconds)
+GPT's analysis is right. The diagnostics I added gave us the real answer. No more code changes needed — both problems are in Codemagic's UI settings:
+
+Problem 1: API Key is Truncated
+APP_STORE_CONNECT_PRIVATE_KEY length: 72
+
+A real Apple .p8 private key is ~250 characters (with the -----BEGIN PRIVATE KEY----- headers). 72 chars means whoever entered the key in Codemagic pasted only a partial line.
+
+Problem 2: Missing Distribution Certificate
+Cannot save Signing Certificates without certificate private key
+
+Codemagic CLI fetched the certificate from App Store Connect API, but the API only returns the public part. The matching private key has to be uploaded separately as a .p12 file. Without it, Codemagic can't sign anything.
+
+What You Need to Do (in Codemagic web UI)
+Fix #1: Re-paste the API Key correctly
+Codemagic → your app → Teams / Integrations → App Store Connect
+Find the integration named Saman Marketpalce
+Delete it, then create a new one with:
+Issuer ID: 32714e0d-e5a7-4f25-ba01-507c7cb1c271 (already correct)
+Key ID: 34VUZRYQ6N (already correct)
+API key file: Upload the .p8 file directly (don't copy-paste the contents — it gets mangled). If you don't have the file, generate a new key at https://appstoreconnect.apple.com/access/integrations/api → click + under Keys → name it "Codemagic" → role "App Manager" → Generate → download the .p8 file (you can only download it ONCE)
+Use the same name Saman Marketpalce so the yaml still finds it
+Fix #2: Generate a fresh certificate (Codemagic does this for you)
+Since you don't have a Mac, you cannot export a .p12 yourself. Good news: with a working API key, Codemagic CLI's fetch-signing-files --create will generate BOTH a new distribution certificate AND its private key automatically, then upload the cert (public part) to Apple. The private key stays in Codemagic.
+
+But for this to work, you may need to first delete the old certificate in Apple Developer Portal so Codemagic can create a fresh one:
+
+https://developer.apple.com/account/resources/certificates/list
+Filter: iOS Distribution (or "Apple Distribution")
+If you see an existing distribution certificate → click it → Revoke
+⚠️ Warning: revoking the cert means any old IPA still signed with it can't be re-uploaded. Since v2.0.4 is already published on App Store, this is safe — Apple only cares about the cert at upload time, not for users running installed apps.
+Then when Codemagic runs fetch-signing-files --create, it'll generate a new cert + private key + profile from scratch.
+
+Order of Operations
+Generate new .p8 API key at App Store Connect, download the file
+Update Codemagic integration: re-create with the file (not copy-paste)
+Revoke old iOS Distribution certificate at developer.apple.com
+Start new Codemagic build — the diagnostics will now show APP_STORE_CONNECT_PRIVATE_KEY length: ~250 and fetch-signing-files will create everything fresh
+Standing by. Let me know when each step is done, or if you hit any walls in the Codemagic UI. Nothing more needs to change in the code or yaml.
+
+
+Checkpoint made
+4 minutes ago
+give me an order with steps and links if u can this is complicated
+
+Just now
+Step-by-Step Codemagic iOS Signing Fix
+Do these in order. Don't skip ahead. Each step takes 1–3 minutes.
+
+STEP 1 — Generate a new App Store Connect API Key
+🔗 https://appstoreconnect.apple.com/access/integrations/api
+
+Make sure you're on the Team Keys tab (top of page)
+Click the blue + button (or "Generate API Key")
+Name: Codemagic
+Access: App Manager
+Click Generate
+A new key appears in the list. Click Download API Key on its row.
+⚠️ You can only download this ONCE. Save the .p8 file somewhere you won't lose it (e.g. Downloads, then move to a permanent folder).
+Note down two values shown on the page:
+Issuer ID (top of page, looks like 32714e0d-e5a7-4f25-...)
+Key ID (next to your new key, 10 chars like 34VUZRYQ6N)
+✅ Done when: You have the .p8 file on your computer + Issuer ID + Key ID written down.
+
+STEP 2 — Revoke the Old Distribution Certificate
+🔗 https://developer.apple.com/account/resources/certificates/list
+
+In the filter at top: Software → select iOS Distribution (or "Apple Distribution")
+You should see one or more certificates listed
+Click each one → red Revoke button → confirm
+This is safe — your live v2.0.4 on App Store keeps working. Apple only checks certs at upload time.
+The list should now be empty for Distribution
+✅ Done when: No Distribution certificates remain in the list.
+
+STEP 3 — Replace the Codemagic Integration
+🔗 https://codemagic.io/teams (then pick your team → Integrations)
+
+Find App Store Connect section
+Find the existing integration named Saman Marketpalce → click the trash/delete icon → confirm
+Click Connect (or Add new under App Store Connect)
+Fill in:
+Name: Saman Marketpalce ← must match exactly (typo and all — the yaml refers to this name)
+Issuer ID: paste from Step 1
+Key ID: paste from Step 1
+API Key: click Choose file → select the .p8 you downloaded in Step 1 (do NOT copy-paste the contents)
+Click Save
+✅ Done when: The integration appears in the list with green status.
+
+STEP 4 — Start the Build
+🔗 https://codemagic.io/apps → click your Saman app → Start new build
+
+Branch: main
+Workflow: iOS Release Build (or whatever you used before)
+Click Start new build
+Wait ~15–20 minutes
+✅ Done when: Build either succeeds (you'll see "Distribution → TestFlight" sections complete) OR fails with a new error.
+
+What to Send Me
+After Step 4 finishes:
+
+✅ If it succeeded → tell me, and check email for TestFlight notification (then it'll process for ~30 min before going live on App Store Connect for review submission)
+❌ If it failed → send me the log, and I'll diagnose from the diagnostics I already added
+The diagnostic line I added will now show APP_STORE_CONNECT_PRIVATE_KEY length: ~250 (instead of 72). That's how we'll know Step 3 worked.
+
+Timing: This whole sequence is ~15 min of clicking + 20 min of build wait = ~35 min total. Take your time on Step 1 (don't lose the .p8 file). Ping me if any screen looks different from what I described.
+
+
+Scroll to latest

@@ -1,0 +1,107 @@
+Thought for a couple of seconds
+
+Yes, Replit’s step list is mostly right, but I would change Step 2: do not revoke all distribution certificates immediately unless you have to. First fix the App Store Connect API key in Codemagic, then try the build. Revoking certificates can affect other builds/apps if you use the same Apple account.
+
+Here’s the safer order.
+
+Step 1 — Create a new App Store Connect API key
+
+Open:
+
+https://appstoreconnect.apple.com/access/integrations/api
+
+Do this:
+
+Go to Team Keys
+Click +
+Name it:
+Codemagic
+Access/Role:
+App Manager
+Click Generate
+Download the .p8 file
+
+Important: you can download the .p8 only once. Save it somewhere safe.
+
+Write down:
+
+Issuer ID
+Key ID
+The downloaded .p8 file
+
+Your current problem is that Codemagic shows the private key length as 72, which is too short. Replit’s diagnosis says a real Apple .p8 key should be much longer, and that the current Codemagic key is likely truncated.
+
+Step 2 — Replace the App Store Connect integration in Codemagic
+
+Open:
+
+https://codemagic.io/teams
+
+Then:
+
+Pick your Codemagic team
+Go to Integrations
+Find App Store Connect
+Delete the old integration for Saman
+Add/connect a new App Store Connect integration
+Use:
+Issuer ID from Step 1
+Key ID from Step 1
+Upload the .p8 file directly
+Do not copy/paste the key text manually
+
+Use the same integration name that your codemagic.yaml expects. Replit says it may be named:
+
+Saman Marketpalce
+
+Yes, typo included if that is what the YAML uses.
+
+Step 3 — Run Codemagic again
+
+Open:
+
+https://codemagic.io/apps
+
+Then:
+
+Select your Saman app
+Start new build
+Branch: main
+Workflow: iOS release build
+
+Watch the diagnostic line.
+
+Before, it said:
+
+APP_STORE_CONNECT_PRIVATE_KEY length: 72
+
+After fixing the integration, it should be much longer. Replit said around 250+ characters, but the exact number can vary depending how it counts formatting. The important thing is: not 72.
+
+Step 4 — Only if it still fails with certificate/private key
+
+If it still says:
+
+Cannot save Signing Certificates without certificate private key
+
+Then go to Apple Developer certificates:
+
+https://developer.apple.com/account/resources/certificates/list
+
+Then:
+
+Filter for Apple Distribution or iOS Distribution
+Revoke only the old distribution certificate used by Codemagic
+Do not randomly revoke unrelated certificates if you are unsure
+Run Codemagic again so it can create/fetch fresh signing files
+
+Replit is right that the live App Store app will keep working; installed App Store apps do not stop working just because you revoke the upload certificate. But still, I would only revoke if the fixed API key build still fails.
+
+Simple version
+
+Do this first:
+
+Create new .p8 API key in App Store Connect
+Replace Codemagic App Store Connect integration using the .p8 file upload
+Run build again
+
+Do not revoke certificates yet unless the build still fails.
