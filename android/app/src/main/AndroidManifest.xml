@@ -30,12 +30,34 @@
                 <data android:scheme="saman" />
             </intent-filter>
 
-            <!-- Universal Links: open thesamanapp.com URLs directly in the app -->
+            <!-- Universal Links: open thesamanapp.com URLs directly in the app.
+                 Android has no "exclude" mechanism, so we whitelist allowed paths.
+                 Routes intentionally omitted (stay in browser):
+                   /reset-password   - email recovery must work without app installed
+                   /payment/*        - Telr payment redirect targets
+                   /admin            - web-only management UI
+                   /checkout/*       - payment initiation needs browser context
+                   /api, /objects, /uploads, /.well-known, /downloads - infra -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="thesamanapp.com" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:pathPrefix="/product/" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:pathPrefix="/category/" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/categories" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:pathPrefix="/seller/" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:pathPrefix="/edit/" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:pathPrefix="/search" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/sell" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/favorites" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/my-listings" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/inbox" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:pathPrefix="/profile" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/auth" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/about" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/contact" />
+                <data android:scheme="https" android:host="thesamanapp.com" android:path="/help" />
             </intent-filter>
 
         </activity>
