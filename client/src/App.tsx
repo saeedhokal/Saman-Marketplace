@@ -160,12 +160,26 @@ function DeepLinkHandler() {
     const handleAppUrlOpen = (event: { url: string }) => {
       const url = event.url;
       console.log("[DeepLink] Received URL:", url);
-      
-      // Parse saman:// URLs
+
+      // Custom scheme: saman://product/123 -> /product/123
       if (url.startsWith("saman://")) {
         const path = url.replace("saman://", "/");
         console.log("[DeepLink] Navigating to:", path);
         setLocation(path);
+        return;
+      }
+
+      // Universal Links / App Links: https://thesamanapp.com/product/123
+      // -> extract pathname + search and navigate inside the app.
+      if (url.startsWith("https://thesamanapp.com") || url.startsWith("https://www.thesamanapp.com")) {
+        try {
+          const parsed = new URL(url);
+          const target = parsed.pathname + parsed.search;
+          console.log("[DeepLink] Universal link -> navigating to:", target);
+          setLocation(target || "/");
+        } catch (e) {
+          console.error("[DeepLink] Failed to parse URL:", e);
+        }
       }
     };
     

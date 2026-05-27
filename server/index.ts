@@ -105,6 +105,76 @@ const serveApplePayVerification = (_req: express.Request, res: express.Response)
 app.get("/.well-known/apple-developer-merchantid-domain-association", serveApplePayVerification);
 app.get("/.well-known/apple-developer-merchantid-domain-association.txt", serveApplePayVerification);
 
+// ===== Universal Links / App Links =====
+// iOS: apple-app-site-association tells iOS which paths on thesamanapp.com
+// should open in the Saman app instead of Safari.
+// Team ID: KQ542Q98H2 | Bundle ID: com.saeed.saman
+const APPLE_APP_SITE_ASSOCIATION = {
+  applinks: {
+    apps: [],
+    details: [
+      {
+        appID: "KQ542Q98H2.com.saeed.saman",
+        paths: [
+          "NOT /api/*",
+          "NOT /objects/*",
+          "NOT /uploads/*",
+          "NOT /.well-known/*",
+          "NOT /downloads/*",
+          "NOT /reset-password*",
+          "/product/*",
+          "/category/*",
+          "/search*",
+          "/seller/*",
+          "/",
+        ],
+      },
+    ],
+  },
+  webcredentials: {
+    apps: ["KQ542Q98H2.com.saeed.saman"],
+  },
+};
+
+const serveAASA = (_req: express.Request, res: express.Response) => {
+  res
+    .type("application/json")
+    .set("Cache-Control", "public, max-age=3600")
+    .send(JSON.stringify(APPLE_APP_SITE_ASSOCIATION));
+};
+app.get("/.well-known/apple-app-site-association", serveAASA);
+app.get("/apple-app-site-association", serveAASA);
+
+// Android: assetlinks.json tells Android which app should handle
+// thesamanapp.com URLs. The sha256_cert_fingerprints array is read from
+// the ANDROID_APP_SHA256 env var (comma-separated for multiple keys —
+// e.g. dev + Play Store upload + Play Store signing fingerprints).
+app.get("/.well-known/assetlinks.json", (_req, res) => {
+  const fingerprints = (process.env.ANDROID_APP_SHA256 || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const payload = [
+    {
+      relation: [
+        "delegate_permission/common.handle_all_urls",
+        "delegate_permission/common.get_login_creds",
+      ],
+      target: {
+        namespace: "android_app",
+        package_name: "com.saman.marketplace",
+        sha256_cert_fingerprints: fingerprints,
+      },
+    },
+  ];
+
+  res
+    .type("application/json")
+    .set("Cache-Control", "public, max-age=3600")
+    .send(JSON.stringify(payload));
+});
+
 // Serve certificate files for download (temporary - for sending to Telr)
 app.get("/downloads/apple_pay_new.cer", (_req, res) => {
   const filePath = path.join(process.cwd(), "certs", "apple_pay_new.cer");

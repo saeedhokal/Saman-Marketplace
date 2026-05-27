@@ -1,0 +1,49 @@
+Before you continue, please follow these rules:
+
+1. Universal Links / iOS deep links
+
+* Use Team ID: KQ542Q98H2
+* Make sure apple-app-site-association is served from:
+  /.well-known/apple-app-site-association
+  and/or /apple-app-site-association
+* It must return JSON with no .json extension.
+* Content-Type should be application/json or application/pkcs7-mime.
+* No redirects for the apple-app-site-association file.
+* Include the correct iOS bundle ID for Saman Marketplace.
+* Do not break existing web routes.
+
+2. App links behavior
+
+* Listing links should open the app if installed.
+* If app is not installed, link should still work on web.
+* Keep normal browser sharing links usable.
+* Test with real listing URLs, not only homepage.
+
+3. Version changes
+
+* Only bump iOS/Android versions where needed.
+* Do not change appId / bundle identifier.
+* Do not reset Capacitor config.
+* Do not touch payment logic, auth, listings, uploads, or production database schema unless required.
+
+4. Pinch zoom in ImageGallery
+
+* Do not touch the in-page Embla gallery.
+* Only modify the FullscreenViewer inside client/src/components/ImageGallery.tsx.
+* Keep the current swipe behavior and ±2 render guard.
+* Add pinch zoom in a safe way without causing scroll, page bounce, or image drag.
+* Use transform: translate3d(...) scale(...) for performance.
+* Keep object-contain and black fullscreen background.
+* Double tap to zoom is okay only if it does not interfere with swipe.
+* When zoomed in, horizontal swipe between photos should be disabled until scale returns to 1.
+* When scale is 1, normal photo swipe should work exactly like before.
+* Add clamp limits, for example min scale 1 and max scale 3 or 4.
+* Reset zoom when changing image or closing viewer.
+* Test on real iPhone Safari/WKWebView behavior, not only desktop browser.
+
+5. Safety
+
+* Keep changes small and isolated.
+* After changes, run TypeScript/build checks.
+* Do not introduce large new libraries unless necessary.
+* If anything conflicts with current swipe smoothness, prioritize keeping swipe smooth and leave pinch zoom simple.

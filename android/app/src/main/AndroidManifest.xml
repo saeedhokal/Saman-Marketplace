@@ -30,6 +30,16 @@
                 <data android:scheme="saman" />
             </intent-filter>
 
+            <!-- Universal Links: open thesamanapp.com URLs directly in the app -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="thesamanapp.com" />
+                <data android:host="www.thesamanapp.com" />
+            </intent-filter>
+
         </activity>
 
         <provider
