@@ -18,6 +18,24 @@ uri = "file://client/src/assets/phone-screen-3.png"
 type = "image"
 title = "saman product detail clean"
 
+[[generated]]
+id = "E2mytl8C0iVFXVjiQ9dnX"
+uri = "file://attached_assets/splash_mockups/concept1_premium_minimal.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "G-rtkbzoLGk4Fa4Z9YLL_"
+uri = "file://attached_assets/splash_mockups/concept2_automotive_tech.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "yzBmyuKJlHFhgut5GVOeJ"
+uri = "file://attached_assets/splash_mockups/concept3_uae_night_luxury.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "Sb2xbwstQo6_mBL2kDbFZ"
 uri = "file://exports/saman-deck/saman-marketplace-deck.pdf"
@@ -227,3 +245,21 @@ id = "V2886waeEzibbfqVFVmCE"
 uri = "file://exports/saman-deck-v3/assets/inspect-sharp-compare.png"
 type = "image"
 title = "Before / After - Sharpened Logo"
+
+[[outputs]]
+id = "e3rCIEKD-hkqcyexv2u1_"
+uri = "file://attached_assets/splash_mockups/concept1_premium_minimal.png"
+type = "image"
+title = "Concept 1 — Premium Minimal UAE"
+
+[[outputs]]
+id = "TWqFCNEgGo9RpTlxdGJSV"
+uri = "file://attached_assets/splash_mockups/concept2_automotive_tech.png"
+type = "image"
+title = "Concept 2 — Automotive Tech"
+
+[[outputs]]
+id = "ZRzxpFK9RTft4xBrGq6eH"
+uri = "file://attached_assets/splash_mockups/concept3_uae_night_luxury.png"
+type = "image"
+title = "Concept 3 — UAE Night Luxury"
