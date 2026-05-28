@@ -104,10 +104,10 @@ export function CategoryCombobox({
               <ChevronsUpDown className={`${isRTL ? 'mr-2' : 'ml-2'} h-4 w-4 shrink-0 opacity-50`} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 rounded-xl" align="start">
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 rounded-xl" align="start" side="bottom" sideOffset={6} avoidCollisions={false}>
             <Command>
               <CommandInput placeholder={t("searchCategoryPlaceholder")} className="h-10" />
-              <CommandList>
+              <CommandList className="max-h-[50vh]">
                 <CommandEmpty>{t("noCategoryFound")}</CommandEmpty>
                 <CommandGroup className="p-1">
                   {MAIN_CATEGORIES.map((cat) => (
@@ -189,10 +189,10 @@ export function CategoryCombobox({
               <ChevronsUpDown className={`${isRTL ? 'mr-2' : 'ml-2'} h-4 w-4 shrink-0 opacity-50`} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 rounded-xl" align="start">
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 rounded-xl" align="start" side="bottom" sideOffset={6} avoidCollisions={false}>
             <Command>
               <CommandInput placeholder={t("searchSubCategory")} />
-              <CommandList>
+              <CommandList className="max-h-[50vh]">
                 <CommandEmpty>{t("noSubCategoryFound")}</CommandEmpty>
                 {mainCategory === "Spare Parts" && (
                   <>

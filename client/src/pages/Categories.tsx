@@ -381,10 +381,10 @@ export default function Categories() {
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl" align="start">
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl" align="start" side="bottom" sideOffset={6} avoidCollisions={false}>
               <Command>
                 <CommandInput placeholder={t('searchCategoryPlaceholder')} />
-                <CommandList>
+                <CommandList className="max-h-[50vh]">
                   <CommandEmpty>{t('noCategoryFound')}</CommandEmpty>
                   <CommandGroup>
                     {getSubcategories().map((cat) => {
@@ -434,10 +434,10 @@ export default function Categories() {
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl" align="start">
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl" align="start" side="bottom" sideOffset={6} avoidCollisions={false}>
                 <Command>
                   <CommandInput placeholder={t('searchCategoryPlaceholder')} />
-                  <CommandList>
+                  <CommandList className="max-h-[50vh]">
                     <CommandEmpty>{t('noCategoryFound')}</CommandEmpty>
                     <CommandGroup>
                       <CommandItem
