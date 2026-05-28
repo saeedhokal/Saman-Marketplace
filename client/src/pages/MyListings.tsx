@@ -83,6 +83,9 @@ export default function MyListings() {
       // Selling something is the strongest positive moment — ask for a
       // store review (Apple/Google handle their own throttling; we also
       // throttle locally to 60 days between asks).
+      (window as any).__iarDebug = (msg: string) => {
+        toast({ title: msg });
+      };
       import("@/lib/inAppReview").then(({ requestInAppReviewIfEligible }) => {
         window.setTimeout(() => { requestInAppReviewIfEligible(); }, 1200);
       });
