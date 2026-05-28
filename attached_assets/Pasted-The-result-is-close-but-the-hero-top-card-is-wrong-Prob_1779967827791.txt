@@ -1,0 +1,71 @@
+The result is close, but the hero/top card is wrong.
+
+Problem:
+The top hero card now contains another skyline/water image inside it, while the page background also has the skyline. This creates a duplicated/overlapping background effect and looks messy. The hero card should not feel like a separate photo pasted on top of another photo.
+
+What I want:
+Make the home screen seamless like the reference mockup.
+
+Fix the Home screen hero section:
+
+1. Use ONE main page background only
+
+* The Dubai skyline / Burj Khalifa atmosphere should be the page background.
+* It should cover the top/home area smoothly.
+* It should be dark, premium, Nardo grey/graphite, slightly blurred/dimmed.
+* No repeated skyline inside the hero card.
+
+2. Hero card should be glass/matte overlay, not a second image
+
+* Remove the separate skyline/water photo inside the hero card.
+* The hero card background should be transparent/frosted glass or dark matte glass.
+* It can show the page background through it subtly.
+* Use backdrop-blur, dark translucent gradient, border, and shadow.
+* Do not add another image layer inside the hero card.
+
+3. Remove duplicated Saman logo inside the hero card
+
+* The mockup showed a logo, but in the real app it looks cluttered.
+* Keep the hero card clean with text + CTA only.
+* If a logo is used, it must be extremely subtle and not compete with text, but preferably remove it for now.
+
+4. Fix background layering
+   The screen should be layered like this:
+
+* Base layer: dark Nardo/graphite gradient
+* Background layer: one subtle Dubai skyline image
+* Overlay layer: dark opacity/blur for readability
+* Content layer: greeting, top icons, hero glass card, categories, recent posts
+
+5. Hero card design
+
+* Keep text:
+  UAE'S MARKETPLACE
+  Powering the UAE Auto Market
+  Buy, sell and discover cars and parts with confidence.
+  Start Selling
+* Make the card look like premium frosted glass.
+* Keep rounded corners.
+* Use subtle white/grey border.
+* Keep orange CTA button.
+* Make sure text is readable.
+
+6. Categories
+
+* Categories should sit cleanly on the same page background.
+* Do not use another skyline image behind category cards.
+* Use matte/glass cards like the reference.
+* Keep all existing category click behavior.
+
+7. Recent posts
+
+* Keep real listing data and current behavior.
+* Do not change listing logic.
+* Only improve card styling if safe.
+
+Important:
+Do not replace the current working Home logic with static mockup UI.
+Do not remove bottom nav, plus button, listing cards, categories, routes, filters, auth, payments, uploads, database, or deep links.
+
+This is mainly a background layering fix:
+ONE page background, glass cards on top, no duplicated skyline/photo inside the hero card.

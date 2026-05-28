@@ -15,7 +15,6 @@ import { useListingView } from "@/hooks/use-listing-view";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
-import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
 import heroSkyline from "@/assets/images/hero-skyline.png";
 import samanLogoWatermark from "@/assets/images/saman-logo-transparent.png";
 
@@ -114,15 +113,11 @@ export default function Landing() {
 
   return (
     <div className="relative" style={{ minHeight: 'var(--app-height)' }}>
-      {/* Full-page Dubai Skyline Background - only in dark mode */}
-      <div 
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none transition-opacity duration-500 dark:opacity-100 opacity-0"
-        style={{ backgroundImage: `url(${dubaiSkylineBg})`, pointerEvents: 'none' }}
+      {/* Solid dark/light page background - no skyline (skyline lives only inside hero card) */}
+      <div
+        className="fixed inset-0 pointer-events-none transition-colors duration-500 bg-gray-50 dark:bg-[#0b0d12]"
+        style={{ pointerEvents: 'none' }}
       />
-      {/* Light mode background */}
-      <div className="fixed inset-0 bg-gray-50 dark:opacity-0 opacity-100 transition-opacity duration-500 pointer-events-none" style={{ pointerEvents: 'none' }} />
-      {/* Dark overlay for readability - only in dark mode */}
-      <div className="fixed inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 pointer-events-none dark:opacity-100 opacity-0 transition-opacity duration-500" style={{ pointerEvents: 'none' }} />
       
       {/* Desktop-only redesigned landing — hidden on small screens and inside the native app */}
       {!isNative && (
