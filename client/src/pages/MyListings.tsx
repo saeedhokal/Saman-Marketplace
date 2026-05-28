@@ -80,6 +80,12 @@ export default function MyListings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
       toast({ title: t('markedAsSold') });
+      // Selling something is the strongest positive moment — ask for a
+      // store review (Apple/Google handle their own throttling; we also
+      // throttle locally to 60 days between asks).
+      import("@/lib/inAppReview").then(({ requestInAppReviewIfEligible }) => {
+        window.setTimeout(() => { requestInAppReviewIfEligible(); }, 1200);
+      });
     },
     onError: () => {
       toast({ variant: "destructive", title: t('failedToUpdate') });
