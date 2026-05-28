@@ -2,8 +2,8 @@ import { Capacitor } from "@capacitor/core";
 
 const LAST_PROMPT_KEY = "iar:lastPromptAt";
 const FIRST_RUN_KEY = "iar:firstRunAt";
-const MIN_DAYS_SINCE_INSTALL = 3;
-const MIN_DAYS_BETWEEN_PROMPTS = 60;
+const MIN_DAYS_SINCE_INSTALL = 0;
+const MIN_DAYS_BETWEEN_PROMPTS = 0;
 
 function daysSince(ts: number): number {
   return (Date.now() - ts) / 86_400_000;
