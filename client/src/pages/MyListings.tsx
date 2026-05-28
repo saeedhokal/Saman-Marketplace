@@ -263,7 +263,11 @@ export default function MyListings() {
                       <DropdownMenuContent align="end" className="min-w-[180px] z-[100]" sideOffset={8}>
                         {listing.status !== "sold" && (
                           <DropdownMenuItem 
-                            onClick={() => handleEdit(listing.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(listing.id);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
                             className={`py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
                           >
                             <Pencil className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
@@ -272,10 +276,12 @@ export default function MyListings() {
                         )}
                         {canRenew(listing) && (
                           <DropdownMenuItem 
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setOpenMenuId(null);
                               setRenewId(listing.id);
                             }}
+                            onPointerDown={(e) => e.stopPropagation()}
                             className={`py-3 text-base cursor-pointer touch-manipulation text-orange-600 dark:text-orange-400 ${isRTL ? 'flex-row-reverse' : ''}`}
                           >
                             <RefreshCw className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
@@ -284,10 +290,12 @@ export default function MyListings() {
                         )}
                         {listing.status !== "sold" && (
                           <DropdownMenuItem 
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setOpenMenuId(null);
                               markSoldMutation.mutate(listing.id);
                             }}
+                            onPointerDown={(e) => e.stopPropagation()}
                             className={`py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
                           >
                             <CheckCircle className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
@@ -295,10 +303,12 @@ export default function MyListings() {
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem 
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setOpenMenuId(null);
                             setDeleteId(listing.id);
                           }}
+                          onPointerDown={(e) => e.stopPropagation()}
                           className={`text-destructive py-3 text-base cursor-pointer touch-manipulation ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <Trash2 className={`h-5 w-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
