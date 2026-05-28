@@ -188,7 +188,7 @@ export function ProductCard({
               {product.title}
             </h3>
             {product.mainCategory === "Automotive" && (product.year || product.mileage) && (
-              <div className={`flex items-center gap-2 mt-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`} data-testid={`pills-${product.id}`}>
+              <div className={`flex items-center gap-2 mt-2 flex-wrap ${isRTL ? 'flex-row-reverse justify-end' : ''}`} data-testid={`pills-${product.id}`}>
                 {product.year ? (
                   <span
                     dir="ltr"

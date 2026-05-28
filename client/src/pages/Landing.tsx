@@ -241,15 +241,15 @@ export default function Landing() {
                 }}
               />
               {/* Content */}
-              <div className={`relative z-10 p-6 flex flex-col justify-between ${isRTL ? 'items-end text-right' : 'items-start'}`} style={{ minHeight: '230px' }}>
-                <div className={isRTL ? 'text-right' : ''}>
+              <div className="relative z-10 p-6 flex flex-col justify-between items-start" style={{ minHeight: '230px' }} dir={isRTL ? 'rtl' : 'ltr'}>
+                <div className={isRTL ? 'text-right w-full' : ''}>
                   <p className="text-orange-400 text-[11px] font-bold uppercase tracking-[0.18em]">
                     {t('uaeMarketplace')}
                   </p>
-                  <h2 className="mt-2.5 text-white text-2xl sm:text-3xl font-extrabold leading-[1.15] tracking-tight max-w-[62%]">
+                  <h2 className={`mt-2.5 text-white text-2xl sm:text-3xl font-extrabold leading-[1.15] tracking-tight ${isRTL ? 'max-w-[72%] ml-auto' : 'max-w-[62%]'}`}>
                     {t('yourNextRide')} {t('startsHere')}
                   </h2>
-                  <p className="mt-2 text-[13px] leading-snug text-gray-200/90 max-w-[62%]">
+                  <p className={`mt-2 text-[13px] leading-snug text-gray-200/90 ${isRTL ? 'max-w-[72%] ml-auto' : 'max-w-[62%]'}`}>
                     {t('heroSubtitle')}
                   </p>
                 </div>
