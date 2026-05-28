@@ -11,6 +11,7 @@ import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
+import dubaiNightSkyline from "@/assets/images/dubai-night-skyline.png";
 import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
 import { useListingView } from "@/hooks/use-listing-view";
 import {
@@ -234,8 +235,29 @@ export default function Categories() {
   }, [products, activeModel, sortBy, activeCategory, activeSubCategory, priceMin, priceMax]);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background">
-      <div className="sticky top-0 z-50 bg-background border-b border-border">
+    <PullToRefresh onRefresh={handleRefresh} className="relative min-h-screen bg-background">
+      {/* Faint Dubai skyline backdrop behind header + search/tabs (dark mode only) */}
+      <div
+        className="absolute top-0 left-0 right-0 pointer-events-none hidden dark:block overflow-hidden"
+        style={{ height: '440px', zIndex: 0 }}
+        aria-hidden="true"
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${dubaiNightSkyline})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 60%',
+            filter: 'blur(2px) saturate(1.05) brightness(0.6)',
+            transform: 'scale(1.05)',
+            WebkitMaskImage: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.25) 85%, rgba(0,0,0,0) 100%)',
+            maskImage: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.25) 85%, rgba(0,0,0,0) 100%)',
+          }}
+        />
+        <div className="absolute inset-0 bg-black/35" />
+      </div>
+
+      <div className="sticky top-0 z-50 bg-background/70 dark:bg-transparent backdrop-blur-md border-b border-border/40 dark:border-white/5">
         <div className="container mx-auto px-4">
           <div className="relative flex items-center justify-center h-14">
             <button type="button" onClick={() => window.history.length > 1 ? window.history.back() : (window.location.href = "/")} className={`absolute ${isRTL ? 'right-0' : 'left-0'} p-2 rounded-lg hover:bg-secondary transition-colors`} data-testid="button-back">
@@ -246,7 +268,7 @@ export default function Categories() {
         </div>
       </div>
 
-      <div className={`container mx-auto px-4 pt-4 ${isRTL ? 'text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`relative z-10 container mx-auto px-4 pt-4 ${isRTL ? 'text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Search bar with embedded filter button */}
         <div className={`flex items-center border border-border bg-white dark:bg-white/[0.03] rounded-full ${isRTL ? 'pr-4 pl-1' : 'pl-4 pr-1'} py-1.5 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Search className={`h-5 w-5 text-foreground/70 shrink-0 ${isRTL ? 'ml-3' : 'mr-3'}`} />
@@ -278,18 +300,28 @@ export default function Categories() {
           </button>
         </div>
 
-        {/* Category tabs - subtle dark pills */}
-        <div className={`flex gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        {/* Category tabs - joined segmented control with radial-glow active state */}
+        <div
+          className={cn(
+            "flex mb-4 rounded-2xl border border-border bg-white dark:bg-white/[0.04] overflow-hidden p-0.5 gap-0.5",
+            isRTL ? 'flex-row-reverse' : ''
+          )}
+        >
           <button
             onClick={() => handleCategoryChange("automotive")}
             data-testid="tab-automotive"
             className={cn(
-              "flex-1 py-3 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border",
+              "flex-1 py-3 px-4 rounded-[14px] font-semibold text-base transition-all flex items-center justify-center gap-2 relative",
               activeCategory === "automotive"
-                ? "border-orange-500 bg-orange-500/10 text-orange-500 shadow-sm shadow-orange-500/10"
-                : "border-border bg-white dark:bg-white/[0.04] text-foreground dark:text-white/85",
+                ? "text-orange-500 ring-1 ring-orange-500/70 shadow-[0_0_18px_-4px_rgba(249,115,22,0.55)]"
+                : "text-foreground/80 dark:text-white/85 hover:bg-white/5",
               isRTL ? 'flex-row-reverse' : ''
             )}
+            style={
+              activeCategory === "automotive"
+                ? { background: 'radial-gradient(120% 140% at 50% 50%, rgba(249,115,22,0.32) 0%, rgba(249,115,22,0.14) 45%, rgba(249,115,22,0.04) 100%)' }
+                : undefined
+            }
           >
             <Car className="h-5 w-5" />
             {t('automotive')}
@@ -299,12 +331,17 @@ export default function Categories() {
             onClick={() => handleCategoryChange("spare-parts")}
             data-testid="tab-spare-parts"
             className={cn(
-              "flex-1 py-3 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border",
+              "flex-1 py-3 px-4 rounded-[14px] font-semibold text-base transition-all flex items-center justify-center gap-2 relative",
               activeCategory === "spare-parts"
-                ? "border-orange-500 bg-orange-500/10 text-orange-500 shadow-sm shadow-orange-500/10"
-                : "border-border bg-white dark:bg-white/[0.04] text-foreground dark:text-white/85",
+                ? "text-orange-500 ring-1 ring-orange-500/70 shadow-[0_0_18px_-4px_rgba(249,115,22,0.55)]"
+                : "text-foreground/80 dark:text-white/85 hover:bg-white/5",
               isRTL ? 'flex-row-reverse' : ''
             )}
+            style={
+              activeCategory === "spare-parts"
+                ? { background: 'radial-gradient(120% 140% at 50% 50%, rgba(249,115,22,0.32) 0%, rgba(249,115,22,0.14) 45%, rgba(249,115,22,0.04) 100%)' }
+                : undefined
+            }
           >
             <Wrench className="h-5 w-5" />
             {t('spareParts')}

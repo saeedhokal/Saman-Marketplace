@@ -40,12 +40,12 @@ const DENSITY_STYLES: Record<Density, {
     soldText: "text-5xl",
   },
   default: {
-    image: "aspect-[4/3] md:aspect-square bg-gray-50 dark:bg-slate-800/40",
+    image: "aspect-[4/3] bg-gray-50 dark:bg-slate-800/40",
     title: "text-[15px] truncate",
-    price: "text-base sm:text-lg",
-    padding: "p-3 sm:p-4",
-    titleMin: "min-h-[1.5rem]",
-    avatar: "h-8 w-8",
+    price: "text-[15px] font-bold",
+    padding: "p-2.5",
+    titleMin: "min-h-[1.25rem]",
+    avatar: "h-7 w-7",
     soldText: "text-4xl",
   },
   compact: {
@@ -83,7 +83,7 @@ export function ProductCard({
   const [imageLoaded, setImageLoaded] = useState(false);
   // Always show the full photo (contain) so cars are never cropped.
   // Users prefer letterbox bars over cut-off subjects.
-  const useCoverFit = false;
+  const useCoverFit = true;
   const imgRef = useRef<HTMLImageElement | null>(null);
   const styles = DENSITY_STYLES[density] ?? DENSITY_STYLES.default;
 
