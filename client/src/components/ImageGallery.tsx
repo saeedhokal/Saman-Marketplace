@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import useEmblaCarousel from "embla-carousel-react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Share2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { retryObjectImg } from "@/lib/bustObjectUrl";
+import { useToast } from "@/hooks/use-toast";
 
 function getFullscreenImageUrl(src: string): string {
   if (!src) return src;
@@ -17,9 +18,10 @@ function getFullscreenImageUrl(src: string): string {
 interface ImageGalleryProps {
   images: string[];
   initialIndex?: number;
+  shareUrl?: string;
 }
 
-export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
+export function ImageGallery({ images, initialIndex = 0, shareUrl }: ImageGalleryProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     startIndex: initialIndex,
     loop: false,
@@ -168,6 +170,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
         <FullscreenViewer
           images={images}
           initialIndex={currentIndex}
+          shareUrl={shareUrl}
           onClose={() => setIsFullscreen(false)}
           onIndexChange={(idx) => {
             setCurrentIndex(idx);
@@ -183,6 +186,7 @@ export function ImageGallery({ images, initialIndex = 0 }: ImageGalleryProps) {
 interface FullscreenViewerProps {
   images: string[];
   initialIndex: number;
+  shareUrl?: string;
   onClose: () => void;
   onIndexChange: (idx: number) => void;
 }
@@ -190,9 +194,40 @@ interface FullscreenViewerProps {
 const SWIPE_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 const SWIPE_DURATION_MS = 340;
 
-function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: FullscreenViewerProps) {
+function FullscreenViewer({ images, initialIndex, shareUrl, onClose, onIndexChange }: FullscreenViewerProps) {
+  const { toast } = useToast();
   const [index, setIndex] = useState(initialIndex);
   const [pendingRenderIndex, setPendingRenderIndex] = useState<number | null>(initialIndex);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const [loadedSet, setLoadedSet] = useState<Set<number>>(new Set());
+  const singleTapTimerRef = useRef<number | null>(null);
+
+  const clearSingleTapTimer = useCallback(() => {
+    if (singleTapTimerRef.current !== null) {
+      window.clearTimeout(singleTapTimerRef.current);
+      singleTapTimerRef.current = null;
+    }
+  }, []);
+
+  const handleShare = useCallback(async () => {
+    if (!shareUrl) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({ url: shareUrl });
+        return;
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({ title: "Link Copied", description: "Listing link copied to clipboard." });
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: "Could not copy link." });
+    }
+  }, [shareUrl, toast]);
+
+  useEffect(() => () => clearSingleTapTimer(), [clearSingleTapTimer]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -234,6 +269,12 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
   const panStartRef = useRef({ x: 0, y: 0 });
   const panBaseRef = useRef({ tx: 0, ty: 0 });
 
+  // Double-tap detection
+  const lastTapRef = useRef<{ t: number; x: number; y: number } | null>(null);
+  const DOUBLE_TAP_MS = 300;
+  const DOUBLE_TAP_DIST = 40;
+  const DOUBLE_TAP_SCALE = 2.5;
+
   const MIN_SCALE = 1;
   const MAX_SCALE = 4;
 
@@ -243,6 +284,37 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     const { scale, tx, ty } = transformRef.current;
     img.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${scale})`;
     img.style.willChange = scale === 1 ? "auto" : "transform";
+  }, []);
+
+  // Animate to a target scale, focused on a viewport point (focalX, focalY).
+  // Used by double-tap to zoom in centered on the tap, or zoom back out to 1×.
+  const animateToScale = useCallback((targetScale: number, focalX: number, focalY: number) => {
+    const img = imageRefs.current[indexRef.current];
+    const container = containerRef.current;
+    if (!img || !container) return;
+    const rect = container.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    let tx = 0, ty = 0;
+    if (targetScale > 1) {
+      tx = (focalX - cx) * (1 - targetScale);
+      ty = (focalY - cy) * (1 - targetScale);
+      const w = rect.width;
+      const h = rect.height;
+      const maxX = Math.max(0, ((targetScale - 1) * w) / 2);
+      const maxY = Math.max(0, ((targetScale - 1) * h) / 2);
+      tx = Math.max(-maxX, Math.min(maxX, tx));
+      ty = Math.max(-maxY, Math.min(maxY, ty));
+    }
+    transformRef.current = { scale: targetScale, tx, ty };
+    img.style.transition = "transform 220ms ease-out";
+    img.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${targetScale})`;
+    img.style.willChange = targetScale === 1 ? "auto" : "transform";
+    window.setTimeout(() => {
+      if (img && transformRef.current.scale === targetScale) {
+        img.style.transition = "none";
+      }
+    }, 240);
   }, []);
 
   const clampPan = useCallback((tx: number, ty: number, scale: number) => {
@@ -478,6 +550,38 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     // Always track the pointer so we know how many fingers are down
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
+    // ===== Double-tap to zoom (single finger only) =====
+    if (pointersRef.current.size === 1) {
+      const now = performance.now();
+      const last = lastTapRef.current;
+      if (
+        last &&
+        now - last.t < DOUBLE_TAP_MS &&
+        Math.hypot(e.clientX - last.x, e.clientY - last.y) < DOUBLE_TAP_DIST
+      ) {
+        // Double-tap detected — cancel any pending single-tap toggle,
+        // toggle zoom, and swallow this gesture
+        clearSingleTapTimer();
+        lastTapRef.current = null;
+        cancelSwipe(e);
+        draggingRef.current = false;
+        activePointerIdRef.current = null;
+        panActiveRef.current = false;
+        pinchActiveRef.current = false;
+        const currentScale = transformRef.current.scale;
+        const target = currentScale > 1.01 ? 1 : DOUBLE_TAP_SCALE;
+        animateToScale(target, e.clientX, e.clientY);
+        // Remove this pointer so subsequent moves don't drag-swipe
+        pointersRef.current.delete(e.pointerId);
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+        return;
+      }
+      lastTapRef.current = { t: now, x: e.clientX, y: e.clientY };
+    } else {
+      // Multi-finger gesture cancels the pending tap
+      lastTapRef.current = null;
+    }
+
     // ===== Pinch starts when a second finger touches down =====
     if (pointersRef.current.size === 2) {
       cancelSwipe(e);
@@ -674,11 +778,28 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
     if (!draggingRef.current) return;
     if (activePointerIdRef.current !== e.pointerId) return;
 
+    const wasUnmoved = lockedAxisRef.current === null;
+
     draggingRef.current = false;
     activePointerIdRef.current = null;
 
     if (cancelled || lockedAxisRef.current !== "x") {
       animateToIndex(indexRef.current, true);
+      // Clean tap (never crossed move threshold, not cancelled, not zoomed):
+      // schedule a controls-visibility toggle after the double-tap window.
+      if (
+        !cancelled &&
+        wasUnmoved &&
+        transformRef.current.scale <= 1.01 &&
+        !pinchActiveRef.current &&
+        !panActiveRef.current
+      ) {
+        clearSingleTapTimer();
+        singleTapTimerRef.current = window.setTimeout(() => {
+          singleTapTimerRef.current = null;
+          setControlsVisible((v) => !v);
+        }, DOUBLE_TAP_MS);
+      }
       return;
     }
 
@@ -756,41 +877,76 @@ function FullscreenViewer({ images, initialIndex, onClose, onIndexChange }: Full
               data-testid={`fullscreen-slide-${idx}`}
             >
               {shouldRenderSlide(idx) ? (
-                <img
-                  ref={(el) => { imageRefs.current[idx] = el; }}
-                  src={getFullscreenImageUrl(img)}
-                  alt={`Image ${idx + 1}`}
-                  loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
-                  decoding="async"
-                  draggable={false}
-                  onError={retryObjectImg}
-                  className="pointer-events-none select-none object-contain"
-                  style={{
-                    width: "100%",
-                    height: "100dvh",
-                    WebkitUserSelect: "none",
-                    userSelect: "none",
-                    WebkitTouchCallout: "none",
-                    transformOrigin: "center center",
-                  }}
-                />
+                <>
+                  {!loadedSet.has(idx) && (
+                    <div
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      data-testid={`fullscreen-loading-${idx}`}
+                    >
+                      <Loader2 className="h-8 w-8 text-white/60 animate-spin" />
+                    </div>
+                  )}
+                  <img
+                    ref={(el) => { imageRefs.current[idx] = el; }}
+                    src={getFullscreenImageUrl(img)}
+                    alt={`Image ${idx + 1}`}
+                    loading={Math.abs(idx - index) <= 1 ? "eager" : "lazy"}
+                    decoding="async"
+                    draggable={false}
+                    onLoad={() => {
+                      setLoadedSet((prev) => {
+                        if (prev.has(idx)) return prev;
+                        const next = new Set(prev);
+                        next.add(idx);
+                        return next;
+                      });
+                    }}
+                    onError={retryObjectImg}
+                    className="pointer-events-none select-none object-contain"
+                    style={{
+                      width: "100%",
+                      height: "100dvh",
+                      WebkitUserSelect: "none",
+                      userSelect: "none",
+                      WebkitTouchCallout: "none",
+                      transformOrigin: "center center",
+                    }}
+                  />
+                </>
               ) : null}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="absolute top-0 left-0 right-0 h-16 bg-black/40 pointer-events-none z-20" />
+      <div
+        className={`absolute top-0 left-0 right-0 h-16 bg-black/40 pointer-events-none z-20 transition-opacity duration-200 ${controlsVisible ? "opacity-100" : "opacity-0"}`}
+      />
 
       <button
-        className="absolute top-[env(safe-area-inset-top,24px)] right-4 z-30 text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+        className={`absolute top-[env(safe-area-inset-top,24px)] right-4 z-30 text-white p-2 hover:bg-white/10 rounded-full transition-all duration-200 ${controlsVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={onClose}
         data-testid="button-close-fullscreen"
+        aria-label="Close"
       >
         <X className="h-7 w-7" strokeWidth={2.5} />
       </button>
 
-      <div className="absolute top-[env(safe-area-inset-top,24px)] mt-2 left-1/2 -translate-x-1/2 text-white text-sm font-medium bg-white/15 backdrop-blur-md px-3 py-1 rounded-full z-30 border border-white/10">
+      {shareUrl && (
+        <button
+          className={`absolute top-[env(safe-area-inset-top,24px)] left-4 z-30 text-white p-2 hover:bg-white/10 rounded-full transition-all duration-200 ${controlsVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          onClick={handleShare}
+          data-testid="button-share-fullscreen"
+          aria-label="Share"
+        >
+          <Share2 className="h-6 w-6" strokeWidth={2.2} />
+        </button>
+      )}
+
+      <div
+        className={`absolute top-[env(safe-area-inset-top,24px)] mt-2 left-1/2 -translate-x-1/2 text-white text-sm font-medium bg-white/15 backdrop-blur-md px-3 py-1 rounded-full z-30 border border-white/10 transition-opacity duration-200 pointer-events-none ${controlsVisible ? "opacity-100" : "opacity-0"}`}
+        data-testid="text-fullscreen-counter"
+      >
         {index + 1} / {total}
       </div>
 

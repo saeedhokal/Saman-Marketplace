@@ -291,7 +291,7 @@ export default function ProductDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
           <div className="relative">
             {allImages.length > 0 ? (
-              <ImageGallery images={allImages} />
+              <ImageGallery images={allImages} shareUrl={`https://thesamanapp.com/product/${id}`} />
             ) : (
               <div className="aspect-square rounded-2xl overflow-hidden bg-secondary border border-border/50 flex items-center justify-center text-muted-foreground">
                 No Image Available
