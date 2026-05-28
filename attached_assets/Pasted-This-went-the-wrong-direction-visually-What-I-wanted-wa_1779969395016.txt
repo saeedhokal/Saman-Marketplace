@@ -1,0 +1,96 @@
+This went the wrong direction visually.
+
+What I wanted was much closer to the reference mockup I uploaded, not the current result.
+
+Current problem:
+
+* The hero/top card is sitting on a mostly black sheet/dark block.
+* It feels like the old style with a pasted image inside.
+* The whole thing looks separated and heavy.
+* It is not blending seamlessly into the page background.
+
+What I actually want:
+I want the top section to feel seamless, premium, and atmospheric like the reference mockup.
+
+Correct design direction:
+
+1. ONE mildly blurry Dubai skyline background behind the whole top/home area
+
+* The background should be a premium dark Dubai skyline.
+* Slightly blurred / softened.
+* Sharper and cleaner than the old foggy/cloudy version.
+* Not too noisy.
+* This skyline should sit behind the whole hero area, not only inside the card.
+
+2. The hero card should be transparent / frosted / glass-like
+
+* Do NOT make the hero card a heavy black rectangle.
+* Do NOT make it look like a pasted old-style panel.
+* The hero card should be a translucent overlay on top of the skyline.
+* It should feel like a glass cover.
+* It should have a soft left-to-right fade / translucent gradient.
+* The left side can be slightly darker for text readability.
+* The right side should fade more softly into transparency / translucency.
+* Use subtle backdrop blur if possible.
+
+3. Remove the heavy “black sheet” feel
+
+* The current result looks like a black block with content on top.
+* I want a lighter, transparent-ish premium overlay instead.
+* Think elegant frosted glass, not opaque dark panel.
+
+4. Hero composition
+
+* Keep the hero text and CTA:
+
+  * UAE'S MARKETPLACE
+  * Powering the UAE Auto Market
+  * Buy, sell and discover cars and parts with confidence.
+  * Start Selling
+* Keep readability strong.
+* Prefer text on the left.
+* Keep the card rounded and premium.
+* If using the Saman logo inside the hero, make it subtle and tasteful only if it truly fits. Otherwise remove it.
+
+5. Overall layering should be:
+
+* Base background: dark navy / graphite gradient
+* Main visual layer: mildly blurry Dubai skyline
+* Overlay: subtle dark fade for readability
+* Hero card: transparent/frosted glass panel with left-to-right fade
+* Content above that
+
+6. Categories section
+
+* It should continue below naturally.
+* Do not make it feel like a separate harsh black section.
+* Keep the same premium seamless visual language.
+
+7. Very important:
+   Use the reference mockup as the visual target.
+   The current screenshots are the source of truth for functionality.
+   Preserve all real app features and layout behavior.
+   Do not remove or break:
+
+* categories
+* recent posts
+* bottom nav
+* plus button
+* listing cards
+* routes
+* search/filter logic
+* image viewer/pinch zoom
+* any existing card view modes
+
+What I need from you first:
+Before changing code, identify exactly why the current implementation looks different from the reference.
+Then explain exactly how you will:
+
+* replace the heavy black hero panel
+* create the transparent/glass hero overlay
+* move the skyline to the background layer
+* make the top section seamless like the mockup
+
+Important:
+I want the visual result closer to the reference mockup:
+transparent-ish cover fading from left to right + mildly blurry Dubai skyline in the background.
