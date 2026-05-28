@@ -36,6 +36,24 @@ uri = "file://attached_assets/splash_mockups/concept3_uae_night_luxury.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "TJyy9fGvZsCApALKlWgYB"
+uri = "file://attached_assets/splash_mockups/bg1_premium.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "2kKA3tyFXTlZanXoR1ud7"
+uri = "file://attached_assets/splash_mockups/bg2_automotive.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "RBzOqXC0VrJDNtbKDI0zQ"
+uri = "file://attached_assets/splash_mockups/bg3_uae_night.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "Sb2xbwstQo6_mBL2kDbFZ"
 uri = "file://exports/saman-deck/saman-marketplace-deck.pdf"
@@ -263,3 +281,21 @@ id = "ZRzxpFK9RTft4xBrGq6eH"
 uri = "file://attached_assets/splash_mockups/concept3_uae_night_luxury.png"
 type = "image"
 title = "Concept 3 — UAE Night Luxury"
+
+[[outputs]]
+id = "ngyQUQAOUnnKnk-7gxaG9"
+uri = "file://attached_assets/splash_mockups/mockup_premium.png"
+type = "image"
+title = "Concept 1 — Premium Minimal UAE (real logo)"
+
+[[outputs]]
+id = "Opx4rtYSNAWu1_ZsvzSDf"
+uri = "file://attached_assets/splash_mockups/mockup_automotive.png"
+type = "image"
+title = "Concept 2 — Automotive Tech (real logo)"
+
+[[outputs]]
+id = "PXoiTXY8UtIass6B52TiW"
+uri = "file://attached_assets/splash_mockups/mockup_uae_night.png"
+type = "image"
+title = "Concept 3 — UAE Night Luxury (real logo)"
