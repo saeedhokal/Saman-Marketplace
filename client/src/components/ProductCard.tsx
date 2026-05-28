@@ -4,7 +4,7 @@ import { type Product } from "@shared/schema";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Store, ImageOff } from "lucide-react";
+import { Store, ImageOff, Car } from "lucide-react";
 import { format } from "date-fns";
 import { bustObjectUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import type { Density } from "@/hooks/use-listing-view";
@@ -201,14 +201,23 @@ export function ProductCard({
               {product.title}
             </h3>
             {product.mainCategory === "Automotive" && (product.year || product.mileage) && (
-              <div className={`flex items-center gap-1.5 mt-1.5 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`} data-testid={`pills-${product.id}`}>
+              <div className={`flex items-center gap-2 mt-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`} data-testid={`pills-${product.id}`}>
                 {product.year ? (
-                  <span dir="ltr" className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900/90 dark:bg-white/10 text-white border border-white/10" data-testid={`pill-year-${product.id}`}>
+                  <span
+                    dir="ltr"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10"
+                    data-testid={`pill-year-${product.id}`}
+                  >
+                    <Car className="h-3 w-3 text-orange-500" strokeWidth={2.25} />
                     {product.year}
                   </span>
                 ) : null}
                 {product.mileage ? (
-                  <span dir={isRTL ? 'rtl' : 'ltr'} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900/90 dark:bg-white/10 text-white border border-white/10" data-testid={`pill-km-${product.id}`}>
+                  <span
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                    className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10"
+                    data-testid={`pill-km-${product.id}`}
+                  >
                     {new Intl.NumberFormat(language === 'ar' ? 'ar-AE' : 'en-US').format(product.mileage)} {language === 'ar' ? 'كم' : 'km'}
                   </span>
                 ) : null}
