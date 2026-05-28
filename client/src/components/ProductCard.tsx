@@ -32,7 +32,7 @@ const DENSITY_STYLES: Record<Density, {
 }> = {
   large: {
     image: "aspect-[16/10] bg-gray-50 dark:bg-slate-800/40",
-    title: "text-base sm:text-lg",
+    title: "text-base sm:text-lg line-clamp-2",
     price: "text-lg sm:text-xl",
     padding: "p-4 sm:p-5",
     titleMin: "min-h-[2.75rem] sm:min-h-[3rem]",
@@ -41,25 +41,25 @@ const DENSITY_STYLES: Record<Density, {
   },
   default: {
     image: "aspect-[4/3] md:aspect-square bg-gray-50 dark:bg-slate-800/40",
-    title: "text-sm sm:text-base",
+    title: "text-[15px] truncate",
     price: "text-base sm:text-lg",
     padding: "p-3 sm:p-4",
-    titleMin: "min-h-[2.5rem] sm:min-h-[2.75rem]",
+    titleMin: "min-h-[1.5rem]",
     avatar: "h-8 w-8",
     soldText: "text-4xl",
   },
   compact: {
     image: "aspect-[4/3] bg-gray-50 dark:bg-slate-800/40",
-    title: "text-sm leading-tight line-clamp-2",
+    title: "text-sm leading-tight truncate",
     price: "text-base font-bold",
     padding: "p-2.5",
-    titleMin: "min-h-[2.25rem]",
+    titleMin: "min-h-[1.25rem]",
     avatar: "h-6 w-6",
     soldText: "text-2xl",
   },
   single: {
     image: "aspect-[16/10] bg-gray-50 dark:bg-slate-800/40",
-    title: "text-base",
+    title: "text-base line-clamp-2",
     price: "text-lg",
     padding: "p-4",
     titleMin: "min-h-[2.5rem]",
@@ -180,7 +180,7 @@ export function ProductCard({
 
           <CardContent className={styles.padding}>
             <h3 className={cn(
-              "font-display font-bold leading-tight line-clamp-2 transition-colors",
+              "font-display font-bold leading-tight transition-colors",
               styles.title,
               styles.titleMin,
               isSold ? 'text-muted-foreground' : 'text-foreground group-hover:text-accent'

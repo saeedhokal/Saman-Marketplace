@@ -23,7 +23,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   Select,
@@ -247,38 +246,64 @@ export default function Categories() {
       </div>
 
       <div className={`container mx-auto px-4 pt-4 ${isRTL ? 'text-right' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className={`flex items-center border border-border rounded-full px-4 py-2 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Search className={`h-5 w-5 text-foreground/70 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+        {/* Search bar with embedded filter button */}
+        <div className={`flex items-center border border-border bg-white dark:bg-white/[0.03] rounded-full ${isRTL ? 'pr-4 pl-1' : 'pl-4 pr-1'} py-1.5 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Search className={`h-5 w-5 text-foreground/70 shrink-0 ${isRTL ? 'ml-3' : 'mr-3'}`} />
           <Input
             type="text"
             placeholder={t('searchCategory')}
-            className={`border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-muted-foreground placeholder:font-semibold ${isRTL ? 'text-right' : ''}`}
+            className={`border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-muted-foreground placeholder:font-semibold flex-1 min-w-0 ${isRTL ? 'text-right' : ''}`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search"
           />
+          <div className={`h-6 w-px bg-border/70 shrink-0 ${isRTL ? 'ml-2 mr-1' : 'mr-2 ml-1'}`} />
+          <button
+            type="button"
+            onClick={() => setFilterOpen(true)}
+            className="relative h-9 w-9 shrink-0 rounded-full flex items-center justify-center hover:bg-secondary transition-colors"
+            data-testid="button-filter"
+            aria-label="Filters"
+          >
+            <SlidersHorizontal className="h-4 w-4 text-foreground/80" />
+            {activeFiltersCount > 0 && (
+              <span
+                className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full text-[10px] font-bold flex items-center justify-center"
+                style={{ backgroundColor: '#f97316', color: 'white' }}
+              >
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
         </div>
 
+        {/* Category tabs - subtle dark pills */}
         <div className={`flex gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <button
             onClick={() => handleCategoryChange("automotive")}
             data-testid="tab-automotive"
-            className={`flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-            style={activeCategory === "automotive" 
-              ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
-              : { backgroundColor: 'rgba(30,30,46,0.95)', color: 'white', border: '1px solid rgba(255,255,255,0.08)' }}
+            className={cn(
+              "flex-1 py-3 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border",
+              activeCategory === "automotive"
+                ? "border-orange-500 bg-orange-500/10 text-orange-500 shadow-sm shadow-orange-500/10"
+                : "border-border bg-white dark:bg-white/[0.04] text-foreground dark:text-white/85",
+              isRTL ? 'flex-row-reverse' : ''
+            )}
           >
             <Car className="h-5 w-5" />
             {t('automotive')}
           </button>
-          
+
           <button
             onClick={() => handleCategoryChange("spare-parts")}
             data-testid="tab-spare-parts"
-            className={`flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-            style={activeCategory === "spare-parts" 
-              ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
-              : { backgroundColor: 'rgba(30,30,46,0.95)', color: 'white', border: '1px solid rgba(255,255,255,0.08)' }}
+            className={cn(
+              "flex-1 py-3 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border",
+              activeCategory === "spare-parts"
+                ? "border-orange-500 bg-orange-500/10 text-orange-500 shadow-sm shadow-orange-500/10"
+                : "border-border bg-white dark:bg-white/[0.04] text-foreground dark:text-white/85",
+              isRTL ? 'flex-row-reverse' : ''
+            )}
           >
             <Wrench className="h-5 w-5" />
             {t('spareParts')}
@@ -330,26 +355,13 @@ export default function Categories() {
           </DropdownMenu>
         </div>
 
-        <div className="flex items-center gap-2 mb-4">
+        {/* View switcher (card layout choices) — sits directly under All Brands row */}
+        <div className={`flex items-center mb-4 ${isRTL ? 'justify-end flex-row-reverse' : 'justify-start'}`}>
+          <ListingViewSwitcher />
+        </div>
+
+        <div className="flex items-center gap-2 mb-4 empty:mb-0">
           <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
-            <SheetTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="relative h-8 w-8"
-                data-testid="button-filter"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                {activeFiltersCount > 0 && (
-                  <span 
-                    className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full text-[10px] font-bold flex items-center justify-center"
-                    style={{ backgroundColor: '#f97316', color: 'white' }}
-                  >
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </Button>
-            </SheetTrigger>
             <SheetContent side="bottom" className="h-auto max-h-[70vh] rounded-t-2xl">
               <SheetHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -536,12 +548,9 @@ export default function Categories() {
           )}
         </div>
 
-        <div className={`flex items-center justify-between gap-2 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <ListingViewSwitcher />
-          <div className="flex items-center gap-2">
-            <DownloadAppButton variant="compact" />
-            <ActionsDropdown />
-          </div>
+        <div className={`flex items-center justify-end gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-start' : ''}`}>
+          <DownloadAppButton variant="compact" />
+          <ActionsDropdown />
         </div>
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
