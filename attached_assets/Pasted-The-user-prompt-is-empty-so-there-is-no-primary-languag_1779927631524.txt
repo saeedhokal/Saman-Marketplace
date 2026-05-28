@@ -1,0 +1,83 @@
+The user prompt is empty, so there is no primary language to identify. However, based on the thinking block alone, here is a summary:
+
+Identified task regarding iOS signing configurationThe user prompt is empty, so there is no primary language to identify. However, based on the thinking block alone, here is a summary:
+
+Identified task regarding iOS signing configurationHere's a complete answer to all four questions:
+
+1. Correct flag name
+--certificate-key-path is correct in recent codemagic-cli-tools. However, there's a subtlety: certificates create doesn't take a raw RSA private key — it needs a CSR (Certificate Signing Request). The private key is used to generate the CSR, and codemagic-cli-tools can do that internally if you pass the key via the environment variable CERTIFICATE_PRIVATE_KEY or --certificate-key (the content, not a path).
+The cleanest approach: let the tool handle CSR generation automatically by setting the private key as an env var value (not a file path).
+
+2. CSR vs raw RSA key
+certificates create needs a CSR submitted to Apple. The tool generates the CSR internally from your private key. You don't pass the CSR manually — you pass the private key content, and the tool builds the CSR, submits it to Apple, and gets back the signed cert. So:
+
+✅ Pass private key content → tool generates CSR internally
+❌ Pass a CSR file directly (no flag for this in codemagic-cli-tools)
+
+
+3. Exact working YAML block
+yamlscripts:
+  - name: Set up code signing
+    script: |
+      # Generate a fresh RSA private key
+      openssl genrsa 2048 > /tmp/ios_dist_key.pem
+      
+      # Export as env var (the tool reads CERTIFICATE_PRIVATE_KEY by default)
+      export CERTIFICATE_PRIVATE_KEY=$(cat /tmp/ios_dist_key.pem)
+      
+      keychain initialize
+      
+      # Create new iOS Distribution cert using the key above
+      app-store-connect certificates create \
+        --type IOS_DISTRIBUTION \
+        --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
+        --save
+      
+      # Fetch (or create) App Store provisioning profile
+      app-store-connect fetch-signing-files "com.saeed.saman" \
+        --type IOS_APP_STORE \
+        --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
+        --create
+      
+      keychain add-certificates \
+        --certificate-key "$CERTIFICATE_PRIVATE_KEY"
+      
+      xcode-project use-profiles
+
+  - name: Build iOS
+    script: |
+      xcode-project build-ipa \
+        --workspace ios/App/App.xcworkspace \
+        --scheme App
+
+  - name: Upload to TestFlight
+    script: |
+      app-store-connect publish \
+        --path $(find build/ios/ipa -name "*.ipa") \
+        --testflight
+Key differences from your attempt 3:
+
+Use --certificate-key "$CERTIFICATE_PRIVATE_KEY" (content, not --certificate-key-path) in all three commands
+Pass the same key consistently to certificates create, fetch-signing-files, AND keychain add-certificates
+
+
+4. Automatic signing (the simpler path)
+Yes — this is almost certainly easier for your situation. Here's exactly what to flip:
+
+Codemagic UI → your workflow → Build → iOS code signing
+Set Code signing method → App Store Connect API key
+Select the API key you already uploaded (KN3B9AFDJM)
+Set Bundle identifier → com.saeed.saman
+Check "Create certificates automatically" ✅
+Check "Create provisioning profiles automatically" ✅
+
+Then in codemagic.yaml, delete the entire manual signing script and just keep:
+yamlscripts:
+  - name: Build iOS
+    script: |
+      xcode-project build-ipa \
+        --workspace ios/App/App.xcworkspace \
+        --scheme App
+Codemagic handles cert creation, profile creation, keychain setup, and profile injection automatically before your build script runs. Since you have zero certs right now, the "create automatically" option was literally designed for this exact case.
+
+My recommendation: Try the automatic signing UI toggle first. It eliminates all the manual CLI complexity. If it still fails, fall back to the manual YAML block above using --certificate-key (content, not path).

@@ -67,27 +67,28 @@ workflows:
           # Codemagic CLI's `certificates create` does NOT auto-generate this —
           # it errors out with "Cannot create resource without certificate
           # private key" unless we supply one explicitly.
-          CERT_KEY_PATH="/tmp/cert_private_key.pem"
-          openssl genrsa -out "$CERT_KEY_PATH" 2048
-          echo "Generated cert private key, length: $(wc -c < "$CERT_KEY_PATH") bytes"
+          # Generate a fresh RSA private key and export its CONTENT (not path)
+          # via the env var the CLI reads by default. The CLI uses this key to
+          # build a CSR internally, submits it to App Store Connect, and gets
+          # back a signed cert paired with this key.
+          openssl genrsa 2048 > /tmp/ios_dist_key.pem
+          export CERTIFICATE_PRIVATE_KEY="$(cat /tmp/ios_dist_key.pem)"
+          echo "Generated cert private key, content length: ${#CERTIFICATE_PRIVATE_KEY} chars"
 
-          # Create a brand-new Apple Distribution certificate using that key.
-          # CLI submits a CSR derived from the private key to App Store Connect,
-          # downloads the signed cert, and (with --save) stores it.
+          # Create a brand-new Apple Distribution certificate.
           app-store-connect certificates create \
             --type IOS_DISTRIBUTION \
-            --certificate-key-path "$CERT_KEY_PATH" \
+            --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
             --save
 
-          # Fetch the App Store distribution profile. The cert we just created
-          # plus its private key are now available locally, so this command
-          # can match them up.
+          # Fetch (or create) the App Store provisioning profile, matching it
+          # against the cert + key we just created.
           app-store-connect fetch-signing-files "com.saeed.saman" \
             --type IOS_APP_STORE \
-            --certificate-key-path "$CERT_KEY_PATH" \
+            --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
             --create
 
-          keychain add-certificates --certificate-key-path "$CERT_KEY_PATH"
+          keychain add-certificates --certificate-key "$CERTIFICATE_PRIVATE_KEY"
 
           # Install the fetched profile into the Xcode project (writes Manual
           # signing config pointing to the fresh profile).
