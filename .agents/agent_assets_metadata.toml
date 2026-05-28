@@ -305,3 +305,9 @@ id = "i5sBCQMSSwejsdpmt7dzt"
 uri = "file://screenshots/hero_card_preview.jpg"
 type = "image"
 title = "Hero Card — Live Preview"
+
+[[outputs]]
+id = "I0B6p0gcLnj-fSKDVyxSi"
+uri = "file://screenshots/hero_card_v2.jpg"
+type = "image"
+title = "Hero Card — No Logo"
