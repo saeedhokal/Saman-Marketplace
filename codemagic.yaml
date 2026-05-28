@@ -50,7 +50,32 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios/App && pod install
-      
+
+      - name: Set up code signing
+        script: |
+          set -e
+          # Decode the persistent private key from secure env var (same key every build)
+          if [ -z "$CERT_PRIVATE_KEY_B64" ]; then
+            echo "ERROR: CERT_PRIVATE_KEY_B64 env var is not set in Codemagic."
+            echo "Add it under Environment variables (Secure) — see codemagic.yaml comments."
+            exit 1
+          fi
+          echo "$CERT_PRIVATE_KEY_B64" | base64 --decode > /tmp/ios_dist_key.pem
+          export CERTIFICATE_PRIVATE_KEY="$(cat /tmp/ios_dist_key.pem)"
+          echo "Decoded persistent cert private key, length: ${#CERTIFICATE_PRIVATE_KEY} chars"
+
+          keychain initialize
+
+          # Fetch existing cert that matches our stored key, or create one if none exists.
+          # Because the key is persistent, subsequent builds reuse the same cert (no 409).
+          app-store-connect fetch-signing-files "com.saeed.saman" \
+            --type IOS_APP_STORE \
+            --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
+            --create
+
+          keychain add-certificates
+          xcode-project use-profiles
+
       - name: Set version and build number
         script: |
           cd $CM_BUILD_DIR/ios/App

@@ -311,3 +311,9 @@ id = "I0B6p0gcLnj-fSKDVyxSi"
 uri = "file://screenshots/hero_card_v2.jpg"
 type = "image"
 title = "Hero Card — No Logo"
+
+[[outputs]]
+id = "l6D2FK10RY7YbFvbYFziG"
+uri = "file://CERT_PRIVATE_KEY_B64.txt"
+type = "text"
+title = "CERT_PRIVATE_KEY_B64 — paste this into Codemagic"
