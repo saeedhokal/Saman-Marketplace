@@ -240,6 +240,14 @@ export default function Landing() {
                   background: `linear-gradient(${isRTL ? '270deg' : '90deg'}, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.05) 100%)`,
                 }}
               />
+              {/* Soft warm corner glow on the text side (bright top-left in LTR / top-right in RTL) */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `radial-gradient(95% 75% at ${isRTL ? '85% 15%' : '15% 15%'}, rgba(255,180,110,0.28) 0%, rgba(249,115,22,0.14) 35%, rgba(0,0,0,0) 70%)`,
+                  mixBlendMode: 'screen',
+                }}
+              />
               {/* Content */}
               <div className="relative z-10 p-6 flex flex-col justify-between items-start" style={{ minHeight: '230px' }} dir={isRTL ? 'rtl' : 'ltr'}>
                 <div className={isRTL ? 'text-right w-full' : ''}>
@@ -286,7 +294,16 @@ export default function Landing() {
                 className={`relative h-32 rounded-2xl overflow-hidden cursor-pointer p-4 flex flex-col justify-between bg-white dark:bg-slate-800/60 backdrop-blur-md border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none transition-all active:scale-[0.98] ${isRTL ? 'text-right' : ''}`}
                 data-testid="card-automotive"
               >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-orange-400/40 bg-orange-500/10">
+                {/* Warm corner glow on the icon side */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  aria-hidden="true"
+                  style={{
+                    background: `radial-gradient(85% 75% at ${isRTL ? '85% 18%' : '15% 18%'}, rgba(249,115,22,0.30) 0%, rgba(249,115,22,0.12) 40%, rgba(0,0,0,0) 75%)`,
+                    mixBlendMode: 'screen',
+                  }}
+                />
+                <div className="relative w-10 h-10 rounded-full flex items-center justify-center border border-orange-400/40 bg-orange-500/10">
                   <Car className="h-5 w-5 text-orange-500" />
                 </div>
                 <div className="flex items-end justify-between gap-2">
@@ -309,7 +326,16 @@ export default function Landing() {
                 }}
                 data-testid="card-spare-parts"
               >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-orange-400/60 bg-orange-500/20">
+                {/* Warm corner glow on the icon side */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  aria-hidden="true"
+                  style={{
+                    background: `radial-gradient(85% 75% at ${isRTL ? '85% 18%' : '15% 18%'}, rgba(255,180,110,0.35) 0%, rgba(249,115,22,0.15) 40%, rgba(0,0,0,0) 75%)`,
+                    mixBlendMode: 'screen',
+                  }}
+                />
+                <div className="relative w-10 h-10 rounded-full flex items-center justify-center border border-orange-400/60 bg-orange-500/20">
                   <Wrench className="h-5 w-5 text-orange-400" />
                 </div>
                 <div className="flex items-end justify-between gap-2">
