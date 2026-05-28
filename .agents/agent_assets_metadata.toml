@@ -299,3 +299,9 @@ id = "PXoiTXY8UtIass6B52TiW"
 uri = "file://attached_assets/splash_mockups/mockup_uae_night.png"
 type = "image"
 title = "Concept 3 — UAE Night Luxury (real logo)"
+
+[[outputs]]
+id = "i5sBCQMSSwejsdpmt7dzt"
+uri = "file://screenshots/hero_card_preview.jpg"
+type = "image"
+title = "Hero Card — Live Preview"
