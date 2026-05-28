@@ -704,35 +704,20 @@ export default function Categories() {
             <p className="text-destructive">Failed to load products</p>
           </div>
         ) : filteredAndSortedProducts.length > 0 ? (
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={`${activeCategory}-${activeSubCategory}-${activeModel}-${sortBy}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className={gridClasses}
-            >
-              {filteredAndSortedProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.03 }}
-                >
-                  <ProductCard 
-                    product={product} 
-                    sellerImageUrl={(product as any).sellerProfileImageUrl}
-                    sellerFirstName={(product as any).sellerFirstName}
-                    sellerLastName={(product as any).sellerLastName}
-                    sellerDisplayName={(product as any).sellerDisplayName}
-                    showDate
-                    density={density}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
+          <div className={gridClasses}>
+            {filteredAndSortedProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                sellerImageUrl={(product as any).sellerProfileImageUrl}
+                sellerFirstName={(product as any).sellerFirstName}
+                sellerLastName={(product as any).sellerLastName}
+                sellerDisplayName={(product as any).sellerDisplayName}
+                showDate
+                density={density}
+              />
+            ))}
+          </div>
         ) : (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
