@@ -1,0 +1,45 @@
+
+Initialize new keychain to store code signing certificates at /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+Create keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db timeout to "no timeout"
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db to system default keychain
+Unlock keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+=== App Store Connect env var check ===
+APP_STORE_CONNECT_KEY_IDENTIFIER set? YESKN3B9AFDJM
+APP_STORE_CONNECT_ISSUER_ID set? YES32714e0d-e5a7-4f25-ba01-507c7cb1c271
+APP_STORE_CONNECT_PRIVATE_KEY length: 72
+=======================================
+Generated cert private key, content length: 1703 chars
+Creating new Signing Certificate: certificate type: IOS_DISTRIBUTION
+POST https://api.appstoreconnect.apple.com/v1/certificates returned 409: There is a problem with the request entity - You already have a current iOS Distribution certificate or a pending certificate request.
+
+
+Build failed :|
+Step 8 script `Set up code signing` exited with status code 1
+Initialize new keychain to store code signing certificates at /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+Create keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db timeout to "no timeout"
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db to system default keychain
+Unlock keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+=== App Store Connect env var check ===
+APP_STORE_CONNECT_KEY_IDENTIFIER set? YESKN3B9AFDJM
+APP_STORE_CONNECT_ISSUER_ID set? YES32714e0d-e5a7-4f25-ba01-507c7cb1c271
+APP_STORE_CONNECT_PRIVATE_KEY length: 72
+=======================================
+Generated cert private key, content length: 1703 chars
+Creating new Signing Certificate: certificate type: IOS_DISTRIBUTION
+POST https://api.appstoreconnect.apple.com/v1/certificates returned 409: There is a problem with the request entity - You already have a current iOS Distribution certificate or a pending certificate request.
+
+
+Build failed :|
+Step 8 script `Set up code signing` exited with status code 1
+
+Set version and build number
+< 1s
+Build IPA
+< 1s
+Publishing
+< 1s
+Cleaning up
+< 1s
+Step 8 script `Set up code signing` exited with status code 1
