@@ -88,7 +88,10 @@ workflows:
             --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
             --create
 
-          keychain add-certificates --certificate-key "$CERTIFICATE_PRIVATE_KEY"
+          # keychain add-certificates auto-discovers the .p12 saved by the
+          # previous steps in ~/Library/Developer/Xcode/UserData/Certificates.
+          # It does NOT accept --certificate-key.
+          keychain add-certificates
 
           # Install the fetched profile into the Xcode project (writes Manual
           # signing config pointing to the fresh profile).

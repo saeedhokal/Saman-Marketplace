@@ -1,0 +1,49 @@
+Found 1 Signing Certificate matching specified filters: certificateType=DISTRIBUTION,IOS_DISTRIBUTION.
+Filtered out 1 Signing Certificate for given private key
+- iOS Distribution: Saeed Hokal (9M237ZNUPG)
+
+Get Profiles for Bundle ID QLHW79CUF7
+Did not find any Profiles for Bundle ID QLHW79CUF7 matching specified filters: profileState=ACTIVE, profileType=IOS_APP_STORE.
+
+Did not find any Profiles that contain Signing Certificate iOS Distribution: Saeed Hokal (9M237ZNUPG)
+Found 2 Devices matching specified filters: platform=IOS, status=ENABLED.
+Found 1 Signing Certificate matching specified filters: certificateType=DISTRIBUTION,IOS_DISTRIBUTION.
+Get Bundle ID QLHW79CUF7
+Creating new Profile: name: 'XC com saeed saman ios_app_store 1779928005', profile type: IOS_APP_STORE, bundle id: QLHW79CUF7, certificates: ['9M237ZNUPG']
+Created Profile 592Y6CMCRB
+
+Saved Signing Certificate iOS Distribution: Saeed Hokal (9M237ZNUPG) to /Users/builder/Library/Developer/Xcode/UserData/Certificates/IOS_DISTRIBUTION_9M237ZNUPG_7lvvrrct.p12
+Saved Profile IOS_APP_STORE XC com saeed saman ios_app_store 1779928005 (592Y6CMCRB) to '/Users/builder/Library/Developer/Xcode/UserData/Provisioning Profiles/IOS_APP_STORE_592Y6CMCRB_jedtjjbm.mobileprovision'
+usage: keychain [-h] [--log-stream {stderr,stdout}] [--no-color] [--version] [-s] [-v] {add-certificates,create,delete,get-default,initialize,list-certificates,lock,make-default,set-timeout,show-info,unlock,use-login} ...
+keychain: error: unrecognized arguments: --certificate-key -----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCf7+n4vP96PXiL
+riYpqUMLEqhiZDCBpXpGVCElrlXKmga7Q/0ar3mahcyoqEblArW/MrBRFA3hSr1t
+84vBrOnbgA7/U0J0Fa1Jtj6DdeOxlt1yxYunkzckKa+FYGjNFqGwgZPnZFInKHjt
+E/sov+G/8+VxSAHchSqHhJGQyCE3/kPPZ7BYEa/vHSD0vf3PBY1CN7gn6/V/qcIz
+w+3JQMgQABRBeyiz3yfWlRt3SGlgLSI0yMnhoEVQfu9qIUS0LGZwZgqaCjUGHnBZ
+MewXBb1JlV1WF6ngvYAj/BEhessc7XplDY93WOD7eiClO9RexjZc07KOlI3BHWuY
+v0WnNmQtAgMBAAECggEAQiM28MpPJ2CWIcThOScqd0C+6vkdae9hEgYmMuvVxFNP
+Z08lMkzQD4s256O2tWsadzdh3BVb7Ac5MGefKnbzufZJvWHTwCdaonm/fiNZBg4q
+AxUXvDNPgR/P2mrUy8KJGHFtFSnSIylEYF175gz7MKKOBftN8cALp0C15VYtDnbq
+DOUMCcCkHiZ847608DeU++ygnc/9NcCjHmCgBrcil/ZG4oeNR/h6GnfK0D7D9fSQ
+a3C7auWpqqmtFxpvAWiEScpAvXeqrfBtzxHZm1cQyQcOkxNFKI2AtXCv2pKSjd7n
+XeBu/QQhogVu6vpFuQkbOwffgrNQfNDCVqhmux8SjQKBgQDZtY1NnRh/KNQTtayO
+qs9XTJjhKbsJPc5RJOo2Sgnfx3QQahBjgnhCWozRypYoJf8cxl5z9iQ5yCEWGS8+
+1GVuMPUFOLKqf2h/4nuJMXLJMGqku9AG/jQbQLHumOeVt94MlJDHhpvRgXTsqg7+
+BYH+aAZQ/3jVnm6yq/xI3laq6wKBgQC8ESb5xEV8/1puqYoXvxX6h2p78mMcK6kC
+h0z5j2AUhzksewoBeS0RAN/f4J3GCu9EVUmFY+c8DfD5lhh+/n28ktiJTF4fqmqG
+DsBa5OM3Wp7nK8B/XBCHNzcA8MfoTPMKgldij2KqBgo4Mx90dv6/xYrPGb3XegAX
+CtTKLT23RwKBgQCuQiSVUD4wYhTGpe81zsDhhp0D9SwRbJg82QhjZgXbScG79bmi
+fOcXbXUz4y0ne6pkdN9bgFRkr6zUDFqFtuptNeCZSlWwJQUW/8iT+rF/GjLyIqaT
+QlugyLrjWR5c92xTs4LjQfpsyms1l7UiXHQ9lzQfFy24BvViLElmZhkG+wKBgQCN
+TPXTwzvSZqkza/5tSQziZswCxGLiz4r0c2PKPYca5V53pRoncTwDAn0yYDkqixyq
+YsoShrU90du0KqnNALjH7izzO4WclRXkE0FDCaYN+PBbD+xZxHpGnZ2d/0qzpt0U
+kEnHq6Ody1vyTbbccmuE+o8Ie3a/ZtKafXDTVpqAEQKBgHQDw0UyAjIa5noQbQCs
+ppHqvwbP8HQB/pS49aKFDG1+P1oxiNco9v6WBVATRo8Z7aIsy5cesad3yjn3sJh7
+2HfjdQ28Nr7AUh1v6lAEBu1ZjJneFL5knZ6YmOoPEPN17wzhaYleBGOPKWfsEtob
+EKwr+901NqDZx1wgQsj4gmVq
+-----END PRIVATE KEY-----
+
+
+Build failed :|
+Step 8 script `Set up code signing` exited with status code 2
