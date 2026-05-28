@@ -59,12 +59,23 @@ export default function MyListings() {
     staleTime: 30000,
   });
 
+  const invalidateProductCaches = (productId?: number) => {
+    queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/sellers"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+    if (productId !== undefined) {
+      queryClient.invalidateQueries({ queryKey: ["/api/products", productId] });
+    }
+  };
+
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/products/${id}`);
+      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
+    onSuccess: (id) => {
+      invalidateProductCaches(id);
       toast({ title: t('listingDeleted') });
       setDeleteId(null);
     },
@@ -76,9 +87,10 @@ export default function MyListings() {
   const markSoldMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("POST", `/api/user/listings/${id}/sold`);
+      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
+    onSuccess: (id) => {
+      invalidateProductCaches(id);
       toast({ title: t('markedAsSold') });
       // Selling something is the strongest positive moment — ask for a
       // store review (Apple/Google handle their own throttling; we also
@@ -95,10 +107,10 @@ export default function MyListings() {
   const renewMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await apiRequest("POST", `/api/listings/${id}/renew`);
-      return response;
+      return { response, id };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
+    onSuccess: ({ id }) => {
+      invalidateProductCaches(id);
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({ title: t('listingRenewed') });
       setRenewId(null);
