@@ -15,8 +15,7 @@ import { useListingView } from "@/hooks/use-listing-view";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
-import heroSkyline from "@/assets/images/hero-skyline.png";
-import samanLogoWatermark from "@/assets/images/saman-logo-transparent.png";
+import dubaiNightSkyline from "@/assets/images/dubai-night-skyline.png";
 
 let landingSavedScrollY: number = 0;
 
@@ -113,11 +112,33 @@ export default function Landing() {
 
   return (
     <div className="relative" style={{ minHeight: 'var(--app-height)' }}>
-      {/* Solid dark/light page background - no skyline (skyline lives only inside hero card) */}
+      {/* Layer 0: Solid base page background */}
       <div
-        className="fixed inset-0 pointer-events-none transition-colors duration-500 bg-gray-50 dark:bg-[#0b0d12]"
+        className="fixed inset-0 pointer-events-none transition-colors duration-500 bg-gray-50 dark:bg-[#0a0d14] -z-10"
         style={{ pointerEvents: 'none' }}
       />
+
+      {/* Layer 1: Atmospheric Dubai skyline behind the top hero area (dark mode only) */}
+      <div
+        className="absolute top-0 left-0 right-0 pointer-events-none hidden dark:block overflow-hidden"
+        style={{ height: '560px', zIndex: 0 }}
+        aria-hidden="true"
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${dubaiNightSkyline})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 55%',
+            filter: 'blur(2px) saturate(1.05) brightness(0.85)',
+            transform: 'scale(1.05)',
+            WebkitMaskImage: 'linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.9) 55%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0) 100%)',
+            maskImage: 'linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.9) 55%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0) 100%)',
+          }}
+        />
+        {/* Subtle darkening scrim for header readability */}
+        <div className="absolute inset-0 bg-black/25" />
+      </div>
       
       {/* Desktop-only redesigned landing — hidden on small screens and inside the native app */}
       {!isNative && (
@@ -183,30 +204,37 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Hero Banner - Skyline card */}
+          {/* Hero Banner - Frosted glass over page skyline */}
           <div className="mb-6">
             <div
-              className="relative rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-xl shadow-black/10 dark:shadow-black/40"
+              className="relative rounded-3xl overflow-hidden border border-white/15 dark:border-white/10 shadow-xl shadow-black/20 dark:shadow-black/50"
               style={{ minHeight: '230px' }}
               data-testid="hero-card"
             >
-              {/* Skyline background with darkening gradient */}
+              {/* Light mode: card-local skyline (no page-level skyline in light mode) */}
+              <div
+                className="absolute inset-0 dark:hidden"
+                style={{
+                  backgroundImage: `url(${dubaiNightSkyline})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center 55%',
+                }}
+              />
+              {/* Dark mode: translucent frosted glass that reveals the page skyline behind */}
+              <div
+                className="absolute inset-0 hidden dark:block"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  backdropFilter: 'blur(8px) saturate(1.1)',
+                  WebkitBackdropFilter: 'blur(8px) saturate(1.1)',
+                }}
+              />
+              {/* Left-to-right dark fade for text readability (both modes) */}
               <div
                 className="absolute inset-0"
                 style={{
-                  backgroundImage: `linear-gradient(${isRTL ? '270deg' : '90deg'}, rgba(10,13,18,0.95) 0%, rgba(10,13,18,0.65) 50%, rgba(10,13,18,0.35) 100%), url(${heroSkyline})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center 60%',
-                  filter: 'saturate(0.95)',
+                  background: `linear-gradient(${isRTL ? '270deg' : '90deg'}, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.05) 100%)`,
                 }}
-              />
-              {/* SAMAN logo watermark */}
-              <img
-                src={samanLogoWatermark}
-                alt=""
-                aria-hidden="true"
-                className={`absolute top-1/2 -translate-y-1/2 w-28 h-28 object-contain pointer-events-none select-none ${isRTL ? 'left-4' : 'right-4'}`}
-                style={{ opacity: 0.18, filter: 'brightness(1.2)' }}
               />
               {/* Content */}
               <div className={`relative z-10 p-6 flex flex-col justify-between ${isRTL ? 'items-end text-right' : 'items-start'}`} style={{ minHeight: '230px' }}>
