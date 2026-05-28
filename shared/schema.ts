@@ -12,7 +12,7 @@ export type MainCategory = typeof MAIN_CATEGORIES[number];
 // Part types first, then "Other", then car brands alphabetically
 export const SPARE_PARTS_SUBCATEGORIES = [
   // Part Types (shown first)
-  "Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights",
+  "Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "ECU",
   // Other
   "Other",
   // Car brands alphabetically

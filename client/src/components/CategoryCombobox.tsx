@@ -197,7 +197,7 @@ export function CategoryCombobox({
                 {mainCategory === "Spare Parts" && (
                   <>
                     <CommandGroup heading={t("partTypes")}>
-                      {["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other"]
+                      {["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "ECU", "Other"]
                         .filter(cat => subcategories.includes(cat as any))
                         .map((cat) => (
                           <CommandItem
@@ -221,7 +221,7 @@ export function CategoryCombobox({
                     </CommandGroup>
                     <CommandGroup heading={t("manufacturers")}>
                       {subcategories
-                        .filter(cat => !["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "Other", "Motorcycles", "Offroad", "ATV", "UTV", "Jet Ski"].includes(cat))
+                        .filter(cat => !["Universal", "Rims", "Tires", "Turbos & Superchargers", "Lights", "ECU", "Other", "Motorcycles", "Offroad", "ATV", "UTV", "Jet Ski"].includes(cat))
                         .map((cat) => (
                           <CommandItem
                             key={cat}

@@ -3,7 +3,7 @@ import { useProducts } from "@/hooks/use-products";
 import { useLanguage } from "@/hooks/use-language";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
-import { Search, Car, Wrench, Loader2, ArrowLeft, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
+import { Search, Car, Wrench, Loader2, ArrowLeft, SlidersHorizontal, ArrowUpDown, X, Check, ChevronsUpDown } from "lucide-react";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +33,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Link } from "wouter";
 
 type MainCategory = "automotive" | "spare-parts";
@@ -74,6 +87,8 @@ export default function Categories() {
   }, []);
 
   const [search, setSearch] = useState(initState.search || "");
+  const [subCatOpen, setSubCatOpen] = useState(false);
+  const [modelOpen, setModelOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<MainCategory>(initState.activeCategory || "automotive");
   const [activeSubCategory, setActiveSubCategory] = useState(initState.activeSubCategory || "All");
   const [activeModel, setActiveModel] = useState(initState.activeModel || "All");
@@ -349,33 +364,123 @@ export default function Categories() {
         </div>
 
         <div className={`mb-3 flex gap-2 items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
-            <SelectTrigger className="flex-1 font-semibold text-foreground" data-testid="select-category">
-              <SelectValue placeholder={t('allBrands')} />
-            </SelectTrigger>
-            <SelectContent>
-              {getSubcategories().map((cat) => (
-                <SelectItem key={cat} value={cat} data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {cat === "All" ? (activeCategory === "automotive" ? t('allBrands') : t('allCategories')) : cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
+          <Popover open={subCatOpen} onOpenChange={setSubCatOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={subCatOpen}
+                className="flex-1 justify-between font-semibold text-foreground h-9"
+                data-testid="select-category"
+              >
+                <span className="truncate">
+                  {activeSubCategory === "All"
+                    ? (activeCategory === "automotive" ? t('allBrands') : t('allCategories'))
+                    : activeSubCategory}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl" align="start">
+              <Command>
+                <CommandInput placeholder={t('searchCategoryPlaceholder')} />
+                <CommandList>
+                  <CommandEmpty>{t('noCategoryFound')}</CommandEmpty>
+                  <CommandGroup>
+                    {getSubcategories().map((cat) => {
+                      const label = cat === "All"
+                        ? (activeCategory === "automotive" ? t('allBrands') : t('allCategories'))
+                        : cat;
+                      return (
+                        <CommandItem
+                          key={cat}
+                          value={label}
+                          onSelect={() => {
+                            handleSubCategoryChange(cat);
+                            setSubCatOpen(false);
+                          }}
+                          className="cursor-pointer"
+                          data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}
+                        >
+                          {label}
+                          <Check
+                            className={cn(
+                              "ml-auto h-4 w-4",
+                              activeSubCategory === cat ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
           {activeCategory === "automotive" && activeSubCategory !== "All" && getModelsForBrand().length > 0 && (
-            <Select value={activeModel} onValueChange={setActiveModel}>
-              <SelectTrigger className="flex-1 font-semibold text-foreground" data-testid="select-model">
-                <SelectValue placeholder={t('allModels')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">{t('allModels')}</SelectItem>
-                {getModelsForBrand().map((model) => (
-                  <SelectItem key={model} value={model} data-testid={`option-model-${model.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={modelOpen} onOpenChange={setModelOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={modelOpen}
+                  className="flex-1 justify-between font-semibold text-foreground h-9"
+                  data-testid="select-model"
+                >
+                  <span className="truncate">
+                    {activeModel === "All" ? t('allModels') : activeModel}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl" align="start">
+                <Command>
+                  <CommandInput placeholder={t('searchCategoryPlaceholder')} />
+                  <CommandList>
+                    <CommandEmpty>{t('noCategoryFound')}</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value={t('allModels')}
+                        onSelect={() => {
+                          setActiveModel("All");
+                          setModelOpen(false);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        {t('allModels')}
+                        <Check
+                          className={cn(
+                            "ml-auto h-4 w-4",
+                            activeModel === "All" ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                      </CommandItem>
+                      {getModelsForBrand().map((model) => (
+                        <CommandItem
+                          key={model}
+                          value={model}
+                          onSelect={() => {
+                            setActiveModel(model);
+                            setModelOpen(false);
+                          }}
+                          className="cursor-pointer"
+                          data-testid={`option-model-${model.toLowerCase().replace(/\s+/g, '-')}`}
+                        >
+                          {model}
+                          <Check
+                            className={cn(
+                              "ml-auto h-4 w-4",
+                              activeModel === model ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           )}
 
           <DropdownMenu>
