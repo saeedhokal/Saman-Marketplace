@@ -81,22 +81,11 @@ export function ProductCard({
   const sellerInitial = getInitial(sellerDisplayName, sellerFirstName, sellerLastName);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  // "extreme" = photo is much taller (e.g. 9:16 phone) or much wider
-  // (e.g. 16:9 widescreen) than the card. In those cases letterboxing
-  // leaves big empty bars, so we crop-fill instead. Mid-aspect photos
-  // (closer to 4:3 / 1:1) still use object-contain so nothing is cut.
-  const [useCoverFit, setUseCoverFit] = useState(false);
+  // Always show the full photo (contain) so cars are never cropped.
+  // Users prefer letterbox bars over cut-off subjects.
+  const useCoverFit = false;
   const imgRef = useRef<HTMLImageElement | null>(null);
   const styles = DENSITY_STYLES[density] ?? DENSITY_STYLES.default;
-
-  const detectOrientation = (el: HTMLImageElement | null) => {
-    if (!el || !el.naturalWidth || !el.naturalHeight) return;
-    const w = el.naturalWidth;
-    const h = el.naturalHeight;
-    const isTallPortrait = h >= w * 1.5;
-    const isWideLandscape = w >= h * 1.5;
-    setUseCoverFit(isTallPortrait || isWideLandscape);
-  };
 
   // If the image is already cached, the browser may finish loading it before
   // React attaches the onLoad handler. Check `complete` after mount so we
@@ -104,7 +93,6 @@ export function ProductCard({
   useEffect(() => {
     if (imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0) {
       setImageLoaded(true);
-      detectOrientation(imgRef.current);
     }
   }, [product.imageUrl]);
   const isSold = product.status === "sold";
@@ -149,9 +137,8 @@ export function ProductCard({
                       ? { objectFit: 'cover', objectPosition: 'center' }
                       : { objectFit: 'contain', objectPosition: 'center' }
                   }
-                  onLoad={(e) => {
+                  onLoad={() => {
                     setImageLoaded(true);
-                    detectOrientation(e.currentTarget);
                   }}
                   onError={(e) => {
                     if (e.currentTarget.dataset.retried === "1") {
