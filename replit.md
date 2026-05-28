@@ -54,7 +54,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **iOS Splash Screen:** Fullscreen with SAMAN logo + Dubai skyline.
 
 ## App Versioning
-- **Current Version:** 2.0.9 (In-app review prompt after marking a listing as sold)
+- **Current Version:** 2.0.9 (In-app review prompt + UI polish: new hero card, upgraded category cards, horizontal-scroll Recent Posts, year/km pills on automotive cards, inline sort, dark inactive tabs, search placeholder, delete-button fix, cache invalidation fix)
 - **iOS:** Version set in `codemagic.yaml` via `agvtool new-marketing-version`. Also in `ios/App/App.xcodeproj/project.pbxproj` (MARKETING_VERSION). Build number auto-incremented by Codemagic.
 - **Android:** Version in `android/app/build.gradle` — `versionName "2.0.9"`, `versionCode 23`.
 - **In-app display:** `client/src/pages/Settings.tsx` shows version to users.

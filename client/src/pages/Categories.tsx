@@ -266,7 +266,7 @@ export default function Categories() {
             className={`flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
             style={activeCategory === "automotive" 
               ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
-              : { backgroundColor: '#fed7aa', color: '#9a3412' }}
+              : { backgroundColor: 'rgba(30,30,46,0.95)', color: 'white', border: '1px solid rgba(255,255,255,0.08)' }}
           >
             <Car className="h-5 w-5" />
             {t('automotive')}
@@ -278,14 +278,14 @@ export default function Categories() {
             className={`flex-1 py-3 px-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
             style={activeCategory === "spare-parts" 
               ? { backgroundColor: '#f97316', color: 'white', boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.3)' } 
-              : { backgroundColor: '#fed7aa', color: '#9a3412' }}
+              : { backgroundColor: 'rgba(30,30,46,0.95)', color: 'white', border: '1px solid rgba(255,255,255,0.08)' }}
           >
             <Wrench className="h-5 w-5" />
             {t('spareParts')}
           </button>
         </div>
 
-        <div className={`mb-3 flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`mb-3 flex gap-2 items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
             <SelectTrigger className="flex-1 font-semibold text-foreground" data-testid="select-category">
               <SelectValue placeholder={t('allBrands')} />
@@ -314,6 +314,20 @@ export default function Categories() {
               </SelectContent>
             </Select>
           )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 border border-border rounded-md" data-testid="button-sort-inline">
+                <ArrowUpDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setSortBy("newest")} className="cursor-pointer">Newest First</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("oldest")} className="cursor-pointer">Oldest First</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("price-low")} className="cursor-pointer">Price: Low to High</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("price-high")} className="cursor-pointer">Price: High to Low</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex items-center gap-2 mb-4">
@@ -497,28 +511,6 @@ export default function Categories() {
               </div>
             </SheetContent>
           </Sheet>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-sort">
-                <ArrowUpDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem onClick={() => setSortBy("newest")} className="cursor-pointer">
-                Newest First
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("oldest")} className="cursor-pointer">
-                Oldest First
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("price-low")} className="cursor-pointer">
-                Price: Low to High
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("price-high")} className="cursor-pointer">
-                Price: High to Low
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           {activeFiltersCount > 0 && (
             <div className="flex-1 flex items-center gap-2 overflow-x-auto">

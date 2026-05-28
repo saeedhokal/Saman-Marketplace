@@ -180,7 +180,7 @@ export const translations = {
     noListingsYet: "No listings yet",
     beFirstToList: "Be the first to list in this category",
     failedToLoad: "Failed to load products",
-    searchCategory: "Search for category...",
+    searchCategory: "Search for cars, parts & more...",
     
     // Hero Banner
     yourNextRide: "Powering the UAE",
@@ -509,7 +509,7 @@ export const translations = {
     noListingsYet: "لا توجد إعلانات حتى الآن",
     beFirstToList: "كن أول من ينشر في هذه الفئة",
     failedToLoad: "فشل في تحميل المنتجات",
-    searchCategory: "ابحث عن فئة...",
+    searchCategory: "ابحث عن سيارات، قطع غيار والمزيد...",
     
     // Hero Banner
     yourNextRide: "نقود سوق السيارات",

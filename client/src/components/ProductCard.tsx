@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { bustObjectUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import type { Density } from "@/hooks/use-listing-view";
 import { cn, getInitial } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language";
 
 interface ProductCardProps {
   product: Product;
@@ -76,6 +77,7 @@ export function ProductCard({
   showDate,
   density = "default",
 }: ProductCardProps) {
+  const { language, isRTL } = useLanguage();
   const sellerInitial = getInitial(sellerDisplayName, sellerFirstName, sellerLastName);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -198,6 +200,20 @@ export function ProductCard({
             )}>
               {product.title}
             </h3>
+            {product.mainCategory === "Automotive" && (product.year || product.mileage) && (
+              <div className={`flex items-center gap-1.5 mt-1.5 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`} data-testid={`pills-${product.id}`}>
+                {product.year ? (
+                  <span dir="ltr" className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900/90 dark:bg-white/10 text-white border border-white/10" data-testid={`pill-year-${product.id}`}>
+                    {product.year}
+                  </span>
+                ) : null}
+                {product.mileage ? (
+                  <span dir={isRTL ? 'rtl' : 'ltr'} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900/90 dark:bg-white/10 text-white border border-white/10" data-testid={`pill-km-${product.id}`}>
+                    {new Intl.NumberFormat(language === 'ar' ? 'ar-AE' : 'en-US').format(product.mileage)} {language === 'ar' ? 'كم' : 'km'}
+                  </span>
+                ) : null}
+              </div>
+            )}
           </CardContent>
 
           <CardFooter className={cn(styles.padding, "pt-0 mt-auto")}>

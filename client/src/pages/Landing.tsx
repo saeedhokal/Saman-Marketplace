@@ -17,6 +17,7 @@ import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
 import heroSkyline from "@/assets/images/hero-skyline.png";
+import samanLogoWatermark from "@/assets/images/saman-logo-transparent.png";
 
 let landingSavedScrollY: number = 0;
 
@@ -204,6 +205,14 @@ export default function Landing() {
                   filter: 'saturate(0.95)',
                 }}
               />
+              {/* SAMAN logo watermark */}
+              <img
+                src={samanLogoWatermark}
+                alt=""
+                aria-hidden="true"
+                className={`absolute top-1/2 -translate-y-1/2 w-28 h-28 object-contain pointer-events-none select-none ${isRTL ? 'left-4' : 'right-4'}`}
+                style={{ opacity: 0.18, filter: 'brightness(1.2)' }}
+              />
               {/* Content */}
               <div className={`relative z-10 p-6 flex flex-col justify-between ${isRTL ? 'items-end text-right' : 'items-start'}`} style={{ minHeight: '230px' }}>
                 <div className={isRTL ? 'text-right' : ''}>
@@ -233,7 +242,15 @@ export default function Landing() {
             </div>
           </div>
 
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">{t('categories')}</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">{t('categories')}</h2>
+            <Link href="/categories">
+              <span className="text-orange-500 dark:text-orange-400 text-sm font-medium inline-flex items-center gap-1" data-testid="link-view-all-categories">
+                {t('viewAll')}
+                <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+              </span>
+            </Link>
+          </div>
 
           {/* Category Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
@@ -281,42 +298,42 @@ export default function Landing() {
             </Link>
           </div>
 
-        {/* Recent Posts Section */}
+        {/* Recent Posts Section - horizontal scroll */}
         {(isLoadingRecent || recentProducts.length > 0) && (
           <div className="mb-4 -mx-4 px-4 py-4 bg-gray-100/80 dark:bg-black/30 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-3 gap-2">
+            <div className="flex items-center justify-between mb-3 gap-2 px-0">
               <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('recentPosts')}</h2>
-              <div className="flex items-center gap-2">
-                <ListingViewSwitcher />
-                <Link href="/categories">
-                  <span className="text-orange-500 dark:text-orange-400 text-sm font-medium" data-testid="link-view-all-recent">{t('viewAll')}</span>
-                </Link>
-              </div>
+              <Link href="/categories">
+                <span className="text-orange-500 dark:text-orange-400 text-sm font-medium inline-flex items-center gap-1" data-testid="link-view-all-recent">
+                  {t('viewAll')}
+                  <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+                </span>
+              </Link>
             </div>
-            <div className={gridClasses}>
+            <div
+              className="flex gap-3 overflow-x-auto -mx-4 px-4 pb-1 snap-x snap-mandatory"
+              style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+              data-testid="scroll-recent-posts"
+            >
               {isLoadingRecent ? (
                 <>
-                  <SkeletonCard />
-                  <SkeletonCard />
-                  <SkeletonCard />
-                  <SkeletonCard />
-                  <div className="hidden md:block"><SkeletonCard /></div>
-                  <div className="hidden md:block"><SkeletonCard /></div>
-                  <div className="hidden md:block"><SkeletonCard /></div>
-                  <div className="hidden md:block"><SkeletonCard /></div>
+                  {[0,1,2,3].map((i) => (
+                    <div key={i} className="shrink-0 w-[180px] snap-start"><SkeletonCard /></div>
+                  ))}
                 </>
               ) : (
                 recentProducts.slice(0, 12).map((product) => (
-                  <ProductCard 
-                    key={product.id} 
-                    product={product}
-                    sellerImageUrl={(product as any).sellerProfileImageUrl}
-                    sellerFirstName={(product as any).sellerFirstName}
-                    sellerLastName={(product as any).sellerLastName}
-                    sellerDisplayName={(product as any).sellerDisplayName}
-                    showDate
-                    density={density}
-                  />
+                  <div key={product.id} className="shrink-0 w-[180px] snap-start">
+                    <ProductCard 
+                      product={product}
+                      sellerImageUrl={(product as any).sellerProfileImageUrl}
+                      sellerFirstName={(product as any).sellerFirstName}
+                      sellerLastName={(product as any).sellerLastName}
+                      sellerDisplayName={(product as any).sellerDisplayName}
+                      showDate
+                      density="compact"
+                    />
+                  </div>
                 ))
               )}
             </div>
