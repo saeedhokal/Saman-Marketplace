@@ -50,10 +50,10 @@ const DENSITY_STYLES: Record<Density, {
   },
   compact: {
     image: "aspect-[4/3] bg-gray-50 dark:bg-slate-800/40",
-    title: "text-sm leading-tight truncate",
-    price: "text-base font-bold",
-    padding: "p-2.5",
-    titleMin: "min-h-[1.25rem]",
+    title: "text-[13px] leading-tight truncate",
+    price: "text-[13px] font-bold truncate",
+    padding: "p-2",
+    titleMin: "min-h-[1.1rem]",
     avatar: "h-6 w-6",
     soldText: "text-2xl",
   },
@@ -114,8 +114,15 @@ export function ProductCard({
       className="h-full"
     >
       <Link href={`/product/${product.id}`} className="block h-full">
-        <Card className={`group h-full flex flex-col overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl ${isSold ? 'opacity-80' : ''}`}>
-          <div className={cn("relative overflow-hidden rounded-xl bg-gray-100 dark:bg-slate-700/30", styles.image)}>
+        <Card className={cn(
+          "group h-full overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl",
+          isSold ? 'opacity-80' : '',
+          density === 'single' ? (isRTL ? 'flex flex-row-reverse' : 'flex flex-row') : 'flex flex-col'
+        )}>
+          <div className={cn(
+            "relative overflow-hidden bg-gray-100 dark:bg-slate-700/30",
+            density === 'single' ? 'rounded-xl m-2 w-[42%] shrink-0 aspect-[4/3]' : cn('rounded-xl', styles.image)
+          )}>
             {product.imageUrl && !imageError ? (
               <>
                 {!imageLoaded && (
@@ -178,6 +185,7 @@ export function ProductCard({
             {/* Date temporarily hidden */}
           </div>
 
+          <div className={density === 'single' ? 'flex-1 min-w-0 flex flex-col' : 'contents'}>
           <CardContent className={styles.padding}>
             <h3 className={cn(
               "font-display font-bold leading-tight transition-colors",
@@ -235,6 +243,18 @@ export function ProductCard({
                 ) : null}
               </div>
             )}
+            {density === 'single' && product.description ? (
+              <p
+                dir={isRTL ? 'rtl' : 'ltr'}
+                className={cn(
+                  "mt-2 text-[12px] leading-snug text-muted-foreground line-clamp-2",
+                  isRTL ? 'text-right' : 'text-left'
+                )}
+                data-testid={`text-description-${product.id}`}
+              >
+                {product.description}
+              </p>
+            ) : null}
           </CardContent>
 
           <CardFooter className={cn(styles.padding, "pt-0 mt-auto")}>
@@ -246,6 +266,7 @@ export function ProductCard({
               {formattedPrice}
             </p>
           </CardFooter>
+          </div>
         </Card>
       </Link>
     </motion.div>
