@@ -1,0 +1,136 @@
+Show more
+4:27 AM
+
+Identified unsupported flag and prescribed straightforward command removal
+Identified unsupported flag and prescribed straightforward command removal
+Good news: the cert and profile were created successfully. The build only failed on the very last keychain add-certificates command because it doesn't accept --certificate-key. The hard part is done.
+
+The fix
+Remove --certificate-key ... from keychain add-certificates. It doesn't take that flag — it automatically finds the .p12 files already saved to disk by the previous steps.
+
+Change this:
+
+yaml
+keychain add-certificates \
+  --certificate-key "$CERTIFICATE_PRIVATE_KEY"
+To just:
+
+yaml
+keychain add-certificates
+That's the only change needed. The full corrected signing block:
+
+yaml
+- name: Set up code signing
+  script: |
+    openssl genrsa 2048 > /tmp/ios_dist_key.pem
+    export CERTIFICATE_PRIVATE_KEY=$(cat /tmp/ios_dist_key.pem)
+
+    keychain initialize
+
+    app-store-connect certificates create \
+      --type IOS_DISTRIBUTION \
+      --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
+      --save
+
+    app-store-connect fetch-signing-files "com.saeed.saman" \
+      --type IOS_APP_STORE \
+      --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
+      --create
+
+    keychain add-certificates
+
+    xcode-project use-profiles
+The log already showed the .p12 and .mobileprovision were saved to their expected locations — keychain add-certificates with no arguments picks them up from there automatically.
+
+
+Initialize new keychain to store code signing certificates at /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+Create keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db timeout to "no timeout"
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db to system default keychain
+Unlock keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+=== App Store Connect env var check ===
+APP_STORE_CONNECT_KEY_IDENTIFIER set? YESKN3B9AFDJM
+APP_STORE_CONNECT_ISSUER_ID set? YES32714e0d-e5a7-4f25-ba01-507c7cb1c271
+APP_STORE_CONNECT_PRIVATE_KEY length: 72
+=======================================
+Generated cert private key, content length: 1703 chars
+Creating new Signing Certificate: certificate type: IOS_DISTRIBUTION
+POST https://api.appstoreconnect.apple.com/v1/certificates returned 409: There is a problem with the request entity - You already have a current iOS Distribution certificate or a pending certificate request.
+Build failed :|
+Step 8 script Set up code signing exited with status code 1
+Initialize new keychain to store code signing certificates at /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+Create keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db timeout to "no timeout"
+Set keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db to system default keychain
+Unlock keychain /Users/builder/Library/codemagic-cli-tools/keychains/28-05-26_7q0jsnfa.keychain-db
+=== App Store Connect env var check ===
+APP_STORE_CONNECT_KEY_IDENTIFIER set? YESKN3B9AFDJM
+APP_STORE_CONNECT_ISSUER_ID set? YES32714e0d-e5a7-4f25-ba01-507c7cb1c271
+APP_STORE_CONNECT_PRIVATE_KEY length: 72
+=======================================
+Generated cert private key, content length: 1703 chars
+Creating new Signing Certificate: certificate type: IOS_DISTRIBUTION
+POST https://api.appstoreconnect.apple.com/v1/certificates returned 409: There is a problem with the request entity - You already have a current iOS Distribution certificate or a pending certificate request.
+Build failed :|
+Step 8 script Set up code signing exited with status code 1
+Set version and build number
+< 1s
+Build IPA
+< 1s
+Publishing
+< 1s
+Cleaning up
+< 1s
+Step 8 script Set up code signing exited with status code 1
+
+Show more
+5:31 AM
+
+Diagnosed private key mismatch causing certificate creation failure
+Diagnosed private key mismatch causing certificate creation failure
+Root cause
+Every build generates a brand new random private key. The previous build already created a cert on Apple's servers paired with that run's key — which was never saved. Now Apple rejects a second cert (409), and even if it didn't, the new random key would never match the existing cert.
+
+You need one persistent private key stored in Codemagic env vars.
+
+Fix: one-time setup (5 minutes)
+Step 1 — Generate the key once on your local machine
+bash
+openssl genrsa 2048 | base64 | tr -d '\n'
+Copy the entire output (a long base64 string).
+
+Step 2 — Add it to Codemagic as an env var
+Codemagic UI → your app → Environment variables → add:
+
+Name	Value	Secure
+CERT_PRIVATE_KEY_B64	(paste the base64 string)	✅ Yes
+Step 3 — Update your YAML signing block
+yaml
+- name: Set up code signing
+  script: |
+    # Decode the persistent private key (same key every build)
+    echo "$CERT_PRIVATE_KEY_B64" | base64 --decode > /tmp/ios_dist_key.pem
+    export CERTIFICATE_PRIVATE_KEY=$(cat /tmp/ios_dist_key.pem)
+
+    keychain initialize
+
+    # Fetch existing cert (matches our stored key) or create if missing
+    app-store-connect fetch-signing-files "com.saeed.saman" \
+      --type IOS_APP_STORE \
+      --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
+      --create
+
+    keychain add-certificates
+
+    xcode-project use-profiles
+Notice certificates create is gone — fetch-signing-files --create handles everything: it fetches the existing cert that matches your stored key, and creates a provisioning profile if needed.
+
+Why this works now
+Same key every build → tool can match the existing cert → no 409
+If the cert ever expires/gets revoked, --create makes a new one using the same stored key
+No more "Filtered out 1 Signing Certificate for given private key" errors
+
+
+
+
+
