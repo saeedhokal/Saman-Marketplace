@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
 import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
 import { useListingView } from "@/hooks/use-listing-view";
