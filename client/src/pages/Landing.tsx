@@ -207,8 +207,12 @@ export default function Landing() {
           {/* Hero Banner - Frosted glass over page skyline */}
           <div className="mb-6">
             <div
-              className="relative rounded-3xl overflow-hidden border border-white/15 dark:border-white/10 shadow-xl shadow-black/20 dark:shadow-black/50"
-              style={{ minHeight: '230px' }}
+              className="relative rounded-3xl overflow-hidden shadow-xl shadow-black/20 dark:shadow-black/50"
+              style={{
+                minHeight: '230px',
+                WebkitMaskImage: `linear-gradient(${isRTL ? '270deg' : '90deg'}, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.6) 80%, rgba(0,0,0,0) 100%)`,
+                maskImage: `linear-gradient(${isRTL ? '270deg' : '90deg'}, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.6) 80%, rgba(0,0,0,0) 100%)`,
+              }}
               data-testid="hero-card"
             >
               {/* Light mode: card-local skyline (no page-level skyline in light mode) */}
