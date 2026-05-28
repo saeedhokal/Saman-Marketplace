@@ -4,7 +4,7 @@ import { type Product } from "@shared/schema";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Store, ImageOff, Car } from "lucide-react";
+import { Store, ImageOff, Car, Gauge } from "lucide-react";
 import { format } from "date-fns";
 import { bustObjectUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import type { Density } from "@/hooks/use-listing-view";
@@ -202,9 +202,10 @@ export function ProductCard({
                 {product.mileage ? (
                   <span
                     dir={isRTL ? 'rtl' : 'ltr'}
-                    className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10"
                     data-testid={`pill-km-${product.id}`}
                   >
+                    <Gauge className="h-3 w-3 text-orange-500" strokeWidth={2.25} />
                     {new Intl.NumberFormat(language === 'ar' ? 'ar-AE' : 'en-US').format(product.mileage)} {language === 'ar' ? 'كم' : 'km'}
                   </span>
                 ) : null}
