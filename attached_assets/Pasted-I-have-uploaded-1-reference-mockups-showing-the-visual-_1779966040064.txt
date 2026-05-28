@@ -1,0 +1,83 @@
+I have uploaded:
+
+1. reference mockups showing the visual direction I want
+2. current screenshots of how the app actually looks now
+
+Important:
+
+* The reference mockups are for visual style only.
+* The current screenshots are the source of truth for the real app structure, components, and features.
+* Do not replace real app logic with fake mockup UI.
+* Do not remove existing features just because they are not visible in the mockups.
+
+Goal:
+Modernize the Saman Marketplace app to visually match the uploaded mockups as closely as possible while preserving all current app functionality.
+
+Visual direction I want:
+
+* premium automotive marketplace feel
+* dark navy / black / nardo grey / graphite palette
+* orange accent color
+* sharper, cleaner, more HD look
+* less foggy / less cloudy / less noisy background
+* subtle Dubai skyline atmosphere
+* cleaner glass / matte cards
+* more modern shadows, spacing, and contrast
+* premium splash screen matching the same design language
+
+Real features that must be preserved:
+
+* current home screen structure
+* greeting area
+* hero card / CTA
+* category cards
+* recent posts section
+* bottom navigation
+* plus/add listing button
+* search page/category page structure
+* automotive / spare parts switching
+* search bar
+* dropdown filters such as All Brands / All Categories
+* sort/filter buttons
+* all current listing cards
+* current different card view modes / layouts
+* existing filters and sorting logic
+* existing navigation and routes
+* image loading behavior
+* safe area behavior on iPhone
+* current listing data and backend connections
+* fullscreen image viewer / pinch zoom functionality
+* all existing features even if not visible in the mockups
+
+Do not touch:
+
+* payments
+* auth
+* uploads
+* database schema
+* API routes
+* Telr / Apple Pay
+* deep links
+* bundle IDs / app IDs
+* signing
+* Codemagic config
+* Capacitor config
+* production logic unrelated to styling
+
+First task:
+Do not implement immediately.
+
+First inspect both the mockups and current screenshots, then give me a plan with:
+
+1. Which current screens/components you identified
+2. Which existing features you must preserve
+3. Which mockup details are visual inspiration only
+4. Which exact files/components would need changing
+5. A phased implementation plan:
+   A. Splash screen
+   B. Home screen visual refresh
+   C. Categories/search screen visual refresh
+   D. Shared cards / nav / buttons / typography / backgrounds
+6. What risks exist and how you will avoid breaking functional features like card view modes and filters
+
+Do not make code changes until I approve the plan.
