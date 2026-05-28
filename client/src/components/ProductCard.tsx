@@ -196,11 +196,11 @@ export function ProductCard({
               {product.title}
             </h3>
             {product.mainCategory === "Automotive" && (product.year || product.mileage || product.model || (product as any).spec || product.condition) && (
-              <div className={`flex items-center gap-2 mt-2 flex-wrap ${isRTL ? 'flex-row-reverse justify-end' : ''}`} data-testid={`pills-${product.id}`}>
+              <div className={`flex items-center gap-1.5 mt-2 flex-nowrap min-w-0 overflow-hidden ${isRTL ? 'flex-row-reverse justify-end' : ''}`} data-testid={`pills-${product.id}`}>
                 {product.year ? (
                   <span
                     dir="ltr"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10"
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10 shrink-0"
                     data-testid={`pill-year-${product.id}`}
                   >
                     <Car className="h-3 w-3 text-orange-500" strokeWidth={2.25} />
@@ -210,15 +210,15 @@ export function ProductCard({
                 {product.mileage ? (
                   <span
                     dir={isRTL ? 'rtl' : 'ltr'}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10"
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10 min-w-0"
                     data-testid={`pill-km-${product.id}`}
                   >
-                    <Gauge className="h-3 w-3 text-orange-500" strokeWidth={2.25} />
-                    {new Intl.NumberFormat(language === 'ar' ? 'ar-AE' : 'en-US').format(product.mileage)} {language === 'ar' ? 'كم' : 'km'}
+                    <Gauge className="h-3 w-3 text-orange-500 shrink-0" strokeWidth={2.25} />
+                    <span className="truncate">{new Intl.NumberFormat(language === 'ar' ? 'ar-AE' : 'en-US').format(product.mileage)} {language === 'ar' ? 'كم' : 'km'}</span>
                   </span>
                 ) : product.model ? (
                   <span
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10 max-w-[140px]"
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10 min-w-0"
                     data-testid={`pill-model-${product.id}`}
                   >
                     <Car className="h-3 w-3 text-orange-500 shrink-0" strokeWidth={2.25} />
@@ -226,7 +226,7 @@ export function ProductCard({
                   </span>
                 ) : (product as any).spec ? (
                   <span
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10 max-w-[140px]"
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10 min-w-0"
                     data-testid={`pill-spec-${product.id}`}
                   >
                     <Globe className="h-3 w-3 text-orange-500 shrink-0" strokeWidth={2.25} />
@@ -234,11 +234,11 @@ export function ProductCard({
                   </span>
                 ) : product.condition ? (
                   <span
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10"
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10 min-w-0"
                     data-testid={`pill-condition-${product.id}`}
                   >
-                    <Tag className="h-3 w-3 text-orange-500" strokeWidth={2.25} />
-                    {product.condition}
+                    <Tag className="h-3 w-3 text-orange-500 shrink-0" strokeWidth={2.25} />
+                    <span className="truncate">{product.condition}</span>
                   </span>
                 ) : null}
               </div>
