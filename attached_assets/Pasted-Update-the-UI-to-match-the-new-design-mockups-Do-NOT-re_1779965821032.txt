@@ -1,0 +1,27 @@
+Update the UI to match the new design mockups. Do NOT remove or break any existing functionality (search, filters, card views, listings, navigation, auth, etc). Only change visual styling and layout details as described below.
+
+--- SPLASH SCREEN ---
+- Change background to a very dark navy/near-black gradient (top: #0d1117, bottom: #1a1a2e)
+- Show a subtle, dark-tinted Dubai skyline silhouette image at the bottom third of the screen
+- Center the Saman logo in the middle of the screen (not top)
+- Add subtitle text below the logo: "UAE'S AUTOMOTIVE MARKETPLACE" in spaced uppercase letters, white color, small font
+- Keep the existing loading spinner but place it lower/center-bottom
+
+--- HOME SCREEN ---
+- Add "View all >" link in orange (#F97316) to the right of the "Categories" section header
+- Recent Posts section: change from 2-column grid to horizontally scrollable cards. Each card should show: image (top), seller avatar circle (top-left overlapping image), heart/favorite icon (top-right on image), listing title, price in orange. Keep all existing data and tap actions.
+- The hero banner should show the Saman logo watermark on the right side of the banner card (semi-transparent)
+
+--- SEARCH / CATEGORIES SCREEN ---
+- Change search bar placeholder text to: "Search for cars, parts & more..."
+- Fix the inactive category tab button: when "Automotive" is active (orange), "Spare Parts" tab should be dark background (#1e1e2e) with white text — NOT the current peach/cream color. Vice versa when Spare Parts is active.
+- Move the sort (↕) icon to the RIGHT side of the "All Brands" dropdown row (inline with it), instead of on a separate row below
+- Add year and mileage pill badges on automotive listing cards below the title, before the price. Style: small dark rounded pill, white text. Example: "2003" pill and "180,000 km" pill side by side. Only show these for car/automotive listings that have this data, not spare parts.
+
+--- KEEP EXACTLY AS-IS ---
+- All navigation (bottom tab bar, back buttons)
+- All filter logic and dropdown functionality  
+- All listing card tap/detail navigation
+- All auth and profile features
+- The 2-column grid layout on the Search screen (keep grid, just update card design)
+- All Arabic text support and RTL handling

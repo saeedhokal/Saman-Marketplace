@@ -185,6 +185,9 @@ export const translations = {
     // Hero Banner
     yourNextRide: "Powering the UAE",
     startsHere: "Auto Market",
+    heroSubtitle: "Buy, sell and discover cars and parts with confidence.",
+    automotiveSubtitle: "Cars, Bikes & More",
+    sparePartsSubtitle: "Genuine & Aftermarket",
     
     // My Listings Page
     addListing: "Add Listing",
@@ -511,6 +514,9 @@ export const translations = {
     // Hero Banner
     yourNextRide: "نقود سوق السيارات",
     startsHere: "في الإمارات",
+    heroSubtitle: "اشترِ، بِع واكتشف السيارات وقطع الغيار بثقة.",
+    automotiveSubtitle: "سيارات، دراجات والمزيد",
+    sparePartsSubtitle: "أصلية وبديلة",
     
     // My Listings Page
     addListing: "إضافة إعلان",

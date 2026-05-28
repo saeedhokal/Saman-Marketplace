@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, ChevronRight, Car, Wrench, Globe, Moon, Sun } from "lucide-react";
+import { Search, Bell, ChevronRight, Car, Wrench, Globe, Moon, Sun, ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitial } from "@/lib/utils";
 import { ProductCard } from "@/components/ProductCard";
@@ -16,6 +16,7 @@ import { PullToRefresh } from "@/components/PullToRefresh";
 import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
+import heroSkyline from "@/assets/images/hero-skyline.png";
 
 let landingSavedScrollY: number = 0;
 
@@ -186,35 +187,48 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Hero Banner */}
+          {/* Hero Banner - Skyline card */}
           <div className="mb-6">
-            <div className="relative rounded-2xl overflow-hidden">
-              {/* Dark mode glass effect */}
-              <div className="hidden dark:block absolute inset-0 border border-white/20 rounded-2xl" style={{ maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 25%, transparent 75%)` }} />
-              <div className="hidden dark:block absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.02) 55%, transparent 100%)`, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', maskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)`, WebkitMaskImage: `linear-gradient(to ${isRTL ? 'left' : 'right'}, black 0%, black 20%, transparent 75%)` }} />
-              <div className="hidden dark:block absolute inset-0" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 30%, transparent 75%)` }} />
-              {/* Light mode glass effect */}
-              <div className="dark:hidden absolute inset-0 rounded-2xl border border-gray-200/60" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(249,115,22,0.08) 0%, rgba(249,115,22,0.04) 30%, rgba(255,255,255,0.02) 55%, transparent 100%)`, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
-              <div className="dark:hidden absolute inset-0 rounded-2xl" style={{ background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, rgba(249,115,22,0.06) 0%, rgba(249,115,22,0.02) 30%, transparent 75%)` }} />
+            <div
+              className="relative rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-xl shadow-black/10 dark:shadow-black/40"
+              style={{ minHeight: '230px' }}
+              data-testid="hero-card"
+            >
+              {/* Skyline background with darkening gradient */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `linear-gradient(${isRTL ? '270deg' : '90deg'}, rgba(10,13,18,0.95) 0%, rgba(10,13,18,0.65) 50%, rgba(10,13,18,0.35) 100%), url(${heroSkyline})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center 60%',
+                  filter: 'saturate(0.95)',
+                }}
+              />
               {/* Content */}
-              <div className="relative h-40 sm:h-48">
-                <div className="relative z-10 p-6 h-full flex items-center justify-start">
-                  <div className={`flex flex-col justify-center ${isRTL ? 'items-start text-right' : ''}`}>
-                    <p className="text-orange-500 dark:text-orange-400 text-xs uppercase tracking-widest mb-2 font-medium">{t('uaeMarketplace')}</p>
-                    <h2 className="text-gray-900 dark:text-white text-2xl sm:text-3xl font-bold leading-tight">{t('yourNextRide')}</h2>
-                    <p className="text-gray-900 dark:text-white text-2xl sm:text-3xl font-bold leading-tight">{t('startsHere')}</p>
-                    <Link href="/sell">
-                      <Button 
-                        size="sm" 
-                        className="mt-4 bg-[#f97316] text-white rounded-full px-6 py-2 font-semibold shadow-lg shadow-orange-500/30"
-                        data-testid="banner-cta-sell"
-                      >
-                        {t('startSelling')}
-                        <ChevronRight className={`h-4 w-4 ${isRTL ? 'mr-1 rotate-180' : 'ml-1'}`} />
-                      </Button>
-                    </Link>
-                  </div>
+              <div className={`relative z-10 p-6 flex flex-col justify-between ${isRTL ? 'items-end text-right' : 'items-start'}`} style={{ minHeight: '230px' }}>
+                <div className={isRTL ? 'text-right' : ''}>
+                  <p className="text-orange-400 text-[11px] font-bold uppercase tracking-[0.18em]">
+                    {t('uaeMarketplace')}
+                  </p>
+                  <h2 className="mt-2.5 text-white text-2xl sm:text-3xl font-extrabold leading-[1.15] tracking-tight max-w-[62%]">
+                    {t('yourNextRide')} {t('startsHere')}
+                  </h2>
+                  <p className="mt-2 text-[13px] leading-snug text-gray-200/90 max-w-[62%]">
+                    {t('heroSubtitle')}
+                  </p>
                 </div>
+                <Link href="/sell">
+                  <button
+                    className="mt-4 inline-flex items-center gap-2.5 rounded-full px-5 py-3 font-bold text-sm text-white shadow-lg shadow-orange-500/40"
+                    style={{ background: 'linear-gradient(180deg, #f97316 0%, #ea580c 100%)' }}
+                    data-testid="banner-cta-sell"
+                  >
+                    {t('startSelling')}
+                    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-full bg-white/20">
+                      <ArrowRight className={`h-3 w-3 ${isRTL ? 'rotate-180' : ''}`} strokeWidth={2.5} />
+                    </span>
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -224,27 +238,45 @@ export default function Landing() {
           {/* Category Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <Link href="/categories?tab=automotive">
-              <div 
-                className="relative h-24 rounded-2xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-800/60 backdrop-blur-md border border-gray-200 dark:border-slate-500/40 hover:border-gray-300 dark:hover:border-slate-400/60 transition-all shadow-sm dark:shadow-none"
+              <div
+                className={`relative h-32 rounded-2xl overflow-hidden cursor-pointer p-4 flex flex-col justify-between bg-white dark:bg-slate-800/60 backdrop-blur-md border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none transition-all active:scale-[0.98] ${isRTL ? 'text-right' : ''}`}
                 data-testid="card-automotive"
               >
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-2 bg-orange-500">
-                  <Car className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-orange-400/40 bg-orange-500/10">
+                  <Car className="h-5 w-5 text-orange-500" />
                 </div>
-                <span className="text-gray-900 dark:text-white font-bold text-sm">{t('automotive')}</span>
+                <div className="flex items-end justify-between gap-2">
+                  <div className={isRTL ? 'text-right' : ''}>
+                    <div className="text-gray-900 dark:text-white font-bold text-[15px] leading-tight">{t('automotive')}</div>
+                    <div className="text-gray-500 dark:text-gray-400 text-[11px] mt-0.5">{t('automotiveSubtitle')}</div>
+                  </div>
+                  <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                    <ArrowRight className={`h-3.5 w-3.5 text-gray-600 dark:text-white/80 ${isRTL ? 'rotate-180' : ''}`} />
+                  </div>
+                </div>
               </div>
             </Link>
 
             <Link href="/categories?tab=spare-parts">
-              <div 
-                className="relative h-24 rounded-2xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center p-4 border border-orange-400/50 hover:border-orange-300/70 transition-all shadow-lg shadow-orange-500/20"
-                style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.85) 0%, rgba(234,88,12,0.9) 50%, rgba(251,146,60,0.85) 100%)' }}
+              <div
+                className={`relative h-32 rounded-2xl overflow-hidden cursor-pointer p-4 flex flex-col justify-between border border-orange-400/60 shadow-lg shadow-orange-500/25 transition-all active:scale-[0.98] ${isRTL ? 'text-right' : ''}`}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(234,88,12,0.10) 100%), rgba(20,24,30,0.6)',
+                }}
                 data-testid="card-spare-parts"
               >
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-2 bg-white/25 backdrop-blur-sm">
-                  <Wrench className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-orange-400/60 bg-orange-500/20">
+                  <Wrench className="h-5 w-5 text-orange-400" />
                 </div>
-                <span className="text-white font-bold text-sm">{t('spareParts')}</span>
+                <div className="flex items-end justify-between gap-2">
+                  <div className={isRTL ? 'text-right' : ''}>
+                    <div className="text-gray-900 dark:text-white font-bold text-[15px] leading-tight">{t('spareParts')}</div>
+                    <div className="text-gray-600 dark:text-gray-300 text-[11px] mt-0.5">{t('sparePartsSubtitle')}</div>
+                  </div>
+                  <div className="w-7 h-7 rounded-full bg-white/20 dark:bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+                    <ArrowRight className={`h-3.5 w-3.5 text-gray-800 dark:text-white ${isRTL ? 'rotate-180' : ''}`} />
+                  </div>
+                </div>
               </div>
             </Link>
           </div>
