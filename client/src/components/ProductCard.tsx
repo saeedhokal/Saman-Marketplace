@@ -4,7 +4,7 @@ import { type Product } from "@shared/schema";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Store, ImageOff, Car, Gauge } from "lucide-react";
+import { Store, ImageOff, Car, Gauge, Globe, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { bustObjectUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import type { Density } from "@/hooks/use-listing-view";
@@ -187,7 +187,7 @@ export function ProductCard({
             )}>
               {product.title}
             </h3>
-            {product.mainCategory === "Automotive" && (product.year || product.mileage) && (
+            {product.mainCategory === "Automotive" && (product.year || product.mileage || product.model || (product as any).spec || product.condition) && (
               <div className={`flex items-center gap-2 mt-2 flex-wrap ${isRTL ? 'flex-row-reverse justify-end' : ''}`} data-testid={`pills-${product.id}`}>
                 {product.year ? (
                   <span
@@ -207,6 +207,30 @@ export function ProductCard({
                   >
                     <Gauge className="h-3 w-3 text-orange-500" strokeWidth={2.25} />
                     {new Intl.NumberFormat(language === 'ar' ? 'ar-AE' : 'en-US').format(product.mileage)} {language === 'ar' ? 'كم' : 'km'}
+                  </span>
+                ) : product.model ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10 max-w-[140px]"
+                    data-testid={`pill-model-${product.id}`}
+                  >
+                    <Car className="h-3 w-3 text-orange-500 shrink-0" strokeWidth={2.25} />
+                    <span className="truncate">{product.model}</span>
+                  </span>
+                ) : (product as any).spec ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10 max-w-[140px]"
+                    data-testid={`pill-spec-${product.id}`}
+                  >
+                    <Globe className="h-3 w-3 text-orange-500 shrink-0" strokeWidth={2.25} />
+                    <span className="truncate">{(product as any).spec}</span>
+                  </span>
+                ) : product.condition ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-foreground/90 bg-white/5 dark:bg-white/[0.04] border border-border dark:border-white/10"
+                    data-testid={`pill-condition-${product.id}`}
+                  >
+                    <Tag className="h-3 w-3 text-orange-500" strokeWidth={2.25} />
+                    {product.condition}
                   </span>
                 ) : null}
               </div>
