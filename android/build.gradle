@@ -21,6 +21,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // JitPack hosts the TikTok Business (App Events) SDK for Android
+        maven { url 'https://jitpack.io' }
     }
 }
 

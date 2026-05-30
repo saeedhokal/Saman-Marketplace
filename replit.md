@@ -57,7 +57,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Current Version (iOS):** 2.1.1 (TikTok Business SDK + App Tracking Transparency + SKAdNetwork for TikTok Ads iOS install/open attribution)
 - **Previous Version:** 2.1.0 (UI polish round 2: warm corner glow on hero + category cards, gauge icon on km pill with model/spec/condition fallback, single-row horizontal card view with description, compact view 3-per-row with truncated price, ECU subcategory in spare parts, searchable category/model dropdowns on Categories page, single-row pill layout with truncation)
 - **iOS:** Version set in `codemagic.yaml` via `agvtool new-marketing-version`. Also in `ios/App/App.xcodeproj/project.pbxproj` (MARKETING_VERSION). Build number auto-incremented by Codemagic.
-- **Android:** Version in `android/app/build.gradle` — `versionName "2.1.0"`, `versionCode 25`.
+- **Android:** Version in `android/app/build.gradle` — `versionName "2.1.1"`, `versionCode 26`.
 - **In-app display:** `client/src/pages/Settings.tsx` shows version to users.
 - **IMPORTANT:** When bumping versions, update ALL of these files: `codemagic.yaml`, `project.pbxproj` (both Debug and Release), `build.gradle`, `Settings.tsx`.
 - **Apple rejects** builds where CFBundleShortVersionString matches a previously approved version — always increment.
@@ -86,6 +86,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
     - **TikTok App ID:** `7641237938868748309` (from TikTok Events Manager)
     - **Web pixel:** `client/src/lib/tiktokPixel.ts` — loads only if `VITE_TIKTOK_PIXEL_ID` is set at build time (website events only).
     - **iOS app SDK:** TikTok Business SDK (`pod 'TikTokBusinessSDK'` in `ios/App/Podfile`), initialized in `AppDelegate.swift` via `TikTokBusiness.initializeSdk(TikTokConfig(appId: "6744526430", tiktokAppId: "7641237938868748309"))`. App Store ID `6744526430` = `appId`; TikTok App ID = `tiktokAppId`.
+    - **Android app SDK:** TikTok Business (App Events) SDK (`com.github.tiktok:tiktok-business-android-sdk:1.6.1` via JitPack repo in `android/build.gradle`), initialized in `android/app/src/main/java/com/saeed/saman/SamanApplication.java` via `TikTokBusinessSdk.initializeSdk(new TTConfig(this).setAppId("com.saman.marketplace").setTTAppId("7641237938868748309"))` then `startTrack()`. `appId` = Google Play package name; `setTTAppId` = TikTok App ID. `SamanApplication` registered via `android:name` in `AndroidManifest.xml`, which also adds the TikTok `<queries>` block for Android 11+ package visibility. Android has no ATT prompt, so the SDK starts directly on launch.
     - **ATT:** `NSUserTrackingUsageDescription` in Info.plist; SDK starts only after `ATTrackingManager.requestTrackingAuthorization` resolves (requested on first foreground, runs once).
     - **SKAdNetwork:** TikTok ID `238da6jt44.skadnetwork` in Info.plist `SKAdNetworkItems` (privacy-safe install attribution when user declines ATT). Add more TikTok SKAN IDs from their docs if needed.
     - **Note:** The native SDK is what clears TikTok Events Manager "Pending verification" — requires a Codemagic build + App Store submission, not just a publish.
