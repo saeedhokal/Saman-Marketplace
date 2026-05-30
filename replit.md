@@ -54,7 +54,8 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **iOS Splash Screen:** Fullscreen with SAMAN logo + Dubai skyline.
 
 ## App Versioning
-- **Current Version:** 2.1.0 (UI polish round 2: warm corner glow on hero + category cards, gauge icon on km pill with model/spec/condition fallback, single-row horizontal card view with description, compact view 3-per-row with truncated price, ECU subcategory in spare parts, searchable category/model dropdowns on Categories page, single-row pill layout with truncation)
+- **Current Version (iOS):** 2.1.1 (TikTok Business SDK + App Tracking Transparency + SKAdNetwork for TikTok Ads iOS install/open attribution)
+- **Previous Version:** 2.1.0 (UI polish round 2: warm corner glow on hero + category cards, gauge icon on km pill with model/spec/condition fallback, single-row horizontal card view with description, compact view 3-per-row with truncated price, ECU subcategory in spare parts, searchable category/model dropdowns on Categories page, single-row pill layout with truncation)
 - **iOS:** Version set in `codemagic.yaml` via `agvtool new-marketing-version`. Also in `ios/App/App.xcodeproj/project.pbxproj` (MARKETING_VERSION). Build number auto-incremented by Codemagic.
 - **Android:** Version in `android/app/build.gradle` — `versionName "2.1.0"`, `versionCode 25`.
 - **In-app display:** `client/src/pages/Settings.tsx` shows version to users.
@@ -81,6 +82,13 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
     - Project: saman-car-spare-parts
     - Purpose: Firebase Cloud Messaging (FCM) for Android push notifications, Firebase Phone Authentication, and Firebase Analytics on iOS (used by Google Ads for install/event conversion tracking — bundle ID `com.saeed.saman`, App Store ID `6744526430`). Native iOS integration in `ios/App/Podfile` (`pod 'Firebase/Analytics'`) and `AppDelegate.swift` (`FirebaseApp.configure()`); `GoogleService-Info.plist` is bundled with the iOS target.
 - **Domain:** thesamanapp.com (managed via GoDaddy).
+- **TikTok (Ads attribution):**
+    - **TikTok App ID:** `7641237938868748309` (from TikTok Events Manager)
+    - **Web pixel:** `client/src/lib/tiktokPixel.ts` — loads only if `VITE_TIKTOK_PIXEL_ID` is set at build time (website events only).
+    - **iOS app SDK:** TikTok Business SDK (`pod 'TikTokBusinessSDK'` in `ios/App/Podfile`), initialized in `AppDelegate.swift` via `TikTokBusiness.initializeSdk(TikTokConfig(appId: "6744526430", tiktokAppId: "7641237938868748309"))`. App Store ID `6744526430` = `appId`; TikTok App ID = `tiktokAppId`.
+    - **ATT:** `NSUserTrackingUsageDescription` in Info.plist; SDK starts only after `ATTrackingManager.requestTrackingAuthorization` resolves (requested on first foreground, runs once).
+    - **SKAdNetwork:** TikTok ID `238da6jt44.skadnetwork` in Info.plist `SKAdNetworkItems` (privacy-safe install attribution when user declines ATT). Add more TikTok SKAN IDs from their docs if needed.
+    - **Note:** The native SDK is what clears TikTok Events Manager "Pending verification" — requires a Codemagic build + App Store submission, not just a publish.
 
 ## Firebase OTP Phone Verification (ENABLED in new app version)
 

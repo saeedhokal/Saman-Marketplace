@@ -21,6 +21,8 @@ target 'App' do
   capacitor_pods
   # Firebase Analytics for Google Ads iOS install/event tracking
   pod 'Firebase/Analytics'
+  # TikTok Business SDK for TikTok Ads iOS install/open attribution
+  pod 'TikTokBusinessSDK'
 end
 
 post_install do |installer|

@@ -81,8 +81,8 @@ workflows:
       - name: Set version and build number
         script: |
           cd $CM_BUILD_DIR/ios/App
-          # Set version to 2.1.0 (UI polish: gauge icon on km pill, searchable category dropdowns, ECU subcategory, single-row card layout, hero glow)
-          agvtool new-marketing-version 2.1.0
+          # Set version to 2.1.1 (TikTok Business SDK + ATT + SKAdNetwork for TikTok Ads iOS install attribution)
+          agvtool new-marketing-version 2.1.1
           # Get latest build number from App Store Connect and increment
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-build-number "$APP_ID" --platform IOS 2>/dev/null || echo "20")
           NEW_BUILD=$((LATEST_BUILD_NUMBER + 1))
