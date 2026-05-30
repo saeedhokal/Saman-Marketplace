@@ -107,16 +107,17 @@ export function useListingView() {
           return "grid grid-cols-2 gap-3";
       }
     }
-    // Large = 2 cards, Default = 3 cards, Compact = 4 cards. Each option must
-    // show a visibly different number of cards per row so the switcher is
-    // meaningful (Default and Compact previously both rendered 3 columns).
+    // Large = 2 cards, Default = 3 cards, Compact = 4 cards. Column counts are
+    // unconditional (no responsive prefix) so each option shows a visibly
+    // different number of cards at ANY width — including narrow windows.
+    // Compact previously rendered 3 columns, identical to Default.
     switch (view) {
       case "large":
         return "grid grid-cols-2 gap-4 sm:gap-6";
       case "compact":
-        return "grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3";
+        return "grid grid-cols-4 gap-2 sm:gap-3";
       default:
-        return "grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4";
+        return "grid grid-cols-3 gap-3 sm:gap-4";
     }
   })();
 
