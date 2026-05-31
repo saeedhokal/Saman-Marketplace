@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar, Wifi, BarChart3, Smartphone, Monitor, UserPlus, Key } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link, useLocation } from "wouter";
@@ -1871,9 +1872,12 @@ function ListingCard({
             </div>
           )}
           <img
-            src={listing.imageUrl}
+            src={objectImageUrl(listing.imageUrl, 200, 75)}
             alt={listing.title}
-            className="w-20 h-20 object-cover rounded-lg flex-shrink-0 cursor-pointer touch-manipulation"
+            loading="lazy"
+            decoding="async"
+            onError={retryObjectImg}
+            className="w-20 h-20 object-cover rounded-lg flex-shrink-0 cursor-pointer touch-manipulation bg-secondary/30"
             data-testid={`img-listing-${listing.id}`}
             onClick={openListing}
           />

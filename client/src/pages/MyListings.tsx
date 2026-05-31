@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import { useToast } from "@/hooks/use-toast";
 import { differenceInDays } from "date-fns";
 import {
@@ -240,10 +241,13 @@ export default function MyListings() {
                 data-testid={`listing-${listing.id}`}
                 onClick={() => setLocation(`/product/${listing.id}`)}
               >
-                <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-secondary/30">
                   <img
-                    src={listing.imageUrl}
+                    src={objectImageUrl(listing.imageUrl, 200, 75)}
                     alt={listing.title}
+                    loading="lazy"
+                    decoding="async"
+                    onError={retryObjectImg}
                     className={`w-full h-full object-cover ${listing.status === "sold" ? 'blur-[1px] brightness-75' : ''}`}
                   />
                   {listing.status === "sold" && (
