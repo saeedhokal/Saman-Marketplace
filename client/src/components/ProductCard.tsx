@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Store, ImageOff, Car, Gauge, Globe, Tag } from "lucide-react";
 import { format } from "date-fns";
-import { bustObjectUrl, retryObjectImg } from "@/lib/bustObjectUrl";
+import { objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import type { Density } from "@/hooks/use-listing-view";
 import { cn, getInitial } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
@@ -134,7 +134,7 @@ export function ProductCard({
                 )}
                 <img
                   ref={imgRef}
-                  src={bustObjectUrl(product.imageUrl)}
+                  src={objectImageUrl(product.imageUrl, 600, 75)}
                   alt={product.title}
                   loading="lazy"
                   decoding="async"

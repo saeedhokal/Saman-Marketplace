@@ -15,6 +15,15 @@ function getFullscreenImageUrl(src: string): string {
   return src;
 }
 
+function getThumbImageUrl(src: string): string {
+  if (!src) return src;
+  if (src.startsWith("/objects/")) {
+    const sep = src.includes("?") ? "&" : "?";
+    return `${src}${sep}w=200&q=70`;
+  }
+  return src;
+}
+
 interface ImageGalleryProps {
   images: string[];
   initialIndex?: number;
@@ -50,7 +59,7 @@ export function ImageGallery({ images, initialIndex = 0, shareUrl }: ImageGaller
     const end = Math.min(images.length - 1, currentIndex + 2);
     for (let i = start; i <= end; i++) {
       const preload = new Image();
-      preload.src = images[i];
+      preload.src = getFullscreenImageUrl(images[i]);
     }
   }, [currentIndex, images]);
 
@@ -99,7 +108,7 @@ export function ImageGallery({ images, initialIndex = 0, shareUrl }: ImageGaller
                   data-testid={`gallery-slide-${idx}`}
                 >
                   <img
-                    src={img}
+                    src={getFullscreenImageUrl(img)}
                     alt={`Image ${idx + 1}`}
                     loading={idx < 2 ? "eager" : "lazy"}
                     decoding="async"
@@ -160,7 +169,7 @@ export function ImageGallery({ images, initialIndex = 0, shareUrl }: ImageGaller
               className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${idx === currentIndex ? "border-accent" : "border-transparent"}`}
               data-testid={`thumbnail-${idx}`}
             >
-              <img src={img} alt={`Thumbnail ${idx + 1}`} loading="lazy" decoding="async" onError={retryObjectImg} className="w-full h-full object-cover" />
+              <img src={getThumbImageUrl(img)} alt={`Thumbnail ${idx + 1}`} loading="lazy" decoding="async" onError={retryObjectImg} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

@@ -19,7 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/hooks/use-language";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { bustObjectUrl, retryObjectImg } from "@/lib/bustObjectUrl";
+import { bustObjectUrl, objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -600,7 +600,7 @@ export default function ProductDetail() {
                       <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow rounded-xl" data-testid={`card-product-${p.id}`}>
                         <div className="aspect-square overflow-hidden bg-secondary/30">
                           {p.imageUrl ? (
-                            <img src={bustObjectUrl(p.imageUrl)} alt={p.title} className="w-full h-full object-cover" onError={retryObjectImg} />
+                            <img src={objectImageUrl(p.imageUrl, 400, 75)} alt={p.title} className="w-full h-full object-cover" onError={retryObjectImg} />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Image</div>
                           )}

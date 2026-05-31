@@ -11,6 +11,21 @@ export function bustObjectUrl(url: string | null | undefined): string {
   return url.includes("?") ? `${url}&_=${CACHE_BUSTER}` : `${url}?_=${CACHE_BUSTER}`;
 }
 
+// Returns a /objects/ URL that asks the server to resize the image to `width`
+// (and re-encode at `quality`). Phone photos are often several MB; serving a
+// small resized/WebP version makes grids and thumbnails load far faster on
+// mobile data. Non-/objects/ URLs are returned unchanged.
+export function objectImageUrl(
+  url: string | null | undefined,
+  width: number,
+  quality = 80,
+): string {
+  const based = bustObjectUrl(url);
+  if (!based.startsWith("/objects/")) return based;
+  const sep = based.includes("?") ? "&" : "?";
+  return `${based}${sep}w=${width}&q=${quality}`;
+}
+
 // Self-healing onError handler for <img> tags pointing at /objects/ URLs.
 // If the image fails to load (stale browser cache, expired signed URL, network
 // blip), retry ONCE with a unique timestamp that bypasses every cache layer.

@@ -1,0 +1,1 @@
+- [Listing image performance](image-performance.md) — display surfaces must request resized /objects/ URLs (w/q params), never full-res phone originals.
