@@ -114,7 +114,7 @@ export default function Landing() {
     <div className="relative" style={{ minHeight: 'var(--app-height)' }}>
       {/* Layer 0: Solid base page background */}
       <div
-        className="fixed inset-0 pointer-events-none transition-colors duration-500 bg-gray-50 dark:bg-[#0a0d14] -z-10"
+        className="fixed inset-0 pointer-events-none transition-colors duration-500 bg-background dark:bg-[#0a0d14] -z-10"
         style={{ pointerEvents: 'none' }}
       />
 
@@ -320,10 +320,7 @@ export default function Landing() {
 
             <Link href="/categories?tab=spare-parts">
               <div
-                className={`relative h-32 rounded-2xl overflow-hidden cursor-pointer p-4 flex flex-col justify-between border border-orange-400/60 shadow-lg shadow-orange-500/25 transition-all active:scale-[0.98] ${isRTL ? 'text-right' : ''}`}
-                style={{
-                  background: 'linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(234,88,12,0.10) 100%), rgba(20,24,30,0.6)',
-                }}
+                className={`relative h-32 rounded-2xl overflow-hidden cursor-pointer p-4 flex flex-col justify-between bg-white dark:bg-slate-800/60 backdrop-blur-md border border-orange-400/60 shadow-sm dark:shadow-none transition-all active:scale-[0.98] ${isRTL ? 'text-right' : ''}`}
                 data-testid="card-spare-parts"
               >
                 {/* Warm corner glow on the icon side */}
@@ -343,8 +340,8 @@ export default function Landing() {
                     <div className="text-gray-900 dark:text-white font-bold text-[15px] leading-tight">{t('spareParts')}</div>
                     <div className="text-gray-600 dark:text-gray-300 text-[11px] mt-0.5">{t('sparePartsSubtitle')}</div>
                   </div>
-                  <div className="w-7 h-7 rounded-full bg-white/20 dark:bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
-                    <ArrowRight className={`h-3.5 w-3.5 text-gray-800 dark:text-white ${isRTL ? 'rotate-180' : ''}`} />
+                  <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                    <ArrowRight className={`h-3.5 w-3.5 text-gray-600 dark:text-white/80 ${isRTL ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
               </div>
