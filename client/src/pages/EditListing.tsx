@@ -25,7 +25,7 @@ import { CategoryCombobox } from "@/components/CategoryCombobox";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const formSchema = insertProductSchema.extend({
-  title: z.string().min(3, "Title must be at least 3 characters"),
+  title: z.string().min(3, "Title must be at least 3 characters").max(60, "Title must be 60 characters or less"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   imageUrl: z.string().min(1, "At least one photo is required"),
   imageUrls: z.array(z.string()).optional(),
@@ -309,6 +309,7 @@ export default function EditListing() {
                           <Input 
                             placeholder={isAutomotive ? "e.g. 2020 Toyota Camry SE" : "e.g. Toyota Camry Bumper OEM"} 
                             className="h-12" 
+                            maxLength={60}
                             data-testid="input-title"
                             {...field} 
                           />

@@ -571,6 +571,7 @@ export const insertProductSchema = createInsertSchema(products).omit({
   rejectionReason: true, // Set by admin
   expiresAt: true, // Set when approved
 }).extend({
+  title: z.string().min(3, "Title must be at least 3 characters").max(60, "Title must be 60 characters or less"),
   mileage: z.number().optional(),
   year: z.number().optional(),
   spec: z.enum(["GCC", "US", "Japan", "Europe", "Canada", "Korea", "Other"]).optional(),

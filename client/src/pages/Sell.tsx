@@ -28,7 +28,7 @@ import { CategoryCombobox } from "@/components/CategoryCombobox";
 import { useLanguage } from "@/hooks/use-language";
 
 const formSchema = insertProductSchema.extend({
-  title: z.string().min(3, "Title must be at least 3 characters"),
+  title: z.string().min(3, "Title must be at least 3 characters").max(60, "Title must be 60 characters or less"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   imageUrl: z.string().min(1, "At least one photo is required"),
   imageUrls: z.array(z.string()).optional(),
@@ -326,6 +326,7 @@ export default function Sell() {
                           <Input 
                             placeholder={isAutomotive ? t("titlePlaceholderAuto") : t("titlePlaceholderParts")} 
                             className="h-12" 
+                            maxLength={60}
                             data-testid="input-title"
                             {...field} 
                           />
