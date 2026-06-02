@@ -183,10 +183,10 @@ export default function Home() {
             data-testid="tab-automotive"
             className={`flex-1 py-4 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border-2 ${
               activeCategory === "automotive" 
-                ? "border-blue-300 dark:border-slate-500/60 text-white shadow-lg" 
+                ? "border-transparent text-orange-500 ring-1 ring-orange-500/70 shadow-[0_0_18px_-4px_rgba(249,115,22,0.55)]" 
                 : "bg-gray-100 dark:bg-slate-800/30 border-gray-200 dark:border-slate-600/30 text-gray-500 dark:text-slate-400"
             }`}
-            style={activeCategory === "automotive" ? { background: 'linear-gradient(135deg, #1e3a5f 0%, #0f2744 50%, #1a3550 100%)' } : {}}
+            style={activeCategory === "automotive" ? { background: 'radial-gradient(120% 140% at 50% 50%, rgba(249,115,22,0.32) 0%, rgba(249,115,22,0.14) 45%, rgba(249,115,22,0.04) 100%)' } : {}}
           >
             <Car className="h-5 w-5" />
             Automotive
@@ -197,10 +197,10 @@ export default function Home() {
             data-testid="tab-spare-parts"
             className={`flex-1 py-4 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border-2 ${
               activeCategory === "spare-parts" 
-                ? "border-orange-400/60 text-white shadow-lg shadow-orange-500/30" 
+                ? "border-transparent text-orange-500 ring-1 ring-orange-500/70 shadow-[0_0_18px_-4px_rgba(249,115,22,0.55)]" 
                 : "bg-gray-100 dark:bg-slate-800/30 border-gray-200 dark:border-slate-600/30 text-gray-500 dark:text-slate-400"
             }`}
-            style={activeCategory === "spare-parts" ? { background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #fb923c 100%)' } : {}}
+            style={activeCategory === "spare-parts" ? { background: 'radial-gradient(120% 140% at 50% 50%, rgba(249,115,22,0.32) 0%, rgba(249,115,22,0.14) 45%, rgba(249,115,22,0.04) 100%)' } : {}}
           >
             <Wrench className="h-5 w-5" />
             Spare Parts
