@@ -22,7 +22,8 @@ import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/sch
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
-import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar, Wifi, BarChart3, Smartphone, Monitor, UserPlus, Key } from "lucide-react";
+import { useUpload } from "@/hooks/use-upload";
+import { Check, X, Trash2, Clock, CheckCircle, XCircle, Settings, Image, Plus, ArrowLeft, Package, Car, DollarSign, TrendingUp, Edit2, CheckSquare, Square, Bell, Send, Users, Search, Calendar, Wifi, BarChart3, Smartphone, Monitor, UserPlus, Key, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import type { Product, AppSettings, Banner, SubscriptionPackage } from "@shared/schema";
 import { Link, useLocation } from "wouter";
 
@@ -35,12 +36,14 @@ interface RevenueStats {
 
 export default function Admin() {
   const { toast } = useToast();
+  const { uploadFile, isUploading } = useUpload();
   const queryClient = useQueryClient();
   const [pendingCategory, setPendingCategory] = useState<"all" | "Spare Parts" | "Automotive">("all");
   const [packageCategory, setPackageCategory] = useState<"Spare Parts" | "Automotive">("Spare Parts");
   const [editingPackage, setEditingPackage] = useState<SubscriptionPackage | null>(null);
   const [selectedListings, setSelectedListings] = useState<Set<number>>(new Set());
   const [editingListing, setEditingListing] = useState<Product | null>(null);
+  const [editImages, setEditImages] = useState<string[]>([]);
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -288,6 +291,11 @@ export default function Admin() {
 
   const openEditDialog = (listing: Product) => {
     setEditingListing(listing);
+    setEditImages(
+      listing.imageUrls?.length
+        ? listing.imageUrls
+        : (listing.imageUrl ? [listing.imageUrl] : [])
+    );
     setEditForm({
       title: listing.title || "",
       description: listing.description || "",
@@ -304,6 +312,10 @@ export default function Admin() {
 
   const submitEdit = () => {
     if (!editingListing) return;
+    if (editImages.length === 0) {
+      toast({ variant: "destructive", title: "At least one photo is required" });
+      return;
+    }
     editListingMutation.mutate({
       id: editingListing.id,
       data: {
@@ -317,7 +329,46 @@ export default function Admin() {
         mileage: editForm.mileage === "" ? null : Number(editForm.mileage),
         condition: editForm.condition || null,
         location: editForm.location || null,
+        imageUrls: editImages,
+        imageUrl: editImages[0],
       },
+    });
+  };
+
+  const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const remainingSlots = 20 - editImages.length;
+    if (remainingSlots <= 0) {
+      toast({ variant: "destructive", title: "Maximum photos reached", description: "You can upload up to 20 photos." });
+      return;
+    }
+    const filesToUpload = Array.from(files).slice(0, remainingSlots);
+    for (const file of filesToUpload) {
+      try {
+        const result = await uploadFile(file);
+        if (result) {
+          setEditImages((prev) => [...prev, result.objectPath]);
+        }
+      } catch (error) {
+        toast({ variant: "destructive", title: "Upload failed", description: `Failed to upload ${file.name}.` });
+      }
+    }
+    e.target.value = "";
+  };
+
+  const removeEditImage = (index: number) => {
+    setEditImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const moveEditImage = (index: number, direction: -1 | 1) => {
+    setEditImages((prev) => {
+      const target = index + direction;
+      if (target < 0 || target >= prev.length) return prev;
+      const newImages = [...prev];
+      const [moved] = newImages.splice(index, 1);
+      newImages.splice(target, 0, moved);
+      return newImages;
     });
   };
 
@@ -1698,6 +1749,83 @@ export default function Admin() {
                 rows={4}
                 data-testid="input-edit-description"
               />
+            </div>
+
+            <div>
+              <label className="text-xs font-medium mb-1 block">Photos ({editImages.length}/20)</label>
+              <p className="text-xs text-muted-foreground mb-2">
+                The first photo is the main cover. Use the arrows to reorder, or the ✕ to delete.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {editImages.map((img, index) => (
+                  <div
+                    key={img}
+                    className="relative aspect-square rounded-lg overflow-hidden border border-border"
+                  >
+                    <img
+                      src={objectImageUrl(img, 300, 70)}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={retryObjectImg}
+                    />
+                    {index === 0 && (
+                      <div className="absolute top-1 left-1 bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded">
+                        Main
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeEditImage(index)}
+                      className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition-colors"
+                      data-testid={`button-edit-remove-image-${index}`}
+                      aria-label="Delete photo"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    <div className="absolute inset-x-1 bottom-1 flex items-center justify-between gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveEditImage(index, -1)}
+                        disabled={index === 0}
+                        className="flex-1 flex items-center justify-center bg-black/60 hover:bg-black/80 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded py-2 transition-colors"
+                        data-testid={`button-edit-move-left-${index}`}
+                        aria-label="Move photo earlier"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveEditImage(index, 1)}
+                        disabled={index === editImages.length - 1}
+                        className="flex-1 flex items-center justify-center bg-black/60 hover:bg-black/80 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded py-2 transition-colors"
+                        data-testid={`button-edit-move-right-${index}`}
+                        aria-label="Move photo later"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {editImages.length < 20 && (
+                  <div className="aspect-square rounded-lg border-2 border-dashed border-border flex items-center justify-center hover:border-accent/50 hover:bg-secondary/20 transition-colors relative">
+                    <input
+                      type="file"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={handleEditImageUpload}
+                      accept="image/*"
+                      multiple
+                      disabled={isUploading}
+                      data-testid="input-edit-add-photo"
+                    />
+                    {isUploading ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Plus className="h-6 w-6 text-muted-foreground" />
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

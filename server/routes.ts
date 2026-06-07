@@ -2649,6 +2649,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         }
         updates.year = y;
       }
+      if (body.imageUrls !== undefined) {
+        if (!Array.isArray(body.imageUrls) || body.imageUrls.some((u: any) => typeof u !== "string" || !u)) {
+          return res.status(400).json({ message: "Invalid photos" });
+        }
+        if (body.imageUrls.length === 0) {
+          return res.status(400).json({ message: "At least one photo is required" });
+        }
+        updates.imageUrls = body.imageUrls;
+        updates.imageUrl = body.imageUrls[0];
+      } else if (body.imageUrl !== undefined) {
+        if (typeof body.imageUrl !== "string" || !body.imageUrl) {
+          return res.status(400).json({ message: "At least one photo is required" });
+        }
+        updates.imageUrl = body.imageUrl;
+        updates.imageUrls = [body.imageUrl];
+      }
 
       const updated = await storage.updateProduct(id, updates);
       res.json(updated);
