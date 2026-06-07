@@ -1,1 +1,2 @@
 - [Listing image performance](image-performance.md) — display surfaces must request resized /objects/ URLs (w/q params), never full-res phone originals.
+- [HEIC photo uploads](heic-uploads.md) — iPhone HEIC photos render broken (no browser/sharp decoder); must convert to JPEG client-side before upload.

@@ -10,6 +10,7 @@ import { ArrowLeft, Store, Save, Camera, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUpload } from "@/hooks/use-upload";
+import { isHeicFile } from "@/lib/convertHeic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitial } from "@/lib/utils";
 
@@ -62,7 +63,8 @@ export default function ProfileDetails() {
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith("image/")) {
+      const isImage = file.type.startsWith("image/") || (await isHeicFile(file));
+      if (!isImage) {
         toast({ variant: "destructive", title: "Please select an image file" });
         return;
       }

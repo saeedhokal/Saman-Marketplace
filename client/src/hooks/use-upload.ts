@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import type { UppyFile } from "@uppy/core";
+import { convertHeicToJpeg } from "@/lib/convertHeic";
 
 interface UploadMetadata {
   name: string;
@@ -111,12 +112,16 @@ export function useUpload(options: UseUploadOptions = {}) {
    * @returns The upload response containing the object path
    */
   const uploadFile = useCallback(
-    async (file: File): Promise<UploadResponse | null> => {
+    async (inputFile: File): Promise<UploadResponse | null> => {
       setIsUploading(true);
       setError(null);
       setProgress(0);
 
       try {
+        // Step 0: iPhone HEIC photos can't be rendered by browsers or resized
+        // by the server, so convert them to JPEG before uploading.
+        const file = await convertHeicToJpeg(inputFile);
+
         // Step 1: Request presigned URL (send metadata as JSON)
         setProgress(10);
         const uploadResponse = await requestUploadUrl(file);
