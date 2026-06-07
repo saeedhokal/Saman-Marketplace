@@ -18,11 +18,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, useRoute } from "wouter";
-import { Loader2, UploadCloud, Car, Wrench, ArrowLeft, X, Plus } from "lucide-react";
+import { Loader2, UploadCloud, Car, Wrench, ArrowLeft, X, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 
 const formSchema = insertProductSchema.extend({
   title: z.string().min(3, "Title must be at least 3 characters").max(60, "Title must be 60 characters or less"),
@@ -190,6 +191,19 @@ export default function EditListing() {
     });
   };
 
+  const moveImage = (index: number, direction: -1 | 1) => {
+    setUploadedImages((prev) => {
+      const target = index + direction;
+      if (target < 0 || target >= prev.length) return prev;
+      const newImages = [...prev];
+      const [moved] = newImages.splice(index, 1);
+      newImages.splice(target, 0, moved);
+      form.setValue("imageUrl", newImages[0], { shouldValidate: true });
+      form.setValue("imageUrls", newImages);
+      return newImages;
+    });
+  };
+
   const onSubmit = (data: FormValues) => {
     updateMutation.mutate(data);
   };
@@ -331,16 +345,20 @@ export default function EditListing() {
                             
                             {uploadedImages.length > 0 ? (
                               <div className="space-y-3">
+                                <p className="text-xs text-muted-foreground">
+                                  The first photo is the main cover. Use the arrows to reorder, or the ✕ to delete.
+                                </p>
                                 <div className="grid grid-cols-3 gap-2">
                                   {uploadedImages.map((img, index) => (
                                     <div 
-                                      key={index} 
-                                      className="relative aspect-square rounded-lg overflow-hidden border border-border group"
+                                      key={img} 
+                                      className="relative aspect-square rounded-lg overflow-hidden border border-border"
                                     >
                                       <img 
-                                        src={img} 
+                                        src={objectImageUrl(img, 300, 70)} 
                                         alt={`Preview ${index + 1}`} 
                                         className="w-full h-full object-cover"
+                                        onError={retryObjectImg}
                                       />
                                       {index === 0 && (
                                         <div className="absolute top-1 left-1 bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded">
@@ -350,11 +368,34 @@ export default function EditListing() {
                                       <button
                                         type="button"
                                         onClick={() => removeImage(index)}
-                                        className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                                        className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition-colors"
                                         data-testid={`button-remove-image-${index}`}
+                                        aria-label="Delete photo"
                                       >
-                                        <X className="h-3 w-3" />
+                                        <X className="h-4 w-4" />
                                       </button>
+                                      <div className="absolute inset-x-1 bottom-1 flex items-center justify-between gap-1">
+                                        <button
+                                          type="button"
+                                          onClick={() => moveImage(index, -1)}
+                                          disabled={index === 0}
+                                          className="flex-1 flex items-center justify-center bg-black/60 hover:bg-black/80 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded py-2 transition-colors"
+                                          data-testid={`button-move-left-${index}`}
+                                          aria-label="Move photo earlier"
+                                        >
+                                          <ChevronLeft className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => moveImage(index, 1)}
+                                          disabled={index === uploadedImages.length - 1}
+                                          className="flex-1 flex items-center justify-center bg-black/60 hover:bg-black/80 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded py-2 transition-colors"
+                                          data-testid={`button-move-right-${index}`}
+                                          aria-label="Move photo later"
+                                        >
+                                          <ChevronRight className="h-4 w-4" />
+                                        </button>
+                                      </div>
                                     </div>
                                   ))}
                                   
