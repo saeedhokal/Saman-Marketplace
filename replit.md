@@ -112,7 +112,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 ### Deep Linking / Universal Links
 - **Purpose:** When users share listing links (e.g. `thesamanapp.com/product/123`), the link should open the app directly instead of the browser (if the app is installed).
 - **What's needed:**
-  1. **Apple Team ID** — need to ask user for this (found in Apple Developer account under Membership)
+  1. **Apple Team ID** — `KQ542Q98H2` (Team Name: Saeed Hokal; obtained from Apple Developer email Jul 2026)
   2. **Server side:** Serve `/.well-known/apple-app-site-association` (iOS) and `/.well-known/assetlinks.json` (Android) files from thesamanapp.com
   3. **iOS native:** Add Associated Domains capability (`applinks:thesamanapp.com`) in Xcode/Codemagic entitlements
   4. **Android native:** Add intent filters in `AndroidManifest.xml` for `thesamanapp.com` URLs
