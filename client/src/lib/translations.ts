@@ -182,6 +182,14 @@ export const translations = {
     failedToLoad: "Failed to load products",
     searchCategory: "Search for cars, parts & more...",
     
+    // Seller Profile
+    seller: "Seller",
+    memberSince: "Member since",
+    listingAvailable: "listing available",
+    listingsAvailable: "listings available",
+    sellerNoListings: "This seller hasn't posted any listings.",
+    failedToLoadSeller: "Unable to load seller profile",
+    
     // Hero Banner
     yourNextRide: "Powering the UAE",
     startsHere: "Auto Market",
@@ -510,6 +518,14 @@ export const translations = {
     beFirstToList: "كن أول من ينشر في هذه الفئة",
     failedToLoad: "فشل في تحميل المنتجات",
     searchCategory: "ابحث عن سيارات، قطع غيار والمزيد...",
+    
+    // Seller Profile
+    seller: "بائع",
+    memberSince: "عضو منذ",
+    listingAvailable: "إعلان متاح",
+    listingsAvailable: "إعلانات متاحة",
+    sellerNoListings: "لم ينشر هذا البائع أي إعلانات.",
+    failedToLoadSeller: "تعذر تحميل ملف البائع",
     
     // Hero Banner
     yourNextRide: "نقود سوق السيارات",

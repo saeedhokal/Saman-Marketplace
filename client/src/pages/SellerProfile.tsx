@@ -9,6 +9,7 @@ import { ArrowLeft, Store, Calendar, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
@@ -28,7 +29,7 @@ export default function SellerProfile() {
   const [, params] = useRoute("/seller/:sellerId");
   const sellerId = params?.sellerId || "";
   const { user, isLoading: authLoading } = useAuth();
-  const { isRTL } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { density, gridClasses } = useListingView();
 
   const { data: products, isLoading, error } = useSellerProducts(sellerId);
@@ -40,7 +41,7 @@ export default function SellerProfile() {
 
   if (!authLoading && !user) {
     return (
-      <div className="min-h-screen bg-background py-8 px-4">
+      <div className="min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="container mx-auto max-w-md text-center py-20">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <Lock className="h-8 w-8 text-primary" />
@@ -69,7 +70,7 @@ export default function SellerProfile() {
             </Button>
           </div>
           <Button variant="ghost" className="mt-6" onClick={() => window.history.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" /> {isRTL ? 'رجوع' : 'Back'}
+            <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} /> {isRTL ? 'رجوع' : 'Back'}
           </Button>
         </div>
       </div>
@@ -81,13 +82,13 @@ export default function SellerProfile() {
     if (sellerInfo?.firstName || sellerInfo?.lastName) {
       return `${sellerInfo.firstName || ''} ${sellerInfo.lastName || ''}`.trim();
     }
-    return 'Seller';
+    return t('seller');
   };
 
   const getMemberSince = () => {
     if (!sellerInfo?.createdAt) return null;
     try {
-      return format(new Date(sellerInfo.createdAt), 'MMMM yyyy');
+      return format(new Date(sellerInfo.createdAt), 'MMMM yyyy', isRTL ? { locale: ar } : undefined);
     } catch {
       return null;
     }
@@ -95,7 +96,7 @@ export default function SellerProfile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background py-8 px-4">
+      <div className="min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="container mx-auto max-w-6xl">
           <div className="flex items-center gap-4 mb-8">
             <Skeleton className="h-16 w-16 rounded-full" />
@@ -116,11 +117,11 @@ export default function SellerProfile() {
 
   if (error || !products) {
     return (
-      <div className="min-h-screen bg-background py-8 px-4">
+      <div className="min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="container mx-auto max-w-6xl text-center py-20">
-          <h2 className="text-xl font-bold text-destructive">Unable to load seller profile</h2>
+          <h2 className="text-xl font-bold text-destructive">{t('failedToLoadSeller')}</h2>
           <Button variant="outline" className="mt-4" onClick={() => window.history.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back
+            <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} /> {t('back')}
           </Button>
         </div>
       </div>
@@ -128,10 +129,10 @@ export default function SellerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <div className="min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="container mx-auto max-w-6xl">
         <Button variant="ghost" className="mb-6" data-testid="button-back" onClick={() => window.history.back()}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back
+          <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} /> {t('back')}
         </Button>
 
         <div className="flex items-center gap-4 mb-8 p-6 bg-card rounded-2xl border border-border">
@@ -144,16 +145,16 @@ export default function SellerProfile() {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h1 className="font-display text-2xl font-bold text-foreground" data-testid="text-seller-name">
+            <h1 dir="auto" className="font-display text-2xl font-bold text-foreground" data-testid="text-seller-name">
               {getSellerDisplayName()}
             </h1>
             <p className="text-muted-foreground">
-              {products.length} {products.length === 1 ? "listing" : "listings"} available
+              {products.length} {products.length === 1 ? t('listingAvailable') : t('listingsAvailable')}
             </p>
             {getMemberSince() && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                 <Calendar className="h-3 w-3" />
-                <span>Member since {getMemberSince()}</span>
+                <span>{t('memberSince')} {getMemberSince()}</span>
               </div>
             )}
           </div>
@@ -162,9 +163,9 @@ export default function SellerProfile() {
         {products.length === 0 ? (
           <div className="text-center py-20 bg-secondary/30 rounded-2xl">
             <Store className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-bold">No listings yet</h3>
+            <h3 className="text-lg font-bold">{t('noListingsYet')}</h3>
             <p className="text-muted-foreground mt-2">
-              This seller hasn't posted any listings.
+              {t('sellerNoListings')}
             </p>
           </div>
         ) : (
