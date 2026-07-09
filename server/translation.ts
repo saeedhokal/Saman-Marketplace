@@ -50,10 +50,14 @@ For product listings or marketplace content, keep brand names and technical term
           content: text,
         },
       ],
-      max_completion_tokens: 1000,
+      reasoning_effort: "minimal",
+      max_completion_tokens: 8000,
     });
 
     const translation = response.choices[0]?.message?.content?.trim();
+    if (!translation) {
+      console.error("Translation returned empty content. finish_reason:", response.choices[0]?.finish_reason);
+    }
     return translation || text;
   } catch (error) {
     console.error("Translation error:", error);
@@ -86,11 +90,16 @@ Maintain formatting and structure.`,
           content: JSON.stringify({ title, description }),
         },
       ],
-      max_completion_tokens: 2000,
+      reasoning_effort: "minimal",
+      max_completion_tokens: 16000,
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0]?.message?.content || "{}");
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      console.error("Listing translation returned empty content. finish_reason:", response.choices[0]?.finish_reason);
+    }
+    const result = JSON.parse(content || "{}");
     return {
       title: result.title || title,
       description: result.description || description,

@@ -1,2 +1,3 @@
 - [Listing image performance](image-performance.md) — display surfaces must request resized /objects/ URLs (w/q params), never full-res phone originals.
+- [GPT-5 reasoning token budget](gpt5-reasoning-token-budget.md) — reasoning tokens eat max_completion_tokens; low caps return empty content silently. Use reasoning_effort minimal for translations.
 - [HEIC photo uploads](heic-uploads.md) — iPhone HEIC photos render broken (no browser/sharp decoder); must convert to JPEG client-side before upload.
