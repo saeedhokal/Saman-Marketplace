@@ -206,8 +206,8 @@ export default function ProductDetail() {
       return;
     }
     
-    // Translate to the user's current app language
-    const targetLang: "arabic" | "english" = language === "ar" ? "arabic" : "english";
+    // Translate to the opposite of the listing's own language
+    const targetLang = getTargetLanguage(`${product.title} ${product.description || ""}`);
     const result = await translateListing(
       product.title,
       product.description || "",
@@ -240,7 +240,11 @@ export default function ProductDetail() {
     if (showTranslation) {
       return language === "ar" ? "عرض الأصلي" : "Show original";
     }
-    return language === "ar" ? "ترجم للعربية" : "Translate to English";
+    const targetLang = getTargetLanguage(`${product.title} ${product.description || ""}`);
+    if (targetLang === "arabic") {
+      return language === "ar" ? "ترجم للعربية" : "Translate to Arabic";
+    }
+    return language === "ar" ? "ترجم إلى الإنجليزية" : "Translate to English";
   };
 
   if (isLoading) {
