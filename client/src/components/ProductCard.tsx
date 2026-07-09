@@ -187,7 +187,7 @@ export function ProductCard({
 
           <div className={density === 'single' ? 'flex-1 min-w-0 flex flex-col' : 'contents'}>
           <CardContent className={styles.padding}>
-            <h3 className={cn(
+            <h3 dir="auto" className={cn(
               "font-display font-bold leading-tight transition-colors",
               styles.title,
               styles.titleMin,
@@ -245,11 +245,8 @@ export function ProductCard({
             )}
             {density === 'single' && product.description ? (
               <p
-                dir={isRTL ? 'rtl' : 'ltr'}
-                className={cn(
-                  "mt-2 text-[12px] leading-snug text-muted-foreground line-clamp-2",
-                  isRTL ? 'text-right' : 'text-left'
-                )}
+                dir="auto"
+                className="mt-2 text-[12px] leading-snug text-muted-foreground line-clamp-2 text-start"
                 data-testid={`text-description-${product.id}`}
               >
                 {product.description}
