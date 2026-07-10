@@ -563,6 +563,109 @@ export function setupSimpleAuth(app: Express) {
     }
   });
 
+  // Check a phone has an account before sending a reset OTP (rate limited)
+  app.post("/api/auth/check-reset-phone", async (req: Request, res: Response) => {
+    try {
+      const { phone } = req.body;
+      if (!phone) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      const normalizedPhone = normalizePhone(phone);
+
+      const now = Date.now();
+      const attempts = forgotPasswordAttempts.get(normalizedPhone);
+      if (attempts && now < attempts.resetTime) {
+        if (attempts.count >= FORGOT_PW_MAX_ATTEMPTS) {
+          return res.status(429).json({ message: "Too many reset attempts. Please try again later." });
+        }
+        attempts.count++;
+      } else {
+        forgotPasswordAttempts.set(normalizedPhone, { count: 1, resetTime: now + FORGOT_PW_WINDOW });
+      }
+
+      const phoneVariants = getPhoneVariants(phone);
+      let user = null;
+      for (const variant of phoneVariants) {
+        const [found] = await db.select().from(users).where(eq(users.phone, variant));
+        if (found) {
+          user = found;
+          break;
+        }
+      }
+
+      if (!user) {
+        return res.status(404).json({ message: "No account found with this phone number" });
+      }
+
+      res.json({ exists: true });
+    } catch (error) {
+      console.error("Check reset phone error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again." });
+    }
+  });
+
+  // Reset password after Firebase OTP verification (no email needed)
+  app.post("/api/auth/reset-password-otp", async (req: Request, res: Response) => {
+    try {
+      const { firebaseIdToken, newPassword } = req.body;
+
+      if (!firebaseIdToken || !newPassword) {
+        return res.status(400).json({ message: "Verification and new password are required" });
+      }
+
+      if (newPassword.length < 4) {
+        return res.status(400).json({ message: "Password must be at least 4 characters" });
+      }
+
+      let firebasePhone: string | undefined;
+      try {
+        ensureFirebaseAdmin();
+        const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
+        // Replay hardening: the OTP must have been verified recently.
+        // auth_time is in seconds; reject tokens older than 10 minutes.
+        const authAgeSeconds = Math.floor(Date.now() / 1000) - (decodedToken.auth_time || 0);
+        if (authAgeSeconds > 10 * 60) {
+          return res.status(400).json({ message: "Verification expired. Please request a new code." });
+        }
+        firebasePhone = decodedToken.phone_number;
+      } catch (err) {
+        console.error("Reset OTP token verification failed:", err);
+        return res.status(400).json({ message: "Phone verification failed. Please try again." });
+      }
+
+      if (!firebasePhone) {
+        return res.status(400).json({ message: "No phone number found in verification token" });
+      }
+
+      const phoneVariants = getPhoneVariants(firebasePhone);
+      let user = null;
+      for (const variant of phoneVariants) {
+        const [found] = await db.select().from(users).where(eq(users.phone, variant));
+        if (found) {
+          user = found;
+          break;
+        }
+      }
+
+      if (!user) {
+        return res.status(404).json({ message: "No account found with this phone number" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await db
+        .update(users)
+        .set({ password: hashedPassword, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+
+      console.log(`[PASSWORD RESET] OTP-verified password reset for phone ending ...${(user.phone ?? "").slice(-4)}`);
+      res.json({ message: "Your password has been reset successfully. You can now log in with your new password." });
+    } catch (error) {
+      console.error("Reset password OTP error:", error);
+      res.status(500).json({ message: "Failed to reset password. Please try again." });
+    }
+  });
+
   // Register with phone + password (direct registration)
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {

@@ -44,6 +44,11 @@ export default function Auth() {
   const [isNewUser, setIsNewUser] = useState(getInitialMode());
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
+  const [resetPhase, setResetPhase] = useState<"phone" | "otp" | "password">("phone");
+  const [resetIdToken, setResetIdToken] = useState<string | null>(null);
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetConfirmPassword, setResetConfirmPassword] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const [otpStep, setOtpStep] = useState(false);
   const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
@@ -236,6 +241,33 @@ export default function Auth() {
     }
   };
 
+  const closeForgotPassword = () => {
+    setShowForgotPassword(false);
+    setResetPhase("phone");
+    setResetIdToken(null);
+    setResetNewPassword("");
+    setResetConfirmPassword("");
+    setOtpDigits(["", "", "", "", "", ""]);
+  };
+
+  // Backup: old email reset-link flow, used if SMS OTP can't be sent
+  const sendResetEmailFallback = async (phone: string) => {
+    const response = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message);
+    }
+    toast({
+      title: isRTL ? "تم الإرسال" : "Reset Link Sent",
+      description: data.message,
+    });
+    closeForgotPassword();
+  };
+
   const handleForgotPassword = async () => {
     const phone = form.getValues("phone");
     if (!phone) {
@@ -249,23 +281,39 @@ export default function Auth() {
 
     setIsSendingReset(true);
     try {
-      const response = await fetch("/api/auth/forgot-password", {
+      // 1. Make sure an account exists before sending an SMS
+      const checkRes = await fetch("/api/auth/check-reset-phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message);
+      const checkData = await checkRes.json();
+      if (!checkRes.ok) {
+        throw new Error(checkData.message);
       }
 
-      toast({
-        title: isRTL ? "تم الإرسال" : "Reset Link Sent",
-        description: data.message,
-      });
-      setShowForgotPassword(false);
+      // 2. Send the OTP
+      try {
+        await sendOTP(phone);
+        setOtpDigits(["", "", "", "", "", ""]);
+        setResetPhase("otp");
+        toast({
+          title: isRTL ? "تم إرسال رمز التحقق" : "Verification Code Sent",
+          description: isRTL ? "يرجى التحقق من رسائلك النصية" : "Please check your SMS messages",
+        });
+      } catch (otpError: any) {
+        console.error("Reset OTP send error:", otpError);
+        if (otpError?.code === "auth/too-many-requests") {
+          toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "محاولات كثيرة. يرجى المحاولة لاحقاً" : "Too many attempts. Please try again later." });
+        } else if (otpError?.code === "auth/invalid-phone-number") {
+          toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "رقم هاتف غير صالح" : "Invalid phone number format" });
+        } else if (isServiceLevelOTPError(otpError)) {
+          // SMS service is down — fall back to the email reset link
+          await sendResetEmailFallback(phone);
+        } else {
+          toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "فشل إرسال رمز التحقق. يرجى المحاولة مرة أخرى" : "Failed to send verification code. Please try again." });
+        }
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -274,6 +322,81 @@ export default function Auth() {
       });
     } finally {
       setIsSendingReset(false);
+    }
+  };
+
+  const handleVerifyResetOTP = async () => {
+    const code = otpDigits.join("");
+    if (code.length !== 6) return;
+
+    setIsVerifyingOTP(true);
+    try {
+      const idToken = await verifyOTP(code);
+      setResetIdToken(idToken);
+      setResetPhase("password");
+    } catch (error: any) {
+      console.error("Reset OTP verify error:", error);
+      let errorMsg = isRTL ? "رمز التحقق غير صحيح" : "Invalid verification code";
+      if (error?.code === "auth/invalid-verification-code") {
+        errorMsg = isRTL ? "رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى" : "Invalid code. Please try again.";
+      } else if (error?.code === "auth/code-expired") {
+        errorMsg = isRTL ? "انتهت صلاحية الرمز. يرجى طلب رمز جديد" : "Code expired. Please request a new one.";
+      }
+      if (error?.message?.includes("No OTP was sent")) {
+        setResetPhase("phone");
+        setOtpDigits(["", "", "", "", "", ""]);
+        errorMsg = isRTL ? "انتهت الجلسة. يرجى المحاولة مرة أخرى" : "Session expired. Please try again.";
+      }
+      toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: errorMsg });
+    } finally {
+      setIsVerifyingOTP(false);
+    }
+  };
+
+  const handleSubmitNewPassword = async () => {
+    if (resetNewPassword.length < 4) {
+      toast({
+        variant: "destructive",
+        title: isRTL ? "خطأ" : "Error",
+        description: isRTL ? "يجب أن تكون كلمة المرور 4 أحرف على الأقل" : "Password must be at least 4 characters",
+      });
+      return;
+    }
+    if (resetNewPassword !== resetConfirmPassword) {
+      toast({
+        variant: "destructive",
+        title: isRTL ? "خطأ" : "Error",
+        description: isRTL ? "كلمتا المرور غير متطابقتين" : "Passwords do not match",
+      });
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      const response = await fetch("/api/auth/reset-password-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firebaseIdToken: resetIdToken, newPassword: resetNewPassword }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      toast({
+        title: isRTL ? "تم تغيير كلمة المرور" : "Password Changed",
+        description: isRTL ? "يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة" : "You can now log in with your new password.",
+      });
+      form.setValue("password", "");
+      closeForgotPassword();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: isRTL ? "خطأ" : "Error",
+        description: error.message,
+      });
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -388,82 +511,212 @@ export default function Auth() {
   }
 
   if (showForgotPassword) {
+    const resetOtpCode = otpDigits.join("");
     return (
       <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3d3d3d 100%)' }}>
         <Card className="w-full max-w-md border-2" style={{ borderColor: '#f97316' }}>
           <CardHeader className="text-center pb-2">
-            <img 
-              src={samanLogo} 
-              alt="Saman Marketplace" 
-              className="mx-auto mb-4 w-24 h-24 rounded-2xl object-cover shadow-lg"
-            />
+            {resetPhase === "phone" ? (
+              <img 
+                src={samanLogo} 
+                alt="Saman Marketplace" 
+                className="mx-auto mb-4 w-24 h-24 rounded-2xl object-cover shadow-lg"
+              />
+            ) : (
+              <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f97316' }}>
+                <ShieldCheck className="h-8 w-8 text-white" />
+              </div>
+            )}
             <CardTitle className="text-2xl font-bold" style={{ color: '#f97316' }}>
-              {isRTL ? 'استعادة كلمة المرور' : 'Reset Password'}
+              {resetPhase === "otp"
+                ? (isRTL ? 'التحقق من الرقم' : 'Verify Your Number')
+                : (isRTL ? 'استعادة كلمة المرور' : 'Reset Password')}
             </CardTitle>
             <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>
-              {isRTL ? 'أدخل رقم هاتفك وسنرسل رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني' : 'Enter your phone number and we\'ll send a password reset link to your recovery email'}
+              {resetPhase === "phone" && (isRTL ? 'أدخل رقم هاتفك وسنرسل لك رمز تحقق عبر رسالة نصية' : "Enter your phone number and we'll text you a verification code")}
+              {resetPhase === "otp" && (isRTL ? `أدخل الرمز المرسل إلى ${form.getValues("phone")}` : `Enter the code sent to ${form.getValues("phone")}`)}
+              {resetPhase === "password" && (isRTL ? 'اختر كلمة مرور جديدة' : 'Choose a new password')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Form {...form}>
-              <FormField
-                control={form.control}
-                name="phone"
-                rules={{ 
-                  required: "Phone number is required",
-                  minLength: { value: 7, message: "Phone number must be at least 7 digits" }
-                }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('phoneNumber')}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Phone className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
-                        <Input
-                          type="tel"
-                          placeholder="+971 50 123 4567"
-                          className={isRTL ? 'pr-10' : 'pl-10'}
-                          data-testid="input-forgot-phone"
-                          {...field}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </Form>
+            {resetPhase === "phone" && (
+              <>
+                <Form {...form}>
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    rules={{ 
+                      required: "Phone number is required",
+                      minLength: { value: 7, message: "Phone number must be at least 7 digits" }
+                    }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('phoneNumber')}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Phone className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+                            <Input
+                              type="tel"
+                              placeholder="+971 50 123 4567"
+                              className={isRTL ? 'pr-10' : 'pl-10'}
+                              data-testid="input-forgot-phone"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </Form>
 
-            <Button
-              className="w-full text-white font-semibold"
-              style={{ backgroundColor: '#f97316' }}
-              disabled={isSendingReset}
-              onClick={handleForgotPassword}
-              data-testid="button-send-reset"
-            >
-              {isSendingReset ? (
-                <>
-                  <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {isRTL ? 'جارٍ الإرسال...' : 'Sending...'}
-                </>
-              ) : (
-                isRTL ? 'إرسال رابط إعادة التعيين' : 'Send Reset Link'
-              )}
-            </Button>
+                <Button
+                  className="w-full text-white font-semibold"
+                  style={{ backgroundColor: '#f97316' }}
+                  disabled={isSendingReset}
+                  onClick={handleForgotPassword}
+                  data-testid="button-send-reset"
+                >
+                  {isSendingReset ? (
+                    <>
+                      <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {isRTL ? 'جارٍ الإرسال...' : 'Sending...'}
+                    </>
+                  ) : (
+                    isRTL ? 'إرسال رمز التحقق' : 'Send Verification Code'
+                  )}
+                </Button>
+              </>
+            )}
+
+            {resetPhase === "otp" && (
+              <>
+                <div className="flex justify-center gap-2" dir="ltr">
+                  {otpDigits.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => { otpInputRefs.current[index] = el; }}
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={index === 0 ? 6 : 1}
+                      autoComplete={index === 0 ? "one-time-code" : "off"}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pasted = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 6);
+                        if (pasted.length > 0) {
+                          const newOtp = [...otpDigits];
+                          pasted.split("").forEach((d, i) => { if (i < 6) newOtp[i] = d; });
+                          setOtpDigits(newOtp);
+                          otpInputRefs.current[Math.min(pasted.length, 5)]?.focus();
+                        }
+                      }}
+                      className="w-11 h-13 text-center text-xl font-bold rounded-lg border-2 bg-background focus:outline-none"
+                      style={{ borderColor: digit ? '#f97316' : '#d4d4d4', height: '3.25rem' }}
+                      data-testid={`input-reset-otp-${index}`}
+                    />
+                  ))}
+                </div>
+
+                <Button
+                  className="w-full text-white font-semibold"
+                  style={{ backgroundColor: '#f97316' }}
+                  disabled={resetOtpCode.length !== 6 || isVerifyingOTP}
+                  onClick={handleVerifyResetOTP}
+                  data-testid="button-verify-reset-otp"
+                >
+                  {isVerifyingOTP ? (
+                    <>
+                      <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {isRTL ? 'جارٍ التحقق...' : 'Verifying...'}
+                    </>
+                  ) : (
+                    isRTL ? 'تحقق' : 'Verify'
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  style={{ color: '#f97316' }}
+                  disabled={isSendingReset}
+                  onClick={handleForgotPassword}
+                  data-testid="button-resend-reset-otp"
+                >
+                  {isSendingReset
+                    ? (isRTL ? 'جارٍ الإرسال...' : 'Sending...')
+                    : (isRTL ? 'إعادة إرسال الرمز' : 'Resend Code')}
+                </Button>
+              </>
+            )}
+
+            {resetPhase === "password" && (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</label>
+                  <div className="relative">
+                    <Lock className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+                    <Input
+                      type="password"
+                      placeholder={isRTL ? 'أدخل كلمة المرور الجديدة' : 'Enter new password'}
+                      className={isRTL ? 'pr-10' : 'pl-10'}
+                      value={resetNewPassword}
+                      onChange={(e) => setResetNewPassword(e.target.value)}
+                      data-testid="input-new-password"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}</label>
+                  <div className="relative">
+                    <Lock className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+                    <Input
+                      type="password"
+                      placeholder={isRTL ? 'أعد إدخال كلمة المرور' : 'Re-enter new password'}
+                      className={isRTL ? 'pr-10' : 'pl-10'}
+                      value={resetConfirmPassword}
+                      onChange={(e) => setResetConfirmPassword(e.target.value)}
+                      data-testid="input-confirm-new-password"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full text-white font-semibold"
+                  style={{ backgroundColor: '#f97316' }}
+                  disabled={isResettingPassword}
+                  onClick={handleSubmitNewPassword}
+                  data-testid="button-submit-new-password"
+                >
+                  {isResettingPassword ? (
+                    <>
+                      <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {isRTL ? 'جارٍ الحفظ...' : 'Saving...'}
+                    </>
+                  ) : (
+                    isRTL ? 'حفظ كلمة المرور' : 'Save New Password'
+                  )}
+                </Button>
+              </>
+            )}
 
             <Button
               type="button"
               variant="outline"
               className="w-full"
               style={{ borderColor: '#f97316', color: '#f97316' }}
-              onClick={() => setShowForgotPassword(false)}
+              onClick={closeForgotPassword}
               data-testid="button-back-to-login"
             >
-              <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
               {isRTL ? 'العودة لتسجيل الدخول' : 'Back to Login'}
             </Button>
           </CardContent>
         </Card>
+        <div id="recaptcha-container"></div>
       </div>
     );
   }
