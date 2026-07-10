@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Phone, Lock, User, Mail, ArrowLeft, ShieldCheck } from "lucide-react";
-import { sendOTP, verifyOTP } from "@/lib/firebase";
+import { sendOTP, verifyOTP, isServiceLevelOTPError } from "@/lib/firebase";
 import samanLogo from "@/assets/saman-logo.jpg";
 
 interface LoginFormValues {
@@ -87,6 +87,33 @@ export default function Auth() {
             toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "محاولات كثيرة. يرجى المحاولة لاحقاً" : "Too many attempts. Please try again later." });
           } else if (error?.code === "auth/invalid-phone-number") {
             toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "رقم هاتف غير صالح" : "Invalid phone number format" });
+          } else if (isServiceLevelOTPError(error)) {
+            // SMS service is down (billing/quota/outage) — not the user's fault.
+            // Fall back to direct registration so sign-ups are never blocked.
+            try {
+              await register({
+                phone: data.phone,
+                password: data.password,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email || undefined,
+                otpFallback: true,
+              });
+              setPendingFormData(null);
+              toast({
+                title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
+                description: isRTL
+                  ? "تم إنشاء حسابك بنجاح. تم تخطي التحقق عبر الرسائل النصية مؤقتاً"
+                  : "Your account has been created. SMS verification was temporarily skipped.",
+              });
+              setLocation(returnTo);
+            } catch (regError: any) {
+              toast({
+                variant: "destructive",
+                title: isRTL ? "فشل التسجيل" : "Registration failed",
+                description: regError?.message || (isRTL ? "يرجى المحاولة مرة أخرى" : "Please try again."),
+              });
+            }
           } else {
             toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "فشل إرسال رمز التحقق. يرجى المحاولة مرة أخرى" : "Failed to send verification code. Please try again." });
           }

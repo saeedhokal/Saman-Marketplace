@@ -94,6 +94,7 @@ interface RegisterParams {
   firstName: string;
   lastName: string;
   email?: string;
+  otpFallback?: boolean;
 }
 
 async function loginFn(params: LoginParams): Promise<User> {

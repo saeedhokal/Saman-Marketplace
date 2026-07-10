@@ -566,7 +566,7 @@ export function setupSimpleAuth(app: Express) {
   // Register with phone + password (direct registration)
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const { phone, password, firstName, lastName, email, firebaseIdToken } = req.body;
+      const { phone, password, firstName, lastName, email, firebaseIdToken, otpFallback } = req.body;
 
       if (!password || !firstName || !lastName) {
         return res.status(400).json({ message: "Password, first name, and last name are required" });
@@ -589,6 +589,12 @@ export function setupSimpleAuth(app: Express) {
         }
       } else if (phone) {
         normalizedPhone = normalizePhone(phone);
+        if (otpFallback) {
+          // New-app registration completed WITHOUT SMS verification because
+          // Firebase OTP failed at the service level (e.g. billing/quota).
+          // If these appear in logs, check Firebase console — SMS is likely down.
+          console.warn(`[OTP FALLBACK] Registration without SMS verification for phone ending ...${normalizedPhone.slice(-4)}`);
+        }
       } else {
         return res.status(400).json({ message: "Phone number or verification is required" });
       }

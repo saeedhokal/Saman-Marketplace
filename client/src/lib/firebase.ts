@@ -81,6 +81,24 @@ export async function sendOTP(phoneNumber: string): Promise<boolean> {
   }
 }
 
+// Service-level failures: Firebase itself is broken or misconfigured
+// (billing, quota, project config). These are NOT the user's fault, so
+// registration can fall back to the direct (unverified) path instead of
+// blocking sign-ups entirely.
+// Deliberately NOT included: captcha-check-failed and network-request-failed
+// (usually caused by the user's own connection/browser session, not an outage).
+const SERVICE_LEVEL_OTP_ERRORS = new Set([
+  'auth/billing-not-enabled',
+  'auth/quota-exceeded',
+  'auth/internal-error',
+  'auth/app-not-authorized',
+  'auth/operation-not-allowed',
+]);
+
+export function isServiceLevelOTPError(error: any): boolean {
+  return typeof error?.code === 'string' && SERVICE_LEVEL_OTP_ERRORS.has(error.code);
+}
+
 export async function verifyOTP(code: string): Promise<string> {
   if (!confirmationResult) {
     throw new Error('No OTP was sent. Please request a new code.');
