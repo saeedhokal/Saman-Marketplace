@@ -134,7 +134,7 @@ export function registerObjectStorageRoutes(app: Express): void {
         let entry = cacheGet(cacheKey);
         if (!entry) {
           const [buffer] = await objectFile.download();
-          const pipeline = sharp(buffer)
+          const pipeline = sharp(buffer, { failOn: "none", limitInputPixels: false })
             .rotate()
             .resize({ width: resize.width, withoutEnlargement: true });
           const body = useWebp
