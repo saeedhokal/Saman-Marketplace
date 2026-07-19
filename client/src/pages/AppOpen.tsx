@@ -11,13 +11,26 @@ function getDevice(): "ios" | "android" | "desktop" {
   return "desktop";
 }
 
+/**
+ * Validate that path is a safe internal relative path.
+ * Must start with exactly one "/" and must NOT be a protocol-relative ("//...")
+ * or absolute URL. Rejects "javascript:", "data:", "https://", etc.
+ */
+function sanitizePath(raw: string | null): string {
+  if (!raw) return "/";
+  // Must start with a single "/" but not "//"
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/";
+  // Must not contain protocol indicators
+  if (/^\/[a-zA-Z][a-zA-Z0-9+\-.]*:/.test(raw)) return "/";
+  return raw;
+}
+
 export default function AppOpen() {
   const params = new URLSearchParams(window.location.search);
-  const path = params.get("path") || "/";
+  const path = sanitizePath(params.get("path"));
   const device = getDevice();
 
   const [status, setStatus] = useState<"trying" | "failed">("trying");
-  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     // Desktop — go straight to the website path
@@ -45,23 +58,14 @@ export default function AppOpen() {
       window.location.href = schemeUrl;
     }, 100);
 
-    // After 1.8 s, if still here the app isn't installed → store
+    // After 1.5 s, if still here the app isn't installed → go straight to store
     const fallbackTimer = setTimeout(() => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (!redirected) {
         setStatus("failed");
-        // Countdown then redirect
-        let c = 3;
-        const tick = setInterval(() => {
-          c -= 1;
-          setCountdown(c);
-          if (c <= 0) {
-            clearInterval(tick);
-            window.location.href = storeUrl;
-          }
-        }, 1000);
+        window.location.href = storeUrl;
       }
-    }, 1800);
+    }, 1500);
 
     return () => {
       clearTimeout(schemeTimer);
@@ -104,9 +108,9 @@ export default function AppOpen() {
         </>
       ) : (
         <>
-          <h1 className="text-xl font-bold text-foreground mb-2">App not installed</h1>
+          <h1 className="text-xl font-bold text-foreground mb-2">Redirecting to {storeName}…</h1>
           <p className="text-muted-foreground text-sm max-w-xs mb-6">
-            Redirecting you to the {storeName} in {countdown}…
+            Taking you to download Saman.
           </p>
           <a
             href={storeUrl}
@@ -116,7 +120,7 @@ export default function AppOpen() {
             Download Saman
           </a>
           <a
-            href={path}
+            href={`https://thesamanapp.com${path}`}
             className="mt-4 text-sm text-muted-foreground underline"
             data-testid="link-website"
           >
