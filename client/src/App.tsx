@@ -51,10 +51,16 @@ import { SeoLandingPage } from "@/pages/SeoLanding";
 import { SEO_PAGES } from "@shared/seo-pages";
 import NotFound from "@/pages/not-found";
 
+// Pages that manage their own scroll restoration on back-navigation.
+// Scrolling them to top here would fight their restoration logic.
+const SCROLL_RESTORE_PAGES = ['/categories', '/favorites', '/my-listings'];
+
 function ScrollToTop() {
   const [location] = useLocation();
 
   useEffect(() => {
+    const base = location.split('?')[0];
+    if (SCROLL_RESTORE_PAGES.some(p => base === p)) return;
     const el = document.getElementById('main-scroll-container');
     if (el) {
       el.scrollTo(0, 0);
