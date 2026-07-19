@@ -81,11 +81,20 @@ export function ProductCard({
   const sellerInitial = getInitial(sellerDisplayName, sellerFirstName, sellerLastName);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  // Always show the full photo (contain) so cars are never cropped.
-  // Users prefer letterbox bars over cut-off subjects.
-  const useCoverFit = true;
+  const [imageAspect, setImageAspect] = useState<number | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const styles = DENSITY_STYLES[density] ?? DENSITY_STYLES.default;
+
+  // Frame shape for this card variant (must match the aspect-[...] classes below).
+  const frameAspect = density === "large" ? 16 / 10 : 4 / 3;
+  // If the photo's shape is close to the frame, fill the frame (cover).
+  // If it's much taller (e.g. 9:16 portrait) or much wider, show the WHOLE
+  // photo (contain) so the subject is never cut off, with a blurred copy of
+  // the photo filling the empty space behind it.
+  const aspectMismatch =
+    imageAspect !== null &&
+    (imageAspect / frameAspect < 0.8 || imageAspect / frameAspect > 1.25);
+  const useContain = aspectMismatch;
 
   // If the image is already cached, the browser may finish loading it before
   // React attaches the onLoad handler. Check `complete` after mount so we
@@ -93,6 +102,7 @@ export function ProductCard({
   useEffect(() => {
     if (imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0) {
       setImageLoaded(true);
+      setImageAspect(imgRef.current.naturalWidth / imgRef.current.naturalHeight);
     }
   }, [product.imageUrl]);
   const isSold = product.status === "sold";
@@ -132,20 +142,35 @@ export function ProductCard({
                     data-testid={`skeleton-image-${product.id}`}
                   />
                 )}
+                {useContain && imageLoaded && (
+                  <img
+                    src={objectImageUrl(product.imageUrl, 100, 40)}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover blur-xl scale-110 opacity-60"
+                    data-testid={`img-backdrop-${product.id}`}
+                  />
+                )}
                 <img
                   ref={imgRef}
                   src={objectImageUrl(product.imageUrl, 600, 75)}
                   alt={product.title}
                   loading="lazy"
                   decoding="async"
-                  className={`h-full w-full transition-all duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  className={`relative h-full w-full transition-all duration-500 group-hover:scale-110 ${isSold ? 'blur-[2px] brightness-75' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   style={
-                    useCoverFit
-                      ? { objectFit: 'cover', objectPosition: 'center' }
-                      : { objectFit: 'contain', objectPosition: 'center' }
+                    useContain
+                      ? { objectFit: 'contain', objectPosition: 'center' }
+                      : { objectFit: 'cover', objectPosition: 'center' }
                   }
-                  onLoad={() => {
+                  onLoad={(e) => {
                     setImageLoaded(true);
+                    const img = e.currentTarget;
+                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                      setImageAspect(img.naturalWidth / img.naturalHeight);
+                    }
                   }}
                   onError={(e) => {
                     if (e.currentTarget.dataset.retried === "1") {
