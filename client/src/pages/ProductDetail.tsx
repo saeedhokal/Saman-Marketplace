@@ -154,7 +154,8 @@ export default function ProductDetail() {
   };
 
   const handleShare = async () => {
-    const shareUrl = `https://thesamanapp.com/product/${id}`;
+    // Smart link: opens the app if installed, falls back to App/Play Store
+    const smartUrl = `https://thesamanapp.com/open?path=/product/${id}`;
 
     // Pass ONLY url to navigator.share — on iOS, including `text` causes the
     // share sheet's "Copy" button to copy the text instead of the URL. With
@@ -162,7 +163,7 @@ export default function ProductDetail() {
     // "Copy" reliably copies the link.
     if (navigator.share) {
       try {
-        await navigator.share({ url: shareUrl });
+        await navigator.share({ url: smartUrl });
         return;
       } catch (err: any) {
         if (err.name === "AbortError") return;
@@ -171,7 +172,7 @@ export default function ProductDetail() {
       }
     }
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(smartUrl);
       toast({ title: "Link Copied", description: "Listing link copied to clipboard." });
     } catch {
       toast({ variant: "destructive", title: "Error", description: "Could not copy link." });

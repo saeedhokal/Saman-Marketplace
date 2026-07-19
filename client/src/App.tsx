@@ -47,6 +47,7 @@ import PaymentCancelled from "@/pages/PaymentCancelled";
 import PaymentDeclined from "@/pages/PaymentDeclined";
 import Downloads from "@/pages/Downloads";
 import ResetPassword from "@/pages/ResetPassword";
+import AppOpen from "@/pages/AppOpen";
 import { SeoLandingPage } from "@/pages/SeoLanding";
 import { SEO_PAGES } from "@shared/seo-pages";
 import NotFound from "@/pages/not-found";
@@ -122,6 +123,7 @@ function Router() {
           <Route path="/payment/declined" component={PaymentDeclined} />
           <Route path="/downloads" component={Downloads} />
           <Route path="/reset-password" component={ResetPassword} />
+          <Route path="/open" component={AppOpen} />
           {SEO_PAGES.map((page) => (
             <Route key={page.path} path={page.path}>
               <SeoLandingPage page={page} />
@@ -136,7 +138,7 @@ function Router() {
 
 function BottomNavWrapper() {
   const [location] = useLocation();
-  const hideBottomNav = location === '/downloads' || location.startsWith('/reset-password');
+  const hideBottomNav = location === '/downloads' || location.startsWith('/reset-password') || location === '/open';
   
   if (hideBottomNav) return null;
   return <BottomNav />;
@@ -144,7 +146,7 @@ function BottomNavWrapper() {
 
 function DesktopNavMenuWrapper() {
   const [location] = useLocation();
-  const hide = location === '/downloads' || location.startsWith('/reset-password') || location.startsWith('/auth');
+  const hide = location === '/downloads' || location.startsWith('/reset-password') || location.startsWith('/auth') || location === '/open';
   if (hide) return null;
   return <DesktopNavMenu />;
 }
@@ -209,6 +211,11 @@ function DeepLinkHandler() {
 
 function AppContent() {
   const { hasSelectedLanguage } = useLanguage();
+
+  // Smart link page must work for anyone — skip language gate
+  if (window.location.pathname === '/open') {
+    return <AppOpen />;
+  }
   
   if (!hasSelectedLanguage) {
     return <LanguageSelect />;
