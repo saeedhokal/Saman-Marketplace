@@ -45,6 +45,22 @@ export default function ProductDetail() {
     setTranslatedDescription(null);
   }, [id]);
 
+  // Apple Smart App Banner: update meta tag with current listing ID
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="apple-itunes-app"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "apple-itunes-app";
+      document.head.appendChild(meta);
+    }
+    meta.content = `app-id=6744526430, app-argument=saman://product/${id}`;
+    return () => {
+      if (meta) {
+        meta.content = "app-id=6744526430";
+      }
+    };
+  }, [id]);
+
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   const goToAuth = (mode: "login" | "signup" = "signup") => {
