@@ -673,22 +673,28 @@ export default function Categories() {
           {activeFiltersCount > 0 && (
             <div className="flex-1 flex items-center gap-2 overflow-x-auto">
               {activeSubCategory !== "All" && (
-                <span 
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap active:opacity-70 touch-manipulation"
                   style={{ backgroundColor: '#fed7aa', color: '#9a3412' }}
+                  onClick={() => { setActiveSubCategory("All"); setActiveModel("All"); }}
+                  data-testid="badge-filter-subcategory"
                 >
                   {activeSubCategory}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => { setActiveSubCategory("All"); setActiveModel("All"); }} />
-                </span>
+                  <X className="h-3.5 w-3.5" />
+                </button>
               )}
               {activeModel !== "All" && (
-                <span 
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap active:opacity-70 touch-manipulation"
                   style={{ backgroundColor: '#fed7aa', color: '#9a3412' }}
+                  onClick={() => setActiveModel("All")}
+                  data-testid="badge-filter-model"
                 >
                   {activeModel}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setActiveModel("All")} />
-                </span>
+                  <X className="h-3.5 w-3.5" />
+                </button>
               )}
             </div>
           )}
