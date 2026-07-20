@@ -21,6 +21,13 @@ export function detectLanguage(text: string): "arabic" | "english" | "mixed" {
   return "english";
 }
 
+// Determine the dominant language for mixed-alphabet text
+export function dominantLanguage(text: string): "arabic" | "english" {
+  const arabicChars = (text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g) || []).length;
+  const latinChars = (text.match(/[a-zA-Z]/g) || []).length;
+  return arabicChars >= latinChars ? "arabic" : "english";
+}
+
 // Translate text between Arabic and English
 export async function translateText(
   text: string,

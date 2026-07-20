@@ -27,11 +27,12 @@ export function useTranslation() {
     return "english";
   }, [containsArabic]);
 
-  // Get the target language (opposite of detected)
+  // Get the target language (opposite of the dominant language)
   const getTargetLanguage = useCallback((text: string): "arabic" | "english" => {
-    const detected = detectLanguage(text);
-    return detected === "arabic" ? "english" : "arabic";
-  }, [detectLanguage]);
+    const arabicChars = (text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g) || []).length;
+    const latinChars = (text.match(/[a-zA-Z]/g) || []).length;
+    return arabicChars >= latinChars ? "english" : "arabic";
+  }, []);
 
   // Translate a single text
   const translateText = useCallback(async (
