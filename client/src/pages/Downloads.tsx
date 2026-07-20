@@ -53,10 +53,10 @@ export default function Downloads() {
           />
           <Link href="/">
             <button
-              className="mt-4 text-white/70 hover:text-white text-sm underline underline-offset-2 transition-colors"
+              className="mt-5 w-full py-3 px-6 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-sm transition-colors border border-white/20"
               data-testid="button-home"
             >
-              Browse the marketplace
+              Browse the Marketplace
             </button>
           </Link>
         </div>
