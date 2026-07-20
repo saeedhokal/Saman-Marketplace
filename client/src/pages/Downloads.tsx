@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import dubaiSkylineBg from "@/assets/images/dubai-skyline-bg.png";
 import samanLogo from "@assets/ChatGPT_Image_Feb_4,_2026,_03_33_07_PM_1770204799107.png";
 import { SiApple, SiGoogleplay } from "react-icons/si";
+import { Link } from "wouter";
 
 type Platform = "ios" | "android" | "other";
 
@@ -50,6 +51,14 @@ export default function Downloads() {
             alt="Saman Marketplace" 
             className="w-64 mx-auto"
           />
+          <Link href="/">
+            <button
+              className="mt-4 text-white/70 hover:text-white text-sm underline underline-offset-2 transition-colors"
+              data-testid="button-home"
+            >
+              Browse the marketplace
+            </button>
+          </Link>
         </div>
         
         <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/5">
