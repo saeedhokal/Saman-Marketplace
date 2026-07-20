@@ -74,12 +74,15 @@ export default function Categories() {
   const { t, isRTL } = useLanguage();
   const { density, gridClasses } = useListingView();
 
-  const initState = useMemo(() => {
+  const initState = useMemo((): Partial<CategoryFilters> => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
     if (tab === "spare-parts" || tab === "automotive") {
       savedFilters = null;
       savedScrollY = 0;
+      params.delete("tab");
+      const rest = params.toString();
+      window.history.replaceState(null, "", window.location.pathname + (rest ? `?${rest}` : ""));
       return { activeCategory: tab as MainCategory };
     }
     if (savedFilters) return savedFilters;
