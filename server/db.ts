@@ -16,4 +16,13 @@ export const pool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
 });
+
+// Idle clients in the pool can be terminated by the database server
+// (e.g. "terminating connection due to administrator command").
+// Without this handler, that emits an unhandled 'error' event and
+// crashes the whole process. Log it and let the pool reconnect.
+pool.on("error", (err) => {
+  console.error("Database pool error (recovered):", err.message);
+});
+
 export const db = drizzle(pool, { schema });

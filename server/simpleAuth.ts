@@ -1,7 +1,7 @@
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import type { Express, Request, Response, NextFunction } from "express";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { users, otpCodes, loginEvents } from "@shared/models/auth";
 import { eq, and, gt, desc, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -141,7 +141,7 @@ export function setupSimpleAuth(app: Express) {
   const sessionTtl = 30 * 24 * 60 * 60 * 1000; // 30 days
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
+    pool,
     createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: "sessions",
