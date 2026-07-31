@@ -5,7 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitial } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Store, Calendar, Lock } from "lucide-react";
+import { ArrowLeft, Store, Calendar, Lock, Share2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -31,6 +32,38 @@ export default function SellerProfile() {
   const { user, isLoading: authLoading } = useAuth();
   const { t, isRTL } = useLanguage();
   const { density, gridClasses } = useListingView();
+  const { toast } = useToast();
+
+  const handleShare = async () => {
+    // Smart link: opens the app if installed, falls back to the website
+    const smartUrl = `https://thesamanapp.com/open?path=/seller/${sellerId}`;
+
+    // Pass ONLY url to navigator.share — on iOS, including `text` causes the
+    // share sheet's "Copy" button to copy the text instead of the URL.
+    if (navigator.share) {
+      try {
+        await navigator.share({ url: smartUrl });
+        return;
+      } catch (err: any) {
+        if (err.name === "AbortError") return;
+        console.error("Share failed:", err);
+        // fall through to clipboard fallback
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(smartUrl);
+      toast({
+        title: isRTL ? "تم نسخ الرابط" : "Link Copied",
+        description: isRTL ? "تم نسخ رابط ملف البائع." : "Seller profile link copied to clipboard.",
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: isRTL ? "خطأ" : "Error",
+        description: isRTL ? "تعذر نسخ الرابط." : "Could not copy link.",
+      });
+    }
+  };
 
   const { data: products, isLoading, error } = useSellerProducts(sellerId);
 
@@ -158,6 +191,15 @@ export default function SellerProfile() {
               </div>
             )}
           </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleShare}
+            aria-label={isRTL ? "مشاركة ملف البائع" : "Share seller profile"}
+            data-testid="button-share-seller"
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
         </div>
 
         {products.length === 0 ? (
