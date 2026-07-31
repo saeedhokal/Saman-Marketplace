@@ -1,5 +1,8 @@
 import { storage } from "./storage";
 import { SEO_PAGES, findSeoPageByPath, seoPageAbsoluteUrl, seoPageAltUrl, type SeoPage } from "../shared/seo-pages";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const SITE_URL = "https://thesamanapp.com";
 
@@ -197,7 +200,62 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
     };
   }
 
-  // 2) Product detail pages
+  // 2) Seller profile pages (public store pages)
+  const sellerMatch = url.match(/^\/seller\/([^/?#]+)(?:[/?#]|$)/);
+  if (sellerMatch) {
+    const sellerId = decodeURIComponent(sellerMatch[1]);
+    if (!sellerId || sellerId.length > 100) return null;
+    try {
+      const [seller] = await db
+        .select({
+          id: users.id,
+          displayName: users.displayName,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+        .from(users)
+        .where(eq(users.id, sellerId));
+      if (!seller) return null;
+
+      const sellerListings = await storage.getProductsBySeller(sellerId);
+      const listingCount = sellerListings.length;
+      const name =
+        seller.displayName ||
+        [seller.firstName, seller.lastName].filter(Boolean).join(" ").trim() ||
+        "Seller";
+
+      const canonical = `${SITE_URL}/seller/${encodeURIComponent(seller.id)}`;
+      const title = `${name} — Seller Store | Saman Marketplace`;
+      const description = listingCount > 0
+        ? `Browse ${listingCount} listing${listingCount === 1 ? "" : "s"} from ${name} on Saman Marketplace — the UAE's auto parts and vehicles marketplace.`
+        : `View ${name}'s store on Saman Marketplace — the UAE's auto parts and vehicles marketplace.`;
+
+      const jsonLd = `<script type="application/ld+json">${JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "ProfilePage",
+        "name": title,
+        "url": canonical,
+        "mainEntity": {
+          "@type": "Person",
+          "name": name,
+          ...(seller.profileImageUrl ? { image: seller.profileImageUrl } : {}),
+        },
+      })}</script>`;
+
+      return {
+        jsonLd,
+        title,
+        description,
+        canonical,
+        ogImage: seller.profileImageUrl || undefined,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  // 3) Product detail pages
   const match = url.match(/^\/product\/(\d+)(?:[/?#]|$)/);
   if (!match) return null;
   const id = parseInt(match[1], 10);

@@ -265,6 +265,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.error("[sitemap] failed to load recent products", err);
     }
 
+    // Public seller store pages (sellers with at least one approved listing)
+    try {
+      const sellers = await db.execute(sql`
+        SELECT DISTINCT seller_id FROM products WHERE status = 'approved' LIMIT 500
+      `);
+      for (const row of sellers.rows as { seller_id: string }[]) {
+        if (!row.seller_id) continue;
+        urls.push({
+          loc: `https://thesamanapp.com/seller/${encodeURIComponent(row.seller_id)}`,
+          priority: "0.6",
+          changefreq: "weekly",
+        });
+      }
+    } catch (err) {
+      console.error("[sitemap] failed to load sellers", err);
+    }
+
     const body =
       `<?xml version="1.0" encoding="UTF-8"?>\n` +
       `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
