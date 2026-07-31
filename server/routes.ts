@@ -742,12 +742,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(404).json({ message: "Seller not found" });
     }
     
-    // Logged-out visitors only get the count (so the listing page can show "X listings")
-    // — not the full list, to discourage scraping and gate "More from this seller".
-    if (!hasVerifiedUser(req)) {
-      return res.json([]);
-    }
-
+    // Public read access: logged-out visitors can view a seller's listings
+    // (shared seller profile links). Contact fields are still stripped below.
     const products = await storage.getProductsBySeller(sellerId);
     res.json(stripContactFieldsList(req, products));
   });
@@ -949,16 +945,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
     
     if (!hasVerifiedUser(req)) {
-      // Hide identifying details from logged-out visitors
+      // Public read access: show name/avatar, but keep phone gated behind login
       return res.json({
-        id: seller.id,
-        displayName: null,
-        firstName: null,
-        lastName: null,
-        profileImageUrl: null,
-        createdAt: seller.createdAt,
+        ...seller,
         phone: null,
-        requiresAuth: true,
       });
     }
     res.json(seller);
