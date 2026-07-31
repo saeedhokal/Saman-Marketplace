@@ -231,6 +231,27 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
         ? `Browse ${listingCount} listing${listingCount === 1 ? "" : "s"} from ${name} on Saman Marketplace — the UAE's auto parts and vehicles marketplace.`
         : `View ${name}'s store on Saman Marketplace — the UAE's auto parts and vehicles marketplace.`;
 
+      const approved = sellerListings.filter((p) => p.status === "approved");
+      const listingsHtml = approved
+        .map(
+          (p) =>
+            `<li><a href="/product/${p.id}">${escapeHtml(p.title)}</a>${
+              p.price && p.price > 0 ? ` — AED ${escapeHtml(String(p.price))}` : ""
+            }</li>`
+        )
+        .join("");
+      // Rendered inside <div id="root"> so crawlers see real content; React
+      // replaces this on mount with the styled seller store page.
+      const bodyContent =
+        `<div id="seo-prerender" lang="en" dir="ltr" style="max-width:880px;margin:0 auto;padding:24px;font-family:DM Sans,Arial,sans-serif;color:#111;">` +
+        `<h1>${escapeHtml(name)} — Seller Store</h1>` +
+        `<p>${escapeHtml(description)}</p>` +
+        (approved.length > 0
+          ? `<h2>Listings</h2><ul>${listingsHtml}</ul>`
+          : `<p>This seller has no active listings right now.</p>`) +
+        `<p><a href="/">Browse Saman Marketplace</a> &middot; <a href="/downloads">Download the app</a></p>` +
+        `</div>`;
+
       const jsonLd = `<script type="application/ld+json">${JSON.stringify({
         "@context": "https://schema.org",
         "@type": "ProfilePage",
@@ -249,6 +270,7 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
         description,
         canonical,
         ogImage: seller.profileImageUrl || undefined,
+        bodyContent,
       };
     } catch {
       return null;
