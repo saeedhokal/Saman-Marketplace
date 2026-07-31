@@ -5,8 +5,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitial } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Store, Calendar, Lock, Share2 } from "lucide-react";
+import { ArrowLeft, Store, Calendar, Lock, Share2, Phone } from "lucide-react";
+import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -24,6 +34,7 @@ type SellerInfo = {
   lastName: string | null;
   profileImageUrl: string | null;
   createdAt: string;
+  phone: string | null;
 };
 
 export default function SellerProfile() {
@@ -33,6 +44,33 @@ export default function SellerProfile() {
   const { t, isRTL } = useLanguage();
   const { density, gridClasses } = useListingView();
   const { toast } = useToast();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  const goToAuth = (mode: "login" | "signup" = "signup") => {
+    const returnTo = `/seller/${sellerId}`;
+    const modeParam = mode === "signup" ? "&mode=signup" : "";
+    window.location.href = `/auth?returnTo=${encodeURIComponent(returnTo)}${modeParam}`;
+  };
+
+  // Contact info requires a signed-in user
+  const handleContactClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!user) {
+      e.preventDefault();
+      setShowAuthPrompt(true);
+    }
+  };
+
+  const formatPhoneForCall = (num: string) => {
+    let digits = num.replace(/[^0-9]/g, "");
+    if (digits.startsWith("00")) digits = digits.slice(2);
+    if (digits.startsWith("971")) return `+${digits}`;
+    if (digits.startsWith("0")) return `+971${digits.slice(1)}`;
+    return `+971${digits}`;
+  };
+
+  const formatWhatsAppNumber = (num: string) => {
+    return num.replace(/[^0-9]/g, "");
+  };
 
   const handleShare = async () => {
     // Smart link: opens the app if installed, falls back to the website
@@ -71,6 +109,9 @@ export default function SellerProfile() {
     queryKey: ['/api/sellers', sellerId],
     enabled: !!sellerId && !!user,
   });
+
+  const sellerPhone = sellerInfo?.phone || "";
+  const hasPhone = sellerPhone.replace(/[^0-9]/g, "").length > 0;
 
   if (!authLoading && !user) {
     return (
@@ -201,6 +242,80 @@ export default function SellerProfile() {
             <Share2 className="h-5 w-5" />
           </Button>
         </div>
+
+        <div className="flex items-center gap-3 mb-8">
+          <a
+            href={user && hasPhone ? `tel:${formatPhoneForCall(sellerPhone)}` : '#'}
+            className="flex-1"
+            aria-disabled={user && !hasPhone ? true : undefined}
+            onClick={(e) => {
+              if (user && !hasPhone) { e.preventDefault(); return; }
+              handleContactClick(e);
+            }}
+          >
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full"
+              disabled={user ? !hasPhone : false}
+              data-testid="button-call-seller"
+            >
+              <Phone className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {isRTL ? 'اتصال' : 'Call'}
+            </Button>
+          </a>
+
+          <a
+            href={user && hasPhone ? `https://wa.me/${formatWhatsAppNumber(formatPhoneForCall(sellerPhone))}` : '#'}
+            target={user && hasPhone ? "_blank" : undefined}
+            rel={user && hasPhone ? "noopener noreferrer" : undefined}
+            className="flex-1"
+            aria-disabled={user && !hasPhone ? true : undefined}
+            onClick={(e) => {
+              if (user && !hasPhone) { e.preventDefault(); return; }
+              handleContactClick(e);
+            }}
+          >
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full text-green-600 border-green-600 hover:bg-green-50"
+              disabled={user ? !hasPhone : false}
+              data-testid="button-whatsapp-seller"
+            >
+              <SiWhatsapp className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> WhatsApp
+            </Button>
+          </a>
+        </div>
+
+        <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+          <DialogContent data-testid="dialog-auth-prompt-seller">
+            <DialogHeader>
+              <DialogTitle data-testid="text-auth-prompt-title">
+                {isRTL ? 'سجّل للتواصل مع البائع' : 'Sign up to contact the seller'}
+              </DialogTitle>
+              <DialogDescription data-testid="text-auth-prompt-description">
+                {isRTL
+                  ? 'أنشئ حسابًا أو سجّل دخولك للاتصال بالبائع أو إرسال رسالة عبر واتساب.'
+                  : 'Create an account or log in to call the seller or message them on WhatsApp.'}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button
+                variant="outline"
+                onClick={() => goToAuth("login")}
+                data-testid="button-auth-prompt-login"
+              >
+                {isRTL ? 'تسجيل الدخول' : 'Log in'}
+              </Button>
+              <Button
+                onClick={() => goToAuth("signup")}
+                data-testid="button-auth-prompt-signup"
+              >
+                {isRTL ? 'إنشاء حساب' : 'Sign up'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {products.length === 0 ? (
           <div className="text-center py-20 bg-secondary/30 rounded-2xl">
