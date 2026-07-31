@@ -44,24 +44,35 @@ export default function AppOpen() {
     const schemePath = path.startsWith("/") ? path.slice(1) : path;
     const schemeUrl = `saman://${schemePath}`;
 
-    let redirected = false;
+    let appOpened = false;
     const storeUrl = device === "ios" ? APP_STORE_URL : PLAY_STORE_URL;
+    const startedAt = Date.now();
 
-    // When the user leaves the page (app opened), cancel the fallback
-    const handleVisibilityChange = () => {
-      if (document.hidden) redirected = true;
+    // When the user leaves the page (app opened), cancel the fallback.
+    // Listen to several signals — Safari/Chrome fire different ones when
+    // handing off to a native app.
+    const markOpened = () => {
+      if (document.hidden || document.visibilityState === "hidden") appOpened = true;
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    const markOpenedAlways = () => { appOpened = true; };
+    document.addEventListener("visibilitychange", markOpened);
+    window.addEventListener("pagehide", markOpenedAlways);
+    window.addEventListener("blur", markOpenedAlways);
 
     // Give the OS a moment then try the scheme
     const schemeTimer = setTimeout(() => {
       window.location.href = schemeUrl;
     }, 100);
 
-    // After 1.5 s, if still here the app isn't installed → go straight to store
+    // After 1.5 s, if still here the app isn't installed → go to store.
+    // Guard against the browser resuming this timer AFTER the app already
+    // opened: if the page is hidden, or far more time elapsed than the timer
+    // interval (i.e. the browser was suspended while the app was open), the
+    // app handled the link — do NOT hijack it to the store.
     const fallbackTimer = setTimeout(() => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      if (!redirected) {
+      const elapsed = Date.now() - startedAt;
+      const wasSuspended = elapsed > 2500;
+      if (!appOpened && !document.hidden && !wasSuspended) {
         setStatus("failed");
         window.location.href = storeUrl;
       }
@@ -70,7 +81,9 @@ export default function AppOpen() {
     return () => {
       clearTimeout(schemeTimer);
       clearTimeout(fallbackTimer);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", markOpened);
+      window.removeEventListener("pagehide", markOpenedAlways);
+      window.removeEventListener("blur", markOpenedAlways);
     };
   }, [device, path]);
 
