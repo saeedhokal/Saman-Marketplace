@@ -13,6 +13,7 @@ import fs from "fs";
 import bcrypt from "bcryptjs";
 import { translateText, translateListing, detectLanguage, containsArabic } from "./translation";
 import rateLimit from "express-rate-limit";
+import { generateSellerOgCard } from "./ogImage";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -112,6 +113,38 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.use("/api/auth/forgot-password", authLimiter);
   app.use("/api/auth/send-otp", authLimiter);
   app.use("/api/auth/verify-otp", authLimiter);
+
+  // Branded Open Graph card for seller store pages (used when the seller
+  // has no profile photo). Served as a PNG for WhatsApp/social previews.
+  app.get("/og/seller/:id.png", async (req, res) => {
+    try {
+      const sellerId = String(req.params.id || "");
+      if (!sellerId || sellerId.length > 100) return res.status(404).end();
+      const [seller] = await db
+        .select({
+          id: users.id,
+          displayName: users.displayName,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        })
+        .from(users)
+        .where(eq(users.id, sellerId));
+      if (!seller) return res.status(404).end();
+      const name =
+        seller.displayName ||
+        [seller.firstName, seller.lastName].filter(Boolean).join(" ").trim() ||
+        "Seller";
+      const listings = await storage.getProductsBySeller(sellerId);
+      const listingCount = listings.filter((p) => p.status === "approved").length;
+      const png = await generateSellerOgCard(name, listingCount);
+      res.set("Content-Type", "image/png");
+      res.set("Cache-Control", "public, max-age=3600");
+      res.send(png);
+    } catch (err) {
+      console.error("[og-card] failed to generate seller card:", err);
+      res.status(500).end();
+    }
+  });
 
   setupSimpleAuth(app);
   registerObjectStorageRoutes(app);

@@ -269,7 +269,9 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
         title,
         description,
         canonical,
-        ogImage: seller.profileImageUrl || undefined,
+        ogImage:
+          seller.profileImageUrl ||
+          `${SITE_URL}/og/seller/${encodeURIComponent(seller.id)}.png`,
         bodyContent,
       };
     } catch {
