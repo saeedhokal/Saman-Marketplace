@@ -447,7 +447,6 @@ export default function Auth() {
                   className="w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 bg-background text-foreground focus:outline-none focus:ring-2 transition-all"
                   style={{ 
                     borderColor: digit ? '#f97316' : '#444',
-                    focusRingColor: '#f97316',
                   }}
                   data-testid={`input-otp-${index}`}
                 />
