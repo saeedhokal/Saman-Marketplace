@@ -93,7 +93,8 @@ AQEBBQAEggEArIDRcP53XoiWhs_FEez2fnxiP1AXCTMCUTS-EHrp2rBP7Y_LayYj_WCQwMDN5Fkt
 EfUpZuhlLqlJvxHBaMDJJUUNnlTk0zbStXa_k-dAl0GacgWsgtrm5XV36RCZsEKEbaXEWiayO3io
 BVuI0RpxafIFDtN_LpmeHgvnE9mnwfGycW8gE7viu_dt4E4o80p0OM44QglV5OM8yV4slv8EY3dQ
 nfqDoX0lO5zxcAXC8F0medXku04N8aNf8UuAxeEX7eVsrkxzwGIAhieO5YNMTtf1RqD1vr3Is_VR
-KcD0oBSJqlQLianqzygtWyzfiT1R4wVsMOHPiTj8uuhke9f_Cg`;
+KcD0oBSJqlQLianqzygtWyzfiT1R4wVsMOHPiTj8uuhke9f_Cg
+`;
 
 // Serve Apple Pay domain verification - embedded for reliable production serving
 const serveApplePayVerification = (_req: express.Request, res: express.Response) => {
@@ -306,6 +307,16 @@ app.use((req, res, next) => {
   });
 
   next();
+});
+
+// Last line of defense: never let a stray async error take the whole server
+// down. Log it loudly instead — individual requests may fail, but the app
+// stays up for everyone else.
+process.on("unhandledRejection", (reason) => {
+  console.error("[FATAL-GUARD] Unhandled promise rejection (server kept alive):", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("[FATAL-GUARD] Uncaught exception (server kept alive):", err);
 });
 
 (async () => {

@@ -2,3 +2,4 @@
 - [GPT-5 reasoning token budget](gpt5-reasoning-token-budget.md) — reasoning tokens eat max_completion_tokens; low caps return empty content silently. Use reasoning_effort minimal for translations.
 - [Firebase OTP billing](firebase-otp-billing.md) — phone-auth SMS needs Blaze plan; auth/billing-not-enabled = console plan issue, not code. Check [OTP ERROR] in deploy logs first.
 - [HEIC photo uploads](heic-uploads.md) — iPhone HEIC photos render broken (no browser/sharp decoder); must convert to JPEG client-side before upload.
+- [Stuck autoscale deployment](stuck-autoscale-deployment.md) — prod timeouts (curl 000) + silent logs after normal scale-down = stuck deployment; republish fixes, not a code bug.
