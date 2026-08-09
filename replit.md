@@ -42,6 +42,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Security:** Rate limiting on key endpoints (auth, listing creation, payments) and Helmet middleware for security headers. Response compression is enabled.
 - **Authentication:** Phone + password registration with Firebase OTP verification for new users. Backend accepts both OTP-verified and direct phone registration for backward compatibility. Existing users login with phone and password. Forgot password sends reset link to recovery email via Gmail SMTP (Samanapp.help@gmail.com). Reset links expire in 30 minutes. Tokens stored in-memory. Reset page at `/reset-password`.
 - **Email Service:** Gmail SMTP via Samanapp.help@gmail.com with app password. Uses nodemailer with retry mechanism and fresh transporter creation. Reset emails use production URL (thesamanapp.com). Emails may initially go to spam/junk folder.
+- **Uptime Monitoring:** `monitor/uptime-monitor.ts` runs as the "Uptime Monitor" workflow in the dev workspace (outside production). Pings https://thesamanapp.com/api/health every 3 min; after 3 consecutive failures sends a push alert to admin devices via APNs/FCM directly (admin tokens cached from prod via `GET /api/monitor/admin-tokens`, guarded by SESSION_SECRET). Recovery push on restore. See `monitor/MONITORING.md` (includes UptimeRobot setup for 24/7 backup coverage — the dev-workspace monitor only runs while the workspace is awake).
 
 ### Mobile Applications (iOS & Android)
 - **Wrapper:** Capacitor v7

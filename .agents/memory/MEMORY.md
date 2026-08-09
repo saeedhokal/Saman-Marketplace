@@ -3,3 +3,4 @@
 - [Firebase OTP billing](firebase-otp-billing.md) — phone-auth SMS needs Blaze plan; auth/billing-not-enabled = console plan issue, not code. Check [OTP ERROR] in deploy logs first.
 - [HEIC photo uploads](heic-uploads.md) — iPhone HEIC photos render broken (no browser/sharp decoder); must convert to JPEG client-side before upload.
 - [Stuck autoscale deployment](stuck-autoscale-deployment.md) — prod timeouts (curl 000) + silent logs after normal scale-down = stuck deployment; republish fixes, not a code bug.
+- [Uptime monitoring](uptime-monitoring.md) — dev-workspace monitor pushes DOWN alerts; APNs key must come from the .p8 file (env var copy is broken); admin tokens cached from prod DB.

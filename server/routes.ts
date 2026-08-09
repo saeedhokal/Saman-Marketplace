@@ -395,12 +395,39 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         timestamp: new Date().toISOString()
       });
     } catch (error: any) {
-      res.json({
+      // 503 (not 200) so uptime monitors treat a broken database as downtime.
+      res.status(503).json({
         status: "error",
         version: SERVER_VERSION,
         error: error.message,
         timestamp: new Date().toISOString()
       });
+    }
+  });
+
+  // Admin device tokens for the external uptime monitor (monitor/uptime-monitor.ts).
+  // Guarded by a shared secret (SESSION_SECRET, present in both dev + prod) so
+  // the monitor running in the dev workspace can cache tokens while production
+  // is healthy, and still push "site down" alerts when production is dead.
+  app.get("/api/monitor/admin-tokens", async (req, res) => {
+    try {
+      const secret = process.env.SESSION_SECRET;
+      const provided = req.headers["x-monitor-secret"];
+      if (!secret || typeof provided !== "string" || provided.length !== secret.length) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const crypto = await import("crypto");
+      if (!crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(secret))) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const rows = await db
+        .select({ fcmToken: deviceTokens.fcmToken, deviceOs: deviceTokens.deviceOs })
+        .from(deviceTokens)
+        .innerJoin(users, eq(deviceTokens.userId, users.id))
+        .where(eq(users.isAdmin, true));
+      res.json({ tokens: rows });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
     }
   });
 
