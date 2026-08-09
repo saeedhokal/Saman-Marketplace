@@ -99,6 +99,7 @@ function initFirebase(): boolean {
 
 async function sendPush(tokens: CachedToken[], title: string, body: string): Promise<number> {
   let sent = 0;
+  const deadTokens: string[] = [];
   for (const t of tokens) {
     if (!t.fcmToken || t.fcmToken.length < 20) continue;
     try {
@@ -114,7 +115,12 @@ async function sendPush(tokens: CachedToken[], title: string, body: string): Pro
         const result = await provider.send(note, t.fcmToken);
         if (result.sent.length > 0) sent++;
         else if (result.failed.length > 0) {
-          log(`APNs failed: ${(result.failed[0].response as any)?.reason || result.failed[0].status}`);
+          const failure = result.failed[0];
+          const reason = (failure.response as any)?.reason || failure.status;
+          log(`APNs failed: ${reason}`);
+          if (String(failure.status) === "410" || reason === "Unregistered") {
+            deadTokens.push(t.fcmToken);
+          }
         }
       } else {
         if (!initFirebase()) continue;
@@ -127,9 +133,35 @@ async function sendPush(tokens: CachedToken[], title: string, body: string): Pro
       }
     } catch (err: any) {
       log(`Push send error (${t.deviceOs}): ${err?.message}`);
+      const code: string = err?.code || "";
+      if (
+        t.deviceOs !== "ios" &&
+        (code === "messaging/registration-token-not-registered" ||
+          code === "messaging/unregistered" ||
+          /unregistered/i.test(err?.message || ""))
+      ) {
+        deadTokens.push(t.fcmToken);
+      }
     }
   }
+  if (deadTokens.length > 0) pruneCachedTokens(deadTokens);
   return sent;
+}
+
+/** Remove tokens the push provider reported as unregistered from the cache file. */
+function pruneCachedTokens(deadTokens: string[]): void {
+  try {
+    const dead = new Set(deadTokens);
+    const remaining = loadCachedTokens().filter((t) => !dead.has(t.fcmToken));
+    fs.mkdirSync(path.dirname(CACHE_FILE), { recursive: true });
+    fs.writeFileSync(
+      CACHE_FILE,
+      JSON.stringify({ updatedAt: new Date().toISOString(), tokens: remaining }),
+    );
+    log(`Pruned ${deadTokens.length} unregistered token(s) from cache (${remaining.length} remain)`);
+  } catch (err: any) {
+    log(`Failed to prune token cache: ${err?.message}`);
+  }
 }
 
 // ---------- Admin token cache ----------

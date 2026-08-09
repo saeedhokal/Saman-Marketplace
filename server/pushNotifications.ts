@@ -203,11 +203,20 @@ async function sendAPNsNotification(
   return result.success;
 }
 
+async function deleteDeadToken(tokenId: number, reason: string): Promise<void> {
+  try {
+    await db.delete(deviceTokens).where(eq(deviceTokens.id, tokenId));
+    console.log(`Deleted dead device token ${tokenId} (${reason})`);
+  } catch (err) {
+    console.error(`Failed to delete dead device token ${tokenId}:`, err);
+  }
+}
+
 async function sendAPNsNotificationWithError(
   token: string,
   payload: PushNotificationPayload,
   badgeCount: number = 0
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; unregistered?: boolean }> {
   console.log(`Attempting APNs send to token: ${token.substring(0, 30)}...`);
   
   if (!initializeAPNs() || !apnProvider) {
@@ -240,7 +249,8 @@ async function sendAPNsNotificationWithError(
         reason: (failure.response as any)?.reason || 'Unknown',
       };
       console.error('APNs send failed:', JSON.stringify(errorInfo));
-      return { success: false, error: `${errorInfo.status}: ${errorInfo.reason}` };
+      const unregistered = String(errorInfo.status) === '410' || errorInfo.reason === 'Unregistered';
+      return { success: false, error: `${errorInfo.status}: ${errorInfo.reason}`, unregistered };
     }
     
     console.log(`APNs notification sent successfully to ${token.substring(0, 20)}...`);
@@ -256,9 +266,18 @@ async function sendFirebaseNotification(
   payload: PushNotificationPayload,
   badgeCount: number = 0
 ): Promise<boolean> {
+  const result = await sendFirebaseNotificationWithError(token, payload, badgeCount);
+  return result.success;
+}
+
+async function sendFirebaseNotificationWithError(
+  token: string,
+  payload: PushNotificationPayload,
+  badgeCount: number = 0
+): Promise<{ success: boolean; error?: string; unregistered?: boolean }> {
   if (!initializeFirebase()) {
     console.log('Firebase not available');
-    return false;
+    return { success: false, error: 'Firebase not initialized' };
   }
 
   try {
@@ -284,10 +303,15 @@ async function sendFirebaseNotification(
 
     await admin.messaging().send(message);
     console.log(`Firebase notification sent to ${token.substring(0, 20)}...`);
-    return true;
+    return { success: true };
   } catch (error: any) {
     console.error('Firebase send error:', error);
-    return false;
+    const code: string = error?.code || '';
+    const unregistered =
+      code === 'messaging/registration-token-not-registered' ||
+      code === 'messaging/unregistered' ||
+      /unregistered/i.test(error?.message || '');
+    return { success: false, error: error?.message || 'Firebase exception', unregistered };
   }
 }
 
@@ -321,12 +345,16 @@ export async function sendPushNotification(
         }
 
         const isIOS = token.deviceOs === 'ios';
-        
-        if (isIOS) {
-          return sendAPNsNotification(token.fcmToken, payload, badgeCount);
-        } else {
-          return sendFirebaseNotification(token.fcmToken, payload, badgeCount);
+
+        const result = isIOS
+          ? await sendAPNsNotificationWithError(token.fcmToken, payload, badgeCount)
+          : await sendFirebaseNotificationWithError(token.fcmToken, payload, badgeCount);
+
+        if (result.unregistered) {
+          await deleteDeadToken(token.id, result.error || 'unregistered');
         }
+
+        return result.success;
       })
     );
 
@@ -476,27 +504,22 @@ export async function broadcastPushNotification(
         }
 
         const isIOS = token.deviceOs === 'ios';
-        let success = false;
 
-        if (isIOS) {
-          const result = await sendAPNsNotificationWithError(token.fcmToken, payload, 1);
-          success = result.success;
-          if (!success && result.error) {
-            errors.push(`Token ${token.id} (iOS): ${result.error}`);
-          }
-        } else {
-          success = await sendFirebaseNotification(token.fcmToken, payload, 1);
-          if (!success) {
-            errors.push(`Token ${token.id} (Android): Firebase failed`);
-          }
+        const result = isIOS
+          ? await sendAPNsNotificationWithError(token.fcmToken, payload, 1)
+          : await sendFirebaseNotificationWithError(token.fcmToken, payload, 1);
+
+        if (!result.success && result.error) {
+          errors.push(`Token ${token.id} (${isIOS ? 'iOS' : 'Android'}): ${result.error}`);
         }
 
-        // DISABLED: Don't auto-delete tokens on failure - keep them for debugging
-        // if (!success && token.deviceOs === 'ios') {
-        //   await db.delete(deviceTokens).where(eq(deviceTokens.id, token.id));
-        // }
+        // Only delete tokens the provider explicitly reports as unregistered
+        // (APNs 410/Unregistered, FCM registration-token-not-registered).
+        if (result.unregistered) {
+          await deleteDeadToken(token.id, result.error || 'unregistered');
+        }
 
-        return { success, tokenId: token.id, os: token.deviceOs };
+        return { success: result.success, tokenId: token.id, os: token.deviceOs };
       })
     );
 
