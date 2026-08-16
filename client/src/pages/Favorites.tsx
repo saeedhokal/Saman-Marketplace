@@ -19,7 +19,7 @@ export default function Favorites() {
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
-      window.location.href = "/api/login";
+      window.location.href = "/auth?returnTo=/favorites";
     }
   }, [user, isAuthLoading]);
 

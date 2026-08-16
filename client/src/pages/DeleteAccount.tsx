@@ -60,7 +60,7 @@ export default function DeleteAccount() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center px-4">
           <p className="text-muted-foreground">Please sign in first</p>
-          <Link href="/auth">
+          <Link href="/auth?returnTo=/profile/delete">
             <Button className="mt-4" data-testid="button-signin">Sign In</Button>
           </Link>
         </div>

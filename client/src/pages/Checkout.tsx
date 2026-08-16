@@ -495,7 +495,7 @@ export default function Checkout() {
           <p className="text-xs text-muted-foreground mb-4">
             Session not found. Please log in again.
           </p>
-          <Link href="/auth">
+          <Link href={`/auth?returnTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/checkout")}`}>
             <Button>Sign In</Button>
           </Link>
         </div>

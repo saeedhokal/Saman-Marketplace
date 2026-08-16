@@ -41,7 +41,7 @@ export function DesktopNavMenu() {
 
   const handlePost = () => {
     if (!user) {
-      setLocation("/auth");
+      setLocation("/auth?returnTo=/sell");
       return;
     }
     if (userInfo?.subscriptionEnabled) {

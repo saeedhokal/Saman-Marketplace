@@ -33,7 +33,7 @@ export function BottomNav() {
 
   const handlePostClick = () => {
     if (!user) {
-      setLocation("/auth");
+      setLocation("/auth?returnTo=/sell");
       return;
     }
     

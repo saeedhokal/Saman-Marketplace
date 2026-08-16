@@ -39,7 +39,7 @@ export default function Profile() {
         <div className="text-center px-4">
           <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">{t('signInToView')}</h2>
-          <Link href="/auth">
+          <Link href="/auth?returnTo=/profile">
             <Button>{t('signIn')}</Button>
           </Link>
         </div>

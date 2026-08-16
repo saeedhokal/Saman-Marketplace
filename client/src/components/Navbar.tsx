@@ -117,7 +117,7 @@ export function Navbar() {
               </DropdownMenu>
             </>
           ) : (
-            <Link href="/auth">
+            <Link href={`/auth?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`}>
               <Button 
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-6"
                 data-testid="button-signin"
@@ -187,7 +187,7 @@ export function Navbar() {
                       </Button>
                     </>
                   ) : (
-                    <Link href="/auth">
+                    <Link href={`/auth?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`}>
                       <Button className="w-full">
                         Sign In
                       </Button>

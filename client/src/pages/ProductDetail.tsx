@@ -142,7 +142,7 @@ export default function ProductDetail() {
 
   const handleToggleFavorite = async () => {
     if (!user) {
-      window.location.href = "/api/login";
+      window.location.href = `/auth?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
     

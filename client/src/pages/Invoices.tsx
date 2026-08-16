@@ -58,7 +58,7 @@ export default function Invoices() {
         <div className="text-center px-4">
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">{t("pleaseSignIn")}</h2>
-          <Link href="/auth">
+          <Link href="/auth?returnTo=/profile/invoices">
             <Button data-testid="button-signin">{t("signIn")}</Button>
           </Link>
         </div>

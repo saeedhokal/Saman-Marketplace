@@ -26,7 +26,7 @@ export default function CreditHistory() {
         <div className="text-center px-4">
           <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">Sign in to view credit history</h2>
-          <Link href="/auth">
+          <Link href="/auth?returnTo=/profile/credits">
             <button className="px-4 py-2 bg-accent text-accent-foreground rounded-lg" data-testid="button-signin">
               Sign In
             </button>

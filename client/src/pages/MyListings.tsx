@@ -137,7 +137,7 @@ export default function MyListings() {
         <div className="text-center">
           <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-lg font-semibold mb-2">{t('signInToViewListings')}</h2>
-          <Link href="/auth">
+          <Link href="/auth?returnTo=/my-listings">
             <Button>{t('signIn')}</Button>
           </Link>
         </div>

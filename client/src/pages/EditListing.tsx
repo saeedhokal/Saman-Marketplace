@@ -108,7 +108,7 @@ export default function EditListing() {
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
-      setLocation("/auth");
+      setLocation(`/auth?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
     }
   }, [user, isAuthLoading, setLocation]);
 
