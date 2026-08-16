@@ -292,6 +292,77 @@ function buildCategoryBodyContent(
   );
 }
 
+// ─── Subcategory filter pages ─────────────────────────────────────────────────
+
+function buildSubCategoryJsonLd(
+  mainCategory: string,
+  subCategory: string,
+  products: CategoryProduct[],
+): string {
+  const tabSlug = mainCategory === "Spare Parts" ? "spare-parts" : "automotive";
+  const url = `${SITE_URL}/categories?tab=${tabSlug}&subCategory=${encodeURIComponent(subCategory)}`;
+
+  const itemList = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": `${subCategory} ${mainCategory} on Saman Marketplace`,
+    "url": url,
+    "numberOfItems": products.length,
+    "itemListElement": products.slice(0, 20).map((p, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "name": p.title,
+      "url": `${SITE_URL}/product/${p.id}`,
+    })),
+  };
+
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": `${SITE_URL}/` },
+      { "@type": "ListItem", "position": 2, "name": mainCategory, "item": `${SITE_URL}/categories?tab=${tabSlug}` },
+      { "@type": "ListItem", "position": 3, "name": subCategory, "item": url },
+    ],
+  };
+
+  return (
+    `<script type="application/ld+json">${safeJsonLd(itemList)}</script>` +
+    `<script type="application/ld+json">${safeJsonLd(breadcrumb)}</script>`
+  );
+}
+
+function buildSubCategoryBodyContent(
+  mainCategory: string,
+  subCategory: string,
+  products: CategoryProduct[],
+): string {
+  const tabSlug = mainCategory === "Spare Parts" ? "spare-parts" : "automotive";
+
+  const listingsHtml = products
+    .slice(0, 30)
+    .map(
+      (p) =>
+        `<li><a href="/product/${p.id}">${escapeHtml(p.title)}</a>` +
+        (p.price && p.price > 0 ? ` — AED ${escapeHtml(String(p.price))}` : "") +
+        `</li>`,
+    )
+    .join("");
+
+  return (
+    `<div id="seo-prerender" lang="en" dir="ltr" style="max-width:880px;margin:0 auto;padding:24px;font-family:DM Sans,Arial,sans-serif;color:#111;">` +
+    `<h1>${escapeHtml(subCategory)} ${escapeHtml(mainCategory)}</h1>` +
+    `<p>Browse ${escapeHtml(subCategory)} ${escapeHtml(mainCategory)} listings on Saman Marketplace — the UAE's auto parts and vehicles marketplace.</p>` +
+    (listingsHtml
+      ? `<h2>Listings</h2><ul>${listingsHtml}</ul>`
+      : `<p>No listings available right now. Check back soon.</p>`) +
+    `<p><a href="/categories?tab=${tabSlug}">All ${escapeHtml(mainCategory)}</a> &middot; ` +
+    `<a href="/categories">All categories</a> &middot; ` +
+    `<a href="/downloads">Download the app</a></p>` +
+    `</div>`
+  );
+}
+
 export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
   const cleanPath = url.split("?")[0].split("#")[0];
 
@@ -314,7 +385,7 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
     };
   }
 
-  // 2) Category browse pages (/categories and /categories?tab=…)
+  // 2) Category browse pages (/categories, /categories?tab=…, /categories?tab=…&subCategory=…)
   if (cleanPath === "/categories") {
     const tabParam = url.match(/[?&]tab=([^&]+)/)?.[1] ?? "";
     const mainCategory: string | null =
@@ -324,6 +395,38 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
         ? "Automotive"
         : null;
 
+    // 2a) Subcategory filter pages: /categories?tab=spare-parts&subCategory=Toyota
+    const subCategoryRaw = url.match(/[?&]subCategory=([^&]+)/)?.[1];
+    const subCategory = subCategoryRaw ? decodeURIComponent(subCategoryRaw) : null;
+
+    if (subCategory && mainCategory) {
+      const validSubs: readonly string[] =
+        mainCategory === "Spare Parts" ? SPARE_PARTS_SUBCATEGORIES : AUTOMOTIVE_SUBCATEGORIES;
+      // Reject unknown subcategory values so we don't pre-render junk pages
+      if (!(validSubs as readonly string[]).includes(subCategory)) return null;
+
+      const tabSlug = mainCategory === "Spare Parts" ? "spare-parts" : "automotive";
+      try {
+        const allProducts = await storage.getProducts({ mainCategory, subCategory });
+        const approved = allProducts.filter((p) => p.status === "approved").slice(0, 30);
+
+        const title = `${subCategory} ${mainCategory} — Buy & Sell in UAE | Saman Marketplace`;
+        const description = `Browse ${approved.length > 0 ? `${approved.length}+ ` : ""}${subCategory} ${mainCategory} listings on Saman Marketplace — the UAE's leading auto parts and vehicles marketplace.`;
+        const canonical = `${SITE_URL}/categories?tab=${tabSlug}&subCategory=${encodeURIComponent(subCategory)}`;
+
+        return {
+          title,
+          description,
+          canonical,
+          jsonLd: buildSubCategoryJsonLd(mainCategory, subCategory, approved),
+          bodyContent: buildSubCategoryBodyContent(mainCategory, subCategory, approved),
+        };
+      } catch {
+        return null;
+      }
+    }
+
+    // 2b) Main category tab pages: /categories?tab=spare-parts or /categories
     const subcategories: readonly string[] =
       mainCategory === "Spare Parts"
         ? SPARE_PARTS_SUBCATEGORIES
