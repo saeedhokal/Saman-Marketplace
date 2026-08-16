@@ -269,6 +269,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       { loc: "https://thesamanapp.com/categories", priority: "0.9", changefreq: "hourly" },
       { loc: "https://thesamanapp.com/categories?tab=spare-parts", priority: "0.85", changefreq: "hourly" },
       { loc: "https://thesamanapp.com/categories?tab=automotive", priority: "0.85", changefreq: "hourly" },
+      // Individual spare-parts subcategory pages
+      ...SPARE_PARTS_SUBCATEGORIES.map((brand) => ({
+        loc: `https://thesamanapp.com/categories?tab=spare-parts&brand=${encodeURIComponent(brand)}`,
+        priority: "0.7",
+        changefreq: "daily",
+      })),
+      // Individual automotive subcategory pages
+      ...AUTOMOTIVE_SUBCATEGORIES.map((brand) => ({
+        loc: `https://thesamanapp.com/categories?tab=automotive&brand=${encodeURIComponent(brand)}`,
+        priority: "0.7",
+        changefreq: "daily",
+      })),
       { loc: "https://thesamanapp.com/downloads", priority: "0.7", changefreq: "monthly" },
       { loc: "https://thesamanapp.com/about", priority: "0.5", changefreq: "monthly" },
       { loc: "https://thesamanapp.com/contact", priority: "0.5", changefreq: "monthly" },
