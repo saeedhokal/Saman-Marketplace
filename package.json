@@ -8,7 +8,8 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "check:sitemap": "tsx scripts/check-sitemap.ts"
   },
   "dependencies": {
     "@capacitor-community/in-app-review": "^7.1.0",

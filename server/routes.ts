@@ -53,6 +53,16 @@ const SERVER_VERSION = "v3.0.2";
 // Sitemap in-memory cache — refreshed at most every 10 minutes
 const SITEMAP_CACHE_TTL_MS = 10 * 60 * 1000;
 let sitemapCache: { body: string; builtAt: number } | null = null;
+// XML-escape a URL for use inside <loc> — query strings contain raw "&"
+// which is invalid XML and can make strict crawlers reject the sitemap.
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
 function invalidateSitemapCache() {
   sitemapCache = null;
 }
@@ -349,7 +359,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       urls
         .map(
           (u) =>
-            `  <url>\n    <loc>${u.loc}</loc>\n    <lastmod>${u.lastmod || today}</lastmod>\n    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`
+            `  <url>\n    <loc>${escapeXml(u.loc)}</loc>\n    <lastmod>${u.lastmod || today}</lastmod>\n    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`
         )
         .join("\n") +
       `\n</urlset>\n`;
