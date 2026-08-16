@@ -80,10 +80,19 @@ export default function Categories() {
     if (tab === "spare-parts" || tab === "automotive") {
       savedFilters = null;
       savedScrollY = 0;
+      const subCatParam = params.get("subCategory");
       params.delete("tab");
+      params.delete("subCategory");
       const rest = params.toString();
       window.history.replaceState(null, "", window.location.pathname + (rest ? `?${rest}` : ""));
-      return { activeCategory: tab as MainCategory };
+      const validSubs: readonly string[] =
+        tab === "spare-parts" ? SPARE_PARTS_SUBCATEGORIES : AUTOMOTIVE_SUBCATEGORIES;
+      const initSub =
+        subCatParam && validSubs.includes(subCatParam) ? subCatParam : undefined;
+      return {
+        activeCategory: tab as MainCategory,
+        ...(initSub ? { activeSubCategory: initSub } : {}),
+      };
     }
     if (savedFilters) return savedFilters;
     return {};

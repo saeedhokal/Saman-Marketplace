@@ -1,10 +1,27 @@
 import { storage } from "./storage";
 import { SEO_PAGES, findSeoPageByPath, seoPageAbsoluteUrl, seoPageAltUrl, type SeoPage } from "../shared/seo-pages";
+import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const SITE_URL = "https://thesamanapp.com";
+
+/**
+ * Serialize an object to JSON that is safe to embed inside a
+ * <script type="application/ld+json"> block in an HTML page.
+ * JSON.stringify alone is not safe: a title like "</script><script>evil()"
+ * would terminate the block. We escape the four characters that can break
+ * the HTML parser or be misread as markup inside a script element.
+ */
+function safeJsonLd(obj: unknown): string {
+  return JSON.stringify(obj)
+    .replace(/&/g, "\\u0026")
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
 
 function escapeAttr(s: string | null | undefined): string {
   if (!s) return "";
@@ -83,8 +100,8 @@ export async function getProductJsonLd(productId: number): Promise<string | null
     };
 
     return (
-      `<script type="application/ld+json">${JSON.stringify(ld)}</script>` +
-      `<script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>`
+      `<script type="application/ld+json">${safeJsonLd(ld)}</script>` +
+      `<script type="application/ld+json">${safeJsonLd(breadcrumb)}</script>`
     );
   } catch {
     return null;
@@ -125,9 +142,9 @@ function buildLandingJsonLd(page: SeoPage): string {
   };
 
   return [
-    `<script type="application/ld+json">${JSON.stringify(webpage)}</script>`,
-    `<script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>`,
-    `<script type="application/ld+json">${JSON.stringify(faq)}</script>`,
+    `<script type="application/ld+json">${safeJsonLd(webpage)}</script>`,
+    `<script type="application/ld+json">${safeJsonLd(breadcrumb)}</script>`,
+    `<script type="application/ld+json">${safeJsonLd(faq)}</script>`,
   ].join("");
 }
 
@@ -180,9 +197,106 @@ export type SeoHead = {
   htmlDir?: "rtl" | "ltr";
 };
 
+// ─── Category browse pages ────────────────────────────────────────────────────
+
+type CategoryProduct = { id: number; title: string; price?: number | null };
+
+function buildCategoryJsonLd(
+  mainCategory: string | null,
+  products: CategoryProduct[],
+): string {
+  const url = mainCategory
+    ? `${SITE_URL}/categories?tab=${mainCategory === "Spare Parts" ? "spare-parts" : "automotive"}`
+    : `${SITE_URL}/categories`;
+
+  const itemList = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": mainCategory ? `${mainCategory} on Saman Marketplace` : "Browse Categories — Saman Marketplace",
+    "url": url,
+    "numberOfItems": products.length,
+    "itemListElement": products.slice(0, 20).map((p, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "name": p.title,
+      "url": `${SITE_URL}/product/${p.id}`,
+    })),
+  };
+
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": `${SITE_URL}/` },
+      { "@type": "ListItem", "position": 2, "name": mainCategory || "Browse", "item": url },
+    ],
+  };
+
+  return (
+    `<script type="application/ld+json">${safeJsonLd(itemList)}</script>` +
+    `<script type="application/ld+json">${safeJsonLd(breadcrumb)}</script>`
+  );
+}
+
+function buildCategoryBodyContent(
+  mainCategory: string | null,
+  subcategories: readonly string[],
+  products: CategoryProduct[],
+): string {
+  const tabSlug = mainCategory === "Spare Parts" ? "spare-parts" : "automotive";
+
+  // When no mainCategory: render both category cards as hub links
+  if (!mainCategory) {
+    const categoryLinksHtml = MAIN_CATEGORIES.map((cat) => {
+      const slug = cat === "Spare Parts" ? "spare-parts" : "automotive";
+      return `<li><a href="/categories?tab=${slug}">${escapeHtml(cat)}</a></li>`;
+    }).join("");
+
+    return (
+      `<div id="seo-prerender" lang="en" dir="ltr" style="max-width:880px;margin:0 auto;padding:24px;font-family:DM Sans,Arial,sans-serif;color:#111;">` +
+      `<h1>Browse Categories</h1>` +
+      `<p>Shop UAE's largest auto parts and vehicles marketplace. Choose a category to get started.</p>` +
+      `<ul>${categoryLinksHtml}</ul>` +
+      `<p><a href="/downloads">Download the Saman app</a> &middot; <a href="/">Back to home</a></p>` +
+      `</div>`
+    );
+  }
+
+  // Subcategory links
+  const subcatHtml = subcategories
+    .map((sub) => `<li><a href="/categories?tab=${tabSlug}&subCategory=${encodeURIComponent(sub)}">${escapeHtml(sub)}</a></li>`)
+    .join("");
+
+  // Product listing links (approved only, capped at 30)
+  const listingsHtml = products
+    .slice(0, 30)
+    .map(
+      (p) =>
+        `<li><a href="/product/${p.id}">${escapeHtml(p.title)}</a>` +
+        (p.price && p.price > 0 ? ` — AED ${escapeHtml(String(p.price))}` : "") +
+        `</li>`,
+    )
+    .join("");
+
+  return (
+    `<div id="seo-prerender" lang="en" dir="ltr" style="max-width:880px;margin:0 auto;padding:24px;font-family:DM Sans,Arial,sans-serif;color:#111;">` +
+    `<h1>${escapeHtml(mainCategory)}</h1>` +
+    `<p>Browse ${escapeHtml(mainCategory)} listings on Saman Marketplace — the UAE's auto parts and vehicles marketplace.</p>` +
+    `<h2>Browse by subcategory</h2>` +
+    `<ul>${subcatHtml}</ul>` +
+    (listingsHtml
+      ? `<h2>Latest listings</h2><ul>${listingsHtml}</ul>`
+      : "") +
+    `<p><a href="/categories">All categories</a> &middot; <a href="/downloads">Download the app</a></p>` +
+    `</div>`
+  );
+}
+
 export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
+  const cleanPath = url.split("?")[0].split("#")[0];
+
   // 1) SEO landing pages (EN + AR)
-  const landing = findSeoPageByPath(url.split("?")[0].split("#")[0]);
+  const landing = findSeoPageByPath(cleanPath);
   if (landing) {
     // Only emit an alt-lang hreflang if there's a real sibling in the other
     // language. Pages where altLangPath === path are single-language pages.
@@ -200,7 +314,54 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
     };
   }
 
-  // 2) Seller profile pages (public store pages)
+  // 2) Category browse pages (/categories and /categories?tab=…)
+  if (cleanPath === "/categories") {
+    const tabParam = url.match(/[?&]tab=([^&]+)/)?.[1] ?? "";
+    const mainCategory: string | null =
+      tabParam === "spare-parts"
+        ? "Spare Parts"
+        : tabParam === "automotive"
+        ? "Automotive"
+        : null;
+
+    const subcategories: readonly string[] =
+      mainCategory === "Spare Parts"
+        ? SPARE_PARTS_SUBCATEGORIES
+        : mainCategory === "Automotive"
+        ? AUTOMOTIVE_SUBCATEGORIES
+        : [];
+
+    try {
+      const allProducts = mainCategory
+        ? await storage.getProducts({ mainCategory })
+        : [];
+      const approved = allProducts
+        .filter((p) => p.status === "approved")
+        .slice(0, 30);
+
+      const title = mainCategory
+        ? `${mainCategory} — Buy & Sell in UAE | Saman Marketplace`
+        : "Browse Car Parts & Vehicles in UAE | Saman Marketplace";
+      const description = mainCategory
+        ? `Browse ${approved.length > 0 ? `${approved.length}+ ` : ""}${mainCategory} listings on Saman Marketplace — the UAE's leading auto parts and vehicles marketplace.`
+        : "Shop Spare Parts and Automotive listings on Saman Marketplace — the UAE's leading auto parts and vehicles marketplace.";
+      const canonical = mainCategory
+        ? `${SITE_URL}/categories?tab=${mainCategory === "Spare Parts" ? "spare-parts" : "automotive"}`
+        : `${SITE_URL}/categories`;
+
+      return {
+        title,
+        description,
+        canonical,
+        jsonLd: buildCategoryJsonLd(mainCategory, approved),
+        bodyContent: buildCategoryBodyContent(mainCategory, subcategories, approved),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  // 3) Seller profile pages (public store pages)
   const sellerMatch = url.match(/^\/seller\/([^/?#]+)(?:[/?#]|$)/);
   if (sellerMatch) {
     const sellerId = decodeURIComponent(sellerMatch[1]);
@@ -252,7 +413,7 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
         `<p><a href="/">Browse Saman Marketplace</a> &middot; <a href="/downloads">Download the app</a></p>` +
         `</div>`;
 
-      const jsonLd = `<script type="application/ld+json">${JSON.stringify({
+      const jsonLd = `<script type="application/ld+json">${safeJsonLd({
         "@context": "https://schema.org",
         "@type": "ProfilePage",
         "name": title,
