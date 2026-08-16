@@ -886,3 +886,32 @@ export function getVerifiedUserId(req: Request): string | undefined {
   }
   return undefined;
 }
+
+/**
+ * Validate and sanitize a returnTo parameter from a query string.
+ * Uses the URL constructor to detect open-redirect attempts — a safe relative
+ * path always resolves to the same host as the base, while protocol-relative
+ * (//) and backslash (/\) paths resolve to an external host.
+ * The raw value may be URL-encoded; this function decodes it first.
+ * Returns "/" on any invalid, missing, or cross-origin input.
+ */
+export function sanitizeReturnTo(raw: unknown): string {
+  if (!raw || typeof raw !== "string") return "/";
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return "/";
+  }
+  // Fast-reject anything that doesn't start with "/"
+  if (!decoded.startsWith("/")) return "/";
+  try {
+    // Parse against a known base: a safe relative path keeps the same host.
+    // Protocol-relative (//host) and backslash (/\host) both resolve externally.
+    const url = new URL(decoded, "http://localhost");
+    if (url.host === "localhost") return decoded;
+  } catch {
+    // Malformed URL
+  }
+  return "/";
+}

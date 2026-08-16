@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { setupSimpleAuth, isAuthenticated, getCurrentUserId, normalizePhone, hasVerifiedUser } from "./simpleAuth";
+import { setupSimpleAuth, isAuthenticated, getCurrentUserId, normalizePhone, hasVerifiedUser, sanitizeReturnTo } from "./simpleAuth";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
@@ -130,6 +130,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.use("/api/auth/forgot-password", authLimiter);
   app.use("/api/auth/send-otp", authLimiter);
   app.use("/api/auth/verify-otp", authLimiter);
+
+  // Server-side login redirect — validates returnTo to prevent open-redirect attacks.
+  // The client encodes the path (encodeURIComponent) before appending it as a query
+  // param; this endpoint decodes and validates it before forwarding to /auth.
+  app.get("/api/login", (req: Request, res: Response) => {
+    const returnTo = sanitizeReturnTo(req.query.returnTo);
+    res.redirect(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
+  });
 
   // Branded Open Graph card for seller store pages (used when the seller
   // has no profile photo). Served as a PNG for WhatsApp/social previews.

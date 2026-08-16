@@ -20,14 +20,24 @@ interface LoginFormValues {
   email: string;
 }
 
+function sanitizeReturnTo(raw: string | null): string {
+  if (!raw || !raw.startsWith("/")) return "/";
+  try {
+    // Use URL constructor against the current origin: a safe relative path
+    // will always resolve to the same origin. Protocol-relative (//host) and
+    // backslash (/\host) paths resolve externally and are rejected.
+    const url = new URL(raw, window.location.origin);
+    if (url.origin === window.location.origin) return raw;
+  } catch {
+    // Malformed URL
+  }
+  return "/";
+}
+
 function getReturnToPath(): string {
   if (typeof window === "undefined") return "/";
   const params = new URLSearchParams(window.location.search);
-  const returnTo = params.get("returnTo");
-  if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) {
-    return returnTo;
-  }
-  return "/";
+  return sanitizeReturnTo(params.get("returnTo"));
 }
 
 function getInitialMode(): boolean {
