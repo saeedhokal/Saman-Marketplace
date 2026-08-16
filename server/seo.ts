@@ -295,12 +295,51 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
     const description = desc
       ? `${desc} — Buy on Saman Marketplace, the UAE's auto parts marketplace.`
       : `${product.title} on Saman Marketplace — the UAE's auto parts and vehicles marketplace.`;
+    // Seller name for the store link (best-effort; skip on failure)
+    let sellerName = "Seller";
+    try {
+      const [seller] = await db
+        .select({
+          displayName: users.displayName,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        })
+        .from(users)
+        .where(eq(users.id, product.sellerId));
+      if (seller) {
+        sellerName =
+          seller.displayName ||
+          [seller.firstName, seller.lastName].filter(Boolean).join(" ").trim() ||
+          "Seller";
+      }
+    } catch {}
+
+    const priceHtml =
+      product.price && product.price > 0
+        ? `<p><strong>AED ${escapeHtml(String(product.price))}</strong></p>`
+        : "";
+    const categoryText = [product.mainCategory, product.subCategory]
+      .filter(Boolean)
+      .join(" > ");
+    // Rendered inside <div id="root"> so crawlers see real content; React
+    // replaces this on mount with the styled product detail page.
+    const bodyContent =
+      `<div id="seo-prerender" lang="en" dir="ltr" style="max-width:880px;margin:0 auto;padding:24px;font-family:DM Sans,Arial,sans-serif;color:#111;">` +
+      `<h1>${escapeHtml(product.title)}</h1>` +
+      priceHtml +
+      (categoryText ? `<p>${escapeHtml(categoryText)}</p>` : "") +
+      (product.description ? `<p>${escapeHtml(product.description)}</p>` : "") +
+      `<p><a href="/seller/${encodeURIComponent(product.sellerId)}">More from ${escapeHtml(sellerName)}'s store</a></p>` +
+      `<p><a href="/">Browse Saman Marketplace</a> &middot; <a href="/downloads">Download the app</a></p>` +
+      `</div>`;
+
     return {
       jsonLd,
       title,
       description,
       canonical: `${SITE_URL}/product/${product.id}`,
       ogImage: product.imageUrl || undefined,
+      bodyContent,
     };
   } catch {
     return null;
