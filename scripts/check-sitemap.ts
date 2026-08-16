@@ -52,33 +52,26 @@ async function main() {
   }
   const locSet = new Set(locs);
 
-  // Representative subcategory URLs: first, last, and a couple of
-  // well-known brands from each list. First+last catch a dropped spread;
-  // the named ones catch encoding bugs (spaces, ampersands).
-  const spareChecks = [
-    SPARE_PARTS_SUBCATEGORIES[0],
-    SPARE_PARTS_SUBCATEGORIES[SPARE_PARTS_SUBCATEGORIES.length - 1],
-    "Toyota",
-    "Turbos & Superchargers", // contains & — encoding regression canary
-    "Land Rover", // contains a space
-  ];
-  const autoChecks = [
-    AUTOMOTIVE_SUBCATEGORIES[0],
-    AUTOMOTIVE_SUBCATEGORIES[AUTOMOTIVE_SUBCATEGORIES.length - 1],
-    "BMW",
-    "Rolls Royce",
-  ];
-
-  for (const brand of spareChecks) {
+  // Assert EVERY subcategory URL from both schema lists is present exactly.
+  for (const brand of SPARE_PARTS_SUBCATEGORIES) {
     const loc = expectedLoc("spare-parts", brand);
     if (!locSet.has(loc)) {
       failures.push(`missing spare-parts subcategory URL: ${loc}`);
     }
   }
-  for (const brand of autoChecks) {
+  for (const brand of AUTOMOTIVE_SUBCATEGORIES) {
     const loc = expectedLoc("automotive", brand);
     if (!locSet.has(loc)) {
       failures.push(`missing automotive subcategory URL: ${loc}`);
+    }
+  }
+
+  // Detect duplicate <loc> entries (locSet collapses them; locs does not)
+  if (locSet.size !== locs.length) {
+    const seen = new Set<string>();
+    for (const l of locs) {
+      if (seen.has(l)) failures.push(`duplicate URL in sitemap: ${l}`);
+      seen.add(l);
     }
   }
 
