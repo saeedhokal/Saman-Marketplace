@@ -267,6 +267,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const urls: { loc: string; priority: string; changefreq: string; lastmod?: string }[] = [
       { loc: "https://thesamanapp.com/", priority: "1.0", changefreq: "daily" },
       { loc: "https://thesamanapp.com/categories", priority: "0.9", changefreq: "hourly" },
+      { loc: "https://thesamanapp.com/categories?tab=spare-parts", priority: "0.85", changefreq: "hourly" },
+      { loc: "https://thesamanapp.com/categories?tab=automotive", priority: "0.85", changefreq: "hourly" },
       { loc: "https://thesamanapp.com/downloads", priority: "0.7", changefreq: "monthly" },
       { loc: "https://thesamanapp.com/about", priority: "0.5", changefreq: "monthly" },
       { loc: "https://thesamanapp.com/contact", priority: "0.5", changefreq: "monthly" },
