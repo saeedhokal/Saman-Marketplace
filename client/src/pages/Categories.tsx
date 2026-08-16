@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { getSavedScroll, setSavedScroll } from "@/lib/scrollMemory";
 import { useProducts } from "@/hooks/use-products";
 import { useLanguage } from "@/hooks/use-language";
 import { ProductCard } from "@/components/ProductCard";
@@ -68,7 +69,7 @@ interface CategoryFilters {
 }
 
 let savedFilters: CategoryFilters | null = null;
-let savedScrollY: number = 0;
+const SCROLL_KEY = "categories";
 
 export default function Categories() {
   const { t, isRTL } = useLanguage();
@@ -79,7 +80,7 @@ export default function Categories() {
     const tab = params.get("tab");
     if (tab === "spare-parts" || tab === "automotive") {
       savedFilters = null;
-      savedScrollY = 0;
+      setSavedScroll(SCROLL_KEY, 0);
       const subCatParam = params.get("subCategory");
       params.delete("tab");
       params.delete("subCategory");
@@ -125,7 +126,7 @@ export default function Categories() {
   useEffect(() => {
     const container = document.getElementById('main-scroll-container');
     if (!container) return;
-    const handleScroll = () => { savedScrollY = container.scrollTop; };
+    const handleScroll = () => { setSavedScroll(SCROLL_KEY, container.scrollTop); };
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
@@ -144,6 +145,7 @@ export default function Categories() {
 
   const hasRestoredScroll = useRef(false);
   useEffect(() => {
+    const savedScrollY = getSavedScroll(SCROLL_KEY);
     if (!isLoading && products && products.length > 0 && savedScrollY > 0 && !hasRestoredScroll.current) {
       hasRestoredScroll.current = true;
       const container = document.getElementById('main-scroll-container');

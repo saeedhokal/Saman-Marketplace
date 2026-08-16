@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { resetScrollMemoryForNavigation } from "@/lib/scrollMemory";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Home, Search, Plus, Package, User, AlertCircle, LayoutGrid } from "lucide-react";
@@ -89,6 +90,7 @@ export function DesktopNavMenu() {
                 <DropdownMenuItem
                   key={item.href}
                   onClick={() => {
+                    resetScrollMemoryForNavigation();
                     if (item.onClick) item.onClick();
                     else setLocation(item.href);
                   }}

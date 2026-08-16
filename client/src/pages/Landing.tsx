@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect, useRef } from "react";
+import { getSavedScroll, setSavedScroll } from "@/lib/scrollMemory";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
@@ -17,7 +18,7 @@ import { queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 import dubaiNightSkyline from "@/assets/images/dubai-night-skyline.png";
 
-let landingSavedScrollY: number = 0;
+const SCROLL_KEY = "landing";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -28,7 +29,7 @@ export default function Landing() {
   useEffect(() => {
     const container = document.getElementById('main-scroll-container');
     if (!container) return;
-    const handleScroll = () => { landingSavedScrollY = container.scrollTop; };
+    const handleScroll = () => { setSavedScroll(SCROLL_KEY, container.scrollTop); };
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
@@ -64,6 +65,7 @@ export default function Landing() {
 
   const hasRestoredScroll = useRef(false);
   useEffect(() => {
+    const landingSavedScrollY = getSavedScroll(SCROLL_KEY);
     if (!isLoadingRecent && recentProducts.length > 0 && landingSavedScrollY > 0 && !hasRestoredScroll.current) {
       hasRestoredScroll.current = true;
       const container = document.getElementById('main-scroll-container');

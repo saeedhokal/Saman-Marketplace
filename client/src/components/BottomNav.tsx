@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { resetScrollMemoryForNavigation } from "@/lib/scrollMemory";
 import { Link, useLocation } from "wouter";
 import { Home, Search, Plus, Package, User, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
@@ -80,7 +81,7 @@ export function BottomNav() {
             }
 
             return (
-              <Link key={item.href} href={item.href}>
+              <Link key={item.href} href={item.href} onClick={() => resetScrollMemoryForNavigation()}>
                 <button
                   className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-colors ${
                     isActive 
