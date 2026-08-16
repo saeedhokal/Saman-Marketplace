@@ -85,7 +85,7 @@ export default function Sell() {
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
-      setLocation("/auth");
+      setLocation("/auth?returnTo=/sell");
     }
   }, [user, isAuthLoading, setLocation]);
 

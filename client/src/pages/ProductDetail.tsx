@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useProduct } from "@/hooks/use-products";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
-import { useRoute, Link } from "wouter";
+import { useRoute, useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2, Eye, Calendar, Gauge, Tag, Car, Globe } from "lucide-react";
+import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2, Eye, Calendar, Gauge, Tag, Car, Globe, PackageX } from "lucide-react";
 import { getInitial } from "@/lib/utils";
 import { PRODUCT_SPEC_LABELS_AR, type ProductSpec } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +31,7 @@ export default function ProductDetail() {
   const removeFavorite = useRemoveFavorite();
   const { toast } = useToast();
   const { isRTL, language } = useLanguage();
+  const [, setLocation] = useLocation();
   
   // Translation state
   const [showTranslation, setShowTranslation] = useState(false);
@@ -282,12 +283,32 @@ export default function ProductDetail() {
   }
 
   if (error || !product) {
+    // `!product` without an error means the API returned 404 — the listing
+    // was deleted or the id is invalid. `error` means the fetch itself failed.
+    const isGone = !error;
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-bold text-foreground">Listing not found</h2>
-        <Button variant="ghost" className="mt-4" onClick={() => window.history.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center" data-testid="screen-listing-unavailable">
+        <div className="rounded-full bg-muted p-4 mb-6">
+          <PackageX className="h-10 w-10 text-muted-foreground" />
+        </div>
+        <h2 className="text-2xl font-bold text-foreground mb-2">
+          {isGone
+            ? (language === "ar" ? "هذا الإعلان لم يعد متوفراً" : "This listing is no longer available")
+            : (language === "ar" ? "تعذر تحميل الإعلان" : "Couldn't load this listing")}
+        </h2>
+        <p className="text-muted-foreground max-w-sm mb-8">
+          {isGone
+            ? (language === "ar" ? "ربما تم بيعه أو حذفه من قبل البائع." : "It may have been sold or removed by the seller.")
+            : (language === "ar" ? "يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى." : "Please check your connection and try again.")}
+        </p>
+        <div className="flex gap-3">
+          <Button onClick={() => setLocation("/categories")} data-testid="button-browse-listings">
+            {language === "ar" ? "تصفح الإعلانات" : "Browse listings"}
+          </Button>
+          <Button variant="ghost" onClick={() => window.history.back()} data-testid="button-back-unavailable">
+            <ArrowLeft className="mr-2 h-4 w-4" /> {language === "ar" ? "رجوع" : "Back"}
+          </Button>
+        </div>
       </div>
     );
   }

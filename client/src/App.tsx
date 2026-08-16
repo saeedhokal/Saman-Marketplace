@@ -73,6 +73,26 @@ function ScrollToTop() {
   return null;
 }
 
+// Web fallbacks for link shapes that exist in shared/Universal Links
+// (/category/:slug, /search) but have no dedicated page — send them to
+// the Categories browse screen instead of a 404.
+function CategoryRedirect({ slug }: { slug?: string }) {
+  const [, setLocation] = useLocation();
+  useEffect(() => {
+    const tab = slug === "spare-parts" || slug === "automotive" ? `?tab=${slug}` : "";
+    setLocation(`/categories${tab}`, { replace: true });
+  }, [slug, setLocation]);
+  return null;
+}
+
+function SearchRedirect() {
+  const [, setLocation] = useLocation();
+  useEffect(() => {
+    setLocation("/categories", { replace: true });
+  }, [setLocation]);
+  return null;
+}
+
 function Router() {
   return (
     <>
@@ -91,6 +111,10 @@ function Router() {
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/categories" component={Categories} />
+          <Route path="/category/:slug?">
+            {(params) => <CategoryRedirect slug={params.slug} />}
+          </Route>
+          <Route path="/search" component={SearchRedirect} />
           <Route path="/product/:id" component={ProductDetail} />
           <Route path="/sell" component={Sell} />
           <Route path="/edit/:id" component={EditListing} />
@@ -158,6 +182,40 @@ function BottomNavWrapperWithSeo() {
   return <BottomNavWrapper />;
 }
 
+// Validate that a deep-link path is a safe internal relative path.
+function sanitizeDeepLinkPath(raw: string | null): string {
+  if (!raw) return "/";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/";
+  if (/^\/[a-zA-Z][a-zA-Z0-9+\-.]*:/.test(raw)) return "/";
+  return raw;
+}
+
+// Normalize an incoming deep-link path to a route the app actually has.
+// - /open?path=/product/123 (smart share links) -> unwrap to /product/123
+// - /category/<slug> and /search?... are declared as Universal Link paths
+//   but have no SPA route -> map onto /categories so users don't hit a 404.
+function resolveDeepLinkTarget(pathname: string, search: string): string {
+  if (pathname === "/open") {
+    const inner = sanitizeDeepLinkPath(new URLSearchParams(search).get("path"));
+    if (inner !== "/open") {
+      const [innerPath, innerSearch = ""] = inner.split("?");
+      return resolveDeepLinkTarget(innerPath, innerSearch ? `?${innerSearch}` : "");
+    }
+    return "/";
+  }
+  if (pathname === "/category" || pathname.startsWith("/category/")) {
+    const slug = pathname.split("/")[2] || "";
+    if (slug === "spare-parts" || slug === "automotive") {
+      return `/categories?tab=${slug}`;
+    }
+    return "/categories";
+  }
+  if (pathname === "/search" || pathname.startsWith("/search/")) {
+    return "/categories";
+  }
+  return pathname + search;
+}
+
 function DeepLinkHandler() {
   const [, setLocation] = useLocation();
   
@@ -171,9 +229,16 @@ function DeepLinkHandler() {
 
       // Custom scheme: saman://product/123 -> /product/123
       if (url.startsWith("saman://")) {
-        const path = url.replace("saman://", "/");
-        console.log("[DeepLink] Navigating to:", path);
-        setLocation(path);
+        try {
+          // Parse via https so pathname/search split is robust
+          const parsed = new URL(url.replace("saman://", "https://thesamanapp.com/"));
+          const target = resolveDeepLinkTarget(parsed.pathname, parsed.search);
+          console.log("[DeepLink] Navigating to:", target);
+          setLocation(target || "/");
+        } catch (e) {
+          console.error("[DeepLink] Failed to parse scheme URL:", e);
+          setLocation("/");
+        }
         return;
       }
 
@@ -182,7 +247,7 @@ function DeepLinkHandler() {
       if (url.startsWith("https://thesamanapp.com") || url.startsWith("https://www.thesamanapp.com")) {
         try {
           const parsed = new URL(url);
-          const target = parsed.pathname + parsed.search;
+          const target = resolveDeepLinkTarget(parsed.pathname, parsed.search);
           console.log("[DeepLink] Universal link -> navigating to:", target);
           setLocation(target || "/");
         } catch (e) {
