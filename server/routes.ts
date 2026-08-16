@@ -50,6 +50,13 @@ const generalApiLimiter = rateLimit({
 // Server version for deployment verification
 const SERVER_VERSION = "v3.0.2";
 
+// Sitemap in-memory cache — refreshed at most every 10 minutes
+const SITEMAP_CACHE_TTL_MS = 10 * 60 * 1000;
+let sitemapCache: { body: string; builtAt: number } | null = null;
+function invalidateSitemapCache() {
+  sitemapCache = null;
+}
+
 // Simple checkout tokens for iOS compatibility (short-lived, single-use)
 const checkoutTokens = new Map<string, { userId: string; packageId: number; expires: number }>();
 
@@ -262,6 +269,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   app.get("/sitemap.xml", async (_req, res) => {
+    // Serve from cache if still fresh
+    if (sitemapCache && Date.now() - sitemapCache.builtAt < SITEMAP_CACHE_TTL_MS) {
+      res.set("Cache-Control", "public, max-age=600");
+      res.set("X-Sitemap-Cache", "HIT");
+      return res.type("application/xml").send(sitemapCache.body);
+    }
+
     const today = new Date().toISOString().split("T")[0];
     const { SEO_PAGES } = await import("../shared/seo-pages");
     const urls: { loc: string; priority: string; changefreq: string; lastmod?: string }[] = [
@@ -339,6 +353,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         )
         .join("\n") +
       `\n</urlset>\n`;
+
+    // Store in cache
+    sitemapCache = { body, builtAt: Date.now() };
+    console.log("[sitemap] cache refreshed");
+
+    res.set("Cache-Control", "public, max-age=600");
+    res.set("X-Sitemap-Cache", "MISS");
     res.type("application/xml").send(body);
   });
 
@@ -2769,7 +2790,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (!product) {
       return res.status(404).json({ message: "Listing not found" });
     }
-    
+
+    // New approved listing means the sitemap needs to include it on next fetch
+    invalidateSitemapCache();
+
     // Create in-app notification for the seller
     if (existingProduct.sellerId) {
       try {
