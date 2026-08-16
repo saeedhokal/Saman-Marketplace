@@ -46,6 +46,10 @@ args = "Uptime Monitor"
 task = "workflow.run"
 args = "subcategory-prerender"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "sitemap"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -76,6 +80,17 @@ args = "npx tsx scripts/test-subcategory-prerender.ts"
 
 [workflows.workflow.metadata]
 isValidation = true
+
+[[workflows.workflow]]
+name = "sitemap"
+author = "agent"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash scripts/validate-sitemap.sh"
 
 [agent]
 integrations = ["javascript_log_in_with_replit:2.0.0", "javascript_object_storage:2.0.0", "javascript_openai_ai_integrations:2.0.0"]
