@@ -317,3 +317,10 @@ id = "l6D2FK10RY7YbFvbYFziG"
 uri = "file://CERT_PRIVATE_KEY_B64.txt"
 type = "text"
 title = "CERT_PRIVATE_KEY_B64 — paste this into Codemagic"
+
+[[outputs]]
+id = "mPhw9YjlIXfDsYkSmfr0e"
+uri = "file://ASO_KEYWORDS_V2.0.5.md"
+type = "text"
+title = "App Store keywords & subtitle for v2.0.5 (revised)"
+description = "Compliant, ready-to-paste English + Arabic subtitle, keywords, and promotional text — no competitor names, no subtitle duplication."
