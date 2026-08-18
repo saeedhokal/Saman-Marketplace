@@ -3,6 +3,7 @@ import { useProduct } from "@/hooks/use-products";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from "@/hooks/use-favorites";
 import { useRoute, useLocation, Link } from "wouter";
+import { listingPath, parseListingId } from "@shared/listing-slug";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Phone, Heart, MapPin, Store, ChevronRight, Languages, Loader2, Share2, Eye, Calendar, Gauge, Tag, Car, Globe, PackageX } from "lucide-react";
 import { getInitial } from "@/lib/utils";
@@ -22,8 +23,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { bustObjectUrl, objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 
 export default function ProductDetail() {
-  const [, params] = useRoute("/product/:id");
-  const id = params?.id ? parseInt(params.id) : 0;
+  const [, params] = useRoute("/product/:slug");
+  const id = params?.slug ? (parseListingId(params.slug) || 0) : 0;
   const { data: product, isLoading, error } = useProduct(id);
   const { user } = useAuth();
   const { data: isFavorite } = useIsFavorite(id);
@@ -46,6 +47,17 @@ export default function ProductDetail() {
     setTranslatedDescription(null);
   }, [id]);
 
+  // URL normalisation: once the product loads, ensure the browser URL shows the
+  // full slug form (/product/title-id) even if navigation arrived with a bare
+  // numeric ID (e.g. from notifications, admin panel, or a legacy link).
+  useEffect(() => {
+    if (!product) return;
+    const slugged = listingPath(product.title, id);
+    if (window.location.pathname !== slugged) {
+      setLocation(slugged, { replace: true });
+    }
+  }, [product, id]);
+
   // Apple Smart App Banner: update meta tag with current listing ID
   useEffect(() => {
     let meta = document.querySelector('meta[name="apple-itunes-app"]') as HTMLMetaElement | null;
@@ -65,7 +77,7 @@ export default function ProductDetail() {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   const goToAuth = (mode: "login" | "signup" = "signup") => {
-    const returnTo = `/product/${id}`;
+    const returnTo = window.location.pathname;
     const modeParam = mode === "signup" ? "&mode=signup" : "";
     window.location.href = `/auth?returnTo=${encodeURIComponent(returnTo)}${modeParam}`;
   };
@@ -333,7 +345,7 @@ export default function ProductDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
           <div className="relative">
             {allImages.length > 0 ? (
-              <ImageGallery images={allImages} shareUrl={`https://thesamanapp.com/product/${id}`} />
+              <ImageGallery images={allImages} shareUrl={`https://thesamanapp.com${product ? listingPath(product.title, id) : `/product/${id}`}`} />
             ) : (
               <div className="aspect-square rounded-2xl overflow-hidden bg-secondary border border-border/50 flex items-center justify-center text-muted-foreground">
                 No Image Available
@@ -638,7 +650,7 @@ export default function ProductDetail() {
                     maximumFractionDigits: 0,
                   }).format(p.price || 0);
                   return (
-                    <Link key={p.id} href={`/product/${p.id}`}>
+                    <Link key={p.id} href={listingPath(p.title, p.id)}>
                       <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow rounded-xl" data-testid={`card-product-${p.id}`}>
                         <div className="aspect-square overflow-hidden bg-secondary/30">
                           {p.imageUrl ? (

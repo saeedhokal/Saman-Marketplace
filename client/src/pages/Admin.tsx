@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } from "@shared/schema";
+import { listingPath } from "@shared/listing-slug";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
@@ -1983,7 +1984,7 @@ function ListingCard({
 
   const openListing = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setLocation(`/product/${listing.id}`);
+    setLocation(listingPath(listing.title, listing.id));
   };
 
   return (

@@ -1,4 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import { listingPath } from "../shared/listing-slug";
 import { createServer, type Server } from "http";
 import { setupSimpleAuth, isAuthenticated, getCurrentUserId, normalizePhone, hasVerifiedUser, sanitizeReturnTo } from "./simpleAuth";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
@@ -332,7 +333,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const recent = await storage.getRecentProducts(500);
       for (const p of recent) {
         urls.push({
-          loc: `https://thesamanapp.com/product/${p.id}`,
+          loc: `https://thesamanapp.com${listingPath(p.title, p.id)}`,
           priority: "0.6",
           changefreq: "weekly",
           lastmod: (p as any).updatedAt

@@ -8,6 +8,7 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
+    "test": "npx tsx --test tests/listing-slug.test.ts",
     "db:push": "drizzle-kit push",
     "check:sitemap": "tsx scripts/check-sitemap.ts"
   },

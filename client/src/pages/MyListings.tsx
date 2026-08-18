@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { listingPath } from "@shared/listing-slug";
 import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -239,7 +240,7 @@ export default function MyListings() {
                 key={listing.id}
                 className="flex gap-3 p-3 bg-card border border-border rounded-xl cursor-pointer touch-manipulation"
                 data-testid={`listing-${listing.id}`}
-                onClick={() => setLocation(`/product/${listing.id}`)}
+                onClick={() => setLocation(listingPath(listing.title, listing.id))}
               >
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-secondary/30">
                   <img

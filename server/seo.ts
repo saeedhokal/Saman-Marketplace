@@ -4,6 +4,7 @@ import { MAIN_CATEGORIES, SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES } 
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { listingPath } from "../shared/listing-slug";
 
 const SITE_URL = "https://thesamanapp.com";
 
@@ -68,7 +69,7 @@ export async function getProductJsonLd(productId: number): Promise<string | null
       "name": product.title,
       "description": product.description,
       "image": images,
-      "url": `${SITE_URL}/product/${product.id}`,
+      "url": `${SITE_URL}${listingPath(product.title, product.id)}`,
       "category": [product.mainCategory, product.subCategory].filter(Boolean).join(" > "),
       "itemCondition": mapCondition(product.condition),
       "brand": {
@@ -80,7 +81,7 @@ export async function getProductJsonLd(productId: number): Promise<string | null
     if (product.price && product.price > 0) {
       ld.offers = {
         "@type": "Offer",
-        "url": `${SITE_URL}/product/${product.id}`,
+        "url": `${SITE_URL}${listingPath(product.title, product.id)}`,
         "priceCurrency": "AED",
         "price": product.price,
         "availability": "https://schema.org/InStock",
@@ -95,7 +96,7 @@ export async function getProductJsonLd(productId: number): Promise<string | null
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": `${SITE_URL}/` },
         { "@type": "ListItem", "position": 2, "name": product.mainCategory, "item": `${SITE_URL}/categories` },
-        { "@type": "ListItem", "position": 3, "name": product.title, "item": `${SITE_URL}/product/${product.id}` }
+        { "@type": "ListItem", "position": 3, "name": product.title, "item": `${SITE_URL}${listingPath(product.title, product.id)}` }
       ]
     };
 
@@ -219,7 +220,7 @@ function buildCategoryJsonLd(
       "@type": "ListItem",
       "position": i + 1,
       "name": p.title,
-      "url": `${SITE_URL}/product/${p.id}`,
+      "url": `${SITE_URL}${listingPath(p.title, p.id)}`,
     })),
   };
 
@@ -272,7 +273,7 @@ function buildCategoryBodyContent(
     .slice(0, 30)
     .map(
       (p) =>
-        `<li><a href="/product/${p.id}">${escapeHtml(p.title)}</a>` +
+        `<li><a href="${listingPath(p.title, p.id)}">${escapeHtml(p.title)}</a>` +
         (p.price && p.price > 0 ? ` — AED ${escapeHtml(String(p.price))}` : "") +
         `</li>`,
     )
@@ -455,7 +456,7 @@ function buildSubCategoryJsonLd(
       "@type": "ListItem",
       "position": i + 1,
       "name": p.title,
-      "url": `${SITE_URL}/product/${p.id}`,
+      "url": `${SITE_URL}${listingPath(p.title, p.id)}`,
     })),
   };
 
@@ -486,7 +487,7 @@ function buildSubCategoryBodyContent(
     .slice(0, 30)
     .map(
       (p) =>
-        `<li><a href="/product/${p.id}">${escapeHtml(p.title)}</a>` +
+        `<li><a href="${listingPath(p.title, p.id)}">${escapeHtml(p.title)}</a>` +
         (p.price && p.price > 0 ? ` — AED ${escapeHtml(String(p.price))}` : "") +
         `</li>`,
     )
@@ -644,7 +645,7 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
       const listingsHtml = approved
         .map(
           (p) =>
-            `<li><a href="/product/${p.id}">${escapeHtml(p.title)}</a>${
+            `<li><a href="${listingPath(p.title, p.id)}">${escapeHtml(p.title)}</a>${
               p.price && p.price > 0 ? ` — AED ${escapeHtml(String(p.price))}` : ""
             }</li>`
         )
@@ -688,8 +689,8 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
     }
   }
 
-  // 3) Product detail pages
-  const match = url.match(/^\/product\/(\d+)(?:[/?#]|$)/);
+  // 3) Product detail pages — match both /product/123 and /product/some-slug-123
+  const match = url.match(/^\/product\/(?:[^/?#]*-)?(\d+)(?:[/?#]|$)/);
   if (!match) return null;
   const id = parseInt(match[1], 10);
   if (!Number.isFinite(id)) return null;
@@ -746,7 +747,7 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
       jsonLd,
       title,
       description,
-      canonical: `${SITE_URL}/product/${product.id}`,
+      canonical: `${SITE_URL}${listingPath(product.title, product.id)}`,
       ogImage: product.imageUrl || undefined,
       bodyContent,
     };

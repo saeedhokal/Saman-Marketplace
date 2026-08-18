@@ -77,6 +77,8 @@ export default function NotificationInbox() {
     if (notification.type === "listing_rejected" && notification.relatedId) {
       navigate(`/my-listings`);
     } else if (notification.type === "listing_approved" && notification.relatedId) {
+      // Navigate with numeric ID — ProductDetail replaces the URL with the
+      // slug once the product data loads (see URL-normalisation effect there).
       navigate(`/product/${notification.relatedId}`);
     } else if (notification.type === "credit_added") {
       navigate(`/profile/credits`);

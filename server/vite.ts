@@ -6,6 +6,8 @@ import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
 import { buildSeoHeadForUrl, injectSeoIntoHtml } from "./seo";
+import { storage } from "./storage";
+import { listingPath } from "../shared/listing-slug";
 
 const viteLogger = createLogger();
 
@@ -34,6 +36,21 @@ export async function setupVite(server: Server, app: Express) {
 
   app.use("/{*path}", async (req, res, next) => {
     const url = req.originalUrl;
+
+    // 301 redirect: /product/123 (numeric-only) → /product/slug-123
+    // Slugged URLs pass through to SEO rendering unchanged.
+    const numericProductMatch = url.match(/^\/product\/(\d+)(?:[/?#]|$)/);
+    if (numericProductMatch) {
+      try {
+        const id = parseInt(numericProductMatch[1], 10);
+        const product = await storage.getProduct(id);
+        if (product) {
+          return res.redirect(301, listingPath(product.title, id));
+        }
+      } catch {
+        // fall through to normal rendering on error
+      }
+    }
 
     try {
       const clientTemplate = path.resolve(

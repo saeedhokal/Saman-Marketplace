@@ -115,7 +115,7 @@ function Router() {
             {(params) => <CategoryRedirect slug={params.slug} />}
           </Route>
           <Route path="/search" component={SearchRedirect} />
-          <Route path="/product/:id" component={ProductDetail} />
+          <Route path="/product/:slug" component={ProductDetail} />
           <Route path="/sell" component={Sell} />
           <Route path="/edit/:id" component={EditListing} />
           <Route path="/seller/:sellerId" component={SellerProfile} />

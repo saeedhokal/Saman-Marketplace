@@ -2,6 +2,8 @@ import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
 import { buildSeoHeadForUrl, injectSeoIntoHtml } from "./seo";
+import { storage } from "./storage";
+import { listingPath } from "../shared/listing-slug";
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dirname, "public");
@@ -25,6 +27,21 @@ export function serveStatic(app: Express) {
     // SEO auditors check the HTTP header too.
     res.setHeader("X-Robots-Tag", "index, follow");
     res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+
+    // 301 redirect: /product/123 (numeric-only) → /product/slug-123
+    const numericProductMatch = req.originalUrl.match(/^\/product\/(\d+)(?:[/?#]|$)/);
+    if (numericProductMatch) {
+      try {
+        const id = parseInt(numericProductMatch[1], 10);
+        const product = await storage.getProduct(id);
+        if (product) {
+          return res.redirect(301, listingPath(product.title, id));
+        }
+      } catch {
+        // fall through to normal rendering on error
+      }
+    }
+
     try {
       const seo = await buildSeoHeadForUrl(req.originalUrl);
       if (seo) {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { type Product } from "@shared/schema";
+import { listingPath } from "@shared/listing-slug";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -123,7 +124,7 @@ export function ProductCard({
       transition={{ duration: 0.15 }}
       className="h-full"
     >
-      <Link href={`/product/${product.id}`} className="block h-full">
+      <Link href={listingPath(product.title, product.id)} className="block h-full">
         <Card className={cn(
           "group h-full overflow-hidden glass-card hover:border-accent/40 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 cursor-pointer rounded-2xl",
           isSold ? 'opacity-80' : '',
