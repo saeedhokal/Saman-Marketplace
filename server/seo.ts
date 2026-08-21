@@ -5,6 +5,12 @@ import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { listingPath } from "../shared/listing-slug";
+import {
+  buildPaginationNavigation,
+  categoryPagePath,
+  getRequestedCategoryPage,
+  paginateCategoryProducts,
+} from "./seo-pagination";
 
 const SITE_URL = "https://thesamanapp.com";
 
@@ -205,16 +211,13 @@ type CategoryProduct = { id: number; title: string; price?: number | null };
 function buildCategoryJsonLd(
   mainCategory: string | null,
   products: CategoryProduct[],
+  canonical: string,
 ): string {
-  const url = mainCategory
-    ? `${SITE_URL}/categories?tab=${mainCategory === "Spare Parts" ? "spare-parts" : "automotive"}`
-    : `${SITE_URL}/categories`;
-
   const itemList = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     "name": mainCategory ? `${mainCategory} on Saman Marketplace` : "Browse Categories — Saman Marketplace",
-    "url": url,
+    "url": canonical,
     "numberOfItems": products.length,
     "itemListElement": products.slice(0, 20).map((p, i) => ({
       "@type": "ListItem",
@@ -229,7 +232,7 @@ function buildCategoryJsonLd(
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": `${SITE_URL}/` },
-      { "@type": "ListItem", "position": 2, "name": mainCategory || "Browse", "item": url },
+      { "@type": "ListItem", "position": 2, "name": mainCategory || "Browse", "item": canonical },
     ],
   };
 
@@ -243,6 +246,8 @@ function buildCategoryBodyContent(
   mainCategory: string | null,
   subcategories: readonly string[],
   products: CategoryProduct[],
+  page: number,
+  totalPages: number,
 ): string {
   const tabSlug = mainCategory === "Spare Parts" ? "spare-parts" : "automotive";
 
@@ -268,9 +273,8 @@ function buildCategoryBodyContent(
     .map((sub) => `<li><a href="/categories?tab=${tabSlug}&subCategory=${encodeURIComponent(sub)}">${escapeHtml(sub)}</a></li>`)
     .join("");
 
-  // Product listing links (approved only, capped at 30)
+  // Product listing links for this crawlable page.
   const listingsHtml = products
-    .slice(0, 30)
     .map(
       (p) =>
         `<li><a href="${listingPath(p.title, p.id)}">${escapeHtml(p.title)}</a>` +
@@ -286,8 +290,11 @@ function buildCategoryBodyContent(
     `<h2>Browse by subcategory</h2>` +
     `<ul>${subcatHtml}</ul>` +
     (listingsHtml
-      ? `<h2>Latest listings</h2><ul>${listingsHtml}</ul>`
+      ? `<h2>${page > 1 ? `Listings — page ${page}` : "Latest listings"}</h2><ul>${listingsHtml}</ul>`
       : "") +
+    buildPaginationNavigation(page, totalPages, (targetPage) =>
+      categoryPagePath(tabSlug, null, targetPage),
+    ) +
     `<p><a href="/categories">All categories</a> &middot; <a href="/downloads">Download the app</a></p>` +
     `</div>`
   );
@@ -442,15 +449,15 @@ function buildSubCategoryJsonLd(
   mainCategory: string,
   subCategory: string,
   products: CategoryProduct[],
+  canonical: string,
 ): string {
   const tabSlug = mainCategory === "Spare Parts" ? "spare-parts" : "automotive";
-  const url = `${SITE_URL}/categories?tab=${tabSlug}&subCategory=${encodeURIComponent(subCategory)}`;
 
   const itemList = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     "name": `${subCategory} ${mainCategory} on Saman Marketplace`,
-    "url": url,
+    "url": canonical,
     "numberOfItems": products.length,
     "itemListElement": products.slice(0, 20).map((p, i) => ({
       "@type": "ListItem",
@@ -466,7 +473,7 @@ function buildSubCategoryJsonLd(
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": `${SITE_URL}/` },
       { "@type": "ListItem", "position": 2, "name": mainCategory, "item": `${SITE_URL}/categories?tab=${tabSlug}` },
-      { "@type": "ListItem", "position": 3, "name": subCategory, "item": url },
+      { "@type": "ListItem", "position": 3, "name": subCategory, "item": canonical },
     ],
   };
 
@@ -480,11 +487,12 @@ function buildSubCategoryBodyContent(
   mainCategory: string,
   subCategory: string,
   products: CategoryProduct[],
+  page: number,
+  totalPages: number,
 ): string {
   const tabSlug = mainCategory === "Spare Parts" ? "spare-parts" : "automotive";
 
   const listingsHtml = products
-    .slice(0, 30)
     .map(
       (p) =>
         `<li><a href="${listingPath(p.title, p.id)}">${escapeHtml(p.title)}</a>` +
@@ -500,8 +508,11 @@ function buildSubCategoryBodyContent(
     `<h1>${escapeHtml(subCategory)} ${escapeHtml(mainCategory)}</h1>` +
     `<p>${escapeHtml(description)}</p>` +
     (listingsHtml
-      ? `<h2>Listings</h2><ul>${listingsHtml}</ul>`
+      ? `<h2>${page > 1 ? `Listings — page ${page}` : "Listings"}</h2><ul>${listingsHtml}</ul>`
       : `<p>No listings available right now. Check back soon.</p>`) +
+    buildPaginationNavigation(page, totalPages, (targetPage) =>
+      categoryPagePath(tabSlug, subCategory, targetPage),
+    ) +
     `<p><a href="/categories?tab=${tabSlug}">All ${escapeHtml(mainCategory)}</a> &middot; ` +
     `<a href="/categories">All categories</a> &middot; ` +
     `<a href="/downloads">Download the app</a></p>` +
@@ -554,18 +565,33 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
       const tabSlug = mainCategory === "Spare Parts" ? "spare-parts" : "automotive";
       try {
         const allProducts = await storage.getProducts({ mainCategory, subCategory });
-        const approved = allProducts.filter((p) => p.status === "approved").slice(0, 30);
+        const allApproved = allProducts.filter((p) => p.status === "approved");
+        const {
+          products: approved,
+          page,
+          totalPages,
+        } = paginateCategoryProducts(
+          allApproved,
+          getRequestedCategoryPage(url, SITE_URL),
+        );
+        const canonical = `${SITE_URL}${categoryPagePath(tabSlug, subCategory, page)}`;
 
-        const title = `${subCategory} ${mainCategory} — Buy & Sell in UAE | Saman Marketplace`;
-        const description = `Browse ${approved.length > 0 ? `${approved.length}+ ` : ""}${subCategory} ${mainCategory} listings on Saman Marketplace — the UAE's leading auto parts and vehicles marketplace.`;
-        const canonical = `${SITE_URL}/categories?tab=${tabSlug}&subCategory=${encodeURIComponent(subCategory)}`;
+        const pageSuffix = page > 1 ? ` — Page ${page}` : "";
+        const title = `${subCategory} ${mainCategory}${pageSuffix} — Buy & Sell in UAE | Saman Marketplace`;
+        const description = `Browse ${allApproved.length > 0 ? `${allApproved.length} ` : ""}${subCategory} ${mainCategory} listings${page > 1 ? ` — page ${page} of ${totalPages}` : ""} on Saman Marketplace — the UAE's leading auto parts and vehicles marketplace.`;
 
         return {
           title,
           description,
           canonical,
-          jsonLd: buildSubCategoryJsonLd(mainCategory, subCategory, approved),
-          bodyContent: buildSubCategoryBodyContent(mainCategory, subCategory, approved),
+          jsonLd: buildSubCategoryJsonLd(mainCategory, subCategory, approved, canonical),
+          bodyContent: buildSubCategoryBodyContent(
+            mainCategory,
+            subCategory,
+            approved,
+            page,
+            totalPages,
+          ),
         };
       } catch {
         return null;
@@ -584,26 +610,42 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
       const allProducts = mainCategory
         ? await storage.getProducts({ mainCategory })
         : [];
-      const approved = allProducts
-        .filter((p) => p.status === "approved")
-        .slice(0, 30);
+      const allApproved = allProducts.filter((p) => p.status === "approved");
+      const {
+        products: approved,
+        page,
+        totalPages,
+      } = paginateCategoryProducts(
+        allApproved,
+        mainCategory ? getRequestedCategoryPage(url, SITE_URL) : 1,
+      );
 
       const title = mainCategory
-        ? `${mainCategory} — Buy & Sell in UAE | Saman Marketplace`
+        ? `${mainCategory}${page > 1 ? ` — Page ${page}` : ""} — Buy & Sell in UAE | Saman Marketplace`
         : "Browse Car Parts & Vehicles in UAE | Saman Marketplace";
       const description = mainCategory
-        ? `Browse ${approved.length > 0 ? `${approved.length}+ ` : ""}${mainCategory} listings on Saman Marketplace — the UAE's leading auto parts and vehicles marketplace.`
+        ? `Browse ${allApproved.length > 0 ? `${allApproved.length} ` : ""}${mainCategory} listings${page > 1 ? ` — page ${page} of ${totalPages}` : ""} on Saman Marketplace — the UAE's leading auto parts and vehicles marketplace.`
         : "Shop Spare Parts and Automotive listings on Saman Marketplace — the UAE's leading auto parts and vehicles marketplace.";
       const canonical = mainCategory
-        ? `${SITE_URL}/categories?tab=${mainCategory === "Spare Parts" ? "spare-parts" : "automotive"}`
+        ? `${SITE_URL}${categoryPagePath(
+            mainCategory === "Spare Parts" ? "spare-parts" : "automotive",
+            null,
+            page,
+          )}`
         : `${SITE_URL}/categories`;
 
       return {
         title,
         description,
         canonical,
-        jsonLd: buildCategoryJsonLd(mainCategory, approved),
-        bodyContent: buildCategoryBodyContent(mainCategory, subcategories, approved),
+        jsonLd: buildCategoryJsonLd(mainCategory, approved, canonical),
+        bodyContent: buildCategoryBodyContent(
+          mainCategory,
+          subcategories,
+          approved,
+          page,
+          totalPages,
+        ),
       };
     } catch {
       return null;
