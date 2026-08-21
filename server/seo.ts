@@ -544,7 +544,8 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
 
   // 2) Category browse pages (/categories, /categories?tab=…, /categories?tab=…&subCategory=…)
   if (cleanPath === "/categories") {
-    const tabParam = url.match(/[?&]tab=([^&]+)/)?.[1] ?? "";
+    const searchParams = new URL(url, SITE_URL).searchParams;
+    const tabParam = searchParams.get("tab") ?? "";
     const mainCategory: string | null =
       tabParam === "spare-parts"
         ? "Spare Parts"
@@ -552,9 +553,10 @@ export async function buildSeoHeadForUrl(url: string): Promise<SeoHead | null> {
         ? "Automotive"
         : null;
 
-    // 2a) Subcategory filter pages: /categories?tab=spare-parts&subCategory=Toyota
-    const subCategoryRaw = url.match(/[?&]subCategory=([^&]+)/)?.[1];
-    const subCategory = subCategoryRaw ? decodeURIComponent(subCategoryRaw) : null;
+    // `subCategory` is the canonical public parameter. Keep the former
+    // sitemap parameter (`brand`) as an alias so already-indexed links work.
+    const subCategory =
+      searchParams.get("subCategory") ?? searchParams.get("brand");
 
     if (subCategory && mainCategory) {
       const validSubs: readonly string[] =

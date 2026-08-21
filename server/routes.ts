@@ -304,13 +304,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       { loc: "https://thesamanapp.com/categories?tab=automotive", priority: "0.85", changefreq: "hourly" },
       // Individual spare-parts subcategory pages
       ...SPARE_PARTS_SUBCATEGORIES.map((brand) => ({
-        loc: `https://thesamanapp.com/categories?tab=spare-parts&brand=${encodeURIComponent(brand)}`,
+        loc: `https://thesamanapp.com/categories?tab=spare-parts&subCategory=${encodeURIComponent(brand)}`,
         priority: "0.7",
         changefreq: "daily",
       })),
       // Individual automotive subcategory pages
       ...AUTOMOTIVE_SUBCATEGORIES.map((brand) => ({
-        loc: `https://thesamanapp.com/categories?tab=automotive&brand=${encodeURIComponent(brand)}`,
+        loc: `https://thesamanapp.com/categories?tab=automotive&subCategory=${encodeURIComponent(brand)}`,
         priority: "0.7",
         changefreq: "daily",
       })),

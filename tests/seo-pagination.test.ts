@@ -105,3 +105,48 @@ test("category page 2 renders its own listings, canonical, and crawl links", asy
     storage.getProducts = originalGetProducts;
   }
 });
+
+
+test("canonical and legacy subcategory URLs filter identically", async () => {
+  const originalGetProducts = storage.getProducts;
+  const requestedFilters: unknown[] = [];
+  storage.getProducts = async (filters) => {
+    requestedFilters.push(filters);
+    return [
+      {
+        id: 501,
+        title: "Toyota filtered listing",
+        price: 250,
+        status: "approved",
+      },
+    ] as any;
+  };
+
+  try {
+    const canonical = await buildSeoHeadForUrl(
+      "/categories?tab=spare-parts&subCategory=Toyota",
+    );
+    const legacy = await buildSeoHeadForUrl(
+      "/categories?tab=spare-parts&brand=Toyota",
+    );
+
+    for (const seo of [canonical, legacy]) {
+      assert.ok(seo);
+      assert.equal(
+        seo.canonical,
+        "https://thesamanapp.com/categories?tab=spare-parts&subCategory=Toyota",
+      );
+      assert.match(seo.bodyContent || "", /<h1>Toyota Spare Parts<\/h1>/);
+      assert.match(
+        seo.bodyContent || "",
+        /\/product\/toyota-filtered-listing-501/,
+      );
+    }
+    assert.deepEqual(requestedFilters, [
+      { mainCategory: "Spare Parts", subCategory: "Toyota" },
+      { mainCategory: "Spare Parts", subCategory: "Toyota" },
+    ]);
+  } finally {
+    storage.getProducts = originalGetProducts;
+  }
+});

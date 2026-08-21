@@ -81,15 +81,27 @@ export default function Categories() {
     if (tab === "spare-parts" || tab === "automotive") {
       savedFilters = null;
       setSavedScroll(SCROLL_KEY, 0);
-      const subCatParam = params.get("subCategory");
-      params.delete("tab");
-      params.delete("subCategory");
-      const rest = params.toString();
-      window.history.replaceState(null, "", window.location.pathname + (rest ? `?${rest}` : ""));
+      const subCatParam = params.get("subCategory") ?? params.get("brand");
       const validSubs: readonly string[] =
         tab === "spare-parts" ? SPARE_PARTS_SUBCATEGORIES : AUTOMOTIVE_SUBCATEGORIES;
       const initSub =
         subCatParam && validSubs.includes(subCatParam) ? subCatParam : undefined;
+
+      // Normalize old sitemap links without breaking them. Canonical
+      // `subCategory` URLs remain visible so the selected brand is shareable.
+      if (params.has("brand")) {
+        params.delete("brand");
+        if (!params.has("subCategory") && subCatParam) {
+          params.set("subCategory", subCatParam);
+        }
+        const normalizedSearch = params.toString();
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + (normalizedSearch ? `?${normalizedSearch}` : ""),
+        );
+      }
+
       return {
         activeCategory: tab as MainCategory,
         ...(initSub ? { activeSubCategory: initSub } : {}),

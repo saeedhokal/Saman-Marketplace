@@ -18,7 +18,7 @@ const CANONICAL_HOST = "https://thesamanapp.com";
 function expectedLoc(tab: "spare-parts" | "automotive", brand: string): string {
   // Sitemap always emits canonical production URLs regardless of which
   // server we fetch from.
-  return `${CANONICAL_HOST}/categories?tab=${tab}&brand=${encodeURIComponent(brand)}`;
+  return `${CANONICAL_HOST}/categories?tab=${tab}&subCategory=${encodeURIComponent(brand)}`;
 }
 
 async function main() {
@@ -80,6 +80,14 @@ async function main() {
   const expectedMin = SPARE_PARTS_SUBCATEGORIES.length + AUTOMOTIVE_SUBCATEGORIES.length + 2; // +2 for the bare tab pages
   if (subcatCount < expectedMin) {
     failures.push(`expected at least ${expectedMin} categories?tab= URLs, found ${subcatCount}`);
+  }
+
+  // The old `brand` parameter remains an inbound alias, but sitemap entries
+  // must only advertise the canonical `subCategory` form.
+  for (const loc of locs.filter((l) => l.includes("/categories?"))) {
+    if (new URL(loc).searchParams.has("brand")) {
+      failures.push(`non-canonical brand parameter in sitemap URL: ${loc}`);
+    }
   }
 
   if (failures.length > 0) {

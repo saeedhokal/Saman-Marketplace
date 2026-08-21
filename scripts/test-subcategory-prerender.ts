@@ -10,7 +10,8 @@
  *   • HTTP 200
  *   • Response contains <div id="seo-prerender">
  *   • Response contains an <h1> with the subcategory name
- *   • Response contains <script type="application/ld+json"> with "@type":"ItemList"
+ *   • Canonical URL uses the public subCategory parameter
+ *   • ItemList metadata and visible listing links agree
  *
  * For an invalid subcategory (FakeBrand):
  *   • No <div id="seo-prerender"> in the response body
@@ -27,6 +28,19 @@ interface TestCase {
   url: string;
   expectPrerender: boolean;
   expectSubcategoryName?: string;
+  expectMainCategory?: "Spare Parts" | "Automotive";
+  expectCanonical?: string;
+}
+
+const canonicalHost = "https://thesamanapp.com";
+
+function decodeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
 }
 
 const CASES: TestCase[] = [
@@ -35,12 +49,24 @@ const CASES: TestCase[] = [
     url: `${base}/categories?tab=spare-parts&subCategory=Toyota`,
     expectPrerender: true,
     expectSubcategoryName: "Toyota",
+    expectMainCategory: "Spare Parts",
+    expectCanonical: `${canonicalHost}/categories?tab=spare-parts&subCategory=Toyota`,
   },
   {
     label: "Automotive / BMW",
     url: `${base}/categories?tab=automotive&subCategory=BMW`,
     expectPrerender: true,
     expectSubcategoryName: "BMW",
+    expectMainCategory: "Automotive",
+    expectCanonical: `${canonicalHost}/categories?tab=automotive&subCategory=BMW`,
+  },
+  {
+    label: "Legacy brand alias / Toyota",
+    url: `${base}/categories?tab=spare-parts&brand=Toyota`,
+    expectPrerender: true,
+    expectSubcategoryName: "Toyota",
+    expectMainCategory: "Spare Parts",
+    expectCanonical: `${canonicalHost}/categories?tab=spare-parts&subCategory=Toyota`,
   },
   {
     label: "Invalid subCategory / FakeBrand",
@@ -84,20 +110,56 @@ async function runCase(tc: TestCase): Promise<string[]> {
       }
     }
 
-    // 4. JSON-LD with "@type":"ItemList"
+    // 4. Canonical points at this exact public filter URL. This also checks
+    // that the legacy `brand` alias resolves to the canonical parameter.
+    const canonicalMatch = body.match(/<link rel="canonical" href="([^"]+)"\s*\/?>/i);
+    const canonical = decodeHtmlAttribute(canonicalMatch?.[1] ?? "");
+    if (tc.expectCanonical && canonical !== tc.expectCanonical) {
+      failures.push(
+        `[${tc.label}] Expected canonical "${tc.expectCanonical}", got: "${canonical || "(missing)"}"`
+      );
+    }
+
+    // 5. JSON-LD describes the same filtered page and every structured
+    // listing is also present as a visible crawlable link.
     const jsonLdBlocks = [...body.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/gi)];
-    const hasItemList = jsonLdBlocks.some((m) => {
+    let itemList: any = null;
+    for (const match of jsonLdBlocks) {
       try {
-        const parsed = JSON.parse(m[1]);
-        return parsed["@type"] === "ItemList";
-      } catch {
-        return false;
-      }
-    });
-    if (!hasItemList) {
+        const parsed = JSON.parse(match[1]);
+        if (parsed["@type"] === "ItemList") {
+          itemList = parsed;
+          break;
+        }
+      } catch {}
+    }
+    if (!itemList) {
       failures.push(
         `[${tc.label}] No <script type="application/ld+json"> block with "@type":"ItemList" found`
       );
+    } else {
+      const expectedName = `${tc.expectSubcategoryName} ${tc.expectMainCategory} on Saman Marketplace`;
+      if (itemList.name !== expectedName) {
+        failures.push(
+          `[${tc.label}] Expected ItemList name "${expectedName}", got: "${itemList.name}"`
+        );
+      }
+      if (tc.expectCanonical && itemList.url !== tc.expectCanonical) {
+        failures.push(
+          `[${tc.label}] Expected ItemList URL "${tc.expectCanonical}", got: "${itemList.url}"`
+        );
+      }
+      for (const item of itemList.itemListElement ?? []) {
+        const visibleHref =
+          typeof item?.url === "string" && item.url.startsWith(canonicalHost)
+            ? item.url.slice(canonicalHost.length)
+            : "";
+        if (!visibleHref || !body.includes(`href="${visibleHref}"`)) {
+          failures.push(
+            `[${tc.label}] Structured listing is missing its visible filtered-page link: ${item?.url ?? "(missing URL)"}`
+          );
+        }
+      }
     }
   } else {
     // For invalid subcategories the server should return a page without seo-prerender
