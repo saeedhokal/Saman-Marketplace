@@ -122,7 +122,7 @@ export default function Settings() {
                   <Info className="h-5 w-5 text-accent" />
                   <div className={isRTL ? 'text-right' : ''}>
                     <p className="font-medium">{t('version')}</p>
-                    <p className="text-sm text-muted-foreground" data-testid="text-app-version">2.1.1</p>
+                    <p className="text-sm text-muted-foreground" data-testid="text-app-version">2.1.3</p>
                   </div>
                 </div>
               </div>

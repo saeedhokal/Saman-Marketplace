@@ -55,10 +55,10 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **iOS Splash Screen:** Fullscreen with SAMAN logo + Dubai skyline.
 
 ## App Versioning
-- **Current Version (iOS):** 2.1.1 (TikTok Business SDK + App Tracking Transparency + SKAdNetwork for TikTok Ads iOS install/open attribution)
+- **Current Version (iOS):** 2.1.3 (TikTok Business SDK + App Tracking Transparency + SKAdNetwork for TikTok Ads iOS install/open attribution)
 - **Previous Version:** 2.1.0 (UI polish round 2: warm corner glow on hero + category cards, gauge icon on km pill with model/spec/condition fallback, single-row horizontal card view with description, compact view 3-per-row with truncated price, ECU subcategory in spare parts, searchable category/model dropdowns on Categories page, single-row pill layout with truncation)
 - **iOS:** Version set in `codemagic.yaml` via `agvtool new-marketing-version`. Also in `ios/App/App.xcodeproj/project.pbxproj` (MARKETING_VERSION). Build number auto-incremented by Codemagic.
-- **Android:** Version in `android/app/build.gradle` — `versionName "2.1.1"`, `versionCode 26`.
+- **Android:** Version in `android/app/build.gradle` — `versionName "2.1.3"`, `versionCode 28`.
 - **In-app display:** `client/src/pages/Settings.tsx` shows version to users.
 - **IMPORTANT:** When bumping versions, update ALL of these files: `codemagic.yaml`, `project.pbxproj` (both Debug and Release), `build.gradle`, `Settings.tsx`.
 - **Apple rejects** builds where CFBundleShortVersionString matches a previously approved version — always increment.
