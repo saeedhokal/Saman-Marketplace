@@ -100,3 +100,7 @@ ANDROID_APP_SHA256 = "6C:E7:B6:A4:DF:29:48:A4:AA:E2:98:9F:FF:54:25:01:B4:BB:36:E
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
