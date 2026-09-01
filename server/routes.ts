@@ -2637,6 +2637,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       await db.execute(sql`DELETE FROM device_tokens WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM notifications WHERE user_id = ${userId}`);
+      // Views from any user can reference this seller's products. Remove
+      // those references before deleting the products themselves.
+      await db.execute(sql`
+        DELETE FROM user_views
+        WHERE product_id IN (
+          SELECT id FROM products WHERE seller_id = ${userId}
+        )
+      `);
       await db.execute(sql`DELETE FROM user_views WHERE user_id = ${userId}`);
       await storage.deleteUserProducts(userId);
       await storage.deleteUserFavorites(userId);
