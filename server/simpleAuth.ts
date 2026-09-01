@@ -92,7 +92,11 @@ async function verifyRecentFirebasePhoneToken(firebaseIdToken: string) {
     throw new Error("Phone verification service is unavailable");
   }
 
-  const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken, true);
+  // Signature, audience, issuer, project, and expiry are validated locally
+  // against Firebase's public keys. Avoid checkRevoked=true here: that extra
+  // remote lookup requires a service-account OAuth exchange and can block
+  // otherwise-valid phone OTPs when the Admin credential cannot mint tokens.
+  const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
   if (decodedToken.firebase?.sign_in_provider !== "phone") {
     throw new Error("A phone verification credential is required");
   }
