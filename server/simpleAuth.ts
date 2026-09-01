@@ -3,7 +3,7 @@ import connectPg from "connect-pg-simple";
 import type { Express, Request, Response, NextFunction } from "express";
 import { db, pool } from "./db";
 import { users, otpCodes, loginEvents } from "@shared/models/auth";
-import { eq, and, gt, desc, sql } from "drizzle-orm";
+import { eq, and, gt, desc, sql, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
@@ -84,6 +84,47 @@ function getPhoneVariants(phone: string): string[] {
   variants.add(phone.replace(/[^0-9]/g, ""));
   
   return Array.from(variants).filter(v => v.length >= 7);
+}
+
+async function verifyRecentFirebasePhoneToken(firebaseIdToken: string) {
+  ensureFirebaseAdmin();
+  if (admin.apps.length === 0) {
+    throw new Error("Phone verification service is unavailable");
+  }
+
+  const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken, true);
+  if (decodedToken.firebase?.sign_in_provider !== "phone") {
+    throw new Error("A phone verification credential is required");
+  }
+
+  const firebasePhone = decodedToken.phone_number;
+  if (!firebasePhone) {
+    throw new Error("No phone number found in verification token");
+  }
+
+  const authTime = decodedToken.auth_time;
+  const authAgeSeconds = Math.floor(Date.now() / 1000) - authTime;
+  if (!Number.isFinite(authTime) || authAgeSeconds < -60 || authAgeSeconds > 10 * 60) {
+    throw new Error("Verification expired. Please request a new code.");
+  }
+
+  return {
+    normalizedPhone: normalizePhone(firebasePhone),
+    tokenFingerprint: crypto.createHash("sha256").update(firebaseIdToken).digest("hex"),
+    tokenExpiresAt: new Date(decodedToken.exp * 1000),
+  };
+}
+
+function getPublicFirebaseVerificationError(error: unknown): string {
+  if (error instanceof Error) {
+    if (
+      error.message === "Phone verification service is unavailable" ||
+      error.message === "Verification expired. Please request a new code."
+    ) {
+      return error.message;
+    }
+  }
+  return "Phone verification failed. Please request a new code.";
 }
 
 // Simple in-memory rate limiter for OTP endpoints
@@ -319,6 +360,165 @@ export function setupSimpleAuth(app: Express) {
     } catch (error) {
       console.error("Verify OTP error:", error);
       res.status(500).json({ message: "Failed to verify OTP" });
+    }
+  });
+
+  // Login with phone + password
+  app.post("/api/auth/otp-login", async (req: Request, res: Response) => {
+    try {
+      const { firebaseIdToken, firstName, lastName } = req.body;
+      if (!firebaseIdToken || typeof firebaseIdToken !== "string") {
+        return res.status(400).json({ message: "Phone verification is required" });
+      }
+
+      let credential: Awaited<ReturnType<typeof verifyRecentFirebasePhoneToken>>;
+      try {
+        credential = await verifyRecentFirebasePhoneToken(firebaseIdToken);
+      } catch (error) {
+        console.error("OTP login token verification failed:", error);
+        return res.status(400).json({
+          message: getPublicFirebaseVerificationError(error),
+        });
+      }
+
+      const phoneVariants = getPhoneVariants(credential.normalizedPhone);
+      const cleanFirstName = typeof firstName === "string" ? firstName.trim() : "";
+      const cleanLastName = typeof lastName === "string" ? lastName.trim() : "";
+
+      let user: typeof users.$inferSelect | undefined;
+      let isNewUser = false;
+      let needsProfile = false;
+      let replayed = false;
+      let ambiguous = false;
+
+      await db.transaction(async (tx) => {
+        // Serialize all exchanges for the same normalized phone. This prevents
+        // two simultaneous first-time OTP requests from creating duplicates.
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${credential.normalizedPhone}))`);
+
+        const matches = await tx
+          .select()
+          .from(users)
+          .where(inArray(users.phone, phoneVariants));
+        const uniqueMatches = Array.from(new Map(matches.map((match) => [match.id, match])).values());
+
+        if (uniqueMatches.length > 1) {
+          ambiguous = true;
+          return;
+        }
+
+        user = uniqueMatches[0];
+        const profileIncomplete = !user?.firstName?.trim() || !user?.lastName?.trim();
+        if ((!user || profileIncomplete) && (!cleanFirstName || !cleanLastName)) {
+          needsProfile = true;
+          return;
+        }
+
+        const [usedCredential] = await tx
+          .select({ id: otpCodes.id })
+          .from(otpCodes)
+          .where(
+            and(
+              eq(otpCodes.phone, credential.normalizedPhone),
+              eq(otpCodes.code, credential.tokenFingerprint),
+              eq(otpCodes.verified, true),
+            ),
+          )
+          .limit(1);
+        if (usedCredential) {
+          replayed = true;
+          return;
+        }
+
+        if (!user) {
+          [user] = await tx
+            .insert(users)
+            .values({
+              phone: credential.normalizedPhone,
+              firstName: cleanFirstName,
+              lastName: cleanLastName,
+              credits: 0,
+              isAdmin: false,
+              profileImageUrl: null,
+            })
+            .returning();
+          isNewUser = true;
+        } else {
+          const shouldNormalizePhone = user.phone !== credential.normalizedPhone;
+          const shouldCompleteProfile = profileIncomplete;
+          if (shouldNormalizePhone || shouldCompleteProfile) {
+            [user] = await tx
+              .update(users)
+              .set({
+                phone: credential.normalizedPhone,
+                firstName: user.firstName?.trim() || cleanFirstName,
+                lastName: user.lastName?.trim() || cleanLastName,
+                updatedAt: new Date(),
+              })
+              .where(eq(users.id, user.id))
+              .returning();
+          }
+        }
+
+        await tx.insert(otpCodes).values({
+          phone: credential.normalizedPhone,
+          code: credential.tokenFingerprint,
+          expiresAt: credential.tokenExpiresAt,
+          verified: true,
+        });
+      });
+
+      if (ambiguous) {
+        return res.status(409).json({
+          message: "More than one account uses this phone number. Please use your password or contact support.",
+        });
+      }
+      if (needsProfile) {
+        return res.json({ needsProfile: true });
+      }
+      if (replayed) {
+        return res.status(401).json({ message: "This verification has already been used. Request a new code." });
+      }
+      if (!user) {
+        return res.status(500).json({ message: "Unable to complete phone login" });
+      }
+
+      req.session.userId = user.id;
+      const clientPlatform = req.body.platform;
+      const ua = req.headers["user-agent"] || "";
+      const loginPlatform =
+        clientPlatform && ["ios", "android", "web"].includes(clientPlatform)
+          ? clientPlatform
+          : ua.includes("iPhone") || ua.includes("iPad")
+            ? "ios"
+            : ua.includes("Android")
+              ? "android"
+              : "web";
+      db.insert(loginEvents)
+        .values({
+          userId: user.id,
+          phone: user.phone,
+          platform: loginPlatform,
+          eventType: isNewUser ? "register" : "login",
+        })
+        .catch(() => {});
+
+      res.json({
+        id: user.id,
+        phone: user.phone,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        credits: user.credits,
+        isAdmin: user.isAdmin,
+        profileImageUrl: user.profileImageUrl,
+        isNewUser,
+        needsProfile: false,
+        authToken: issueAuthToken(user.id),
+      });
+    } catch (error) {
+      console.error("OTP login error:", error);
+      res.status(500).json({ message: "Phone login failed. Please try again." });
     }
   });
 
@@ -669,83 +869,97 @@ export function setupSimpleAuth(app: Express) {
   // Register with phone + password (direct registration)
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const { phone, password, firstName, lastName, email, firebaseIdToken, otpFallback } = req.body;
+      const { password, firstName, lastName, email, firebaseIdToken } = req.body;
 
       if (!password || !firstName || !lastName) {
         return res.status(400).json({ message: "Password, first name, and last name are required" });
       }
 
-      let normalizedPhone: string;
+      if (!firebaseIdToken || typeof firebaseIdToken !== "string") {
+        return res.status(400).json({ message: "Phone verification is required" });
+      }
 
-      if (firebaseIdToken) {
-        try {
-          ensureFirebaseAdmin();
-          const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
-          const firebasePhone = decodedToken.phone_number;
-          if (!firebasePhone) {
-            return res.status(400).json({ message: "No phone number found in verification token" });
-          }
-          normalizedPhone = normalizePhone(firebasePhone);
-        } catch (err) {
-          console.error("Firebase token verification failed:", err);
-          return res.status(400).json({ message: "Phone verification failed. Please try again." });
-        }
-      } else if (phone) {
-        normalizedPhone = normalizePhone(phone);
-        if (otpFallback) {
-          // New-app registration completed WITHOUT SMS verification because
-          // Firebase OTP failed at the service level (e.g. billing/quota).
-          // If these appear in logs, check Firebase console — SMS is likely down.
-          console.warn(`[OTP FALLBACK] Registration without SMS verification for phone ending ...${normalizedPhone.slice(-4)}`);
-        }
-      } else {
-        return res.status(400).json({ message: "Phone number or verification is required" });
+      let normalizedPhone: string;
+      try {
+        ({ normalizedPhone } = await verifyRecentFirebasePhoneToken(firebaseIdToken));
+      } catch (err) {
+        console.error("Firebase token verification failed:", err);
+        return res.status(400).json({
+          message: getPublicFirebaseVerificationError(err),
+        });
       }
 
       if (normalizedPhone.length < 7) {
         return res.status(400).json({ message: "Phone number must be at least 7 digits" });
       }
 
-      // Check if user already exists
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.phone, normalizedPhone));
-
       const hashedPassword = await bcrypt.hash(password, 10);
-      // Leave profileImageUrl null so the client renders locally-generated
-      // initials (Unicode-safe, works for Arabic names).
+      let user: typeof users.$inferSelect | undefined;
+      let ambiguous = false;
+      let alreadyRegistered = false;
 
-      let user;
-      if (existingUser && existingUser.password) {
+      await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${normalizedPhone}))`);
+        const existingUsers = await tx
+          .select()
+          .from(users)
+          .where(inArray(users.phone, getPhoneVariants(normalizedPhone)));
+        const uniqueExistingUsers = Array.from(
+          new Map(existingUsers.map((existingUser) => [existingUser.id, existingUser])).values(),
+        );
+
+        if (uniqueExistingUsers.length > 1) {
+          ambiguous = true;
+          return;
+        }
+
+        const existingUser = uniqueExistingUsers[0];
+        if (existingUser?.password) {
+          alreadyRegistered = true;
+          return;
+        }
+
+        if (existingUser) {
+          [user] = await tx
+            .update(users)
+            .set({
+              phone: normalizedPhone,
+              password: hashedPassword,
+              firstName: firstName.trim(),
+              lastName: lastName.trim(),
+              email: email?.trim() || existingUser.email,
+              profileImageUrl: existingUser.profileImageUrl ?? null,
+              updatedAt: new Date(),
+            })
+            .where(eq(users.id, existingUser.id))
+            .returning();
+        } else {
+          [user] = await tx
+            .insert(users)
+            .values({
+              phone: normalizedPhone,
+              password: hashedPassword,
+              firstName: firstName.trim(),
+              lastName: lastName.trim(),
+              email: email?.trim() || null,
+              credits: 0,
+              isAdmin: false,
+              profileImageUrl: null,
+            })
+            .returning();
+        }
+      });
+
+      if (ambiguous) {
+        return res.status(409).json({
+          message: "More than one account uses this phone number. Please contact support.",
+        });
+      }
+      if (alreadyRegistered) {
         return res.status(400).json({ message: "Phone number already registered" });
-      } else if (existingUser && !existingUser.password) {
-        [user] = await db
-          .update(users)
-          .set({
-            password: hashedPassword,
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            email: email?.trim() || existingUser.email,
-            profileImageUrl: existingUser.profileImageUrl ?? null,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.id, existingUser.id))
-          .returning();
-      } else {
-        [user] = await db
-          .insert(users)
-          .values({
-            phone: normalizedPhone,
-            password: hashedPassword,
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            email: email?.trim() || null,
-            credits: 0,
-            isAdmin: false,
-            profileImageUrl: null,
-          })
-          .returning();
+      }
+      if (!user) {
+        return res.status(500).json({ message: "Registration failed" });
       }
 
       req.session.userId = user.id;

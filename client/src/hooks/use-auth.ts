@@ -88,13 +88,43 @@ interface LoginParams {
 }
 
 interface RegisterParams {
-  phone?: string;
   firebaseIdToken?: string;
   password: string;
   firstName: string;
   lastName: string;
   email?: string;
-  otpFallback?: boolean;
+}
+
+interface OtpLoginParams {
+  firebaseIdToken: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+type OtpLoginResult =
+  | { needsProfile: true }
+  | (User & { needsProfile?: false; isNewUser?: boolean; authToken?: string });
+
+async function otpLoginFn(params: OtpLoginParams): Promise<OtpLoginResult> {
+  const platform = Capacitor.isNativePlatform() ? Capacitor.getPlatform() : "web";
+  const response = await fetch("/api/auth/otp-login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ ...params, platform }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Phone login failed");
+  }
+
+  const result = await response.json();
+  if (!result.needsProfile) {
+    storeUserId(result?.id || null);
+    if (result?.authToken) storeAuthToken(result.authToken);
+  }
+  return result;
 }
 
 async function loginFn(params: LoginParams): Promise<User> {
@@ -187,6 +217,16 @@ export function useAuth() {
     },
   });
 
+  const otpLoginMutation = useMutation({
+    mutationFn: otpLoginFn,
+    onSuccess: (result) => {
+      if (!result.needsProfile) {
+        queryClient.setQueryData(["/api/auth/user"], result);
+        invalidateAuthGatedQueries();
+      }
+    },
+  });
+
   return {
     user,
     isLoading: isAuthLoading,
@@ -195,6 +235,8 @@ export function useAuth() {
     isLoggingOut: logoutMutation.isPending,
     login: loginMutation.mutateAsync,
     isLoggingIn: loginMutation.isPending,
+    otpLogin: otpLoginMutation.mutateAsync,
+    isOtpLoggingIn: otpLoginMutation.isPending,
     register: registerMutation.mutateAsync,
     isRegistering: registerMutation.isPending,
   };

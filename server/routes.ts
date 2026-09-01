@@ -127,6 +127,7 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   app.use("/api/", generalApiLimiter);
   app.use("/api/auth/login", authLimiter);
+  app.use("/api/auth/otp-login", authLimiter);
   app.use("/api/auth/register", authLimiter);
   app.use("/api/auth/forgot-password", authLimiter);
   app.use("/api/auth/send-otp", authLimiter);

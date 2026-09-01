@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Phone, Lock, User, Mail, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Loader2, Phone, Lock, User, ArrowLeft, ShieldCheck } from "lucide-react";
 import { sendOTP, verifyOTP, isServiceLevelOTPError } from "@/lib/firebase";
 import samanLogo from "@/assets/saman-logo.jpg";
 
@@ -19,6 +19,8 @@ interface LoginFormValues {
   lastName: string;
   email: string;
 }
+
+type AuthMethod = "otp" | "password";
 
 function sanitizeReturnTo(raw: string | null): string {
   if (!raw || !raw.startsWith("/")) return "/";
@@ -47,11 +49,12 @@ function getInitialMode(): boolean {
 
 export default function Auth() {
   const [, setLocation] = useLocation();
-  const { login, register, isLoggingIn, isRegistering, user } = useAuth();
+  const { login, register, otpLogin, isLoggingIn, isRegistering, isOtpLoggingIn, user } = useAuth();
   const returnTo = getReturnToPath();
   const { toast } = useToast();
   const { t, isRTL } = useLanguage();
   const [isNewUser, setIsNewUser] = useState(getInitialMode());
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("otp");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [resetPhase, setResetPhase] = useState<"phone" | "otp" | "password">("phone");
@@ -65,6 +68,8 @@ export default function Auth() {
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<LoginFormValues | null>(null);
+  const [profileStep, setProfileStep] = useState(false);
+  const [verifiedOtpToken, setVerifiedOtpToken] = useState<string | null>(null);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const form = useForm<LoginFormValues>({
@@ -85,7 +90,7 @@ export default function Auth() {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      if (isNewUser) {
+      if (authMethod === "otp" || isNewUser) {
         setIsSendingOTP(true);
         setPendingFormData(data);
         try {
@@ -102,33 +107,6 @@ export default function Auth() {
             toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "محاولات كثيرة. يرجى المحاولة لاحقاً" : "Too many attempts. Please try again later." });
           } else if (error?.code === "auth/invalid-phone-number") {
             toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "رقم هاتف غير صالح" : "Invalid phone number format" });
-          } else if (isServiceLevelOTPError(error)) {
-            // SMS service is down (billing/quota/outage) — not the user's fault.
-            // Fall back to direct registration so sign-ups are never blocked.
-            try {
-              await register({
-                phone: data.phone,
-                password: data.password,
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email || undefined,
-                otpFallback: true,
-              });
-              setPendingFormData(null);
-              toast({
-                title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
-                description: isRTL
-                  ? "تم إنشاء حسابك بنجاح. تم تخطي التحقق عبر الرسائل النصية مؤقتاً"
-                  : "Your account has been created. SMS verification was temporarily skipped.",
-              });
-              setLocation(returnTo);
-            } catch (regError: any) {
-              toast({
-                variant: "destructive",
-                title: isRTL ? "فشل التسجيل" : "Registration failed",
-                description: regError?.message || (isRTL ? "يرجى المحاولة مرة أخرى" : "Please try again."),
-              });
-            }
           } else {
             toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: isRTL ? "فشل إرسال رمز التحقق. يرجى المحاولة مرة أخرى" : "Failed to send verification code. Please try again." });
           }
@@ -144,7 +122,7 @@ export default function Auth() {
         setLocation(returnTo);
       }
     } catch (error: any) {
-      if (error.message === "User not found" && !isNewUser) {
+      if (error.message === "User not found" && authMethod === "password" && !isNewUser) {
         setIsNewUser(true);
         toast({
           title: "New user?",
@@ -196,18 +174,34 @@ export default function Auth() {
     setIsVerifyingOTP(true);
     try {
       const idToken = await verifyOTP(code);
-      await register({
-        firebaseIdToken: idToken,
-        password: pendingFormData.password,
-        firstName: pendingFormData.firstName,
-        lastName: pendingFormData.lastName,
-        email: pendingFormData.email || undefined,
-      });
-      toast({
-        title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
-        description: isRTL ? "تم إنشاء حسابك بنجاح" : "Your account has been created.",
-      });
-      setLocation(returnTo);
+      if (authMethod === "otp") {
+        const result = await otpLogin({ firebaseIdToken: idToken });
+        if (result.needsProfile) {
+          setVerifiedOtpToken(idToken);
+          setOtpStep(false);
+          setProfileStep(true);
+          form.setValue("firstName", "");
+          form.setValue("lastName", "");
+          return;
+        }
+        toast({
+          title: isRTL ? "مرحباً بعودتك!" : "Welcome back!",
+          description: isRTL ? "تم تسجيل دخولك بنجاح" : "You have been logged in successfully.",
+        });
+        setLocation(returnTo);
+      } else {
+        await register({
+          firebaseIdToken: idToken,
+          password: pendingFormData.password,
+          firstName: pendingFormData.firstName,
+          lastName: pendingFormData.lastName,
+        });
+        toast({
+          title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
+          description: isRTL ? "تم إنشاء حسابك بنجاح" : "Your account has been created.",
+        });
+        setLocation(returnTo);
+      }
     } catch (error: any) {
       console.error("OTP verify error:", error);
       let errorMsg = isRTL ? "رمز التحقق غير صحيح" : "Invalid verification code";
@@ -227,6 +221,38 @@ export default function Auth() {
       toast({ variant: "destructive", title: isRTL ? "خطأ" : "Error", description: errorMsg });
     } finally {
       setIsVerifyingOTP(false);
+    }
+  };
+
+  const handleCompleteOtpProfile = async () => {
+    if (!verifiedOtpToken) return;
+    const firstName = form.getValues("firstName").trim();
+    const lastName = form.getValues("lastName").trim();
+    if (!firstName || !lastName) {
+      toast({
+        variant: "destructive",
+        title: isRTL ? "مطلوب" : "Required",
+        description: isRTL ? "يرجى إدخال الاسم الأول واسم العائلة" : "Please enter your first and last name.",
+      });
+      return;
+    }
+
+    try {
+      const result = await otpLogin({ firebaseIdToken: verifiedOtpToken, firstName, lastName });
+      if (result.needsProfile) {
+        throw new Error("Profile details are required");
+      }
+      toast({
+        title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
+        description: isRTL ? "تم إنشاء حسابك بنجاح" : "Your account has been created.",
+      });
+      setLocation(returnTo);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: isRTL ? "فشل التسجيل" : "Registration failed",
+        description: error.message,
+      });
     }
   };
 
@@ -410,7 +436,96 @@ export default function Auth() {
     }
   };
 
-  const isLoading = isLoggingIn || isRegistering;
+  const isLoading = isLoggingIn || isRegistering || isOtpLoggingIn;
+
+  const handleAuthMethodChange = (method: AuthMethod) => {
+    setAuthMethod(method);
+    setIsNewUser(method === "password" ? getInitialMode() : false);
+    setOtpStep(false);
+    setProfileStep(false);
+    setVerifiedOtpToken(null);
+    setPendingFormData(null);
+    setOtpDigits(["", "", "", "", "", ""]);
+    form.clearErrors();
+  };
+
+  if (profileStep && verifiedOtpToken) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3d3d3d 100%)' }}>
+        <Card className="w-full max-w-md border-2" style={{ borderColor: '#f97316' }}>
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f97316' }}>
+              <User className="h-8 w-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl font-bold" style={{ color: '#f97316' }}>
+              {isRTL ? 'أكمل ملفك الشخصي' : 'Complete Your Profile'}
+            </CardTitle>
+            <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>
+              {isRTL ? 'أدخل اسمك لإنشاء ملفك الشخصي' : 'Add your name to finish creating your profile.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{isRTL ? 'الاسم الأول' : 'First Name'}</label>
+              <div className="relative">
+                <User className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+                <Input
+                  value={form.watch("firstName")}
+                  onChange={(event) => form.setValue("firstName", event.target.value)}
+                  className={isRTL ? 'pr-10' : 'pl-10'}
+                  placeholder={isRTL ? 'أدخل اسمك الأول' : 'Enter your first name'}
+                  data-testid="input-otp-firstname"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{isRTL ? 'اسم العائلة' : 'Last Name'}</label>
+              <div className="relative">
+                <User className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+                <Input
+                  value={form.watch("lastName")}
+                  onChange={(event) => form.setValue("lastName", event.target.value)}
+                  className={isRTL ? 'pr-10' : 'pl-10'}
+                  placeholder={isRTL ? 'أدخل اسم العائلة' : 'Enter your last name'}
+                  data-testid="input-otp-lastname"
+                />
+              </div>
+            </div>
+            <Button
+              className="w-full text-white font-semibold h-12"
+              style={{ backgroundColor: '#f97316' }}
+              disabled={isOtpLoggingIn}
+              onClick={handleCompleteOtpProfile}
+              data-testid="button-complete-otp-profile"
+            >
+              {isOtpLoggingIn ? (
+                <>
+                  <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {isRTL ? 'جارٍ إنشاء الحساب...' : 'Creating account...'}
+                </>
+              ) : (
+                isRTL ? 'متابعة' : 'Continue'
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setProfileStep(false);
+                setVerifiedOtpToken(null);
+                setPendingFormData(null);
+                setOtpDigits(["", "", "", "", "", ""]);
+              }}
+            >
+              {isRTL ? 'البدء من جديد' : 'Start over'}
+            </Button>
+          </CardContent>
+        </Card>
+        <div id="recaptcha-container"></div>
+      </div>
+    );
+  }
 
   if (otpStep && pendingFormData) {
     const otpCode = otpDigits.join("");
@@ -476,7 +591,9 @@ export default function Auth() {
                   {isRTL ? 'جاري التحقق...' : 'Verifying...'}
                 </>
               ) : (
-                isRTL ? 'تحقق وإنشاء الحساب' : 'Verify & Create Account'
+                authMethod === "otp"
+                  ? (isRTL ? 'تحقق ومتابعة' : 'Verify & Continue')
+                  : (isRTL ? 'تحقق وإنشاء الحساب' : 'Verify & Create Account')
               )}
             </Button>
 
@@ -743,6 +860,41 @@ export default function Auth() {
           <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>{t('appSubtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-5 space-y-3">
+            <div className="text-center">
+              <p className="font-semibold text-foreground">
+                {isRTL ? 'كيف ترغب في تسجيل الدخول؟' : 'How would you like to sign in?'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {isRTL ? 'استخدم رمزاً لمرة واحدة عبر الرسائل النصية أو كلمة المرور.' : 'Use a one-time SMS code or your password.'}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant={authMethod === "otp" ? "default" : "outline"}
+                className={authMethod === "otp" ? "text-white" : ""}
+                style={authMethod === "otp" ? { backgroundColor: '#f97316' } : { borderColor: '#f97316', color: '#f97316' }}
+                onClick={() => handleAuthMethodChange("otp")}
+                data-testid="button-auth-method-otp"
+              >
+                <ShieldCheck className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {isRTL ? 'المتابعة باستخدام رمز SMS' : 'Continue with SMS code'}
+              </Button>
+              <Button
+                type="button"
+                variant={authMethod === "password" ? "default" : "outline"}
+                className={authMethod === "password" ? "text-white" : ""}
+                style={authMethod === "password" ? { backgroundColor: '#f97316' } : { borderColor: '#f97316', color: '#f97316' }}
+                onClick={() => handleAuthMethodChange("password")}
+                data-testid="button-auth-method-password"
+              >
+                <Lock className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {isRTL ? 'استخدام رقم الهاتف وكلمة المرور' : 'Use phone and password'}
+              </Button>
+            </div>
+          </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -772,6 +924,7 @@ export default function Auth() {
                 )}
               />
 
+              {authMethod === "password" && (
               <FormField
                 control={form.control}
                 name="password"
@@ -811,8 +964,9 @@ export default function Auth() {
                   </FormItem>
                 )}
               />
+              )}
 
-              {isNewUser && (
+              {authMethod === "password" && isNewUser && (
                 <>
                   <FormField
                     control={form.control}
@@ -866,39 +1020,6 @@ export default function Auth() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    rules={{
-                      pattern: {
-                        value: /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: "Please enter a valid email address",
-                      }
-                    }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {isRTL ? 'البريد الإلكتروني' : 'Email'}
-                          <span className="text-muted-foreground text-xs font-normal ml-1">
-                            ({isRTL ? 'اختياري - لاستعادة كلمة المرور' : 'Optional - for password recovery'})
-                          </span>
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Mail className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
-                            <Input
-                              type="email"
-                              placeholder={isRTL ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
-                              className={isRTL ? 'pr-10' : 'pl-10'}
-                              data-testid="input-email"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </>
               )}
 
@@ -918,10 +1039,13 @@ export default function Auth() {
                     }
                   </>
                 ) : (
-                  isNewUser ? t('register') : t('login')
+                    authMethod === "otp"
+                      ? (isRTL ? 'إرسال رمز SMS' : 'Send SMS code')
+                      : (isNewUser ? t('register') : t('login'))
                 )}
               </Button>
 
+              {authMethod === "password" && (
               <Button
                 type="button"
                 variant="outline"
@@ -932,6 +1056,7 @@ export default function Auth() {
               >
                 {isNewUser ? t('alreadyHaveAccount') : t('dontHaveAccount')}
               </Button>
+              )}
             </form>
           </Form>
 
