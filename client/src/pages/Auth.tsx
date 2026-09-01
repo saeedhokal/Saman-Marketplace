@@ -860,41 +860,6 @@ export default function Auth() {
           <CardDescription className="text-base" style={{ color: '#8a8a8a' }}>{t('appSubtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-5 space-y-3">
-            <div className="text-center">
-              <p className="font-semibold text-foreground">
-                {isRTL ? 'كيف ترغب في تسجيل الدخول؟' : 'How would you like to sign in?'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {isRTL ? 'استخدم رمزاً لمرة واحدة عبر الرسائل النصية أو كلمة المرور.' : 'Use a one-time SMS code or your password.'}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Button
-                type="button"
-                variant={authMethod === "otp" ? "default" : "outline"}
-                className={authMethod === "otp" ? "text-white" : ""}
-                style={authMethod === "otp" ? { backgroundColor: '#f97316' } : { borderColor: '#f97316', color: '#f97316' }}
-                onClick={() => handleAuthMethodChange("otp")}
-                data-testid="button-auth-method-otp"
-              >
-                <ShieldCheck className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {isRTL ? 'المتابعة باستخدام رمز SMS' : 'Continue with SMS code'}
-              </Button>
-              <Button
-                type="button"
-                variant={authMethod === "password" ? "default" : "outline"}
-                className={authMethod === "password" ? "text-white" : ""}
-                style={authMethod === "password" ? { backgroundColor: '#f97316' } : { borderColor: '#f97316', color: '#f97316' }}
-                onClick={() => handleAuthMethodChange("password")}
-                data-testid="button-auth-method-password"
-              >
-                <Lock className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {isRTL ? 'استخدام رقم الهاتف وكلمة المرور' : 'Use phone and password'}
-              </Button>
-            </div>
-          </div>
-
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -1044,6 +1009,30 @@ export default function Auth() {
                       : (isNewUser ? t('register') : t('login'))
                 )}
               </Button>
+
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-1">
+                <button
+                  type="button"
+                  className={`text-sm font-semibold underline underline-offset-4 transition-colors ${authMethod === "otp" ? "text-foreground" : "hover:opacity-80"}`}
+                  style={authMethod === "otp" ? undefined : { color: '#f97316' }}
+                  onClick={() => handleAuthMethodChange("otp")}
+                  disabled={isLoading || isSendingOTP}
+                  data-testid="button-auth-method-otp"
+                >
+                  {isRTL ? 'المتابعة باستخدام رمز SMS' : 'Continue with SMS code'}
+                </button>
+                <span className="text-muted-foreground text-sm" aria-hidden="true">•</span>
+                <button
+                  type="button"
+                  className={`text-sm font-semibold underline underline-offset-4 transition-colors ${authMethod === "password" ? "text-foreground" : "hover:opacity-80"}`}
+                  style={authMethod === "password" ? undefined : { color: '#f97316' }}
+                  onClick={() => handleAuthMethodChange("password")}
+                  disabled={isLoading || isSendingOTP}
+                  data-testid="button-auth-method-password"
+                >
+                  {isRTL ? 'استخدام رقم الهاتف وكلمة المرور' : 'Use phone and password'}
+                </button>
+              </div>
 
               {authMethod === "password" && (
               <Button
