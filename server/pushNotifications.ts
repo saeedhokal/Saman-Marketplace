@@ -390,6 +390,7 @@ export async function notifyNewListing(
     body: `${sellerName} submitted "${productTitle}" for review`,
     data: {
       type: 'new_listing',
+      path: '/admin',
     },
   });
 }
@@ -403,6 +404,7 @@ export async function notifyListingApproved(
     body: `Your listing "${productTitle}" has been approved and is now live!`,
     data: {
       type: 'listing_approved',
+      path: '/my-listings',
     },
   });
 }
@@ -419,6 +421,7 @@ export async function notifyListingRejected(
       : `Your listing "${productTitle}" was rejected. Credit refunded.`,
     data: {
       type: 'listing_rejected',
+      path: '/my-listings',
     },
   });
 }
@@ -433,6 +436,7 @@ export async function notifyCreditsAdded(
     body: `${credits} ${category} credits have been added to your account!`,
     data: {
       type: 'credits_added',
+      path: '/profile',
     },
   });
 }

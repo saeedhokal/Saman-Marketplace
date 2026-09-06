@@ -3,16 +3,15 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'wouter';
+import { getPushNotificationPath } from '@/lib/pushNavigation';
 
 const TOKEN_KEY = 'saman_push_token';
 const PENDING_TOKEN_KEY = 'saman_pending_push_token';
 
-function navigateTo(path: string) {
-  window.location.href = path;
-}
-
 export function usePushNotifications() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const userRef = useRef(user);
   const hasRegisteredRef = useRef(false);
 
@@ -143,13 +142,12 @@ export function usePushNotifications() {
 
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
         console.log('[Push] Notification action performed');
-        const data = notification.notification.data;
-        if (data?.type === 'listing_approved' || data?.type === 'listing_rejected') {
-          navigateTo('/my-listings');
-        } else if (data?.type === 'new_listing') {
-          navigateTo('/admin');
-        } else if (data?.type === 'credits_added') {
-          navigateTo('/profile');
+        const target = getPushNotificationPath(notification.notification.data);
+        if (target) {
+          console.log('[Push] Navigating in app to:', target);
+          setLocation(target);
+        } else {
+          console.warn('[Push] Notification has no recognized destination');
         }
       });
 
@@ -182,7 +180,7 @@ export function usePushNotifications() {
     return () => {
       PushNotifications.removeAllListeners();
     };
-  }, [handleToken]);
+  }, [handleToken, setLocation]);
 
   return {
     unregisterToken,
