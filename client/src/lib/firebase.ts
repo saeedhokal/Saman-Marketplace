@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import type { ConfirmationResult } from 'firebase/auth';
+import { formatUaePhoneForFirebase } from './phone';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDZ3yxWoX8AgxDtjZIbJtM3Zjt1gSAcN90",
@@ -43,7 +44,7 @@ function cleanupRecaptcha() {
 
 export async function sendOTP(phoneNumber: string): Promise<boolean> {
   try {
-    const formattedPhone = formatPhoneForFirebase(phoneNumber);
+    const formattedPhone = formatUaePhoneForFirebase(phoneNumber);
     console.log('[Firebase] Sending OTP to:', formattedPhone);
 
     cleanupRecaptcha();
@@ -112,13 +113,6 @@ export async function verifyOTP(code: string): Promise<string> {
     console.error('[Firebase] Verify OTP error:', error);
     throw error;
   }
-}
-
-function formatPhoneForFirebase(phone: string): string {
-  const digits = phone.replace(/[^0-9]/g, '');
-  if (digits.startsWith('971')) return `+${digits}`;
-  if (digits.startsWith('0')) return `+971${digits.slice(1)}`;
-  return `+971${digits}`;
 }
 
 export { auth };

@@ -104,18 +104,18 @@ export default function Sell() {
     }
 
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
+    let successfulUploads = 0;
 
     for (const file of filesToUpload) {
       try {
         const result = await uploadFile(file);
-        if (result) {
-          setUploadedImages((prev) => {
-            const newImages = [...prev, result.objectPath];
-            form.setValue("imageUrl", newImages[0], { shouldValidate: true });
-            form.setValue("imageUrls", newImages);
-            return newImages;
-          });
-        }
+        successfulUploads++;
+        setUploadedImages((prev) => {
+          const newImages = [...prev, result.objectPath];
+          form.setValue("imageUrl", newImages[0], { shouldValidate: true });
+          form.setValue("imageUrls", newImages);
+          return newImages;
+        });
       } catch (error) {
         toast({
           variant: "destructive",
@@ -125,10 +125,12 @@ export default function Sell() {
       }
     }
 
-    toast({
-      title: t("photosUploaded"),
-      description: `${filesToUpload.length} ${t("photosUploadedDesc")}`,
-    });
+    if (successfulUploads > 0) {
+      toast({
+        title: t("photosUploaded"),
+        description: `${successfulUploads} ${t("photosUploadedDesc")}`,
+      });
+    }
   };
 
   const removeImage = (index: number) => {

@@ -112,7 +112,7 @@ export function useUpload(options: UseUploadOptions = {}) {
    * @returns The upload response containing the object path
    */
   const uploadFile = useCallback(
-    async (inputFile: File): Promise<UploadResponse | null> => {
+    async (inputFile: File): Promise<UploadResponse> => {
       setIsUploading(true);
       setError(null);
       setProgress(0);
@@ -137,7 +137,7 @@ export function useUpload(options: UseUploadOptions = {}) {
         const error = err instanceof Error ? err : new Error("Upload failed");
         setError(error);
         options.onError?.(error);
-        return null;
+        throw error;
       } finally {
         setIsUploading(false);
       }
