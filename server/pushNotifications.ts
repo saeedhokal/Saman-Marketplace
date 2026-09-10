@@ -4,7 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import { db } from './db';
 import { deviceTokens, users, notifications } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
+import { deduplicateDeviceTokens } from './pushNotificationPolicy';
 
 let apnProvider: apn.Provider | null = null;
 let firebaseInitialized = false;
@@ -137,36 +138,21 @@ export async function registerDeviceToken(
   deviceName?: string
 ): Promise<boolean> {
   try {
-    const existingToken = await db.select()
-      .from(deviceTokens)
-      .where(and(
-        eq(deviceTokens.userId, userId),
-        eq(deviceTokens.fcmToken, fcmToken)
-      ))
-      .limit(1);
+    await db.transaction(async (tx) => {
+      // Capacitor can submit the same token twice at nearly the same time.
+      // Serialize registrations for this token so both requests cannot insert it.
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${fcmToken}))`);
 
-    if (existingToken.length > 0) {
-      await db.update(deviceTokens)
-        .set({ 
-          updatedAt: new Date(),
-          deviceOs: deviceOs || existingToken[0].deviceOs,
-          deviceName: deviceName || existingToken[0].deviceName,
-        })
-        .where(eq(deviceTokens.id, existingToken[0].id));
-    } else {
-      await db.delete(deviceTokens)
-        .where(and(
-          eq(deviceTokens.userId, userId),
-          eq(deviceTokens.fcmToken, fcmToken)
-        ));
-
-      await db.insert(deviceTokens).values({
+      // A physical device token belongs to one current account. Replacing every
+      // matching row also cleans up duplicates created before this guard existed.
+      await tx.delete(deviceTokens).where(eq(deviceTokens.fcmToken, fcmToken));
+      await tx.insert(deviceTokens).values({
         userId,
         fcmToken,
         deviceOs,
         deviceName,
       });
-    }
+    });
     
     console.log(`Device token registered for user ${userId} (${deviceOs})`);
     return true;
@@ -337,8 +323,15 @@ export async function sendPushNotification(
       ));
     const badgeCount = unreadCount.length;
 
+    const uniqueTokens = deduplicateDeviceTokens(userTokens);
+    if (uniqueTokens.length !== userTokens.length) {
+      console.warn(
+        `Deduplicated ${userTokens.length - uniqueTokens.length} repeated device token(s) for user ${userId}`
+      );
+    }
+
     const results = await Promise.all(
-      userTokens.map(async (token) => {
+      uniqueTokens.map(async (token) => {
         if (!token.fcmToken || token.fcmToken.length < 20) {
           console.log(`Invalid token for device ${token.id}`);
           return false;

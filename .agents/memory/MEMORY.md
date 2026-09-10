@@ -5,3 +5,4 @@
 - [Stuck autoscale deployment](stuck-autoscale-deployment.md) — prod timeouts (curl 000) + silent logs after normal scale-down = stuck deployment; republish fixes, not a code bug.
 - [Uptime monitoring](uptime-monitoring.md) — dev-workspace monitor pushes DOWN alerts; APNs key must come from the .p8 file (env var copy is broken); admin tokens cached from prod DB.
 - [iOS WebView resume height](ios-webview-resume-height.md) — Capacitor may briefly report a zero viewport on resume; never persist tiny heights or the UI collapses to a blank background.
+- [Push notification deduplication](push-notification-deduplication.md) — dedupe physical tokens at send time and alert admins only when a listing first enters or re-enters review.

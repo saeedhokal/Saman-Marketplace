@@ -99,6 +99,7 @@ import {
   sendPushNotification,
   broadcastPushNotification,
 } from "./pushNotifications";
+import { shouldNotifyAdminsForListingEdit } from "./pushNotificationPolicy";
 
 // Valid subcategories by main category
 const validSubcategories: Record<string, readonly string[]> = {
@@ -508,7 +509,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           await db.execute(sql`DELETE FROM favorites WHERE user_id = ${userId}`);
           await db.execute(sql`UPDATE products SET seller_id = 'demo_seller_1' WHERE seller_id = ${userId}`);
         }
-        
+
         // Now delete users
         for (const p of phonesToDelete) {
           await db.delete(users).where(eq(users.phone, p));
@@ -1235,23 +1236,27 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const [seller] = await db.select({ profileImageUrl: users.profileImageUrl, firstName: users.firstName, lastName: users.lastName })
       .from(users).where(eq(users.id, userId));
     
-    // Notify admins about the resubmitted listing
-    try {
-      const adminUsers = await storage.getAdminUsers();
-      for (const admin of adminUsers) {
-        await storage.createNotification({
-          userId: admin.id,
-          type: "new_listing_request",
-          title: "Listing Resubmitted",
-          message: `An edited listing "${updates.title}" needs your re-approval.`,
-          relatedId: id,
-        });
+    // Editing an already-pending listing does not create another admin alert.
+    // Only a previously approved/rejected listing becoming pending again is a
+    // genuine resubmission that needs a new notification.
+    if (shouldNotifyAdminsForListingEdit(product.status)) {
+      try {
+        const adminUsers = await storage.getAdminUsers();
+        for (const admin of adminUsers) {
+          await storage.createNotification({
+            userId: admin.id,
+            type: "new_listing_request",
+            title: "Listing Resubmitted",
+            message: `An edited listing "${updates.title}" needs your re-approval.`,
+            relatedId: id,
+          });
+        }
+
+        const sellerName = seller ? `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'A user' : 'A user';
+        await notifyNewListing(updates.title, sellerName);
+      } catch (notifyErr) {
+        console.error("Failed to notify admins about resubmitted listing:", notifyErr);
       }
-      
-      const sellerName = seller ? `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'A user' : 'A user';
-      await notifyNewListing(updates.title, sellerName);
-    } catch (notifyErr) {
-      console.error("Failed to notify admins about resubmitted listing:", notifyErr);
     }
     
     res.json({
