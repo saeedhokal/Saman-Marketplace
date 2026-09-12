@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Phone, Lock, User, ArrowLeft, ShieldCheck } from "lucide-react";
 import { sendOTP, verifyOTP, isServiceLevelOTPError } from "@/lib/firebase";
+import { trackGoogleAdsConversion } from "@/lib/googleAds";
 import samanLogo from "@/assets/saman-logo.jpg";
 
 interface LoginFormValues {
@@ -196,6 +197,7 @@ export default function Auth() {
           firstName: pendingFormData.firstName,
           lastName: pendingFormData.lastName,
         });
+        trackGoogleAdsConversion("sign_up");
         toast({
           title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
           description: isRTL ? "تم إنشاء حسابك بنجاح" : "Your account has been created.",
@@ -241,6 +243,9 @@ export default function Auth() {
       const result = await otpLogin({ firebaseIdToken: verifiedOtpToken, firstName, lastName });
       if (result.needsProfile) {
         throw new Error("Profile details are required");
+      }
+      if (result.isNewUser) {
+        trackGoogleAdsConversion("sign_up");
       }
       toast({
         title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",

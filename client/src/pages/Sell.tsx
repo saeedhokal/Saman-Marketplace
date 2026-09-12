@@ -26,6 +26,7 @@ import { Link } from "wouter";
 import { useEffect, useState } from "react";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
 import { useLanguage } from "@/hooks/use-language";
+import { trackGoogleAdsConversion } from "@/lib/googleAds";
 
 const formSchema = insertProductSchema.extend({
   title: z.string().min(3, "Title must be at least 3 characters").max(60, "Title must be 60 characters or less"),
@@ -155,6 +156,7 @@ export default function Sell() {
 
     createProduct.mutate(payload, {
       onSuccess: () => {
+        trackGoogleAdsConversion("listing_submission");
         toast({
           title: t("listingSubmitted"),
           description: t("listingUnderReview"),
