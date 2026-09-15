@@ -250,8 +250,10 @@ export default function Categories() {
     let filtered = [...products];
     
     if (activeCategory === "automotive" && activeModel !== "All" && activeSubCategory !== "All") {
-      filtered = filtered.filter(p => 
-        p.title.toLowerCase().includes(activeModel.toLowerCase())
+      const normalizedModel = activeModel.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.model?.toLowerCase() === normalizedModel ||
+        p.title.toLowerCase().includes(normalizedModel)
       );
     }
 
