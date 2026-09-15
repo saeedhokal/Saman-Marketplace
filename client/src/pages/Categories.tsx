@@ -12,6 +12,7 @@ import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
+import { ModelCombobox } from "@/components/ModelCombobox";
 import dubaiNightSkyline from "@/assets/images/dubai-night-skyline.png";
 import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
 import { useListingView } from "@/hooks/use-listing-view";
@@ -113,7 +114,6 @@ export default function Categories() {
 
   const [search, setSearch] = useState(initState.search || "");
   const [subCatOpen, setSubCatOpen] = useState(false);
-  const [modelOpen, setModelOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<MainCategory>(initState.activeCategory || "automotive");
   const [activeSubCategory, setActiveSubCategory] = useState(initState.activeSubCategory || "All");
   const [activeModel, setActiveModel] = useState(initState.activeModel || "All");
@@ -447,68 +447,16 @@ export default function Categories() {
           </Popover>
 
           {activeCategory === "automotive" && activeSubCategory !== "All" && getModelsForBrand().length > 0 && (
-            <Popover open={modelOpen} onOpenChange={setModelOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={modelOpen}
-                  className="flex-1 justify-between font-semibold text-foreground h-9"
-                  data-testid="select-model"
-                >
-                  <span className="truncate">
-                    {activeModel === "All" ? t('allModels') : activeModel}
-                  </span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl" align="start" side="bottom" sideOffset={6} avoidCollisions={false}>
-                <Command>
-                  <CommandInput placeholder={t('searchCategoryPlaceholder')} />
-                  <CommandList className="max-h-[50vh]">
-                    <CommandEmpty>{t('noCategoryFound')}</CommandEmpty>
-                    <CommandGroup>
-                      <CommandItem
-                        value={t('allModels')}
-                        onSelect={() => {
-                          setActiveModel("All");
-                          setModelOpen(false);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        {t('allModels')}
-                        <Check
-                          className={cn(
-                            "ml-auto h-4 w-4",
-                            activeModel === "All" ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                      </CommandItem>
-                      {getModelsForBrand().map((model) => (
-                        <CommandItem
-                          key={model}
-                          value={model}
-                          onSelect={() => {
-                            setActiveModel(model);
-                            setModelOpen(false);
-                          }}
-                          className="cursor-pointer"
-                          data-testid={`option-model-${model.toLowerCase().replace(/\s+/g, '-')}`}
-                        >
-                          {model}
-                          <Check
-                            className={cn(
-                              "ml-auto h-4 w-4",
-                              activeModel === model ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <ModelCombobox
+              models={getModelsForBrand()}
+              value={activeModel}
+              onValueChange={setActiveModel}
+              emptyValue="All"
+              emptyLabel={t("allModels")}
+              searchPlaceholder={t("searchModels")}
+              noResultsLabel={t("noModelFound")}
+              className="flex-1 h-9 font-semibold"
+            />
           )}
 
           <DropdownMenu>
@@ -565,19 +513,16 @@ export default function Categories() {
                   {activeCategory === "automotive" && (
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Model</label>
-                      <Select value={activeModel} onValueChange={setActiveModel} disabled={activeSubCategory === "All"}>
-                        <SelectTrigger className="h-9 text-sm" data-testid="filter-select-model">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="All">All</SelectItem>
-                          {getModelsForBrand().map((model) => (
-                            <SelectItem key={model} value={model}>
-                              {model}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <ModelCombobox
+                        models={getModelsForBrand()}
+                        value={activeModel}
+                        onValueChange={setActiveModel}
+                        emptyValue="All"
+                        emptyLabel="All"
+                        disabled={activeSubCategory === "All"}
+                        className="h-9 text-sm"
+                        testId="filter-select-model"
+                      />
                     </div>
                   )}
                 </div>

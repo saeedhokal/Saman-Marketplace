@@ -25,6 +25,7 @@ import { Loader2, UploadCloud, AlertCircle, Coins, Clock, Car, Wrench, ArrowLeft
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
+import { ModelCombobox } from "@/components/ModelCombobox";
 import { useLanguage } from "@/hooks/use-language";
 import { trackGoogleAdsConversion } from "@/lib/googleAds";
 
@@ -286,17 +287,15 @@ export default function Sell() {
                       <FormItem>
                         <FormLabel>{t("modelOptional")}</FormLabel>
                         <FormControl>
-                          <select
-                            className="w-full h-12 px-3 rounded-lg border border-border bg-background text-foreground"
-                            data-testid="select-model"
+                          <ModelCombobox
+                            models={CAR_MODELS[subCategory]}
                             value={field.value || ""}
-                            onChange={(e) => field.onChange(e.target.value)}
-                          >
-                            <option value="">{t("selectModel")}</option>
-                            {CAR_MODELS[subCategory].map((model) => (
-                              <option key={model} value={model}>{model}</option>
-                            ))}
-                          </select>
+                            onValueChange={field.onChange}
+                            emptyLabel={t("selectModel")}
+                            searchPlaceholder={t("searchModels")}
+                            noResultsLabel={t("noModelFound")}
+                            className="h-12"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

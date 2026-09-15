@@ -22,6 +22,7 @@ import { Loader2, UploadCloud, Car, Wrench, ArrowLeft, X, Plus, ChevronLeft, Che
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
+import { ModelCombobox } from "@/components/ModelCombobox";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 
@@ -279,17 +280,15 @@ export default function EditListing() {
                       <FormItem>
                         <FormLabel>Model (Optional)</FormLabel>
                         <FormControl>
-                          <select
-                            className="w-full h-12 px-3 rounded-lg border border-border bg-background text-foreground"
-                            data-testid="select-model"
+                          <ModelCombobox
+                            models={CAR_MODELS[subCategory]}
                             value={field.value || ""}
-                            onChange={(e) => field.onChange(e.target.value)}
-                          >
-                            <option value="">Select Model</option>
-                            {CAR_MODELS[subCategory].map((model) => (
-                              <option key={model} value={model}>{model}</option>
-                            ))}
-                          </select>
+                            onValueChange={field.onChange}
+                            emptyLabel="Select Model"
+                            searchPlaceholder="Search models..."
+                            noResultsLabel="No model found"
+                            className="h-12"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

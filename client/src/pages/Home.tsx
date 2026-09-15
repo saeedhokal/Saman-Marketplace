@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
+import { ModelCombobox } from "@/components/ModelCombobox";
 import { DownloadAppButton, ActionsDropdown } from "@/components/WebChromeActions";
 import { useListingView } from "@/hooks/use-listing-view";
 import {
@@ -224,19 +225,14 @@ export default function Home() {
           </Select>
           
           {activeCategory === "automotive" && activeSubCategory !== "All" && getModelsForBrand().length > 0 && (
-            <Select value={activeModel} onValueChange={setActiveModel}>
-              <SelectTrigger className="flex-1 font-semibold text-foreground" data-testid="select-model">
-                <SelectValue placeholder="All Models" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Models</SelectItem>
-                {getModelsForBrand().map((model) => (
-                  <SelectItem key={model} value={model} data-testid={`option-model-${model.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ModelCombobox
+              models={getModelsForBrand()}
+              value={activeModel}
+              onValueChange={setActiveModel}
+              emptyValue="All"
+              emptyLabel="All Models"
+              className="flex-1"
+            />
           )}
         </div>
 
@@ -292,19 +288,16 @@ export default function Home() {
                   {activeCategory === "automotive" && (
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Model</label>
-                      <Select value={activeModel} onValueChange={setActiveModel} disabled={activeSubCategory === "All"}>
-                        <SelectTrigger className="h-9 text-sm" data-testid="filter-select-model">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="All">All</SelectItem>
-                          {getModelsForBrand().map((model) => (
-                            <SelectItem key={model} value={model}>
-                              {model}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <ModelCombobox
+                        models={getModelsForBrand()}
+                        value={activeModel}
+                        onValueChange={setActiveModel}
+                        emptyValue="All"
+                        emptyLabel="All"
+                        disabled={activeSubCategory === "All"}
+                        className="h-9 text-sm"
+                        testId="filter-select-model"
+                      />
                     </div>
                   )}
                 </div>
