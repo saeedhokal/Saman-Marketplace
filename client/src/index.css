@@ -204,6 +204,33 @@
    application theme without changing the native or mobile product surface. */
 .saman-desktop-header, .saman-app-rail, .saman-app-rail__reopen, .desktop-filter-sidebar, .desktop-listing-detail { display: none; }
 @media (min-width: 1024px) {
+  body:has(.desktop-web-active, [data-testid="desktop-landing"]) [data-marketplace-menu] {
+    --background: 0 0% 100%;
+    --foreground: 210 28% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 28% 10%;
+    --muted: 210 16% 96%;
+    --muted-foreground: 210 9% 42%;
+    --border: 210 14% 88%;
+    --input: 210 14% 88%;
+    --accent: 20 100% 96%;
+    --accent-foreground: 16 79% 42%;
+    color-scheme: light;
+    color: #101820;
+    background: #fff;
+    border: 1px solid #dfe3e5;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgb(32 48 58 / .14);
+  }
+  body:has(.desktop-web-active, [data-testid="desktop-landing"]) [data-marketplace-menu] :is([role="option"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]) {
+    font-size: 12px;
+    border-radius: 5px;
+    padding-block: 9px;
+  }
+  body:has(.desktop-web-active, [data-testid="desktop-landing"]) [data-marketplace-menu] :is([data-highlighted], [data-state="checked"], [cmdk-item][data-selected="true"]) {
+    background: #fff1e9;
+    color: #d94b1b;
+  }
   .desktop-web-active { --background: 210 20% 97%; --foreground: 210 28% 10%; --card: 0 0% 100%; --card-foreground: 210 28% 10%; --popover: 0 0% 100%; --popover-foreground: 210 28% 10%; --muted: 210 16% 94%; --muted-foreground: 210 9% 42%; --border: 210 14% 88%; --input: 210 14% 88%; color-scheme: light; }
   .desktop-web-active .desktop-redesigned-mobile-nav { display: none; }
    .desktop-web-active .desktop-shell-legacy-nav { display: none; }
