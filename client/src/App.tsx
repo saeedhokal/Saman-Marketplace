@@ -190,7 +190,7 @@ function BottomNavWrapper() {
   
   if (hideBottomNav) return null;
   if (location === '/' && !Capacitor.isNativePlatform()) {
-    return <div className="md:hidden"><BottomNav /></div>;
+    return <div className="lg:hidden"><BottomNav /></div>;
   }
   return <div className={desktopMarketplaceRoute ? "desktop-redesigned-mobile-nav" : ""}><BottomNav /></div>;
 }
