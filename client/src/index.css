@@ -374,3 +374,197 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
 }
+
+/* Nighttime is a desktop-web experience only. It is intentionally keyed off
+   the persisted document attribute plus the desktop route/landing roots, so
+   native tablets and sub-1024 layouts never inherit these treatments. */
+@media (min-width: 1024px) {
+  .desktop-theme-toggle { display:flex; align-items:center; padding:2px; gap:2px; border:1px solid #d9dddf; border-radius:7px; background:#f3f5f5; }
+  .desktop-theme-toggle button { display:flex !important; align-items:center; gap:4px; padding:5px 7px; border-radius:5px; font-size:10px; font-weight:800; line-height:1; color:#667279; }
+  .desktop-theme-toggle button.is-active { background:#fff; color:#dc4b1c; box-shadow:0 1px 3px rgb(16 24 32 / .12); }
+
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active, [data-testid="desktop-landing"]) {
+    background:#080d12;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-web-active,
+  html[data-desktop-theme="nighttime"] .desktop-saman {
+    --background: 216 31% 6%;
+    --foreground: 30 18% 91%;
+    --card: 216 24% 10%;
+    --card-foreground: 30 18% 91%;
+    --popover: 216 24% 10%;
+    --popover-foreground: 30 18% 91%;
+    --muted: 215 18% 15%;
+    --muted-foreground: 215 10% 63%;
+    --border: 215 18% 21%;
+    --input: 215 18% 21%;
+    color-scheme:dark;
+    color:#eee9e2;
+    background:
+      radial-gradient(circle at 86% 4%, rgb(242 79 27 / .13), transparent 24rem),
+      linear-gradient(135deg,#070b0f,#0d141a 52%,#080c11);
+  }
+  html[data-desktop-theme="nighttime"] .saman-desktop-header {
+    background:rgb(8 13 18 / .88); border-color:rgb(244 106 48 / .2);
+    box-shadow:0 8px 30px rgb(0 0 0 / .24);
+  }
+  html[data-desktop-theme="nighttime"] .desktop-saman > header {
+    background:rgb(8 13 18 / .90) !important;
+    border-color:rgb(244 106 48 / .23) !important;
+    box-shadow:0 8px 30px rgb(0 0 0 / .25);
+  }
+  html[data-desktop-theme="nighttime"] .desktop-saman > header a,
+  html[data-desktop-theme="nighttime"] .desktop-saman > header button,
+  html[data-desktop-theme="nighttime"] .desktop-saman > header span { color:#f3eee7 !important; }
+  html[data-desktop-theme="nighttime"] .desktop-saman > header a:hover,
+  html[data-desktop-theme="nighttime"] .desktop-saman > header button:hover { color:#ff7540 !important; }
+  html[data-desktop-theme="nighttime"] .saman-desktop-header a,
+  html[data-desktop-theme="nighttime"] .saman-desktop-header button { color:#eeeae3; }
+  html[data-desktop-theme="nighttime"] .saman-desktop-header a:hover,
+  html[data-desktop-theme="nighttime"] .saman-desktop-header button:hover { color:#ff6a31; }
+  html[data-desktop-theme="nighttime"] .saman-post-listing { background:linear-gradient(135deg,#ff7a33,#ea3e12); border:1px solid rgb(255 174 113 / .45); box-shadow:0 7px 20px rgb(207 55 10 / .25); }
+  html[data-desktop-theme="nighttime"] .desktop-theme-toggle { background:#111a21; border-color:#2a3740; }
+  html[data-desktop-theme="nighttime"] .desktop-theme-toggle button { color:#95a3aa; }
+  html[data-desktop-theme="nighttime"] .desktop-theme-toggle button.is-active { background:#263039; color:#ff7840; box-shadow:inset 0 0 0 1px rgb(255 126 64 / .18); }
+  html[data-desktop-theme="nighttime"] .saman-app-rail {
+    color:#acb4b7; background:linear-gradient(160deg,rgb(20 29 36 / .94),rgb(8 13 18 / .97));
+    border-color:rgb(244 106 48 / .38); box-shadow:0 14px 32px rgb(0 0 0 / .4), inset 0 1px 0 rgb(255 255 255 / .06);
+  }
+  html[data-desktop-theme="nighttime"] .saman-app-rail__title,
+  html[data-desktop-theme="nighttime"] .saman-app-rail strong { color:#f5f0e9; }
+  html[data-desktop-theme="nighttime"] .saman-app-rail p:not(.saman-app-rail__title) { color:#c2cbcc; }
+  html[data-desktop-theme="nighttime"] .saman-app-rail a { background:#05090c; border:1px solid #2d3940; }
+  html[data-desktop-theme="nighttime"] .desktop-browse-hero,
+  html[data-desktop-theme="nighttime"] .desktop-home-hero {
+    background-color:#15212a !important; background-blend-mode:multiply; border:1px solid rgb(244 106 48 / .25);
+    box-shadow:inset 0 0 80px rgb(0 0 0 / .48), 0 12px 30px rgb(0 0 0 / .24);
+  }
+  html[data-desktop-theme="nighttime"] .desktop-home-hero { background-blend-mode:normal; }
+  html[data-desktop-theme="nighttime"] .desktop-browse-hero { background-blend-mode:normal; }
+  html[data-desktop-theme="nighttime"] .desktop-browse-hero h1,
+  html[data-desktop-theme="nighttime"] .desktop-saman h1 { color:#f6f0e9; }
+  html[data-desktop-theme="nighttime"] .desktop-browse-hero p,
+  html[data-desktop-theme="nighttime"] .desktop-saman > main > div > section:first-child p { color:#ff7540; }
+  html[data-desktop-theme="nighttime"] .desktop-browse-hero span { color:#cbd0d0; }
+  html[data-desktop-theme="nighttime"] .desktop-search-panel,
+  html[data-desktop-theme="nighttime"] .desktop-saman > main > div > section:first-child > div.absolute {
+    background:linear-gradient(145deg,rgb(20 29 36 / .97),rgb(10 16 21 / .98)); border-color:#344047;
+    box-shadow:0 15px 32px rgb(0 0 0 / .35), inset 0 1px 0 rgb(255 255 255 / .055);
+  }
+  html[data-desktop-theme="nighttime"] .desktop-market-tabs { border-color:#28353c; }
+  html[data-desktop-theme="nighttime"] .desktop-market-tabs button { color:#bbc3c5; }
+  html[data-desktop-theme="nighttime"] .desktop-market-tabs button.active,
+  html[data-desktop-theme="nighttime"] .desktop-saman [data-testid^="desktop-market-"][aria-pressed="true"] { background:linear-gradient(135deg,#ff742f,#e64817); color:#fff7f1; box-shadow:0 5px 15px rgb(230 72 23 / .23); }
+  html[data-desktop-theme="nighttime"] .desktop-query,
+  html[data-desktop-theme="nighttime"] .desktop-web-active input,
+  html[data-desktop-theme="nighttime"] .desktop-web-active textarea,
+  html[data-desktop-theme="nighttime"] .desktop-web-active button[role="combobox"],
+  html[data-desktop-theme="nighttime"] .desktop-saman input,
+  html[data-desktop-theme="nighttime"] .desktop-saman button[role="combobox"] { background:#10191f; border-color:#303d45; color:#f2eee8; }
+  html[data-desktop-theme="nighttime"] .desktop-web-active input::placeholder,
+  html[data-desktop-theme="nighttime"] .desktop-saman input::placeholder { color:#849197; }
+  html[data-desktop-theme="nighttime"] .desktop-filter-sidebar,
+  html[data-desktop-theme="nighttime"] .desktop-listing-gallery,
+  html[data-desktop-theme="nighttime"] .desktop-listing-info,
+  html[data-desktop-theme="nighttime"] .desktop-seller-card {
+    background:linear-gradient(150deg,#151f26,#0c1318); border-color:#2d3a42; color:#eee9e2; box-shadow:0 14px 30px rgb(0 0 0 / .2);
+  }
+  html[data-desktop-theme="nighttime"] .desktop-home-search {
+    bottom:-61px !important; padding:9px 10px !important;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-home-search__main {
+    display:grid; grid-template-columns:minmax(0,1fr) 170px 170px 94px; gap:7px; align-items:center;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-home-search__secondary { display:contents; }
+  html[data-desktop-theme="nighttime"] .desktop-home-search__secondary > div { min-width:0; }
+  html[data-desktop-theme="nighttime"] .desktop-home-search__secondary > a { grid-column:4; }
+  html[data-desktop-theme="nighttime"] .desktop-home-search__main .mt-1\.5 { margin-top:0; }
+  html[data-desktop-theme="nighttime"] .desktop-search-row {
+    grid-template-columns:minmax(0,1fr) 245px; align-items:center;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-search-row > .desktop-query { grid-column:auto; }
+  html[data-desktop-theme="nighttime"] .desktop-filter-sidebar__head,
+  html[data-desktop-theme="nighttime"] .desktop-filter-sidebar label,
+  html[data-desktop-theme="nighttime"] .desktop-results-head h2,
+  html[data-desktop-theme="nighttime"] .desktop-listing-info h1,
+  html[data-desktop-theme="nighttime"] .desktop-listing-description h2,
+  html[data-desktop-theme="nighttime"] .desktop-seller-listings h2 { color:#f3eee7; }
+  html[data-desktop-theme="nighttime"] .desktop-filter-sidebar label,
+  html[data-desktop-theme="nighttime"] .desktop-results-head p,
+  html[data-desktop-theme="nighttime"] .desktop-listing-description p { color:#9facb0; }
+  html[data-desktop-theme="nighttime"] .desktop-listing-specs > div { background:#111a20; color:#ff7140; border:1px solid #2a363e; }
+  html[data-desktop-theme="nighttime"] .desktop-listing-specs span,
+  html[data-desktop-theme="nighttime"] .desktop-seller-card b { color:#eee9e2; }
+  html[data-desktop-theme="nighttime"] .desktop-listing-description,
+  html[data-desktop-theme="nighttime"] .desktop-listing-seller { border-color:#29363e; }
+  html[data-desktop-theme="nighttime"] .desktop-listing-contact a { background:linear-gradient(135deg,#ff7130,#e94a16); border-color:#ff7c42; }
+  html[data-desktop-theme="nighttime"] .desktop-listing-contact a + a { background:#101c1e; border-color:#2c8d78; color:#6fe3bb; }
+  html[data-desktop-theme="nighttime"] .desktop-card-grid .shadcn-card,
+  html[data-desktop-theme="nighttime"] .desktop-saman .glass-card {
+    background:linear-gradient(160deg,#182229,#0c1318) !important; border-color:#2d3b43 !important;
+    box-shadow:0 12px 25px rgb(0 0 0 / .25) !important;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-card-grid .text-foreground,
+  html[data-desktop-theme="nighttime"] .desktop-saman .text-\[\#101820\] { color:#f1ece5 !important; }
+  html[data-desktop-theme="nighttime"] .desktop-card-grid .bg-gray-100,
+  html[data-desktop-theme="nighttime"] .desktop-saman .bg-white { background-color:#111a20 !important; }
+  html[data-desktop-theme="nighttime"] .desktop-saman footer,
+  html[data-desktop-theme="nighttime"] .desktop-saman section { border-color:rgb(129 146 151 / .2); }
+  html[data-desktop-theme="nighttime"] .desktop-saman .text-\[\#7b858b\],
+  html[data-desktop-theme="nighttime"] .desktop-saman .text-\[\#68737a\] { color:#9aa7aa !important; }
+  html[data-desktop-theme="nighttime"] .desktop-saman .bg-\[\#f1f3f3\] {
+    background:#202b32 !important; color:#ff7440 !important; border:1px solid #3b4950;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-saman .border-\[\#e0e4e6\] {
+    border-color:#38464e !important; background:linear-gradient(145deg,#162027,#0e151a) !important; color:#eee9e2 !important;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-saman .bg-\[\#fff8f2\] {
+    background:linear-gradient(110deg,#1a242a,#0d151a) !important; border-color:#3c464a !important;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-saman .bg-\[\#fff8f2\] p,
+  html[data-desktop-theme="nighttime"] .desktop-saman .bg-\[\#fff8f2\] div { color:#d8d9d4 !important; }
+  html[data-desktop-theme="nighttime"] .desktop-saman .bg-\[\#f45b27\],
+  html[data-desktop-theme="nighttime"] .desktop-saman .bg-\[\#f45b27\] * { color:#fff8f2 !important; }
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active, .desktop-saman) [data-marketplace-menu] {
+    --background: 216 24% 10%; --foreground: 30 18% 91%; --popover: 216 24% 10%;
+    --popover-foreground: 30 18% 91%; --muted: 215 18% 15%; --muted-foreground: 215 10% 63%;
+    --border: 215 18% 25%; --input: 215 18% 25%; --accent: 16 35% 17%; --accent-foreground: 20 90% 65%;
+    color:#eee9e2 !important; background:#10181e !important; border-color:#334149 !important;
+    box-shadow:0 16px 38px rgb(0 0 0 / .48) !important;
+  }
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active, .desktop-saman) [data-marketplace-menu] :is([role="option"],[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]) { color:#e8e5df !important; }
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active, .desktop-saman) [data-marketplace-menu] :is([data-highlighted],[data-state="checked"],[cmdk-item][data-selected="true"]) { background:#332018 !important; color:#ff8050 !important; }
+  html[data-desktop-theme="nighttime"] .desktop-home-hero .text-\[\#27323a\]\/75 { color:#d4d9d8 !important; text-shadow:0 2px 12px rgb(0 0 0 / .65); }
+
+  /* Account, seller and listing-form routes reuse their mobile components on
+     desktop and include utility-level light surfaces. Contain the conversion
+     inside the desktop route root, never the global application shell. */
+  html[data-desktop-theme="nighttime"] .desktop-web-active .bg-white,
+  html[data-desktop-theme="nighttime"] .desktop-web-active .bg-background,
+  html[data-desktop-theme="nighttime"] .desktop-web-active .bg-card {
+    background-color:#111a20 !important;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-web-active .text-gray-900,
+  html[data-desktop-theme="nighttime"] .desktop-web-active .text-gray-800,
+  html[data-desktop-theme="nighttime"] .desktop-web-active .text-\[\#101820\],
+  html[data-desktop-theme="nighttime"] .desktop-web-active .text-foreground {
+    color:#f0ece5 !important;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-web-active .text-gray-700,
+  html[data-desktop-theme="nighttime"] .desktop-web-active .text-gray-600,
+  html[data-desktop-theme="nighttime"] .desktop-web-active .text-muted-foreground,
+  html[data-desktop-theme="nighttime"] .desktop-web-active .text-\[\#68737a\],
+  html[data-desktop-theme="nighttime"] .desktop-web-active .text-\[\#7b858b\] {
+    color:#aab4b5 !important;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.border-gray-100,.border-gray-200,.border-gray-300,.border-\[\#dfe3e5\],.border-\[\#e0e4e6\]) {
+    border-color:#2d3b43 !important;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(input,textarea,select) {
+    background-color:#10181e !important; color:#f0ece5 !important; border-color:#34434b !important;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-web-active .bg-gray-50,
+  html[data-desktop-theme="nighttime"] .desktop-web-active .bg-gray-100 {
+    background-color:#172229 !important;
+  }
+}

@@ -51,6 +51,8 @@ import {
 import { useSearch } from "wouter";
 import { DesktopFilterSidebar } from "@/components/DesktopFilterSidebar";
 import { Capacitor } from "@capacitor/core";
+import { useDesktopTheme } from "@/hooks/use-desktop-theme";
+import dubaiNightSportsCar from "@/assets/images/dubai-night-sports-car-hero.png";
 
 type MainCategory = "automotive" | "spare-parts";
 type SortOption = "newest" | "oldest" | "price-low" | "price-high";
@@ -75,6 +77,7 @@ const SCROLL_KEY = "categories";
 
 export default function Categories() {
   const { t, isRTL } = useLanguage();
+  const { theme } = useDesktopTheme();
   // Wouter's pathname location does not change for query-only navigation.
   // useSearch subscribes to pushState/replaceState/popstate separately.
   const urlSearch = useSearch();
@@ -436,7 +439,7 @@ export default function Categories() {
   if (isDesktopWeb) {
     return <div className="desktop-saman categories-desktop-surface min-h-full" dir={isRTL ? "rtl" : "ltr"}>
       <main className="desktop-browse-main">
-        <section className="desktop-browse-hero" style={{ backgroundImage: `linear-gradient(${isRTL ? "270deg" : "90deg"},rgba(255,222,185,.96),rgba(255,201,148,.68) 47%,rgba(16,32,42,.12)),url(${dubaiNightSkyline})` }}><div><p>{isRTL ? "سوق الإمارات للسيارات وقطع الغيار" : "THE UAE'S AUTOMOTIVE MARKETPLACE"}</p><h1>{activeCategory === "automotive" ? (isRTL ? "اكتشف سيارتك القادمة." : "Find your next drive.") : (isRTL ? "كل قطعة في مكانها." : "The right part is out there.")}</h1></div><span>{isRTL ? "دبي · الإمارات" : "Dubai · UAE"}</span></section>
+        <section className="desktop-browse-hero" style={{ backgroundImage: theme === "nighttime" ? `linear-gradient(${isRTL ? "270deg" : "90deg"},rgba(5,10,14,.94),rgba(7,13,17,.68) 43%,rgba(5,10,14,.10) 76%),url(${dubaiNightSportsCar})` : `linear-gradient(${isRTL ? "270deg" : "90deg"},rgba(255,222,185,.96),rgba(255,201,148,.68) 47%,rgba(16,32,42,.12)),url(${dubaiNightSkyline})`, backgroundPosition: theme === "nighttime" ? "center 63%" : "center" }}><div><p>{isRTL ? "سوق الإمارات للسيارات وقطع الغيار" : "THE UAE'S AUTOMOTIVE MARKETPLACE"}</p><h1>{activeCategory === "automotive" ? (isRTL ? "اكتشف سيارتك القادمة." : "Find your next drive.") : (isRTL ? "كل قطعة في مكانها." : "The right part is out there.")}</h1></div><span>{isRTL ? "دبي · الإمارات" : "Dubai · UAE"}</span></section>
         <section className="desktop-search-panel"><div className="desktop-market-tabs"><button onClick={() => handleCategoryChange("automotive")} className={activeCategory === "automotive" ? "active" : ""}><Car size={15}/>{t("automotive")}</button><button onClick={() => handleCategoryChange("spare-parts")} className={activeCategory === "spare-parts" ? "active" : ""}><Wrench size={15}/>{t("spareParts")}</button></div><div className="desktop-search-row"><div className="desktop-query"><Search size={16}/><Input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("searchCategory")} data-testid="input-search-desktop" /></div><Select value={activeSubCategory} onValueChange={handleSubCategoryChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{getSubcategories().map(x => <SelectItem key={x} value={x}>{x === "All" ? (activeCategory === "automotive" ? t("allBrands") : t("allCategories")) : x}</SelectItem>)}</SelectContent></Select>{activeCategory === "automotive" && activeSubCategory !== "All" && getModelsForBrand().length > 0 && <ModelCombobox models={getModelsForBrand()} value={activeModel} onValueChange={setActiveModel} emptyValue="All" emptyLabel={t("allModels")} />}</div></section>
         <div className={`desktop-results-layout ${filterOpen ? "has-filters" : ""}`}>
           <DesktopFilterSidebar open={filterOpen} onClose={() => setFilterOpen(false)} isRTL={isRTL} automotive={activeCategory === "automotive"} categories={getSubcategories()} category={activeSubCategory} onCategory={handleSubCategoryChange} models={getModelsForBrand()} model={activeModel} onModel={setActiveModel} {...{ priceMin, setPriceMin, priceMax, setPriceMax, yearMin, setYearMin, yearMax, setYearMax, kmMin, setKmMin, kmMax, setKmMax, condition, setCondition }} clear={clearAllFilters} />

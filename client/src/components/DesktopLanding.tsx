@@ -14,9 +14,12 @@ import { AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS, SPARE_PARTS_SUBCATEGORIES } from 
 import { ProductCard } from "@/components/ProductCard";
 import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
+import { DesktopThemeToggle } from "@/components/DesktopThemeToggle";
+import { useDesktopTheme } from "@/hooks/use-desktop-theme";
 import type { Product } from "@shared/schema";
 import samanLogo from "@/assets/images/saman-logo-transparent.png";
 import dubaiSkyline from "@/assets/images/dubai-night-skyline.png";
+import dubaiNightSportsCar from "@/assets/images/dubai-night-sports-car-hero.png";
 import phone1 from "@/assets/phone-screen-2.png";
 import phone2 from "@/assets/phone-screen-3.png";
 
@@ -31,6 +34,7 @@ interface DesktopLandingProps {
 export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandingProps) {
   const { isRTL, language, setLanguage } = useLanguage();
   const { user } = useAuth();
+  const { theme } = useDesktopTheme();
   const accountHref = user ? "/profile" : "/auth";
   const accountLabel = user ? (isRTL ? "حسابي" : "My account") : (isRTL ? "تسجيل الدخول" : "Sign In");
   const ar = language === "ar";
@@ -74,7 +78,7 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
     { value: "Mercedes", label: "Mercedes" },
     { value: "Honda", label: "Honda" },
     { value: "Ford", label: "Ford" },
-  ].filter((make) => AUTOMOTIVE_SUBCATEGORIES.includes(make.value));
+  ].filter((make) => AUTOMOTIVE_SUBCATEGORIES.includes(make.value as typeof AUTOMOTIVE_SUBCATEGORIES[number]));
   const sample = recentProducts.slice(0, 6);
   const carImage = recentProducts.find((p) => p.mainCategory === "Automotive")?.imageUrl;
   const partImage = recentProducts.find((p) => p.mainCategory !== "Automotive")?.imageUrl;
@@ -93,6 +97,7 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
             <Link href="/sell" className="hover:text-orange-600">{ar ? "بيع" : "Sell"}</Link>
           </nav>
           <div className="hidden items-center gap-4 text-[12px] font-semibold lg:flex" style={{ marginInlineStart: "auto" }}>
+            <DesktopThemeToggle />
             <span className="flex items-center gap-1">● {ar ? "الإمارات" : "UAE"} <span className="text-[10px]">⌄</span></span>
             <button onClick={() => setLanguage(ar ? "en" : "ar")} className="flex items-center gap-1" data-testid="desktop-nav-language-toggle"><Globe className="h-4 w-4" /> {ar ? "EN" : "عربي"}</button>
             <Link href={accountHref} className="flex items-center gap-1" data-testid="desktop-nav-sign-in"><UserRound className="h-4 w-4" /> {accountLabel}</Link>
@@ -120,7 +125,7 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
         </aside>
 
         <div className="min-w-0">
-          <section className="relative h-[245px] overflow-visible rounded-lg bg-[#f9c08c] shadow-sm sm:h-[265px]" style={{ backgroundImage: `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(255,218,178,.95) 0%, rgba(255,197,141,.55) 48%, rgba(15,33,47,.08)), url(${dubaiSkyline})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+          <section className="desktop-home-hero relative h-[245px] overflow-visible rounded-lg bg-[#f9c08c] shadow-sm sm:h-[265px]" style={{ backgroundImage: theme === "nighttime" ? `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(5,10,14,.94) 0%, rgba(7,13,17,.72) 43%, rgba(5,10,14,.10) 76%), url(${dubaiNightSportsCar})` : `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(255,218,178,.95) 0%, rgba(255,197,141,.55) 48%, rgba(15,33,47,.08)), url(${dubaiSkyline})`, backgroundSize: "cover", backgroundPosition: theme === "nighttime" ? "center 70%" : "center" }}>
             <div className="relative z-10 max-w-[490px] px-6 pt-7 sm:px-10 sm:pt-10">
               <p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#e95220]">{ar ? "سوق الإمارات الموثوق" : "The UAE's trusted automotive marketplace"}</p>
               <h1 className="mt-2 text-[31px] font-black leading-[.98] tracking-[-.04em] text-[#101820] sm:text-[42px]">{ar ? "سيارات. قطع. أشخاص. كلهم على سامان." : <>Cars. Parts. People.<br />All on Saman.</>}</h1>
@@ -209,9 +214,9 @@ function SearchPanel(p: SearchPanelProps) {
       };
   return <div className="absolute inset-x-4 -bottom-[87px] z-20 rounded-lg border border-[#d9dddf] bg-white p-2.5 shadow-[0_12px_30px_rgba(32,48,58,.18)] sm:inset-x-10">
     <div className="flex gap-1 border-b border-[#edf0f1] pb-2">{[["automotive", <Car className="h-3.5 w-3.5" />, p.ar ? "سيارات" : "Automotive"], ["spare-parts", <Wrench className="h-3.5 w-3.5" />, p.ar ? "قطع الغيار" : "Spare Parts"]].map(([value, icon, label]) => <button key={String(value)} aria-pressed={p.market === value} onClick={() => { p.setMarket(value as any); p.setBrand("All"); p.setModel("All"); }} className={`flex items-center gap-1.5 rounded-md px-4 py-2 text-[11px] font-bold ${p.market === value ? "bg-[#f45b27] text-white" : "text-[#5c686f] hover:bg-[#f6f7f7]"}`} data-testid={`desktop-market-${value}`}>{icon}{label}</button>)}<span className="hidden self-center text-[10px] text-[#879197] sm:block" style={{ marginInlineStart: "auto" }}>{p.ar ? "إعلانات حقيقية من بائعين محليين" : "Millions of listings. Real people. Real deals."}</span></div>
-    <div className="mt-2">
+    <div className="mt-2 desktop-home-search__main">
       <div className="flex items-center rounded-md border border-[#dfe3e5] px-2"><Search className="h-3.5 w-3.5 text-[#f45b27]" /><Input value={p.query} onChange={(e) => p.setQuery(e.target.value)} placeholder={labels.search} aria-label={labels.searchAria} className="h-8 border-0 bg-transparent text-[11px] shadow-none focus-visible:ring-0" /></div>
-      <div className="mt-1.5 flex gap-1.5">
+      <div className="mt-1.5 flex gap-1.5 desktop-home-search__secondary">
         <div className="min-w-0 flex-1"><Select value={p.brand} onValueChange={(v) => { p.setBrand(v); p.setModel("All"); }}><SelectTrigger className="h-8 border-[#dfe3e5] bg-white text-[11px] text-[#101820]" aria-label={labels.category}><SelectValue placeholder={labels.category} /></SelectTrigger><SelectContent><SelectItem value="All">{p.market === "automotive" ? labels.allMakes : labels.allCategories}</SelectItem>{p.brands.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></div>
         {p.market === "automotive" && p.models.length > 0 && <div className="min-w-0 flex-1"><ModelCombobox models={p.models} value={p.model} onValueChange={p.setModel} emptyValue="All" emptyLabel={labels.allModels} searchPlaceholder={labels.modelSearch} ariaLabel={labels.modelAria} className="h-8 text-[11px]" /></div>}
         <Link href={p.searchUrl} data-testid="desktop-search-submit" className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-md bg-[#f45b27] px-6 text-[11px] font-bold text-white hover:bg-[#df4818]"><Search className="h-3.5 w-3.5" />{p.ar ? "بحث" : "Search"}</Link>

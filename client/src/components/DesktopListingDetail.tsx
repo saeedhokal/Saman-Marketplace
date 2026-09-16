@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { objectImageUrl, bustObjectUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import { getInitial } from "@/lib/utils";
+import { useDesktopTheme } from "@/hooks/use-desktop-theme";
+import dubaiNightSportsCar from "@/assets/images/dubai-night-sports-car-hero.png";
 
 type SellerInfo = {
   id: string; displayName: string | null; firstName: string | null; lastName: string | null;
@@ -27,6 +29,7 @@ type Props = {
 
 export function DesktopListingDetail(props: Props) {
   const { product, id, images, sellerProducts, sellerInfo, isRTL, user, isFavorite, formattedPrice } = props;
+  const { theme } = useDesktopTheme();
   const sellerName = sellerInfo?.displayName || [sellerInfo?.firstName, sellerInfo?.lastName].filter(Boolean).join(" ") || "Seller";
   const more = (sellerProducts || []).filter((item) => item.id !== id && item.status === "approved");
   const specs = [
@@ -42,7 +45,7 @@ export function DesktopListingDetail(props: Props) {
     product.spec && { icon: Globe, label: isRTL ? "المواصفات" : "Spec", value: isRTL ? (PRODUCT_SPEC_LABELS_AR[product.spec as ProductSpec] || product.spec) : product.spec },
   ].filter(Boolean) as { icon: typeof Calendar; label: string; value: string }[];
 
-  return <main className="desktop-listing-detail" dir={isRTL ? "rtl" : "ltr"}>
+  return <main className="desktop-listing-detail" dir={isRTL ? "rtl" : "ltr"} style={theme === "nighttime" ? { backgroundImage: `linear-gradient(90deg, rgba(5,10,14,.94), rgba(5,10,14,.55)), url(${dubaiNightSportsCar})`, backgroundPosition: "right center", backgroundSize: "cover" } : undefined}>
     <div className="desktop-listing-detail__crumb">
       <button onClick={props.onBack}>‹ {isRTL ? "العودة إلى التصفح" : "Back to browse"}</button>
     </div>

@@ -5,6 +5,7 @@ import { SiGoogleplay } from "react-icons/si";
 import { Capacitor } from "@capacitor/core";
 import QRCode from "qrcode";
 import { useLanguage } from "@/hooks/use-language";
+import { DesktopThemeToggle } from "@/components/DesktopThemeToggle";
 import samanLogo from "@/assets/images/saman-logo-transparent.png";
 import phone1 from "@/assets/phone-screen-2.png";
 
@@ -37,6 +38,7 @@ export function DesktopMarketplaceChrome() {
             <Link href="/sell">{ar ? "بيع" : "Sell"}</Link>
           </nav>
           <div className="saman-desktop-header__actions">
+            <DesktopThemeToggle />
             <button onClick={() => setLanguage(ar ? "en" : "ar")}><Globe size={15} />{ar ? "EN" : "عربي"}</button>
             <Link href="/profile"><UserRound size={15} />{ar ? "حسابي" : "My account"}</Link>
             <Link href="/sell" className="saman-post-listing">{ar ? "أضف إعلاناً" : "+ Post Listing"}</Link>
