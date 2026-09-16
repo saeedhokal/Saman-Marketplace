@@ -27,7 +27,7 @@ Saman Marketplace is an automotive spare parts and vehicles marketplace for the 
 - **Styling:** Tailwind CSS, shadcn/ui components
 - **Animations:** Framer Motion
 - **Routing:** Wouter (client-side)
-- **UI Theme:** Orange (#f97316) accent, dark gradient cards, rounded corners, rounded corners. Support for dark mode.
+- **UI Theme:** The light public marketplace redesign is called the **Daytime theme**. The nighttime website version is called the **Nighttime theme**. Both use the orange (#f97316) accent and support dark-mode styling where applicable.
 - **Translation:** Bidirectional Arabic ↔ English translation for listings.
 - **Mobile UI/UX:** Adaptive top padding using `safe-area-inset-top`, bottom navigation isolation for cold-start performance, `pointerEvents: 'none'` for landing page overlays, `object-contain` for listing images, `createPortal` for fullscreen image gallery. Dynamic `--vh` CSS variable for consistent viewport height on iOS.
 
