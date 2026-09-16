@@ -477,6 +477,19 @@
   html[data-desktop-theme="nighttime"] .desktop-home-search__main {
     display:block;
   }
+  html[data-desktop-theme="nighttime"] .desktop-saman .desktop-home-search__main > div:first-child {
+    border:1px solid transparent;
+    background:linear-gradient(#10191f,#10191f) padding-box,
+      linear-gradient(110deg,rgba(177,192,199,.28),rgba(177,192,199,.12) 45%,rgba(177,192,199,.05)) border-box;
+    transition:box-shadow .18s ease;
+  }
+  html[data-desktop-theme="nighttime"] .desktop-saman .desktop-home-search__main > div:first-child:focus-within {
+    box-shadow:0 0 0 1px rgba(255,133,65,.55);
+  }
+  html[data-desktop-theme="nighttime"] .desktop-saman .desktop-home-search > div:first-child {
+    border-bottom-color:transparent;
+    background:linear-gradient(90deg,rgba(177,192,199,.2),rgba(177,192,199,.07) 55%,transparent) bottom / 100% 1px no-repeat;
+  }
   html[data-desktop-theme="nighttime"] .desktop-home-search__secondary { display:flex; gap:7px; }
   html[data-desktop-theme="nighttime"] .desktop-home-search__secondary > div { min-width:0; }
   html[data-desktop-theme="nighttime"] .desktop-home-search__secondary > a { grid-column:-2; }
