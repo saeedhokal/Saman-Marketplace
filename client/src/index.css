@@ -278,7 +278,9 @@
   .desktop-market-tabs { display:flex; gap:3px; border-bottom:1px solid #edf0f1; padding-bottom:7px; }
   .desktop-market-tabs button { display:flex; align-items:center; gap:5px; padding:6px 13px; font-size:11px; font-weight:800; border-radius:5px; color:#657178; }
   .desktop-market-tabs button.active { background:#f45b27; color:#fff; }
-  .desktop-search-row { display:grid; grid-template-columns:minmax(220px,1.7fr) minmax(140px,1fr) minmax(140px,1fr); gap:7px; padding-top:8px; }
+  .desktop-search-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; padding-top:8px; }
+  .desktop-search-row > .desktop-query { grid-column:1 / -1; }
+  .desktop-search-row > button:last-child:nth-child(2) { grid-column:1 / -1; }
   .desktop-search-row > button, .desktop-search-row [role=combobox] { height:34px; font-size:11px; background:#fff; }
   .desktop-query { display:flex; align-items:center; border:1px solid #dfe3e5; border-radius:6px; padding:0 8px; color:#f45b27; }.desktop-query input { border:0; box-shadow:none; height:32px; font-size:11px; }
   .desktop-filters-reopen { display:flex; align-items:center; gap:6px; margin:5px 0 8px; color:#df4818; font-size:11px; font-weight:800; }
