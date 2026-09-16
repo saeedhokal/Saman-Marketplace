@@ -44,7 +44,7 @@ export default function Downloads() {
       />
       <div className="fixed inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
       
-      <div className="relative z-10 w-full max-w-md mx-auto px-6 py-12 text-center">
+      <div className="relative z-10 w-full max-w-md mx-auto -translate-y-6 px-6 py-10 text-center">
         <div className="mb-6">
           <img 
             src={samanLogo} 
@@ -69,7 +69,7 @@ export default function Downloads() {
             Buy and sell spare parts & vehicles in the UAE
           </p>
           
-          <div className="space-y-4">
+          <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-4">
             {showApple && (
               <a
                 href={appStoreUrl}
