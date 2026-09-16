@@ -209,7 +209,7 @@
    .desktop-web-active .desktop-shell-legacy-nav { display: none; }
    .desktop-web-active .product-detail-mobile { display: none; }
    .desktop-web-active .desktop-listing-detail { display:block; max-width:1120px; margin-left:max(158px, calc((100vw - 1440px)/2 + 150px)); margin-right:max(24px, calc((100vw - 1440px)/2)); padding:26px 0 64px; color:#101820; }
-   [dir="rtl"] .desktop-listing-detail { margin-left:max(24px, calc((100vw - 1440px)/2)); margin-right:max(158px, calc((100vw - 1440px)/2 + 150px)); }
+    .desktop-web-active [dir="rtl"] .desktop-listing-detail { margin-left:max(24px, calc((100vw - 1440px)/2)); margin-right:max(158px, calc((100vw - 1440px)/2 + 150px)); }
    .desktop-listing-seller__link > span:first-child { flex:0 0 40px; width:40px; height:40px; }
    .desktop-listing-detail__crumb { margin-bottom:18px; }.desktop-listing-detail__crumb button { color:#69757c; font-size:12px; font-weight:700; }.desktop-listing-detail__crumb button:hover { color:#df4818; }
    .desktop-listing-detail__grid { display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(350px, .9fr); gap:34px; align-items:start; }
@@ -245,14 +245,14 @@
   .saman-app-rail a { color: #fff; display: flex; align-items: center; justify-content: center; gap: 3px; background: #101820; border-radius: 4px; font-size: 8px; padding: 6px 1px; margin-top: 4px; }
   .saman-app-rail__reopen { display: block; position: fixed; z-index: 44; top: 90px; left: 0; border-radius: 0 6px 6px 0; background: #f45b27; color: white; padding: 8px 5px; font-size: 10px; writing-mode: vertical-rl; }
    .saman-app-rail__reopen[dir="rtl"] { left:auto; right:0; border-radius:6px 0 0 6px; }
-  .categories-desktop-route > .sticky { display: none; }
-  .categories-desktop-content { max-width: 1260px !important; margin-left: max(158px, calc((100vw - 1440px)/2 + 150px)); margin-right: max(24px, calc((100vw - 1440px)/2)); padding-top: 22px !important; transition: margin .25s ease; }
-  [dir="rtl"] .categories-desktop-content { margin-left: max(24px, calc((100vw - 1440px)/2)); margin-right: max(158px, calc((100vw - 1440px)/2 + 150px)); }
-  .categories-desktop-content.filters-visible { margin-left: max(370px, calc((100vw - 1440px)/2 + 362px)); }
-  [dir="rtl"] .categories-desktop-content.filters-visible { margin-left: max(24px, calc((100vw - 1440px)/2)); margin-right: max(370px, calc((100vw - 1440px)/2 + 362px)); }
-  .categories-desktop-content > div:first-child { border-radius: 9px !important; padding: 10px 12px !important; margin-bottom: 12px !important; }
-  .categories-desktop-content .grid { gap: 10px; }
-  .categories-desktop-content [role="dialog"] { display: none; }
+   .desktop-web-active .categories-desktop-route > .sticky { display: none; }
+   .desktop-web-active .categories-desktop-content { max-width: 1260px !important; margin-left: max(158px, calc((100vw - 1440px)/2 + 150px)); margin-right: max(24px, calc((100vw - 1440px)/2)); padding-top: 22px !important; transition: margin .25s ease; }
+   .desktop-web-active [dir="rtl"] .categories-desktop-content { margin-left: max(24px, calc((100vw - 1440px)/2)); margin-right: max(158px, calc((100vw - 1440px)/2 + 150px)); }
+   .desktop-web-active .categories-desktop-content.filters-visible { margin-left: max(370px, calc((100vw - 1440px)/2 + 362px)); }
+   .desktop-web-active [dir="rtl"] .categories-desktop-content.filters-visible { margin-left: max(24px, calc((100vw - 1440px)/2)); margin-right: max(370px, calc((100vw - 1440px)/2 + 362px)); }
+   .desktop-web-active .categories-desktop-content > div:first-child { border-radius: 9px !important; padding: 10px 12px !important; margin-bottom: 12px !important; }
+   .desktop-web-active .categories-desktop-content .grid { gap: 10px; }
+   .desktop-web-active .categories-desktop-content [role="dialog"] { display: none; }
   .desktop-web-active .desktop-filter-sidebar { display: block; position: sticky; top: 82px; align-self: start; width: 100%; max-height: calc(100dvh - 104px); overflow-y: auto; padding: 14px; background: #fff; border: 1px solid #dfe3e5; border-radius: 8px; box-shadow: 0 5px 18px rgb(32 48 58 / .07); }
   .desktop-filter-sidebar__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; color: #101820; }
   .desktop-filter-sidebar__head div { display:flex; gap:7px; align-items:center; font-size:13px; }

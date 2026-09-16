@@ -132,6 +132,10 @@ export default function MyListings() {
     },
   });
 
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
+  }, []);
+
   if (!user && !isAuthLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -186,10 +190,6 @@ export default function MyListings() {
     const daysLeft = differenceInDays(expiresAt, new Date());
     return daysLeft <= 7 && daysLeft >= -7;
   };
-
-  const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["/api/user/listings"] });
-  }, []);
 
   return (
     <>

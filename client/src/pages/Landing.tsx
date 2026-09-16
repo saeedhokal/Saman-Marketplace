@@ -144,12 +144,12 @@ export default function Landing() {
       
       {/* Desktop-only redesigned landing — hidden on small screens and inside the native app */}
       {!isNative && (
-        <div className="hidden md:block relative z-10">
+        <div className="hidden lg:block relative z-10">
           <DesktopLanding recentProducts={recentProducts} isLoadingRecent={isLoadingRecent} />
         </div>
       )}
 
-      <PullToRefresh onRefresh={handleRefresh} className={`relative z-10 ${!isNative ? "md:hidden" : ""}`}>
+      <PullToRefresh onRefresh={handleRefresh} className={`relative z-10 ${!isNative ? "lg:hidden" : ""}`}>
         <div className="container mx-auto px-4 pt-2">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">

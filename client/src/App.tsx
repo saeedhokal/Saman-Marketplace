@@ -1,5 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -312,6 +312,19 @@ function AppContent() {
   const { hasSelectedLanguage } = useLanguage();
   const [location] = useLocation();
   const isDesktopRoute = isDesktopMarketplaceRoute(location);
+  const isNative = Capacitor.isNativePlatform();
+  const [isDesktopViewport, setIsDesktopViewport] = useState(
+    () => !isNative && window.innerWidth >= 1024,
+  );
+
+  useEffect(() => {
+    if (isNative) return;
+    const updateViewport = () => setIsDesktopViewport(window.innerWidth >= 1024);
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, [isNative]);
+
+  const desktopWebActive = !isNative && isDesktopViewport && isDesktopRoute;
 
   // Smart link page must work for anyone — skip language gate
   if (window.location.pathname === '/open') {
@@ -327,8 +340,8 @@ function AppContent() {
       <DeepLinkHandler />
       <UpdatePrompt />
       <Heartbeat />
-      <div className={`flex flex-col bg-background ${!Capacitor.isNativePlatform() && isDesktopRoute ? "desktop-web-active" : ""}`} style={{ height: 'var(--app-height)' }}>
-        {!Capacitor.isNativePlatform() && isDesktopRoute && <DesktopMarketplaceChrome />}
+      <div className={`flex flex-col bg-background ${desktopWebActive ? "desktop-web-active" : ""}`} style={{ height: 'var(--app-height)' }}>
+        {desktopWebActive && <DesktopMarketplaceChrome />}
         <Router />
         <StickyDownloadAppCTA />
         <DesktopNavMenuWrapper />
