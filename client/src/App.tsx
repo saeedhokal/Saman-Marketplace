@@ -165,6 +165,9 @@ function BottomNavWrapper() {
   const hideBottomNav = location === '/downloads' || location.startsWith('/reset-password') || location === '/open';
   
   if (hideBottomNav) return null;
+  if (location === '/' && !Capacitor.isNativePlatform()) {
+    return <div className="md:hidden"><BottomNav /></div>;
+  }
   return <BottomNav />;
 }
 
@@ -172,6 +175,7 @@ function DesktopNavMenuWrapper() {
   const [location] = useLocation();
   const hide = location === '/downloads' || location.startsWith('/reset-password') || location.startsWith('/auth') || location === '/open';
   if (hide) return null;
+  if (location === '/' && !Capacitor.isNativePlatform()) return null;
   return <DesktopNavMenu />;
 }
 

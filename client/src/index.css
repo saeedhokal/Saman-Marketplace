@@ -177,6 +177,29 @@
   }
 }
 
+/* The public desktop landing is intentionally a light marketplace surface,
+   independent of a previously saved app theme. Native and mobile screens keep
+   using the normal root theme tokens. */
+.desktop-saman {
+  --background: 210 20% 97%;
+  --foreground: 210 28% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 28% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 28% 10%;
+  --muted: 210 16% 94%;
+  --muted-foreground: 210 9% 42%;
+  --border: 210 14% 88%;
+  --input: 210 14% 88%;
+  color-scheme: light;
+}
+
+.dark .desktop-saman .glass-card {
+  background-color: #fff;
+  border-color: #e0e4e6;
+  box-shadow: 0 2px 8px rgb(16 24 32 / 0.06);
+}
+
 /* Light-mode card lift: slightly stronger border + very soft shadow.
    Dark mode is unchanged. */
 :root .shadcn-card {
