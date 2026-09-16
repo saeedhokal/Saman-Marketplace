@@ -19,7 +19,7 @@ import { useDesktopTheme } from "@/hooks/use-desktop-theme";
 import type { Product } from "@shared/schema";
 import samanLogo from "@/assets/images/saman-logo-transparent.png";
 import dubaiSkyline from "@/assets/images/dubai-night-skyline.png";
-import dubaiNightSportsCar from "@/assets/images/nighttime-home-panorama.webp";
+import dubaiNightSportsCar from "@/assets/images/nighttime-home-detailed.webp";
 import phone1 from "@/assets/phone-screen-2.png";
 import phone2 from "@/assets/phone-screen-3.png";
 
