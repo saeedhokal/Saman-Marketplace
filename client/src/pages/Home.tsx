@@ -2,11 +2,9 @@ import { useState, useMemo, useCallback } from "react";
 import { useProducts } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
-import { Search, Car, Wrench, Loader2, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
+import { Search, Car, Wrench, Loader2, SlidersHorizontal, ArrowUpDown, X, ShieldCheck, MapPin, ChevronRight, Sparkles } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { PullToRefresh } from "@/components/PullToRefresh";
-import { motion, AnimatePresence } from "framer-motion";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SPARE_PARTS_SUBCATEGORIES, AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { ListingViewSwitcher } from "@/components/ListingViewSwitcher";
@@ -33,11 +31,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLanguage } from "@/hooks/use-language";
 
 type MainCategory = "automotive" | "spare-parts";
 type SortOption = "newest" | "oldest" | "price-low" | "price-high";
 
 export default function Home() {
+  const { isRTL } = useLanguage();
   const { density, gridClasses } = useListingView();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<MainCategory>("automotive");
@@ -167,74 +167,50 @@ export default function Home() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 pt-4">
-        <div className="flex items-center glass-card rounded-full px-4 py-2 mb-4">
-          <Search className="h-5 w-5 text-foreground/70 mr-3" />
-          <Input
-            type="text"
-            placeholder="Search for category..."
-            className="border-0 shadow-none focus-visible:ring-0 text-base h-8 bg-transparent p-0 placeholder:text-muted-foreground placeholder:font-semibold"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            data-testid="input-search"
-          />
+      <section className="relative overflow-hidden border-b border-border/70 bg-[#f5f1ea] dark:bg-[#17181a]">
+        <div className="absolute -left-20 top-8 h-56 w-56 rounded-full bg-orange-500/10 blur-3xl" />
+        <div className="container relative mx-auto px-4 pb-8 pt-7 lg:pb-10 lg:pt-10">
+          <div className="mb-7 flex items-center justify-between">
+            <div>
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-orange-600 dark:text-orange-400">SAMAN / UAE MARKETPLACE</p>
+              <h1 className="font-display text-2xl font-black tracking-tight sm:text-4xl">Find your next move.</h1>
+            </div>
+            <div className="hidden items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 text-xs font-semibold text-muted-foreground sm:flex">
+              <ShieldCheck className="h-4 w-4 text-orange-500" /> Trusted local listings
+            </div>
+          </div>
+          <div className="mx-auto max-w-5xl rounded-[1.5rem] border border-border/80 bg-background p-2 shadow-[0_18px_60px_-30px_rgba(20,24,30,.5)]">
+            <div className="flex items-center gap-3 rounded-[1.1rem] border border-border/70 bg-secondary/40 px-4 py-2.5">
+              <Search className="h-5 w-5 shrink-0 text-orange-500" />
+              <Input type="text" placeholder={isRTL ? "ابحث عن سيارات، قطع غيار والمزيد..." : "Search cars, parts and more"} className="h-9 border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="input-search" />
+              <span className="hidden text-[11px] font-medium text-muted-foreground sm:block">Shortcut</span>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button onClick={() => handleCategoryChange("automotive")} data-testid="tab-automotive" className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-start transition-all ${activeCategory === "automotive" ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20" : "border-border bg-background hover:border-orange-300"}`}>
+                <Car className="h-5 w-5" /><span><strong className="block text-sm">{isRTL ? "سيارات ومركبات" : "Automotive"}</strong><small className={activeCategory === "automotive" ? "text-white/75" : "text-muted-foreground"}>{isRTL ? "سيارات، دراجات والمزيد" : "Cars, bikes & more"}</small></span>
+              </button>
+              <button onClick={() => handleCategoryChange("spare-parts")} data-testid="tab-spare-parts" className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-start transition-all ${activeCategory === "spare-parts" ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20" : "border-border bg-background hover:border-orange-300"}`}>
+                <Wrench className="h-5 w-5" /><span><strong className="block text-sm">{isRTL ? "قطع الغيار" : "Spare Parts"}</strong><small className={activeCategory === "spare-parts" ? "text-white/75" : "text-muted-foreground"}>{isRTL ? "أصلية وبديلة" : "Genuine & aftermarket"}</small></span>
+              </button>
+            </div>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
+                <SelectTrigger className="h-11 border-border/80 bg-background font-semibold" data-testid="select-category"><SelectValue placeholder={activeCategory === "automotive" ? "All Brands" : "All Categories"} /></SelectTrigger>
+                <SelectContent>{getSubcategories().map((cat) => <SelectItem key={cat} value={cat} data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}>{cat === "All" ? (activeCategory === "automotive" ? "All Brands" : "All Categories") : cat}</SelectItem>)}</SelectContent>
+              </Select>
+              {activeCategory === "automotive" && activeSubCategory !== "All" && getModelsForBrand().length > 0 ? <ModelCombobox models={getModelsForBrand()} value={activeModel} onValueChange={setActiveModel} emptyValue="All" emptyLabel="All Models" className="h-11" /> : <div className="hidden items-center gap-2 rounded-lg border border-dashed border-border px-3 text-xs text-muted-foreground sm:flex"><MapPin className="h-4 w-4 text-orange-500" /> Across the UAE</div>}
+            </div>
+          </div>
+          <div className="mx-auto mt-5 flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">Browse popular</span>
+            {(activeCategory === "automotive" ? AUTOMOTIVE_SUBCATEGORIES.slice(0, 5) : SPARE_PARTS_SUBCATEGORIES.slice(0, 5)).map((cat) => <button key={cat} onClick={() => handleSubCategoryChange(cat)} className="transition-colors hover:text-orange-600">{cat}</button>)}
+          </div>
         </div>
+      </section>
 
-        <div className="flex gap-3 mb-3">
-          <button
-            onClick={() => handleCategoryChange("automotive")}
-            data-testid="tab-automotive"
-            className={`flex-1 py-4 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border-2 ${
-              activeCategory === "automotive" 
-                ? "border-transparent text-orange-500 ring-1 ring-orange-500/70 shadow-[0_0_18px_-4px_rgba(249,115,22,0.55)]" 
-                : "bg-gray-100 dark:bg-slate-800/30 border-gray-200 dark:border-slate-600/30 text-gray-500 dark:text-slate-400"
-            }`}
-            style={activeCategory === "automotive" ? { background: 'radial-gradient(120% 140% at 50% 50%, rgba(249,115,22,0.32) 0%, rgba(249,115,22,0.14) 45%, rgba(249,115,22,0.04) 100%)' } : {}}
-          >
-            <Car className="h-5 w-5" />
-            Automotive
-          </button>
-          
-          <button
-            onClick={() => handleCategoryChange("spare-parts")}
-            data-testid="tab-spare-parts"
-            className={`flex-1 py-4 px-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2 border-2 ${
-              activeCategory === "spare-parts" 
-                ? "border-transparent text-orange-500 ring-1 ring-orange-500/70 shadow-[0_0_18px_-4px_rgba(249,115,22,0.55)]" 
-                : "bg-gray-100 dark:bg-slate-800/30 border-gray-200 dark:border-slate-600/30 text-gray-500 dark:text-slate-400"
-            }`}
-            style={activeCategory === "spare-parts" ? { background: 'radial-gradient(120% 140% at 50% 50%, rgba(249,115,22,0.32) 0%, rgba(249,115,22,0.14) 45%, rgba(249,115,22,0.04) 100%)' } : {}}
-          >
-            <Wrench className="h-5 w-5" />
-            Spare Parts
-          </button>
-        </div>
-
-        <div className="pb-3 flex gap-2">
-          <Select value={activeSubCategory} onValueChange={handleSubCategoryChange}>
-            <SelectTrigger className="flex-1 font-semibold text-foreground" data-testid="select-category">
-              <SelectValue placeholder="All Brands" />
-            </SelectTrigger>
-            <SelectContent>
-              {getSubcategories().map((cat) => (
-                <SelectItem key={cat} value={cat} data-testid={`option-${cat.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {cat === "All" ? (activeCategory === "automotive" ? "All Brands" : "All Categories") : cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {activeCategory === "automotive" && activeSubCategory !== "All" && getModelsForBrand().length > 0 && (
-            <ModelCombobox
-              models={getModelsForBrand()}
-              value={activeModel}
-              onValueChange={setActiveModel}
-              emptyValue="All"
-              emptyLabel="All Models"
-              className="flex-1"
-            />
-          )}
-        </div>
+      <div className="container mx-auto px-4 pt-6">
+        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_250px]">
+          <div className="min-w-0">
 
         <div className="flex items-center gap-2 pb-4">
           <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
@@ -462,10 +438,14 @@ export default function Home() {
         </div>
       </div>
 
-      <main className="container mx-auto px-4 pb-8">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <ListingViewSwitcher />
+      <main className="mx-auto max-w-5xl px-0 pb-8">
+        <div className="mb-4 flex items-center justify-between gap-2 border-b border-border/70 pb-3">
+          <div>
+            <p className="text-sm font-bold">{activeCategory === "automotive" ? "Cars & vehicles" : "Parts marketplace"}</p>
+            <p className="text-xs text-muted-foreground">{filteredAndSortedProducts.length} listings available</p>
+          </div>
           <div className="flex items-center gap-2">
+            <ListingViewSwitcher />
             <DownloadAppButton variant="compact" />
             <ActionsDropdown />
           </div>
@@ -509,6 +489,26 @@ export default function Home() {
           </div>
         )}
       </main>
+          </div>
+          <aside className="hidden space-y-4 lg:block">
+            <div className="sticky top-4 space-y-4">
+              <div className="overflow-hidden rounded-2xl border border-orange-500/25 bg-orange-500 p-5 text-white shadow-lg shadow-orange-500/10">
+                <div className="mb-8 flex h-9 w-9 items-center justify-center rounded-xl bg-white/15"><Sparkles className="h-4 w-4" /></div>
+                <p className="mb-1 text-[11px] font-bold uppercase tracking-[.18em] text-white/70">Saman on mobile</p>
+                <h2 className="font-display text-xl font-black leading-tight">Your market, wherever you are.</h2>
+                <p className="mt-2 text-xs leading-relaxed text-white/80">Save searches, message sellers and browse new listings faster.</p>
+                <div className="mt-5"><DownloadAppButton className="w-full bg-white text-orange-600 hover:bg-orange-50" /></div>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-secondary p-2"><ShieldCheck className="h-4 w-4 text-orange-500" /></div>
+                  <div><p className="text-sm font-bold">A clearer way to buy</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Compare real listings from sellers across the UAE.</p></div>
+                </div>
+                <button onClick={() => document.querySelector('[data-testid="input-search"]')?.scrollIntoView({ behavior: "smooth" })} className="mt-4 flex w-full items-center justify-between border-t border-border pt-3 text-xs font-semibold text-orange-600">Start searching <ChevronRight className="h-4 w-4" /></button>
+              </div>
+            </div>
+          </aside>
+        </div>
     </PullToRefresh>
   );
 }
