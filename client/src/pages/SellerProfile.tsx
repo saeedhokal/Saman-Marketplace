@@ -132,7 +132,7 @@ export default function SellerProfile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="seller-desktop-route min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="container mx-auto max-w-6xl">
           <div className="flex items-center gap-4 mb-8">
             <Skeleton className="h-16 w-16 rounded-full" />
@@ -153,7 +153,7 @@ export default function SellerProfile() {
 
   if (error || !products) {
     return (
-      <div className="min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="seller-desktop-route min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="container mx-auto max-w-6xl text-center py-20">
           <h2 className="text-xl font-bold text-destructive">{t('failedToLoadSeller')}</h2>
           <Button variant="outline" className="mt-4" onClick={() => window.history.back()}>

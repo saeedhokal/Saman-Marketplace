@@ -499,7 +499,7 @@
   html[data-desktop-theme="nighttime"] .desktop-search-row {
     grid-template-columns:minmax(0,1fr) 245px; align-items:center;
   }
-  html[data-desktop-theme="nighttime"] .desktop-search-row > .desktop-query { grid-column:auto; }
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-search-row > .desktop-query { grid-column:1 / -1; }
   html[data-desktop-theme="nighttime"] .desktop-filter-sidebar__head,
   html[data-desktop-theme="nighttime"] .desktop-filter-sidebar label,
   html[data-desktop-theme="nighttime"] .desktop-results-head h2,

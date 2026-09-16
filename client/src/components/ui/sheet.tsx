@@ -61,6 +61,7 @@ const SheetContent = React.forwardRef<
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
+      data-marketplace-menu=""
       className={cn(sheetVariants({ side }), className)}
       {...props}
     >

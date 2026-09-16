@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 
 export type DesktopTheme = "daytime" | "nighttime";
 
@@ -11,6 +12,11 @@ function readTheme(): DesktopTheme {
 }
 
 function applyTheme(theme: DesktopTheme) {
+  try {
+    if (Capacitor.isNativePlatform()) return;
+  } catch {
+    // Keep web behavior available if the native bridge is unavailable.
+  }
   document.documentElement.dataset.desktopTheme = theme;
 }
 

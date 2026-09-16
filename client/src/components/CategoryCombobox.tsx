@@ -81,8 +81,8 @@ export function CategoryCombobox({
             >
               {mainCategory ? (
                 <span className="flex items-center gap-3">
-                  <span 
-                    className="flex items-center justify-center w-8 h-8 rounded-lg"
+                  <span
+                    className="category-option-icon flex items-center justify-center w-8 h-8 rounded-lg"
                     style={{ backgroundColor: '#f97316' }}
                   >
                     {mainCategory === "Automotive" ? (
@@ -122,8 +122,8 @@ export function CategoryCombobox({
                       className="cursor-pointer rounded-lg p-3 mb-1"
                     >
                       <div className="flex items-center gap-3">
-                        <span 
-                          className="flex items-center justify-center w-8 h-8 rounded-lg"
+                        <span
+                          className="category-option-icon flex items-center justify-center w-8 h-8 rounded-lg"
                           style={{ backgroundColor: mainCategory === cat ? '#f97316' : '#fed7aa' }}
                         >
                           {cat === "Automotive" ? (

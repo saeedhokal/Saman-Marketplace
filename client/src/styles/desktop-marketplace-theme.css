@@ -1,0 +1,449 @@
+/*
+ * Desktop marketplace route theme isolation.
+ *
+ * The landing page has its own artwork and remains intentionally outside this
+ * file.  Every rule below requires the browser-only `.desktop-web-active`
+ * ancestor, so a saved desktop choice cannot recolor mobile/native surfaces or
+ * portals left over from an unrelated route.
+ */
+@media (min-width: 1024px) {
+  .desktop-web-active .inbox-desktop-route > .sticky {
+    display: none;
+  }
+
+  html[data-desktop-theme="daytime"] .desktop-web-active {
+    --background: 210 20% 97%;
+    --foreground: 210 28% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 28% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 28% 10%;
+    --muted: 210 16% 94%;
+    --muted-foreground: 210 9% 42%;
+    --border: 210 14% 88%;
+    --input: 210 14% 88%;
+    color-scheme: light;
+    color: #101820;
+    background: #f4f6f7;
+  }
+
+  html[data-desktop-theme="daytime"] .desktop-web-active
+    :is(.shadcn-card, .glass-card) {
+    background: #fff;
+    border-color: #e0e4e6;
+    color: #101820;
+    box-shadow: 0 5px 16px rgb(32 48 58 / 0.06);
+  }
+
+  html[data-desktop-theme="daytime"] .desktop-web-active .desktop-theme-toggle button:is(:hover, :focus-visible) {
+    color: #d94b1b;
+    outline: 2px solid rgb(217 75 27 / 0.2);
+    outline-offset: 1px;
+  }
+
+  html[data-desktop-theme="daytime"] .desktop-web-active
+    :is(.favorites-desktop-route, .my-listings-desktop-route, .profile-desktop-route,
+      .inbox-desktop-route,
+      .seller-desktop-route, .sell-page, .edit-listing-desktop-route,
+      .desktop-listing-detail) {
+    color: #101820;
+  }
+
+  html[data-desktop-theme="daytime"] .desktop-web-active
+    :is(.favorites-desktop-route, .my-listings-desktop-route, .profile-desktop-route,
+      .inbox-desktop-route,
+      .seller-desktop-route, .sell-page, .edit-listing-desktop-route) {
+    background-color: #f4f6f7;
+  }
+
+  /*
+   * Nighttime uses the same surface hierarchy on every marketplace route:
+   * charcoal page, slightly lifted panels, and translucent/fading borders.
+   */
+  html[data-desktop-theme="nighttime"] .desktop-web-active {
+    --background: 216 31% 6%;
+    --foreground: 30 18% 91%;
+    --card: 216 24% 10%;
+    --card-foreground: 30 18% 91%;
+    --popover: 216 24% 10%;
+    --popover-foreground: 30 18% 91%;
+    --muted: 215 18% 15%;
+    --muted-foreground: 215 10% 63%;
+    --border: 215 18% 21%;
+    --input: 215 18% 21%;
+    color-scheme: dark;
+    color: #eee9e2;
+    background:
+      radial-gradient(circle at 86% 4%, rgb(242 79 27 / 0.1), transparent 24rem),
+      linear-gradient(135deg, #070b0f, #0d141a 52%, #080c11);
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-theme-toggle button:is(:hover, :focus-visible) {
+    color: #ff8050;
+    outline: 2px solid rgb(255 120 64 / 0.34);
+    outline-offset: 1px;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.favorites-desktop-route, .my-listings-desktop-route, .profile-desktop-route,
+      .inbox-desktop-route,
+      .seller-desktop-route, .sell-page, .edit-listing-desktop-route) {
+    background:
+      linear-gradient(145deg, rgb(19 29 36 / 0.86), rgb(8 14 19 / 0.96));
+    color: #eee9e2;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.shadcn-card, .glass-card) {
+    background: linear-gradient(155deg, #18232a, #0c1318) !important;
+    border-color: rgb(145 164 170 / 0.24) !important;
+    color: #eee9e2;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.035),
+      0 12px 28px rgb(0 0 0 / 0.22) !important;
+    transition: border-color 180ms ease, box-shadow 180ms ease,
+      transform 180ms ease;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.shadcn-card, .glass-card, .desktop-seller-card):is(:hover, :focus-within) {
+    border-color: rgb(255 120 64 / 0.68) !important;
+    box-shadow:
+      inset 0 1px 0 rgb(255 178 122 / 0.08),
+      0 0 0 1px rgb(255 108 49 / 0.12),
+      0 15px 30px rgb(0 0 0 / 0.3);
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.desktop-listing-detail, .desktop-listing-info, .desktop-listing-gallery) {
+    color: #eee9e2;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.desktop-listing-seller__link b, .desktop-listing-seller__link > svg,
+      .desktop-listing-info__topline button) {
+    color: #d8dfde;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-listing-detail__crumb button,
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-listing-seller__link small {
+    color: #aab7b9;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-listing-info__topline button {
+    background: #111b21;
+    border-color: rgb(145 164 170 / 0.26);
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-listing-info__topline button:is(:hover, :focus-visible),
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-listing-description button:is(:hover, :focus-visible) {
+    color: #ff8050;
+    border-color: rgb(255 120 64 / 0.68);
+    background: #2d1c17;
+    outline: none;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-listing-gallery
+    :is([data-testid="image-gallery-main"], .desktop-listing-empty-image),
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-seller-card > div {
+    background: #111b21;
+    color: #9fadaf;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .desktop-state {
+    background: linear-gradient(145deg, #151f26, #0d151a);
+    border-color: rgb(145 164 170 / 0.26);
+    color: #b8c2c3;
+  }
+
+  /* Utility-level light surfaces used by the shared account/listing pages. */
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.bg-white, .bg-card, .bg-background) {
+    background-color: #111a20 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.text-gray-900, .text-gray-800, .text-\[\#101820\], .text-foreground) {
+    color: #f0ece5 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.text-gray-700, .text-gray-600, .text-muted-foreground,
+      .text-\[\#68737a\], .text-\[\#7b858b\]) {
+    color: #aab4b5 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.border-gray-100, .border-gray-200, .border-gray-300,
+      .border-\[\#dfe3e5\], .border-\[\#e0e4e6\]) {
+    border-color: rgb(145 164 170 / 0.24) !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(input, textarea, select, [role="combobox"]) {
+    background-color: #10181e !important;
+    border-color: rgb(145 164 170 / 0.3) !important;
+    color: #f0ece5 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(input, textarea, select, [role="combobox"]):is(:hover, :focus-visible) {
+    border-color: rgb(255 120 64 / 0.68) !important;
+    box-shadow: 0 0 0 1px rgb(255 120 64 / 0.15);
+    outline: none;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is([data-testid="select-main-category"], [data-testid="select-sub-category"]) {
+    background: #10191f !important;
+    border-color: rgb(255 120 64 / 0.5) !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is([data-testid="select-main-category"], [data-testid="select-sub-category"])
+    .text-orange-900 {
+    color: #ffb389 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(input, textarea)::placeholder {
+    color: #849397;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is(.bg-gray-50, .bg-gray-100, .bg-gray-200) {
+    background-color: #172229 !important;
+  }
+
+  /* Favorites and status/icon treatments that use literal light utilities. */
+  html[data-desktop-theme="nighttime"] .desktop-web-active .favorites-desktop-route .bg-red-50 {
+    background: #321c20 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .favorites-desktop-route .text-red-500 {
+    color: #ff817e !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .my-listings-desktop-route
+    :is(.bg-green-100, .bg-yellow-100, .bg-red-100, .bg-gray-100, .bg-orange-100) {
+    border: 1px solid rgb(145 164 170 / 0.18);
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .my-listings-desktop-route .bg-green-100 {
+    background: #17352c !important;
+    color: #75e1b7 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .my-listings-desktop-route .bg-yellow-100 {
+    background: #3a301a !important;
+    color: #f4ce72 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .my-listings-desktop-route .bg-red-100 {
+    background: #3b1d21 !important;
+    color: #ff8582 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .my-listings-desktop-route .bg-gray-100 {
+    background: #202b32 !important;
+    color: #c3cccd !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .my-listings-desktop-route .bg-orange-100 {
+    background: #3b2418 !important;
+    color: #ff9b67 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route) .bg-gray-200 {
+    background: #27343b !important;
+    color: #f0ece5 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route)
+    :is(.bg-red-100, .bg-green-100, .bg-amber-100, .bg-blue-100) {
+    border: 1px solid rgb(145 164 170 / 0.18);
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route) .bg-red-100 {
+    background: #3b1d21 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route) .bg-green-100 {
+    background: #17352c !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route) .bg-amber-100 {
+    background: #3a301a !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route) .bg-blue-100 {
+    background: #182d43 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route)
+    :is(.text-red-500, .text-green-500, .text-amber-600, .text-blue-500) {
+    filter: saturate(1.1) brightness(1.15);
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route)
+    :is(.bg-green-100.text-green-700, .bg-green-100.text-green-600) {
+    color: #75e1b7 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route) .bg-red-100.text-red-700 {
+    color: #ff8582 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route) .bg-amber-100.text-amber-600 {
+    color: #f4ce72 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active :is(.profile-desktop-route, .inbox-desktop-route) .bg-blue-100.text-blue-500 {
+    color: #78baf5 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active .seller-desktop-route
+    :is(.hover\:bg-green-50, .text-green-600):is(:hover, :focus-visible) {
+    background: #142d28 !important;
+    color: #71dfba !important;
+    border-color: #2d8e79 !important;
+  }
+
+  /* Category and listing forms use a few intentionally orange inline marks. */
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    [data-marketplace-menu] .category-option-icon {
+    background: #3a251b !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    [data-marketplace-menu] .category-option-icon svg {
+    color: #ff9b67 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] .desktop-web-active
+    :is([data-testid="badge-filter-subcategory"], [data-testid="badge-filter-model"]) {
+    background: #3b2418 !important;
+    color: #ff9b67 !important;
+    border: 1px solid rgb(255 120 64 / 0.3);
+  }
+
+  /*
+   * All Radix portals used by these routes carry the marker at their content
+   * node.  The body gate is essential: portals render under body, outside the
+   * active route's `.desktop-web-active` subtree.
+   */
+  html[data-desktop-theme="daytime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] {
+    --background: 0 0% 100%;
+    --foreground: 210 28% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 28% 10%;
+    --muted: 210 16% 94%;
+    --muted-foreground: 210 9% 42%;
+    --border: 210 14% 88%;
+    --input: 210 14% 88%;
+    --accent: 20 100% 96%;
+    --accent-foreground: 16 79% 42%;
+    background: #fff !important;
+    border-color: #dfe3e5 !important;
+    color: #101820 !important;
+    color-scheme: light;
+    box-shadow: 0 12px 30px rgb(32 48 58 / 0.14) !important;
+  }
+
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] {
+    --background: 216 24% 10%;
+    --foreground: 30 18% 91%;
+    --popover: 216 24% 10%;
+    --popover-foreground: 30 18% 91%;
+    --muted: 215 18% 15%;
+    --muted-foreground: 215 10% 63%;
+    --border: 215 18% 25%;
+    --input: 215 18% 25%;
+    --accent: 16 35% 17%;
+    --accent-foreground: 20 90% 65%;
+    background:
+      linear-gradient(150deg, rgb(21 31 38 / 0.98), rgb(9 15 20 / 0.99)) !important;
+    border-color: rgb(145 164 170 / 0.3) !important;
+    color: #eee9e2 !important;
+    color-scheme: dark;
+    box-shadow:
+      0 16px 38px rgb(0 0 0 / 0.48),
+      inset 0 1px 0 rgb(255 255 255 / 0.045) !important;
+  }
+
+  html[data-desktop-theme="daytime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is(input, textarea, select) {
+    background: #fff !important;
+    border-color: #dfe3e5 !important;
+    color: #101820 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is(input, textarea, select) {
+    background: #10181e !important;
+    border-color: rgb(145 164 170 / 0.3) !important;
+    color: #f0ece5 !important;
+  }
+
+  html[data-desktop-theme="daytime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is([role="option"], [role="menuitem"],
+      [role="menuitemcheckbox"], [role="menuitemradio"], [cmdk-item]) {
+    color: #26343b !important;
+  }
+
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is([role="option"], [role="menuitem"],
+      [role="menuitemcheckbox"], [role="menuitemradio"], [cmdk-item]) {
+    color: #e8e5df !important;
+  }
+
+  html[data-desktop-theme="daytime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is([role="option"], [role="menuitem"],
+      [role="menuitemcheckbox"], [role="menuitemradio"], [cmdk-item]):is(
+      :hover, :focus-visible, [data-highlighted], [data-state="checked"],
+      [data-selected="true"]) {
+    background: #fff1e9 !important;
+    color: #d94b1b !important;
+    outline: none;
+  }
+
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is([role="option"], [role="menuitem"],
+      [role="menuitemcheckbox"], [role="menuitemradio"], [cmdk-item]):is(
+      :hover, :focus-visible, [data-highlighted], [data-state="checked"],
+      [data-selected="true"]) {
+    background: #332018 !important;
+    color: #ff8050 !important;
+    outline: none;
+  }
+
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is(button, [role="button"]):is(:hover, :focus-visible) {
+    color: #ff8050 !important;
+    border-color: rgb(255 120 64 / 0.62);
+    outline: none;
+  }
+
+  html[data-desktop-theme="daytime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is([cmdk-group-heading], .text-muted-foreground) {
+    color: #68747b !important;
+  }
+
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is([cmdk-group-heading], .text-muted-foreground) {
+    color: #aab7b9 !important;
+  }
+
+  html[data-desktop-theme="nighttime"] body:has(.desktop-web-active)
+    [data-marketplace-menu] :is([data-radix-popper-content-wrapper], [role="dialog"]) {
+    color: #eee9e2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-web-active :is(.shadcn-card, .glass-card, [data-marketplace-menu]) {
+    transition: none !important;
+  }
+}

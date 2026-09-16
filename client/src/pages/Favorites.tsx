@@ -25,7 +25,7 @@ export default function Favorites() {
 
   if (isAuthLoading || !user) {
     return (
-      <div className="min-h-screen bg-background py-8 px-4">
+      <div className="favorites-desktop-route min-h-screen bg-background py-8 px-4">
         <div className="container mx-auto max-w-6xl">
           <Skeleton className="h-10 w-48 mb-8" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -43,7 +43,7 @@ export default function Favorites() {
   }, []);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background py-8 px-4">
+    <PullToRefresh onRefresh={handleRefresh} className="favorites-desktop-route min-h-screen bg-background py-8 px-4">
       <div className="container mx-auto max-w-6xl">
         <Button variant="ghost" className="mb-6" data-testid="button-back" onClick={() => window.history.length > 1 ? window.history.back() : (window.location.href = "/")}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to listings

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
+import { useDesktopTheme } from "@/hooks/use-desktop-theme";
 import { cn } from "@/lib/utils";
 
 export const APP_STORE_URL =
@@ -125,13 +126,28 @@ interface ActionsDropdownProps {
 export function ActionsDropdown({ className }: ActionsDropdownProps) {
   const { toast } = useToast();
   const { language, setLanguage, isRTL } = useLanguage();
+  const { theme: desktopTheme, setTheme: setDesktopTheme } = useDesktopTheme();
   const [dark, setDarkState] = useState<boolean>(() => isDarkMode());
+  const [desktopMarketplace, setDesktopMarketplace] = useState(false);
 
   useEffect(() => {
     // Keep the menu's theme indicator in sync if something else toggles dark mode.
     const obs = new MutationObserver(() => setDarkState(isDarkMode()));
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const updateSurface = () => {
+      setDesktopMarketplace(
+        !isNative() &&
+        window.innerWidth >= 1024 &&
+        Boolean(document.querySelector(".desktop-web-active")),
+      );
+    };
+    updateSurface();
+    window.addEventListener("resize", updateSurface);
+    return () => window.removeEventListener("resize", updateSurface);
   }, []);
 
   if (isNative()) return null;
@@ -171,10 +187,16 @@ export function ActionsDropdown({ className }: ActionsDropdownProps) {
   };
 
   const toggleTheme = () => {
+    if (desktopMarketplace) {
+      setDesktopTheme(desktopTheme === "nighttime" ? "daytime" : "nighttime");
+      return;
+    }
     const next = !dark;
     setDark(next);
     setDarkState(next);
   };
+
+  const themeIsDark = desktopMarketplace ? desktopTheme === "nighttime" : dark;
 
   return (
     <DropdownMenu>
@@ -203,8 +225,8 @@ export function ActionsDropdown({ className }: ActionsDropdownProps) {
           {language === "en" ? "العربية" : "English"}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer" data-testid="action-theme">
-          {dark ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
-          {dark
+          {themeIsDark ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+          {themeIsDark
             ? (isRTL ? "الوضع الفاتح" : "Light mode")
             : (isRTL ? "الوضع الداكن" : "Dark mode")}
         </DropdownMenuItem>
