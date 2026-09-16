@@ -48,7 +48,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Link } from "wouter";
+import { useSearch } from "wouter";
+import { DesktopFilterSidebar } from "@/components/DesktopFilterSidebar";
+import { Capacitor } from "@capacitor/core";
 
 type MainCategory = "automotive" | "spare-parts";
 type SortOption = "newest" | "oldest" | "price-low" | "price-high";
@@ -65,7 +67,6 @@ interface CategoryFilters {
   yearMax: string;
   kmMin: string;
   kmMax: string;
-  sellerType: string;
   condition: string;
 }
 
@@ -74,61 +75,99 @@ const SCROLL_KEY = "categories";
 
 export default function Categories() {
   const { t, isRTL } = useLanguage();
+  // Wouter's pathname location does not change for query-only navigation.
+  // useSearch subscribes to pushState/replaceState/popstate separately.
+  const urlSearch = useSearch();
   const { density, gridClasses } = useListingView();
 
   const initState = useMemo((): Partial<CategoryFilters> => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(urlSearch);
     const tab = params.get("tab");
-    if (tab === "spare-parts" || tab === "automotive") {
-      savedFilters = null;
-      setSavedScroll(SCROLL_KEY, 0);
-      const subCatParam = params.get("subCategory") ?? params.get("brand");
-      const validSubs: readonly string[] =
-        tab === "spare-parts" ? SPARE_PARTS_SUBCATEGORIES : AUTOMOTIVE_SUBCATEGORIES;
-      const initSub =
-        subCatParam && validSubs.includes(subCatParam) ? subCatParam : undefined;
-      const rawModel = params.get("model") || "";
-      const validModels = initSub && tab === "automotive" ? (CAR_MODELS[initSub] || []) : [];
-      const initModel =
-        rawModel && validModels.includes(rawModel) ? rawModel : undefined;
-      const validNumber = (key: string) => {
-        const value = params.get(key);
-        return value && /^\d+(?:\.\d+)?$/.test(value) ? value : undefined;
-      };
-      const initSearch = (params.get("search") || "").trim();
-      const initCondition = ["all", "new", "used", "refurbished"].includes(params.get("condition") || "")
-        ? params.get("condition")!
-        : undefined;
+    const hasTab = tab === "spare-parts" || tab === "automotive";
+    const hasUrlFilters = ["tab", "subCategory", "brand", "model", "search", "sort",
+      "priceMin", "priceMax", "yearMin", "yearMax", "kmMin", "kmMax", "condition"]
+      .some((key) => params.has(key));
 
-      // Normalize old sitemap links without breaking them. Canonical
-      // `subCategory` URLs remain visible so the selected brand is shareable.
-      if (params.has("brand")) {
-        params.delete("brand");
-        if (!params.has("subCategory") && subCatParam) {
-          params.set("subCategory", subCatParam);
-        }
-        const normalizedSearch = params.toString();
-        window.history.replaceState(
-          null,
-          "",
-          window.location.pathname + (normalizedSearch ? `?${normalizedSearch}` : ""),
-        );
+    if (hasUrlFilters) {
+      // A tab URL is a new browse context and should not inherit the previous
+      // tab's selections. Query-only links (for example ?search=brake) are
+      // patches over the saved context, so opening/back-navigation does not
+      // erase filters that were restored from the previous browse session.
+      const base: Partial<CategoryFilters> = hasTab ? {} : (savedFilters || {});
+      const category = (hasTab ? tab : base.activeCategory) || "automotive";
+      const validSubs: readonly string[] =
+        category === "spare-parts" ? SPARE_PARTS_SUBCATEGORIES : AUTOMOTIVE_SUBCATEGORIES;
+      const subCatParam = params.has("subCategory") || params.has("brand")
+        ? (params.get("subCategory") ?? params.get("brand") ?? "")
+        : undefined;
+      const activeSubCategory = subCatParam !== undefined
+        ? (validSubs.includes(subCatParam) ? subCatParam : "All")
+        : (base.activeSubCategory || "All");
+      const rawModel = params.has("model") ? (params.get("model") || "") : undefined;
+      const validModels = category === "automotive" && activeSubCategory !== "All"
+        ? (CAR_MODELS[activeSubCategory] || [])
+        : [];
+      const activeModel = rawModel !== undefined
+        ? (validModels.includes(rawModel) ? rawModel : "All")
+        : (base.activeModel || "All");
+      const validNumber = (key: string, fallback = "") => {
+        if (!params.has(key)) return fallback;
+        const value = params.get(key) || "";
+        return /^\d+(?:\.\d+)?$/.test(value) ? value : "";
+      };
+      const validCondition = (value: string | null, fallback = "all") =>
+        value === null ? fallback : (["all", "new", "used", "refurbished"].includes(value) ? value : "all");
+      const validSort = (value: string | null, fallback: SortOption = "newest"): SortOption =>
+        value === null ? fallback : (["newest", "oldest", "price-low", "price-high"].includes(value)
+          ? value as SortOption
+          : "newest");
+      const initSearch = params.has("search") ? (params.get("search") || "").trim() : (base.search || "");
+
+      if (hasTab) {
+        savedFilters = null;
+        setSavedScroll(SCROLL_KEY, 0);
       }
 
       return {
-        activeCategory: tab as MainCategory,
-        ...(initSub ? { activeSubCategory: initSub } : {}),
-        ...(initSearch ? { search: initSearch } : {}),
-        ...(initModel ? { activeModel: initModel } : {}),
-        ...(validNumber("priceMax") ? { priceMax: validNumber("priceMax") } : {}),
-        ...(validNumber("yearMin") ? { yearMin: validNumber("yearMin") } : {}),
-        ...(validNumber("kmMax") ? { kmMax: validNumber("kmMax") } : {}),
-        ...(initCondition ? { condition: initCondition } : {}),
+        ...base,
+        activeCategory: category as MainCategory,
+        activeSubCategory,
+        activeModel,
+        search: initSearch,
+        sortBy: validSort(params.get("sort"), base.sortBy),
+        priceMin: validNumber("priceMin", base.priceMin),
+        priceMax: validNumber("priceMax", base.priceMax),
+        yearMin: validNumber("yearMin", base.yearMin),
+        yearMax: validNumber("yearMax", base.yearMax),
+        kmMin: validNumber("kmMin", base.kmMin),
+        kmMax: validNumber("kmMax", base.kmMax),
+        condition: validCondition(params.has("condition") ? params.get("condition") : null, base.condition),
       };
     }
     if (savedFilters) return savedFilters;
     return {};
-  }, []);
+  }, [urlSearch]);
+  const pendingNormalizedSearch = useRef<string | null>(null);
+
+  /*
+   * Keep legacy brand links readable while making subCategory canonical. This
+   * is deliberately an effect rather than a render-time history mutation so
+   * useSearch receives the resulting replaceState update.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(urlSearch);
+    if (!params.has("brand")) return;
+    const brand = params.get("brand");
+    params.delete("brand");
+    if (!params.has("subCategory") && brand) params.set("subCategory", brand);
+    const normalizedSearch = params.toString();
+    pendingNormalizedSearch.current = normalizedSearch;
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + (normalizedSearch ? `?${normalizedSearch}` : ""),
+    );
+  }, [urlSearch]);
 
   const [search, setSearch] = useState(initState.search || "");
   const [subCatOpen, setSubCatOpen] = useState(false);
@@ -143,15 +182,79 @@ export default function Categories() {
   const [yearMax, setYearMax] = useState(initState.yearMax || "");
   const [kmMin, setKmMin] = useState(initState.kmMin || "");
   const [kmMax, setKmMax] = useState(initState.kmMax || "");
-  const [sellerType, setSellerType] = useState(initState.sellerType || "all");
   const [condition, setCondition] = useState(initState.condition || "all");
+  const [isDesktopWeb, setIsDesktopWeb] = useState(() => !Capacitor.isNativePlatform() && window.innerWidth >= 1024);
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
+    const update = () => setIsDesktopWeb(window.innerWidth >= 1024);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  /*
+   * Apply query-only navigations while Categories stays mounted. A pathname
+   * location effect is insufficient here because Wouter intentionally tracks
+   * the search string separately.
+   */
+  const previousSearch = useRef(urlSearch);
+  useEffect(() => {
+    if (previousSearch.current === urlSearch) return;
+    previousSearch.current = urlSearch;
+    if (pendingNormalizedSearch.current === urlSearch) {
+      pendingNormalizedSearch.current = null;
+      return;
+    }
+    const params = new URLSearchParams(urlSearch);
+    const tab = params.get("tab");
+    const hasTab = tab === "spare-parts" || tab === "automotive";
+    const knownKey = ["tab", "subCategory", "brand", "model", "search", "sort",
+      "priceMin", "priceMax", "yearMin", "yearMax", "kmMin", "kmMax", "condition"]
+      .some((key) => params.has(key));
+    if (!knownKey) return;
+
+    const category = (hasTab ? tab : activeCategory) as MainCategory;
+    const validSubs: readonly string[] =
+      category === "spare-parts" ? SPARE_PARTS_SUBCATEGORIES : AUTOMOTIVE_SUBCATEGORIES;
+    let nextSub = "All";
+    if (hasTab) setActiveCategory(category);
+    if (params.has("subCategory") || params.has("brand")) {
+      const rawSub = params.get("subCategory") ?? params.get("brand") ?? "";
+      nextSub = validSubs.includes(rawSub) ? rawSub : "All";
+    }
+    setActiveSubCategory(nextSub);
+    if (params.has("model")) {
+      const rawModel = params.get("model") || "";
+      const models = category === "automotive" && nextSub !== "All"
+        ? (CAR_MODELS[nextSub] || [])
+        : [];
+      setActiveModel(models.includes(rawModel) ? rawModel : "All");
+    } else setActiveModel("All");
+    setSearch(params.has("search") ? (params.get("search") || "").trim() : "");
+    const validNumber = (key: string) => {
+      if (!params.has(key)) return "";
+      const value = params.get(key) || "";
+      return /^\d+(?:\.\d+)?$/.test(value) ? value : "";
+    };
+    setPriceMin(validNumber("priceMin"));
+    setPriceMax(validNumber("priceMax"));
+    setYearMin(validNumber("yearMin"));
+    setYearMax(validNumber("yearMax"));
+    setKmMin(validNumber("kmMin"));
+    setKmMax(validNumber("kmMax"));
+    const nextCondition = params.get("condition") || "all";
+    setCondition(["all", "new", "used", "refurbished"].includes(nextCondition) ? nextCondition : "all");
+    const nextSort = params.get("sort") || "newest";
+    setSortBy(["newest", "oldest", "price-low", "price-high"].includes(nextSort)
+      ? nextSort as SortOption
+      : "newest");
+  }, [urlSearch, activeCategory, activeSubCategory]);
 
   useEffect(() => {
     savedFilters = {
       search, activeCategory, activeSubCategory, activeModel, sortBy,
-      priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition,
+      priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, condition,
     };
-  }, [search, activeCategory, activeSubCategory, activeModel, sortBy, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition]);
+  }, [search, activeCategory, activeSubCategory, activeModel, sortBy, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, condition]);
 
   useEffect(() => {
     const container = document.getElementById('main-scroll-container');
@@ -235,10 +338,9 @@ export default function Categories() {
     if (priceMin || priceMax) count++;
     if (yearMin || yearMax) count++;
     if (kmMin || kmMax) count++;
-    if (sellerType !== "all") count++;
     if (condition !== "all") count++;
     return count;
-  }, [activeSubCategory, activeModel, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, sellerType, condition]);
+  }, [activeSubCategory, activeModel, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, condition]);
 
   const clearAllFilters = () => {
     setActiveSubCategory("All");
@@ -249,7 +351,6 @@ export default function Categories() {
     setYearMax("");
     setKmMin("");
     setKmMax("");
-    setSellerType("all");
     setCondition("all");
   };
 
@@ -306,7 +407,6 @@ export default function Categories() {
         p.condition.trim().toLowerCase() === normalizedCondition
       );
     }
-    
     if (sortBy === "oldest") {
       filtered.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
     } else if (sortBy === "price-low") {
@@ -331,6 +431,17 @@ export default function Categories() {
     condition,
   ]);
 
+  if (isDesktopWeb) {
+    return <div className="desktop-saman categories-desktop-surface min-h-full" dir={isRTL ? "rtl" : "ltr"}>
+      <DesktopFilterSidebar open={filterOpen} onClose={() => setFilterOpen(false)} isRTL={isRTL} automotive={activeCategory === "automotive"} categories={getSubcategories()} category={activeSubCategory} onCategory={handleSubCategoryChange} models={getModelsForBrand()} model={activeModel} onModel={setActiveModel} {...{ priceMin, setPriceMin, priceMax, setPriceMax, yearMin, setYearMin, yearMax, setYearMax, kmMin, setKmMin, kmMax, setKmMax, condition, setCondition }} clear={clearAllFilters} />
+      <main className={`desktop-browse-main ${filterOpen ? "filters-visible" : ""}`}>
+        <section className="desktop-browse-hero" style={{ backgroundImage: `linear-gradient(${isRTL ? "270deg" : "90deg"},rgba(255,222,185,.96),rgba(255,201,148,.68) 47%,rgba(16,32,42,.12)),url(${dubaiNightSkyline})` }}><div><p>{isRTL ? "سوق الإمارات للسيارات وقطع الغيار" : "THE UAE'S AUTOMOTIVE MARKETPLACE"}</p><h1>{activeCategory === "automotive" ? (isRTL ? "اكتشف سيارتك القادمة." : "Find your next drive.") : (isRTL ? "كل قطعة في مكانها." : "The right part is out there.")}</h1></div><span>{isRTL ? "دبي · الإمارات" : "Dubai · UAE"}</span></section>
+        <section className="desktop-search-panel"><div className="desktop-market-tabs"><button onClick={() => handleCategoryChange("automotive")} className={activeCategory === "automotive" ? "active" : ""}><Car size={15}/>{t("automotive")}</button><button onClick={() => handleCategoryChange("spare-parts")} className={activeCategory === "spare-parts" ? "active" : ""}><Wrench size={15}/>{t("spareParts")}</button></div><div className="desktop-search-row"><div className="desktop-query"><Search size={16}/><Input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("searchCategory")} data-testid="input-search-desktop" /></div><Select value={activeSubCategory} onValueChange={handleSubCategoryChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{getSubcategories().map(x => <SelectItem key={x} value={x}>{x === "All" ? (activeCategory === "automotive" ? t("allBrands") : t("allCategories")) : x}</SelectItem>)}</SelectContent></Select>{activeCategory === "automotive" && activeSubCategory !== "All" && getModelsForBrand().length > 0 && <ModelCombobox models={getModelsForBrand()} value={activeModel} onValueChange={setActiveModel} emptyValue="All" emptyLabel={t("allModels")} />}</div><button onClick={() => setFilterOpen(!filterOpen)} className="desktop-advanced-filter"><SlidersHorizontal size={14}/>{isRTL ? "فلاتر إضافية" : "Advanced Filters"}{activeFiltersCount ? <b>{activeFiltersCount}</b> : null}</button></section>
+         <section className="desktop-results-head"><div><h2>{isRTL ? "الإعلانات المتاحة" : "Available listings"}</h2><p>{filteredAndSortedProducts.length} {isRTL ? "إعلان" : "listings matching your search"}</p></div><div><ListingViewSwitcher includeList={isDesktopWeb} /><Select value={sortBy} onValueChange={v => setSortBy(v as SortOption)}><SelectTrigger className="desktop-sort"><ArrowUpDown size={14}/><SelectValue /></SelectTrigger><SelectContent><SelectItem value="newest">{t("newest")}</SelectItem><SelectItem value="oldest">{t("oldest")}</SelectItem><SelectItem value="price-low">{t("priceUp")}</SelectItem><SelectItem value="price-high">{t("priceDown")}</SelectItem></SelectContent></Select></div></section>
+         {isLoading ? <div className="desktop-card-grid">{Array.from({length: 8}).map((_, i) => <Skeleton key={i} className="h-64 rounded-lg" />)}</div> : error ? <div className="desktop-state"><p>Failed to load products</p><Button onClick={() => refetch()}>Retry</Button></div> : filteredAndSortedProducts.length ? <div className={`desktop-card-grid ${density === "compact" ? "compact" : ""} ${density === "single" ? "list" : ""}`}>{filteredAndSortedProducts.map(product => <ProductCard key={product.id} product={product} sellerImageUrl={(product as any).sellerProfileImageUrl} sellerFirstName={(product as any).sellerFirstName} sellerLastName={(product as any).sellerLastName} sellerDisplayName={(product as any).sellerDisplayName} showDate density={density} />)}</div> : <div className="desktop-state"><Car size={34}/><h3>{isRTL ? "لا توجد إعلانات مطابقة" : "No listings found"}</h3><Button variant="outline" onClick={clearAllFilters}>{isRTL ? "مسح الفلاتر" : "Clear filters"}</Button></div>}
+      </main>
+    </div>;
+  }
   return (
     <PullToRefresh onRefresh={handleRefresh} className="relative min-h-screen bg-background">
       {/* Faint Dubai skyline backdrop behind header + search/tabs (dark mode only) */}
@@ -650,21 +761,7 @@ export default function Categories() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">Seller Type</label>
-                        <Select value={sellerType} onValueChange={setSellerType}>
-                          <SelectTrigger className="h-9 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            <SelectItem value="dealer">Dealer</SelectItem>
-                            <SelectItem value="private">Private</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
+                    <div className="grid grid-cols-1 gap-3">
                       <div className="space-y-1.5">
                         <label className="text-xs font-medium text-muted-foreground">Condition</label>
                         <Select value={condition} onValueChange={setCondition}>
@@ -675,6 +772,7 @@ export default function Categories() {
                             <SelectItem value="all">All</SelectItem>
                             <SelectItem value="new">New</SelectItem>
                             <SelectItem value="used">Used</SelectItem>
+                            <SelectItem value="refurbished">Refurbished</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

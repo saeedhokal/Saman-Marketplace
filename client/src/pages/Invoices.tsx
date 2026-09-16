@@ -68,7 +68,7 @@ export default function Invoices() {
 
   if (selectedInvoice) {
     return (
-      <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="profile-desktop-route min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
         <div className="sticky top-0 z-40 bg-background border-b border-border">
           <div className="container mx-auto px-4">
             <div className="flex items-center h-14">
@@ -148,7 +148,7 @@ export default function Invoices() {
   }
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="profile-desktop-route min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">

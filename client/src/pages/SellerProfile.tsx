@@ -165,8 +165,8 @@ export default function SellerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="container mx-auto max-w-6xl">
+    <div className="seller-desktop-route min-h-screen bg-background py-8 px-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="seller-desktop-content container mx-auto max-w-6xl">
         <Button variant="ghost" className="mb-6" data-testid="button-back" onClick={() => window.history.back()}>
           <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} /> {t('back')}
         </Button>

@@ -13,6 +13,7 @@ import { Capacitor } from "@capacitor/core";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { Heartbeat } from "@/components/Heartbeat";
 import { StickyDownloadAppCTA } from "@/components/WebChromeActions";
+import { DesktopMarketplaceChrome } from "@/components/DesktopMarketplaceChrome";
 
 import Landing from "@/pages/Landing";
 import LanguageSelect from "@/pages/LanguageSelect";
@@ -55,6 +56,26 @@ import NotFound from "@/pages/not-found";
 // Pages that manage their own scroll restoration on back-navigation.
 // Scrolling them to top here would fight their restoration logic.
 const SCROLL_RESTORE_PAGES = ['/categories', '/favorites', '/my-listings'];
+
+// These routes use the public web marketplace frame at desktop widths. Keep
+// the route list in one place so the legacy shortcut menu and mobile bottom
+// navigation cannot accidentally render alongside the desktop chrome.
+function isDesktopMarketplaceRoute(location: string): boolean {
+  const pathname = location.split("?")[0];
+  return pathname === "/categories" ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/seller/") ||
+    pathname === "/favorites" ||
+    pathname === "/my-listings" ||
+    pathname === "/inbox";
+}
+
+function isLegacyRedesignRoute(location: string): boolean {
+  const pathname = location.split("?")[0];
+  return pathname === "/categories" ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/seller/");
+}
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -163,12 +184,13 @@ function Router() {
 function BottomNavWrapper() {
   const [location] = useLocation();
   const hideBottomNav = location === '/downloads' || location.startsWith('/reset-password') || location === '/open';
+  const desktopMarketplaceRoute = isDesktopMarketplaceRoute(location);
   
   if (hideBottomNav) return null;
   if (location === '/' && !Capacitor.isNativePlatform()) {
     return <div className="md:hidden"><BottomNav /></div>;
   }
-  return <BottomNav />;
+  return <div className={desktopMarketplaceRoute ? "desktop-redesigned-mobile-nav" : ""}><BottomNav /></div>;
 }
 
 function DesktopNavMenuWrapper() {
@@ -176,6 +198,12 @@ function DesktopNavMenuWrapper() {
   const hide = location === '/downloads' || location.startsWith('/reset-password') || location.startsWith('/auth') || location === '/open';
   if (hide) return null;
   if (location === '/' && !Capacitor.isNativePlatform()) return null;
+  if (isDesktopMarketplaceRoute(location) && !Capacitor.isNativePlatform()) {
+    // Keep the pre-existing tablet/browser navigation behavior. The wrapper
+    // is hidden by the >=1024 desktop-web-active rule instead of removing
+    // this menu at every viewport size.
+    return <div className="desktop-shell-legacy-nav"><DesktopNavMenu /></div>;
+  }
   return <DesktopNavMenu />;
 }
 
@@ -280,6 +308,8 @@ function DeepLinkHandler() {
 
 function AppContent() {
   const { hasSelectedLanguage } = useLanguage();
+  const [location] = useLocation();
+  const isDesktopRoute = isDesktopMarketplaceRoute(location);
 
   // Smart link page must work for anyone — skip language gate
   if (window.location.pathname === '/open') {
@@ -295,7 +325,8 @@ function AppContent() {
       <DeepLinkHandler />
       <UpdatePrompt />
       <Heartbeat />
-      <div className="flex flex-col bg-background" style={{ height: 'var(--app-height)' }}>
+      <div className={`flex flex-col bg-background ${!Capacitor.isNativePlatform() && isDesktopRoute ? "desktop-web-active" : ""}`} style={{ height: 'var(--app-height)' }}>
+        {!Capacitor.isNativePlatform() && isDesktopRoute && <DesktopMarketplaceChrome />}
         <Router />
         <StickyDownloadAppCTA />
         <DesktopNavMenuWrapper />

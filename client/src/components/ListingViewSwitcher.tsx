@@ -4,9 +4,11 @@ import { cn } from "@/lib/utils";
 
 interface ListingViewSwitcherProps {
   className?: string;
+  /** Expose the horizontal list layout only on the desktop redesign. */
+  includeList?: boolean;
 }
 
-export function ListingViewSwitcher({ className }: ListingViewSwitcherProps) {
+export function ListingViewSwitcher({ className, includeList = false }: ListingViewSwitcherProps) {
   const { view, setView, isNative } = useListingView();
 
   const options: { value: ListingView; label: string; Icon: typeof LayoutGrid }[] =
@@ -16,8 +18,9 @@ export function ListingViewSwitcher({ className }: ListingViewSwitcherProps) {
           { value: "default", label: "Default", Icon: LayoutGrid },
           { value: "compact", label: "Compact", Icon: Grid3x3 },
         ]
-      : [
-          { value: "large", label: "Large", Icon: Rows3 },
+       : [
+           ...(includeList ? [{ value: "single" as ListingView, label: "List", Icon: Rows3 }] : []),
+           { value: "large", label: "Large", Icon: Square },
           { value: "default", label: "Default", Icon: LayoutGrid },
           { value: "compact", label: "Compact", Icon: Grid3x3 },
         ];

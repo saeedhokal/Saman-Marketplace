@@ -70,7 +70,7 @@ export default function Subscription() {
 
   if (!creditsInfo?.subscriptionEnabled) {
     return (
-      <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="profile-desktop-route min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
         <div className="sticky top-0 z-40 bg-background border-b border-border">
           <div className="container mx-auto px-4">
             <div className="relative flex items-center justify-center h-14">
@@ -106,7 +106,7 @@ export default function Subscription() {
   const tabLabel = activeTab === "Spare Parts" ? t("spareParts") : t("automotive");
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="profile-desktop-route min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="relative flex items-center justify-center h-14">

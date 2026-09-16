@@ -65,6 +65,9 @@ if (typeof window !== "undefined") {
 
 export function useListingView() {
   const [view, setViewState] = useState<ListingView>(currentView);
+  const [isDesktopWeb, setIsDesktopWeb] = useState(
+    () => !NATIVE && typeof window !== "undefined" && window.innerWidth >= 1024,
+  );
 
   useEffect(() => {
     const cb = (v: ListingView) => setViewState(v);
@@ -77,19 +80,32 @@ export function useListingView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (NATIVE || typeof window === "undefined") return;
+    const update = () => setIsDesktopWeb(window.innerWidth >= 1024);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   const setView = useCallback((v: ListingView) => {
     setGlobalView(v);
   }, []);
 
   // Map current view to a density for ProductCard.
+  // "single" is the desktop web list view. Treat it as the normal grid on
+  // narrow web viewports so selecting it on a desktop and resizing to a
+  // tablet/mobile browser does not alter the mobile layout.
+  const effectiveView = !NATIVE && !isDesktopWeb && view === "single" ? "default" : view;
+
   const density: Density = (() => {
     if (NATIVE) {
-      if (view === "single") return "single";
-      if (view === "compact") return "compact";
+      if (effectiveView === "single") return "single";
+      if (effectiveView === "compact") return "compact";
       return "default";
     }
-    if (view === "large") return "large";
-    if (view === "compact") return "compact";
+    if (effectiveView === "single") return "single";
+    if (effectiveView === "large") return "large";
+    if (effectiveView === "compact") return "compact";
     return "default";
   })();
 
@@ -111,7 +127,9 @@ export function useListingView() {
     // unconditional (no responsive prefix) so each option shows a visibly
     // different number of cards at ANY width — including narrow windows.
     // Compact previously rendered 3 columns, identical to Default.
-    switch (view) {
+    switch (effectiveView) {
+      case "single":
+        return "grid grid-cols-1 gap-3";
       case "large":
         return "grid grid-cols-2 gap-4 sm:gap-6";
       case "compact":

@@ -69,7 +69,7 @@ export default function Profile() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="profile-desktop-route min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="relative flex items-center justify-center h-14">
@@ -81,7 +81,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pt-6">
+      <div className="profile-desktop-content container mx-auto px-4 pt-6">
         {/* Profile Photo Section */}
         <div className="flex flex-col items-center mb-8">
           <Avatar className="h-24 w-24 mb-4">
