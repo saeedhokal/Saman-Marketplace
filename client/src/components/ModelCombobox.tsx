@@ -27,6 +27,7 @@ interface ModelComboboxProps {
   disabled?: boolean;
   className?: string;
   testId?: string;
+  ariaLabel?: string;
 }
 
 export function ModelCombobox({
@@ -40,6 +41,7 @@ export function ModelCombobox({
   disabled = false,
   className,
   testId = "select-model",
+  ariaLabel,
 }: ModelComboboxProps) {
   const [open, setOpen] = useState(false);
   const selectedLabel = value && value !== emptyValue ? value : emptyLabel;
@@ -58,6 +60,7 @@ export function ModelCombobox({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
+          aria-label={ariaLabel}
           className={cn("w-full justify-between font-normal", className)}
           data-testid={testId}
         >

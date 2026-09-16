@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import QRCode from "qrcode";
-import { Apple, Download as DownloadIcon, Upload, MessageCircle, Car, Wrench, Cog, Check, Smartphone, Globe, Moon, Sun } from "lucide-react";
+import { Apple, Download as DownloadIcon, Upload, MessageCircle, Car, Wrench, Cog, Check, Smartphone, Globe, Moon, Sun, Search, SlidersHorizontal, RotateCcw, ShieldCheck, MapPin } from "lucide-react";
 import { SiGoogleplay } from "react-icons/si";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ModelCombobox } from "@/components/ModelCombobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS, SPARE_PARTS_SUBCATEGORIES } from "@shared/schema";
 import { ProductCard } from "@/components/ProductCard";
 import { useLanguage } from "@/hooks/use-language";
 import type { Product } from "@shared/schema";
@@ -29,6 +33,31 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
   const [darkMode, setDarkMode] = useState(() =>
     typeof document !== "undefined" && document.documentElement.classList.contains("dark")
   );
+  const [market, setMarket] = useState<"automotive" | "spare-parts">("automotive");
+  const [brand, setBrand] = useState("All");
+  const [model, setModel] = useState("All");
+  const [query, setQuery] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [yearMin, setYearMin] = useState("");
+  const [kmMax, setKmMax] = useState("");
+  const [partCondition, setPartCondition] = useState("all");
+  const [vehicleCondition, setVehicleCondition] = useState("all");
+  const [moreFilters, setMoreFilters] = useState(false);
+  const brands = market === "automotive" ? AUTOMOTIVE_SUBCATEGORIES : SPARE_PARTS_SUBCATEGORIES;
+  const models = market === "automotive" && brand !== "All" ? (CAR_MODELS[brand] || []) : [];
+  const searchUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("tab", market);
+    if (query) params.set("search", query);
+    if (brand !== "All") params.set("subCategory", brand);
+    if (model !== "All") params.set("model", model);
+    if (priceMax) params.set("priceMax", priceMax);
+    if (yearMin) params.set("yearMin", yearMin);
+    if (kmMax) params.set("kmMax", kmMax);
+    if ((market === "automotive" ? vehicleCondition : partCondition) !== "all") params.set("condition", market === "automotive" ? vehicleCondition : partCondition);
+    return `/categories?${params.toString()}`;
+  }, [market, query, brand, model, priceMax, yearMin, kmMax, partCondition, vehicleCondition]);
+  const resetSearch = () => { setBrand("All"); setModel("All"); setQuery(""); setPriceMax(""); setYearMin(""); setKmMax(""); setPartCondition("all"); setVehicleCondition("all"); setMoreFilters(false); };
 
   const toggleDarkMode = useCallback(() => {
     const root = document.documentElement;
@@ -111,6 +140,37 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
             </Link>
           </div>
         </nav>
+
+        {/* ===== Marketplace search ===== */}
+        <section className="relative z-40 -mt-1 mb-10 rounded-[1.75rem] border border-gray-200/80 bg-white p-3 shadow-[0_24px_70px_-35px_rgba(15,23,42,.55)] dark:border-white/10 dark:bg-slate-900">
+          <div className="rounded-2xl bg-slate-50 p-5 dark:bg-white/[0.04]">
+            <div className="mb-4 flex items-end justify-between gap-4">
+              <div>
+                <p className="mb-1 text-[11px] font-bold uppercase tracking-[.2em] text-orange-500">{ar ? "ابحث في سوق الإمارات" : "Search the UAE marketplace"}</p>
+                <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">{ar ? "ملايين الخيارات. بحث واحد واضح." : "Your next find starts here."}</h2>
+              </div>
+              <div className="hidden items-center gap-2 text-xs font-semibold text-gray-500 dark:text-white/50 md:flex"><ShieldCheck className="h-4 w-4 text-orange-500" /> {ar ? "إعلانات حقيقية من بائعين محليين" : "Real listings from local sellers"}</div>
+            </div>
+            <div className="mb-3 flex gap-2">
+              <button aria-pressed={market === "automotive"} aria-label={ar ? "اختيار السيارات والمركبات" : "Choose Automotive"} data-testid="desktop-market-automotive" onClick={() => { setMarket("automotive"); setBrand("All"); setModel("All"); }} className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition-colors ${market === "automotive" ? "border-orange-500 bg-orange-500 text-white" : "border-gray-200 bg-white text-gray-600 hover:border-orange-300 dark:border-white/10 dark:bg-white/5 dark:text-white/70"}`}><Car className="h-4 w-4" />{ar ? "سيارات ومركبات" : "Automotive"}</button>
+              <button aria-pressed={market === "spare-parts"} aria-label={ar ? "اختيار قطع الغيار" : "Choose Spare Parts"} data-testid="desktop-market-spare-parts" onClick={() => { setMarket("spare-parts"); setBrand("All"); setModel("All"); }} className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition-colors ${market === "spare-parts" ? "border-orange-500 bg-orange-500 text-white" : "border-gray-200 bg-white text-gray-600 hover:border-orange-300 dark:border-white/10 dark:bg-white/5 dark:text-white/70"}`}><Wrench className="h-4 w-4" />{ar ? "قطع الغيار" : "Spare Parts"}</button>
+            </div>
+            <div className={`grid gap-2 ${market === "automotive" ? (models.length > 0 ? "lg:grid-cols-[minmax(220px,1.35fr)_minmax(130px,1fr)_minmax(130px,1fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(104px,auto)]" : "lg:grid-cols-[minmax(220px,1.5fr)_minmax(130px,1fr)_minmax(130px,1fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(104px,auto)]") : "lg:grid-cols-[minmax(220px,1.5fr)_minmax(150px,1fr)_minmax(140px,1fr)_minmax(104px,auto)]"}`}>
+              <div className="flex items-center rounded-xl border border-gray-200 bg-white px-3 dark:border-white/10 dark:bg-slate-950"><Search className="mr-2 h-4 w-4 text-orange-500" /><Input aria-label={ar ? "البحث عن سيارة أو قطعة" : "Search cars or parts"} value={query} onChange={(e) => setQuery(e.target.value)} placeholder={ar ? "ابحث عن سيارة، قطعة..." : "Search cars, parts & more"} className="h-11 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0" /></div>
+              <Select value={brand} onValueChange={(v) => { setBrand(v); setModel("All"); }}><SelectTrigger aria-label={ar ? "الفئة" : "Category"} className="h-11 min-w-0 border-gray-200 bg-white dark:border-white/10 dark:bg-slate-950"><SelectValue placeholder={ar ? "الفئة" : "Category"} /></SelectTrigger><SelectContent><SelectItem value="All">{ar ? "كل الفئات" : "All categories"}</SelectItem>{brands.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>
+              {market === "automotive" && models.length > 0 && <ModelCombobox models={models} value={model} onValueChange={setModel} emptyValue="All" emptyLabel={ar ? "كل الموديلات" : "All models"} searchPlaceholder={ar ? "ابحث عن موديل..." : "Search models..."} ariaLabel={ar ? "الموديل" : "Model"} className="h-11 min-w-0" />}
+              <Input aria-label={ar ? "الحد الأقصى للسعر بالدرهم" : "Maximum price in AED"} value={priceMax} onChange={(e) => setPriceMax(e.target.value)} type="number" placeholder={ar ? "السعر حتى (درهم)" : "Price up to (AED)"} className="h-11 min-w-0 bg-white dark:bg-slate-950" />
+              {market === "automotive" && <Input aria-label={ar ? "السنة من" : "Year from"} value={yearMin} onChange={(e) => setYearMin(e.target.value)} type="number" placeholder={ar ? "السنة من" : "Year from"} className="h-11 min-w-0 bg-white dark:bg-slate-950" />}
+              {market === "automotive" && <Input aria-label={ar ? "المسافة القصوى بالكيلومتر" : "Maximum mileage in kilometres"} value={kmMax} onChange={(e) => setKmMax(e.target.value)} type="number" placeholder={ar ? "المسافة حتى" : "Mileage up to"} className="h-11 min-w-0 bg-white dark:bg-slate-950" />}
+              <Link aria-label={ar ? "بحث في الإعلانات" : "Search listings"} data-testid="desktop-search-submit" href={searchUrl} className="flex h-11 min-w-[104px] items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"><Search className="h-4 w-4" />{ar ? "بحث" : "Search"}</Link>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <button aria-expanded={moreFilters} aria-label={ar ? "عرض الفلاتر الإضافية" : "Show additional filters"} onClick={() => setMoreFilters(!moreFilters)} className="flex items-center gap-2 font-semibold text-gray-600 hover:text-orange-600 dark:text-white/70"><SlidersHorizontal className="h-4 w-4" />{ar ? "فلاتر إضافية" : "More filters"}</button>
+              <button aria-label={ar ? "إعادة ضبط البحث" : "Reset search"} onClick={resetSearch} className="flex items-center gap-1 text-gray-500 hover:text-orange-600 dark:text-white/50"><RotateCcw className="h-3.5 w-3.5" />{ar ? "إعادة ضبط" : "Reset"}</button>
+            </div>
+            {moreFilters && <div className="mt-3 max-w-xs border-t border-gray-200 pt-3 dark:border-white/10"><Select value={market === "automotive" ? vehicleCondition : partCondition} onValueChange={market === "automotive" ? setVehicleCondition : setPartCondition}><SelectTrigger aria-label={ar ? "الحالة" : "Condition"} className="bg-white dark:bg-slate-950"><SelectValue placeholder={ar ? "الحالة" : "Condition"} /></SelectTrigger><SelectContent><SelectItem value="all">{ar ? "كل الحالات" : "Any condition"}</SelectItem><SelectItem value="new">{ar ? "جديد" : "New"}</SelectItem><SelectItem value="used">{ar ? "مستعمل" : "Used"}</SelectItem></SelectContent></Select></div>}
+          </div>
+        </section>
 
         {/* ===== Hero ===== */}
         <section className="grid lg:grid-cols-2 gap-12 items-center pt-6 pb-20">
@@ -240,7 +300,16 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
         </section>
 
         {/* ===== Sample listings ===== */}
-        <section className="py-16 border-t border-gray-200/60 dark:border-white/10">
+        <section className="mx-auto max-w-[1120px] py-16 border-t border-gray-200/60 dark:border-white/10">
+          <div className="grid gap-6 lg:grid-cols-[190px_minmax(0,1fr)_190px]">
+            <aside className="hidden space-y-4 lg:block">
+              <div className="sticky top-6 rounded-2xl border border-orange-500/20 bg-orange-500/[0.07] p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[.15em] text-orange-600">{ar ? "على هاتفك" : "Saman on mobile"}</p>
+                <p className="mt-2 text-sm font-bold leading-snug text-gray-900 dark:text-white">{ar ? "احفظ بحثك وتواصل أسرع." : "Save searches and message sellers faster."}</p>
+                <div className="mt-4 grid gap-2"><a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-black px-2 py-2 text-center text-[11px] font-semibold text-white">App Store</a><a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-black px-2 py-2 text-center text-[11px] font-semibold text-white">Google Play</a></div>
+              </div>
+            </aside>
+            <div className="min-w-0">
           <div className="flex items-end justify-between mb-8">
             <div>
               <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">
@@ -255,13 +324,13 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
             </Link>
           </div>
           {isLoadingRecent ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="aspect-square rounded-2xl bg-gray-200/60 dark:bg-white/5 animate-pulse" />
               ))}
             </div>
           ) : sample.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               {sample.map((p) => (
                 <ProductCard
                   key={p.id}
@@ -279,6 +348,16 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
               {ar ? "لا توجد إعلانات حالياً." : "No listings yet — be the first to post."}
             </p>
           )}
+            </div>
+            <aside className="hidden space-y-4 lg:block">
+              <div className="sticky top-6 rounded-2xl border border-gray-200/70 p-4 dark:border-white/10">
+                <ShieldCheck className="h-5 w-5 text-orange-500" />
+                <p className="mt-3 text-sm font-bold text-gray-900 dark:text-white">{ar ? "سوق واضح وموثوق" : "A clearer way to buy"}</p>
+                <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-white/60">{ar ? "تواصل مباشر مع بائعين في الإمارات." : "Direct contact with sellers across the UAE."}</p>
+                <MapPin className="mt-4 h-4 w-4 text-gray-400" />
+              </div>
+            </aside>
+          </div>
         </section>
 
         {/* ===== QR + download ===== */}

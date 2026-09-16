@@ -87,6 +87,18 @@ export default function Categories() {
         tab === "spare-parts" ? SPARE_PARTS_SUBCATEGORIES : AUTOMOTIVE_SUBCATEGORIES;
       const initSub =
         subCatParam && validSubs.includes(subCatParam) ? subCatParam : undefined;
+      const rawModel = params.get("model") || "";
+      const validModels = initSub && tab === "automotive" ? (CAR_MODELS[initSub] || []) : [];
+      const initModel =
+        rawModel && validModels.includes(rawModel) ? rawModel : undefined;
+      const validNumber = (key: string) => {
+        const value = params.get(key);
+        return value && /^\d+(?:\.\d+)?$/.test(value) ? value : undefined;
+      };
+      const initSearch = (params.get("search") || "").trim();
+      const initCondition = ["all", "new", "used", "refurbished"].includes(params.get("condition") || "")
+        ? params.get("condition")!
+        : undefined;
 
       // Normalize old sitemap links without breaking them. Canonical
       // `subCategory` URLs remain visible so the selected brand is shareable.
@@ -106,6 +118,12 @@ export default function Categories() {
       return {
         activeCategory: tab as MainCategory,
         ...(initSub ? { activeSubCategory: initSub } : {}),
+        ...(initSearch ? { search: initSearch } : {}),
+        ...(initModel ? { activeModel: initModel } : {}),
+        ...(validNumber("priceMax") ? { priceMax: validNumber("priceMax") } : {}),
+        ...(validNumber("yearMin") ? { yearMin: validNumber("yearMin") } : {}),
+        ...(validNumber("kmMax") ? { kmMax: validNumber("kmMax") } : {}),
+        ...(initCondition ? { condition: initCondition } : {}),
       };
     }
     if (savedFilters) return savedFilters;
@@ -265,6 +283,29 @@ export default function Categories() {
       const maxPrice = parseFloat(priceMax);
       filtered = filtered.filter(p => (p.price || 0) <= maxPrice);
     }
+    if (yearMin) {
+      const minYear = parseFloat(yearMin);
+      filtered = filtered.filter(p => p.year != null && Number(p.year) >= minYear);
+    }
+    if (yearMax) {
+      const maxYear = parseFloat(yearMax);
+      filtered = filtered.filter(p => p.year != null && Number(p.year) <= maxYear);
+    }
+    if (kmMin) {
+      const minKm = parseFloat(kmMin);
+      filtered = filtered.filter(p => p.mileage != null && Number(p.mileage) >= minKm);
+    }
+    if (kmMax) {
+      const maxKm = parseFloat(kmMax);
+      filtered = filtered.filter(p => p.mileage != null && Number(p.mileage) <= maxKm);
+    }
+    if (condition !== "all") {
+      const normalizedCondition = condition.trim().toLowerCase();
+      filtered = filtered.filter(p =>
+        typeof p.condition === "string" &&
+        p.condition.trim().toLowerCase() === normalizedCondition
+      );
+    }
     
     if (sortBy === "oldest") {
       filtered.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
@@ -275,7 +316,20 @@ export default function Categories() {
     }
     
     return filtered;
-  }, [products, activeModel, sortBy, activeCategory, activeSubCategory, priceMin, priceMax]);
+  }, [
+    products,
+    activeModel,
+    sortBy,
+    activeCategory,
+    activeSubCategory,
+    priceMin,
+    priceMax,
+    yearMin,
+    yearMax,
+    kmMin,
+    kmMax,
+    condition,
+  ]);
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="relative min-h-screen bg-background">
