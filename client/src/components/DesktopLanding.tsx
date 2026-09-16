@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AUTOMOTIVE_SUBCATEGORIES, CAR_MODELS, SPARE_PARTS_SUBCATEGORIES } from "@shared/schema";
 import { ProductCard } from "@/components/ProductCard";
 import { useLanguage } from "@/hooks/use-language";
+import { useAuth } from "@/hooks/use-auth";
 import type { Product } from "@shared/schema";
 import samanLogo from "@/assets/images/saman-logo-transparent.png";
 import dubaiSkyline from "@/assets/images/dubai-night-skyline.png";
@@ -29,6 +30,9 @@ interface DesktopLandingProps {
 
 export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandingProps) {
   const { isRTL, language, setLanguage } = useLanguage();
+  const { user } = useAuth();
+  const accountHref = user ? "/profile" : "/auth";
+  const accountLabel = user ? (isRTL ? "حسابي" : "My account") : (isRTL ? "تسجيل الدخول" : "Sign In");
   const ar = language === "ar";
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [market, setMarket] = useState<"automotive" | "spare-parts">("automotive");
@@ -91,12 +95,12 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
           <div className="hidden items-center gap-4 text-[12px] font-semibold lg:flex" style={{ marginInlineStart: "auto" }}>
             <span className="flex items-center gap-1">● {ar ? "الإمارات" : "UAE"} <span className="text-[10px]">⌄</span></span>
             <button onClick={() => setLanguage(ar ? "en" : "ar")} className="flex items-center gap-1" data-testid="desktop-nav-language-toggle"><Globe className="h-4 w-4" /> {ar ? "EN" : "عربي"}</button>
-            <Link href="/auth" className="flex items-center gap-1" data-testid="desktop-nav-sign-in"><UserRound className="h-4 w-4" /> {ar ? "تسجيل الدخول" : "Sign In"}</Link>
+            <Link href={accountHref} className="flex items-center gap-1" data-testid="desktop-nav-sign-in"><UserRound className="h-4 w-4" /> {accountLabel}</Link>
             <Link href="/sell" className="rounded-lg bg-[#f45b27] px-5 py-3 text-white shadow-sm hover:bg-[#df4818]" data-testid="desktop-nav-post">{ar ? "أضف إعلاناً" : "+ Post Listing"}</Link>
           </div>
           <button className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)} aria-label={ar ? "القائمة" : "Menu"}><Menu /></button>
         </div>
-        {mobileMenu && <div className="border-t bg-white px-5 py-4 lg:hidden"><div className="flex flex-col gap-4 text-sm font-semibold"><Link href="/categories?tab=automotive">{ar ? "السيارات" : "Automotive"}</Link><Link href="/categories?tab=spare-parts">{ar ? "قطع الغيار" : "Spare Parts"}</Link><Link href="/categories">{ar ? "المتاجر" : "Shops"}</Link><Link href="/sell">{ar ? "بيع" : "Sell"}</Link><Link href="/auth">{ar ? "تسجيل الدخول" : "Sign In"}</Link></div></div>}
+        {mobileMenu && <div className="border-t bg-white px-5 py-4 lg:hidden"><div className="flex flex-col gap-4 text-sm font-semibold"><Link href="/categories?tab=automotive">{ar ? "السيارات" : "Automotive"}</Link><Link href="/categories?tab=spare-parts">{ar ? "قطع الغيار" : "Spare Parts"}</Link><Link href="/categories">{ar ? "المتاجر" : "Shops"}</Link><Link href="/sell">{ar ? "بيع" : "Sell"}</Link><Link href={accountHref}>{accountLabel}</Link></div></div>}
       </header>
 
       <main className="mx-auto grid max-w-[1440px] grid-cols-1 gap-4 px-3 py-3 sm:px-5 lg:grid-cols-[130px_minmax(0,1fr)] lg:gap-4 lg:px-6">
