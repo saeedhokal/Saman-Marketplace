@@ -1,4 +1,5 @@
 - [Desktop/native isolation](desktop-native-isolation.md) — desktop CSS needs both a web-platform gate and width breakpoint; native tablets can exceed desktop widths.
+- [Nighttime visual fidelity](nighttime-visual-fidelity.md) — reference requires localized amber highlights and real logos; verify generated hero aspect ratio before fitting.
 - [Listing image performance](image-performance.md) — display surfaces must request resized /objects/ URLs (w/q params), never full-res phone originals.
 - [GPT-5 reasoning token budget](gpt5-reasoning-token-budget.md) — reasoning tokens eat max_completion_tokens; low caps return empty content silently. Use reasoning_effort minimal for translations.
 - [Firebase OTP billing](firebase-otp-billing.md) — phone-auth SMS needs Blaze plan; auth/billing-not-enabled = console plan issue, not code. Check [OTP ERROR] in deploy logs first.

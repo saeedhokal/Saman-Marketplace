@@ -5,7 +5,7 @@ import {
   Apple, Car, ChevronRight, Cog, Globe, Menu, Search,
   SlidersHorizontal, UserRound, Wrench, X,
 } from "lucide-react";
-import { SiGoogleplay } from "react-icons/si";
+import { SiBmw, SiFord, SiGoogleplay, SiHonda, SiMercedes, SiNissan, SiToyota } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ModelCombobox } from "@/components/ModelCombobox";
@@ -19,7 +19,7 @@ import { useDesktopTheme } from "@/hooks/use-desktop-theme";
 import type { Product } from "@shared/schema";
 import samanLogo from "@/assets/images/saman-logo-transparent.png";
 import dubaiSkyline from "@/assets/images/dubai-night-skyline.png";
-import dubaiNightSportsCar from "@/assets/images/dubai-night-sports-car-hero.png";
+import dubaiNightSportsCar from "@/assets/images/nighttime-home-panorama.webp";
 import phone1 from "@/assets/phone-screen-2.png";
 import phone2 from "@/assets/phone-screen-3.png";
 
@@ -72,12 +72,12 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
     setBrand("All"); setModel("All"); setQuery(""); setPriceMax(""); setYearMin(""); setKmMax(""); setCondition("all"); setMoreFilters(false);
   };
   const popular = [
-    { value: "Toyota", label: "Toyota" },
-    { value: "Nissan", label: "Nissan" },
-    { value: "BMW", label: "BMW" },
-    { value: "Mercedes", label: "Mercedes" },
-    { value: "Honda", label: "Honda" },
-    { value: "Ford", label: "Ford" },
+    { value: "Toyota", label: "Toyota", Icon: SiToyota },
+    { value: "Nissan", label: "Nissan", Icon: SiNissan },
+    { value: "BMW", label: "BMW", Icon: SiBmw },
+    { value: "Mercedes", label: "Mercedes", Icon: SiMercedes },
+    { value: "Honda", label: "Honda", Icon: SiHonda },
+    { value: "Ford", label: "Ford", Icon: SiFord },
   ].filter((make) => AUTOMOTIVE_SUBCATEGORIES.includes(make.value as typeof AUTOMOTIVE_SUBCATEGORIES[number]));
   const sample = recentProducts.slice(0, 6);
   const carImage = recentProducts.find((p) => p.mainCategory === "Automotive")?.imageUrl;
@@ -109,7 +109,7 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
       </header>
 
       <main className="mx-auto grid max-w-[1440px] grid-cols-1 gap-4 px-3 py-3 sm:px-5 lg:grid-cols-[130px_minmax(0,1fr)] lg:gap-4 lg:px-6">
-        <aside className="hidden rounded-lg border border-[#e2e5e7] bg-white p-3 lg:block">
+          <aside className="desktop-home-rail hidden rounded-lg border border-[#e2e5e7] bg-white p-3 lg:block">
           <div className="sticky top-[84px] text-center">
             <p className="text-[20px] font-black leading-[.95] tracking-tight">{ar ? <>سامان<br />معك</> : <>Saman<br />On The Go</>}</p>
             <p className="mt-3 text-[10px] leading-snug text-[#5f6b72]">
@@ -125,10 +125,10 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
         </aside>
 
         <div className="min-w-0">
-          <section className="desktop-home-hero relative h-[245px] overflow-visible rounded-lg bg-[#f9c08c] shadow-sm sm:h-[265px]" style={{ backgroundImage: theme === "nighttime" ? `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(5,10,14,.94) 0%, rgba(7,13,17,.72) 43%, rgba(5,10,14,.10) 76%), url(${dubaiNightSportsCar})` : `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(255,218,178,.95) 0%, rgba(255,197,141,.55) 48%, rgba(15,33,47,.08)), url(${dubaiSkyline})`, backgroundSize: "cover", backgroundPosition: theme === "nighttime" ? "center 70%" : "center" }}>
+          <section className="desktop-home-hero relative h-[245px] overflow-visible rounded-lg bg-[#f9c08c] shadow-sm sm:h-[265px]" style={{ backgroundImage: theme === "nighttime" ? `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(5,10,14,.38) 0%, rgba(7,13,17,.15) 43%, transparent 76%), url(${dubaiNightSportsCar})` : `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(255,218,178,.95) 0%, rgba(255,197,141,.55) 48%, rgba(15,33,47,.08)), url(${dubaiSkyline})`, backgroundSize: "cover", backgroundPosition: "center" }}>
             <div className="relative z-10 max-w-[490px] px-6 pt-7 sm:px-10 sm:pt-10">
               <p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#e95220]">{ar ? "سوق الإمارات الموثوق" : "The UAE's trusted automotive marketplace"}</p>
-              <h1 className="mt-2 text-[31px] font-black leading-[.98] tracking-[-.04em] text-[#101820] sm:text-[42px]">{ar ? "سيارات. قطع. أشخاص. كلهم على سامان." : <>Cars. Parts. People.<br />All on Saman.</>}</h1>
+              <h1 className="mt-2 text-[31px] font-black leading-[.98] tracking-[-.04em] text-[#101820] sm:text-[42px]">{ar ? "سيارات. قطع. أشخاص. كلهم على سامان." : <>Cars. Parts. People.<br />All on <span className="desktop-home-brand-word">Saman.</span></>}</h1>
               <p className="mt-3 text-[13px] font-medium text-[#27323a]">{ar ? "اكتشف صفقات حقيقية من بائعين محليين." : "Find your next car, part, or buyer — all in one place."}</p>
             </div>
             <div className={`absolute top-7 hidden rotate-[-8deg] text-[13px] font-black uppercase leading-[.9] tracking-widest text-[#27323a]/75 sm:block ${isRTL ? "left-7 text-left" : "right-7 text-right"}`}>{ar ? <>اصنع<br /><span className="text-[19px]">قصتك القادمة</span></> : <>Drive your<br /><span className="text-[19px]">next story</span></>}</div>
@@ -138,7 +138,7 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
           <section className={moreFilters ? "mt-[166px] sm:mt-[148px]" : "mt-[112px] sm:mt-[94px]"}>
             <div className="mb-2 flex items-center justify-between"><h2 className="text-[15px] font-extrabold">{ar ? "تصفح حسب الفئة" : "Browse by category"}</h2><Link href="/categories" className="text-[11px] font-semibold text-[#68737a]">{ar ? "كل الفئات ←" : "Popular categories in the UAE →"}</Link></div>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-7">
-              {popular.map((make) => <Link key={make.value} href={`/categories?tab=automotive&subCategory=${encodeURIComponent(make.value)}`} className="flex h-[59px] flex-col items-center justify-center gap-1 rounded-md border border-[#e0e4e6] bg-white text-[10px] font-bold transition hover:border-orange-400 hover:text-orange-600"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#f1f3f3] text-[12px] font-black">{make.label.slice(0, 2).toUpperCase()}</span>{make.label}</Link>)}
+              {popular.map((make) => <Link key={make.value} href={`/categories?tab=automotive&subCategory=${encodeURIComponent(make.value)}`} className="desktop-brand-tile flex h-[59px] flex-col items-center justify-center gap-1 rounded-md border border-[#e0e4e6] bg-white text-[10px] font-bold transition hover:border-orange-400 hover:text-orange-600"><span className="desktop-brand-mark flex h-7 w-9 items-center justify-center text-[20px]"><make.Icon aria-hidden="true" /></span>{make.label}</Link>)}
               <Link href="/categories" className="flex h-[59px] flex-col items-center justify-center gap-1 rounded-md border border-[#e0e4e6] bg-white text-[10px] font-bold hover:border-orange-400"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#f1f3f3]"><SlidersHorizontal className="h-4 w-4" /></span>{ar ? "كل الفئات" : "All Categories"}</Link>
             </div>
           </section>
@@ -212,7 +212,7 @@ function SearchPanel(p: SearchPanelProps) {
         advanced: "Advanced Filters",
         reset: "Reset",
       };
-  return <div className="absolute inset-x-4 -bottom-[87px] z-20 rounded-lg border border-[#d9dddf] bg-white p-2.5 shadow-[0_12px_30px_rgba(32,48,58,.18)] sm:inset-x-10">
+  return <div className="desktop-home-search absolute inset-x-4 -bottom-[87px] z-20 rounded-lg border border-[#d9dddf] bg-white p-2.5 shadow-[0_12px_30px_rgba(32,48,58,.18)] sm:inset-x-10">
     <div className="flex gap-1 border-b border-[#edf0f1] pb-2">{[["automotive", <Car className="h-3.5 w-3.5" />, p.ar ? "سيارات" : "Automotive"], ["spare-parts", <Wrench className="h-3.5 w-3.5" />, p.ar ? "قطع الغيار" : "Spare Parts"]].map(([value, icon, label]) => <button key={String(value)} aria-pressed={p.market === value} onClick={() => { p.setMarket(value as any); p.setBrand("All"); p.setModel("All"); }} className={`flex items-center gap-1.5 rounded-md px-4 py-2 text-[11px] font-bold ${p.market === value ? "bg-[#f45b27] text-white" : "text-[#5c686f] hover:bg-[#f6f7f7]"}`} data-testid={`desktop-market-${value}`}>{icon}{label}</button>)}<span className="hidden self-center text-[10px] text-[#879197] sm:block" style={{ marginInlineStart: "auto" }}>{p.ar ? "إعلانات حقيقية من بائعين محليين" : "Millions of listings. Real people. Real deals."}</span></div>
     <div className="mt-2 desktop-home-search__main">
       <div className="flex items-center rounded-md border border-[#dfe3e5] px-2"><Search className="h-3.5 w-3.5 text-[#f45b27]" /><Input value={p.query} onChange={(e) => p.setQuery(e.target.value)} placeholder={labels.search} aria-label={labels.searchAria} className="h-8 border-0 bg-transparent text-[11px] shadow-none focus-visible:ring-0" /></div>
@@ -228,5 +228,5 @@ function SearchPanel(p: SearchPanelProps) {
 }
 
 function PromoCard({ ar, href, image, icon, title, body, action }: { ar: boolean; href: string; image: string; icon: React.ReactNode; title: string; body: string; action: string }) {
-  return <Link href={href} className="group relative flex h-[78px] overflow-hidden rounded-lg border border-[#e9d9cb] bg-[#fff8f2]"><div className="w-[31%] shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${image})` }} /><div className="min-w-0 flex-1 px-3 py-2"><div className="flex items-center gap-1.5 text-[13px] font-extrabold">{icon}{title}</div><p className="mt-1 max-w-[250px] truncate text-[10px] text-[#68737a]">{body}</p></div><span className={`my-auto rounded-md bg-[#f45b27] px-3 py-2 text-[10px] font-bold text-white group-hover:bg-[#df4818] ${ar ? "ml-3" : "mr-3"}`}>{action} <ChevronRight className={`inline h-3 w-3 ${ar ? "rotate-180" : ""}`} /></span></Link>;
+  return <Link href={href} className="desktop-home-promo group relative flex h-[78px] overflow-hidden rounded-lg border border-[#e9d9cb] bg-[#fff8f2]"><div className="w-[31%] shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${image})` }} /><div className="min-w-0 flex-1 px-3 py-2"><div className="flex items-center gap-1.5 text-[13px] font-extrabold">{icon}{title}</div><p className="mt-1 max-w-[250px] truncate text-[10px] text-[#68737a]">{body}</p></div><span className={`my-auto rounded-md bg-[#f45b27] px-3 py-2 text-[10px] font-bold text-white group-hover:bg-[#df4818] ${ar ? "ml-3" : "mr-3"}`}>{action} <ChevronRight className={`inline h-3 w-3 ${ar ? "rotate-180" : ""}`} /></span></Link>;
 }
