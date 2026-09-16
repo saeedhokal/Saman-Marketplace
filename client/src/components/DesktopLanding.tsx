@@ -131,7 +131,6 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
               <h1 className="mt-2 text-[31px] font-black leading-[.98] tracking-[-.04em] text-[#101820] sm:text-[42px]">{ar ? "سيارات. قطع. أشخاص. كلهم على سامان." : <>Cars. Parts. People.<br />All on <span className="desktop-home-brand-word">Saman.</span></>}</h1>
               <p className="mt-3 text-[13px] font-medium text-[#27323a]">{ar ? "اكتشف صفقات حقيقية من بائعين محليين." : "Find your next car, part, or buyer — all in one place."}</p>
             </div>
-            <div className={`absolute top-7 hidden rotate-[-8deg] text-[13px] font-black uppercase leading-[.9] tracking-widest text-[#27323a]/75 sm:block ${isRTL ? "left-7 text-left" : "right-7 text-right"}`}>{ar ? <>اصنع<br /><span className="text-[19px]">قصتك القادمة</span></> : <>Drive your<br /><span className="text-[19px]">next story</span></>}</div>
             <SearchPanel {...{ ar, market, setMarket, brand, setBrand, model, setModel, query, setQuery, priceMax, setPriceMax, yearMin, setYearMin, kmMax, setKmMax, condition, setCondition, brands, models, searchUrl, moreFilters, setMoreFilters, resetSearch }} />
           </section>
 
