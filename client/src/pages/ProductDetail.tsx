@@ -21,10 +21,17 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/hooks/use-language";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { bustObjectUrl, objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
+import { DesktopListingDetail } from "@/components/DesktopListingDetail";
+import { Capacitor } from "@capacitor/core";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:slug");
   const id = params?.slug ? (parseListingId(params.slug) || 0) : 0;
+  const [isDesktopWeb, setIsDesktopWeb] = useState(() =>
+    typeof window !== "undefined" &&
+    !Capacitor.isNativePlatform() &&
+    window.innerWidth >= 1024
+  );
   const { data: product, isLoading, error } = useProduct(id);
   const { user } = useAuth();
   const { data: isFavorite } = useIsFavorite(id);
@@ -33,6 +40,16 @@ export default function ProductDetail() {
   const { toast } = useToast();
   const { isRTL, language } = useLanguage();
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    const updateDesktopWeb = () => {
+      setIsDesktopWeb(!Capacitor.isNativePlatform() && window.innerWidth >= 1024);
+    };
+
+    updateDesktopWeb();
+    window.addEventListener("resize", updateDesktopWeb);
+    return () => window.removeEventListener("resize", updateDesktopWeb);
+  }, []);
   
   // Translation state
   const [showTranslation, setShowTranslation] = useState(false);
@@ -334,7 +351,22 @@ export default function ProductDetail() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background" ref={pageRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <>
+      {isDesktopWeb ? (
+        <DesktopListingDetail
+          product={product} id={id} images={allImages} sellerProducts={sellerProducts} sellerInfo={sellerInfo}
+          isRTL={isRTL} user={user} isFavorite={isFavorite} formattedPrice={formattedPrice}
+          showTranslation={showTranslation} translatedTitle={translatedTitle} translatedDescription={translatedDescription}
+          isTranslating={isTranslating} translationLabel={getTranslationButtonLabel()}
+          callHref={user && hasCallNumber ? `tel:${formatPhoneForCall(callNumber)}` : "#"}
+          whatsappHref={user && hasWhatsappNumber ? `https://wa.me/${formatWhatsAppNumber(whatsappNumber)}` : "#"}
+          callDisabled={!!user && !hasCallNumber} whatsappDisabled={!!user && !hasWhatsappNumber}
+          onBack={() => window.history.back()} onFavorite={handleToggleFavorite} onShare={handleShare} onTranslate={handleTranslate}
+          onContact={handleContactClick}
+          onSellerLocked={() => setShowAuthPrompt(true)}
+        />
+      ) : (
+      <div className="product-detail-mobile min-h-screen bg-background" ref={pageRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <div className="container mx-auto px-4 py-6">
         <Button variant="ghost" className={`${isRTL ? 'pr-0' : 'pl-0'} hover:bg-transparent hover:text-accent text-base`} data-testid="button-back" onClick={() => window.history.back()}>
           <ArrowLeft className={`h-5 w-5 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} strokeWidth={2.5} /> {isRTL ? 'رجوع' : 'Back'}
@@ -412,7 +444,7 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {(product.year || product.mileage || product.condition || product.model || (product as any).spec) && (
+            {(product.year || product.mileage || product.condition || product.subCategory || product.model || product.spec) && (
               <div className="mb-6 grid grid-cols-2 gap-2" data-testid="product-specs">
                 {product.year && (
                   <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-year">
@@ -441,6 +473,17 @@ export default function ProductDetail() {
                     </div>
                   </div>
                 )}
+                {product.subCategory && (
+                  <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-subcategory">
+                    <Car className="h-4 w-4 text-accent shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                        {isRTL ? (product.mainCategory === "Automotive" ? 'الماركة' : 'الفئة الفرعية') : (product.mainCategory === "Automotive" ? 'Make' : 'Subcategory')}
+                      </div>
+                      <div className="text-sm font-semibold truncate">{product.subCategory}</div>
+                    </div>
+                  </div>
+                )}
                 {product.model && (
                   <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-model">
                     <Car className="h-4 w-4 text-accent shrink-0" />
@@ -450,15 +493,15 @@ export default function ProductDetail() {
                     </div>
                   </div>
                 )}
-                {(product as any).spec && (
+                {product.spec && (
                   <div className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2.5" data-testid="spec-spec">
                     <Globe className="h-4 w-4 text-accent shrink-0" />
                     <div className="min-w-0">
                       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{isRTL ? 'المواصفات' : 'Spec'}</div>
                       <div className="text-sm font-semibold truncate">
                         {isRTL
-                          ? (PRODUCT_SPEC_LABELS_AR[(product as any).spec as ProductSpec] || (product as any).spec)
-                          : (product as any).spec}
+                          ? (PRODUCT_SPEC_LABELS_AR[product.spec as ProductSpec] || product.spec)
+                          : product.spec}
                       </div>
                     </div>
                   </div>
@@ -536,35 +579,6 @@ export default function ProductDetail() {
               </a>
             </div>
 
-            <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
-              <DialogContent data-testid="dialog-auth-prompt">
-                <DialogHeader>
-                  <DialogTitle data-testid="text-auth-prompt-title">
-                    {isRTL ? 'سجّل للتواصل مع البائع' : 'Sign up to contact the seller'}
-                  </DialogTitle>
-                  <DialogDescription data-testid="text-auth-prompt-description">
-                    {isRTL
-                      ? 'أنشئ حسابًا أو سجّل دخولك للاتصال بالبائع أو إرسال رسالة عبر واتساب.'
-                      : 'Create an account or log in to call the seller or message them on WhatsApp.'}
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className="gap-2 sm:gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => goToAuth("login")}
-                    data-testid="button-auth-prompt-login"
-                  >
-                    {isRTL ? 'تسجيل الدخول' : 'Log in'}
-                  </Button>
-                  <Button
-                    onClick={() => goToAuth("signup")}
-                    data-testid="button-auth-prompt-signup"
-                  >
-                    {isRTL ? 'إنشاء حساب' : 'Sign up'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
 
@@ -672,5 +686,36 @@ export default function ProductDetail() {
         )}
       </div>
     </div>
+      )}
+      <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+        <DialogContent data-testid="dialog-auth-prompt">
+          <DialogHeader>
+            <DialogTitle data-testid="text-auth-prompt-title">
+              {isRTL ? 'سجّل للتواصل مع البائع' : 'Sign up to contact the seller'}
+            </DialogTitle>
+            <DialogDescription data-testid="text-auth-prompt-description">
+              {isRTL
+                ? 'أنشئ حسابًا أو سجّل دخولك للاتصال بالبائع أو إرسال رسالة عبر واتساب.'
+                : 'Create an account or log in to call the seller or message them on WhatsApp.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => goToAuth("login")}
+              data-testid="button-auth-prompt-login"
+            >
+              {isRTL ? 'تسجيل الدخول' : 'Log in'}
+            </Button>
+            <Button
+              onClick={() => goToAuth("signup")}
+              data-testid="button-auth-prompt-signup"
+            >
+              {isRTL ? 'إنشاء حساب' : 'Sign up'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -63,6 +63,7 @@ const SCROLL_RESTORE_PAGES = ['/categories', '/favorites', '/my-listings'];
 function isDesktopMarketplaceRoute(location: string): boolean {
   const pathname = location.split("?")[0];
   return pathname === "/categories" ||
+    pathname.startsWith("/product/") ||
     pathname.startsWith("/profile") ||
     pathname.startsWith("/seller/") ||
     pathname === "/favorites" ||
@@ -73,6 +74,7 @@ function isDesktopMarketplaceRoute(location: string): boolean {
 function isLegacyRedesignRoute(location: string): boolean {
   const pathname = location.split("?")[0];
   return pathname === "/categories" ||
+    pathname.startsWith("/product/") ||
     pathname.startsWith("/profile") ||
     pathname.startsWith("/seller/");
 }
