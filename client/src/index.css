@@ -266,7 +266,8 @@
   .desktop-search-row { display:grid; grid-template-columns:minmax(220px,1.7fr) minmax(140px,1fr) minmax(140px,1fr); gap:7px; padding-top:8px; }
   .desktop-search-row > button, .desktop-search-row [role=combobox] { height:34px; font-size:11px; background:#fff; }
   .desktop-query { display:flex; align-items:center; border:1px solid #dfe3e5; border-radius:6px; padding:0 8px; color:#f45b27; }.desktop-query input { border:0; box-shadow:none; height:32px; font-size:11px; }
-  .desktop-advanced-filter { display:flex; gap:5px; align-items:center; margin-top:8px; font-size:10px; color:#657178; font-weight:700; }.desktop-advanced-filter b { width:15px; height:15px; border-radius:50%; background:#f45b27; color:#fff; font-size:9px; display:grid; place-items:center; }
+  .desktop-filters-reopen { display:flex; align-items:center; gap:6px; margin:5px 0 8px; color:#df4818; font-size:11px; font-weight:800; }
+  .desktop-filters-reopen b { width:16px; height:16px; border-radius:50%; background:#f45b27; color:#fff; font-size:9px; display:grid; place-items:center; }
   .desktop-results-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; align-items:start; }
   .desktop-results-layout.has-filters { grid-template-columns:210px minmax(0,1fr); }
   .desktop-results-content { min-width:0; }
