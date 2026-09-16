@@ -19,6 +19,7 @@ import { useDesktopTheme } from "@/hooks/use-desktop-theme";
 import type { Product } from "@shared/schema";
 import samanLogo from "@/assets/images/saman-logo-transparent.png";
 import dubaiSkyline from "@/assets/images/dubai-night-skyline.png";
+import dubaiDaySportsCar from "@/assets/images/daytime-home-panorama.webp";
 import dubaiNightSportsCar from "@/assets/images/nighttime-home-panorama.webp";
 import phone1 from "@/assets/phone-screen-2.png";
 import phone2 from "@/assets/phone-screen-3.png";
@@ -125,7 +126,7 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
         </aside>
 
         <div className="min-w-0">
-          <section className="desktop-home-hero relative h-[245px] overflow-visible rounded-lg bg-[#f9c08c] shadow-sm sm:h-[265px]" style={{ backgroundImage: theme === "nighttime" ? `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(5,10,14,.38) 0%, rgba(7,13,17,.15) 43%, transparent 76%), url(${dubaiNightSportsCar})` : `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(255,218,178,.95) 0%, rgba(255,197,141,.55) 48%, rgba(15,33,47,.08)), url(${dubaiSkyline})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+          <section className="desktop-home-hero relative h-[245px] overflow-visible rounded-lg bg-[#f9c08c] shadow-sm sm:h-[265px]" style={{ backgroundImage: theme === "nighttime" ? `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(5,10,14,.38) 0%, rgba(7,13,17,.15) 43%, transparent 76%), url(${dubaiNightSportsCar})` : `linear-gradient(${isRTL ? "270deg" : "90deg"}, rgba(241,247,249,.92) 0%, rgba(234,244,249,.5) 43%, transparent 76%), url(${dubaiDaySportsCar})`, backgroundSize: "cover", backgroundPosition: "center" }}>
             <div className="relative z-10 max-w-[490px] px-6 pt-7 sm:px-10 sm:pt-10">
               <p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#e95220]">{ar ? "سوق الإمارات الموثوق" : "The UAE's trusted automotive marketplace"}</p>
               <h1 className="mt-2 text-[31px] font-black leading-[.98] tracking-[-.04em] text-[#101820] sm:text-[42px]">{ar ? "سيارات. قطع. أشخاص. كلهم على سامان." : <>Cars. Parts. People.<br />All on <span className="desktop-home-brand-word">Saman.</span></>}</h1>

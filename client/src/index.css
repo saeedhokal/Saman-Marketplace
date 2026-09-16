@@ -731,3 +731,23 @@
   .desktop-web-active .saman-desktop-header nav > a,
   .desktop-web-active .saman-desktop-header nav > a::after { transition:none !important; }
 }
+
+@media (min-width:1024px) {
+  html[data-desktop-theme="daytime"] .desktop-saman .desktop-home-search {
+    border:1px solid transparent;
+    background:linear-gradient(125deg,rgba(255,255,255,.82),rgba(249,252,253,.7)) padding-box,
+      linear-gradient(110deg,rgba(119,141,151,.26),rgba(119,141,151,.09) 50%,transparent) border-box;
+    box-shadow:0 8px 22px rgba(32,48,58,.08);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+  html[data-desktop-theme="daytime"] .desktop-saman .desktop-home-search > div:first-child {
+    border-bottom-color:transparent;
+    background:linear-gradient(90deg,rgba(119,141,151,.2),transparent) bottom / 100% 1px no-repeat;
+  }
+  html[data-desktop-theme="daytime"] .desktop-saman .desktop-home-search__main > div:first-child,
+  html[data-desktop-theme="daytime"] .desktop-saman .desktop-home-search button[role="combobox"] {
+    border-color:rgba(119,141,151,.2);
+    background-color:rgba(255,255,255,.55);
+  }
+}
