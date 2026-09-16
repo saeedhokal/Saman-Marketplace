@@ -207,6 +207,19 @@
   .desktop-web-active { --background: 210 20% 97%; --foreground: 210 28% 10%; --card: 0 0% 100%; --card-foreground: 210 28% 10%; --popover: 0 0% 100%; --popover-foreground: 210 28% 10%; --muted: 210 16% 94%; --muted-foreground: 210 9% 42%; --border: 210 14% 88%; --input: 210 14% 88%; color-scheme: light; }
   .desktop-web-active .desktop-redesigned-mobile-nav { display: none; }
    .desktop-web-active .desktop-shell-legacy-nav { display: none; }
+   .desktop-web-active .sell-page > .sticky { display:none; }
+   .desktop-web-active .sell-page { min-height:100%; padding:30px 24px 70px; background:#f4f6f7; color:#101820; }
+   .desktop-sell-heading { display:block; max-width:1120px; margin:0 auto 18px; padding:0 4px; }
+   .desktop-sell-heading p { color:#df4818; font-size:10px; font-weight:800; letter-spacing:.14em; }
+   .desktop-sell-heading h1 { margin-top:7px; color:#101820; font-size:32px; line-height:1; letter-spacing:-.05em; }
+   .desktop-sell-heading span { display:block; margin-top:7px; color:#68747b; font-size:12px; }
+   .desktop-web-active .sell-page > .container { max-width:1120px; padding:0; }
+   .desktop-web-active .sell-page > .container > .card { border:1px solid #dfe3e5; box-shadow:0 6px 20px rgb(32 48 58 / .06); border-radius:9px; }
+   .desktop-web-active .sell-page > .container > .desktop-sell-form-card { max-width:840px; margin:0 auto; padding:24px 30px; }
+   .desktop-web-active .sell-page label { color:#59666d; font-size:11px; font-weight:800; }
+   .desktop-web-active .sell-page input, .desktop-web-active .sell-page textarea, .desktop-web-active .sell-page select { border-color:#dfe3e5; border-radius:6px; font-size:12px; }
+   .desktop-web-active .sell-page textarea { min-height:150px; }
+   .desktop-web-active .sell-page [data-testid="button-publish"] { height:46px; font-size:13px; border-radius:6px; }
    .desktop-web-active .product-detail-mobile { display: none; }
    .desktop-web-active .desktop-listing-detail { display:block; max-width:1120px; margin-left:max(158px, calc((100vw - 1440px)/2 + 150px)); margin-right:max(24px, calc((100vw - 1440px)/2)); padding:26px 0 64px; color:#101820; }
     .desktop-web-active [dir="rtl"] .desktop-listing-detail { margin-left:max(24px, calc((100vw - 1440px)/2)); margin-right:max(158px, calc((100vw - 1440px)/2 + 150px)); }

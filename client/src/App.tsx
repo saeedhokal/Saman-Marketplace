@@ -66,6 +66,7 @@ function isDesktopMarketplaceRoute(location: string): boolean {
     pathname.startsWith("/product/") ||
     pathname.startsWith("/profile") ||
     pathname.startsWith("/seller/") ||
+    pathname === "/sell" ||
     pathname === "/favorites" ||
     pathname === "/my-listings" ||
     pathname === "/inbox";

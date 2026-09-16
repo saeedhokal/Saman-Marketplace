@@ -191,7 +191,7 @@ export default function Sell() {
   }
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="sell-page min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-14">
@@ -202,6 +202,12 @@ export default function Sell() {
           </div>
         </div>
       </div>
+
+      <section className="desktop-sell-heading" aria-hidden="true">
+        <p>{isRTL ? "سوق سامان" : "SAMAN MARKETPLACE"}</p>
+        <h1>{isRTL ? "أضف إعلانك" : "Post a listing"}</h1>
+        <span>{isRTL ? "اعرض سيارتك أو قطع الغيار أمام مشترين حقيقيين." : "Put your vehicle or parts in front of real buyers."}</span>
+      </section>
 
       <div className="container mx-auto px-4 pt-4 max-w-2xl">
         {userInfo?.subscriptionEnabled && (
@@ -248,7 +254,7 @@ export default function Sell() {
           })()
         )}
 
-        <div className="bg-card border border-border shadow-lg rounded-xl p-6 sm:p-8">
+        <div className="desktop-sell-form-card bg-card border border-border shadow-lg rounded-xl p-6 sm:p-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               
