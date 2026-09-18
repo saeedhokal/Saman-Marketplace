@@ -440,7 +440,7 @@
     box-shadow:inset 0 0 80px rgb(0 0 0 / .48), 0 12px 30px rgb(0 0 0 / .24);
   }
   html[data-desktop-theme="nighttime"] .desktop-home-hero { background-blend-mode:normal; }
-  html[data-desktop-theme="nighttime"] .desktop-browse-hero { background-blend-mode:normal; }
+  html[data-desktop-theme="nighttime"] .desktop-saman .desktop-browse-hero { background-blend-mode:normal; border:0; outline:none; box-shadow:none; }
   html[data-desktop-theme="nighttime"] .desktop-browse-hero h1,
   html[data-desktop-theme="nighttime"] .desktop-saman h1 { color:#f6f0e9; }
   html[data-desktop-theme="nighttime"] .desktop-browse-hero p,
