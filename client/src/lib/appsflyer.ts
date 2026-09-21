@@ -14,14 +14,20 @@ export function initAppsFlyer(): Promise<void> {
   if (initialization) return initialization;
 
   initialization = (async () => {
-    if (!__APPSFLYER_DEV_KEY__) {
-      console.error("[AppsFlyer] Dev key is not configured");
+    const platform = Capacitor.getPlatform();
+    const devKey =
+      platform === "ios"
+        ? __APPSFLYER_IOS_DEV_KEY__
+        : __APPSFLYER_ANDROID_DEV_KEY__;
+
+    if (!devKey) {
+      console.error(`[AppsFlyer] Dev key is not configured for ${platform}`);
       return;
     }
 
     try {
       await AppsFlyer.initSDK({
-        devKey: __APPSFLYER_DEV_KEY__,
+        devKey,
         appID: IOS_APP_STORE_ID,
         isDebug: import.meta.env.DEV,
         // AppDelegate owns the shared iOS ATT prompt used by attribution SDKs.
