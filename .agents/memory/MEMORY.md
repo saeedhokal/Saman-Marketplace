@@ -10,3 +10,4 @@
 - [Push notification deduplication](push-notification-deduplication.md) — dedupe physical tokens at send time and alert admins only when a listing first enters or re-enters review.
 - [Google Ads conversions](google-ads-conversions.md) — named success events are always emitted; manual Ads conversion snippets need account labels supplied separately.
 - [Powersports taxonomy](powersports-taxonomy.md) — classify bikes, ATVs, and UTVs by vehicle type, then offer manufacturer-prefixed model choices.
+- [AppsFlyer on Capacitor 7](appsflyer-capacitor-7.md) — pin plugin 6.17.9; the documented latest-7 npm tag may not exist despite upstream instructions.

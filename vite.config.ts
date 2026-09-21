@@ -4,6 +4,9 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig({
+  define: {
+    __APPSFLYER_DEV_KEY__: JSON.stringify(process.env.APPSFLYER_DEV_KEY ?? ""),
+  },
   plugins: [
     react(),
     runtimeErrorOverlay(),

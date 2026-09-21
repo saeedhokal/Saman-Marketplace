@@ -2,6 +2,12 @@
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
 
+include ':capacitor-community-in-app-review'
+project(':capacitor-community-in-app-review').projectDir = new File('../node_modules/@capacitor-community/in-app-review/android')
+
+include ':capacitor-app'
+project(':capacitor-app').projectDir = new File('../node_modules/@capacitor/app/android')
+
 include ':capacitor-push-notifications'
 project(':capacitor-push-notifications').projectDir = new File('../node_modules/@capacitor/push-notifications/android')
 
@@ -10,3 +16,6 @@ project(':capacitor-splash-screen').projectDir = new File('../node_modules/@capa
 
 include ':jackobo-capacitor-apple-pay'
 project(':jackobo-capacitor-apple-pay').projectDir = new File('../node_modules/@jackobo/capacitor-apple-pay/android')
+
+include ':appsflyer-capacitor-plugin'
+project(':appsflyer-capacitor-plugin').projectDir = new File('../node_modules/appsflyer-capacitor-plugin/android')
