@@ -261,6 +261,49 @@ export default function Categories() {
     };
   }, [search, activeCategory, activeSubCategory, activeModel, sortBy, priceMin, priceMax, yearMin, yearMax, kmMin, kmMax, condition]);
 
+  /*
+   * Keep the active browse state in the current history entry. Opening a
+   * listing then navigating back restores the exact filters from the URL,
+   * including after Categories has unmounted.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set("tab", activeCategory);
+    if (activeSubCategory !== "All") params.set("subCategory", activeSubCategory);
+    if (activeModel !== "All") params.set("model", activeModel);
+    if (search.trim()) params.set("search", search.trim());
+    if (sortBy !== "newest") params.set("sort", sortBy);
+    if (priceMin) params.set("priceMin", priceMin);
+    if (priceMax) params.set("priceMax", priceMax);
+    if (yearMin) params.set("yearMin", yearMin);
+    if (yearMax) params.set("yearMax", yearMax);
+    if (kmMin) params.set("kmMin", kmMin);
+    if (kmMax) params.set("kmMax", kmMax);
+    if (condition !== "all") params.set("condition", condition);
+
+    const nextSearch = params.toString();
+    if (nextSearch === urlSearch) return;
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}?${nextSearch}`,
+    );
+  }, [
+    urlSearch,
+    search,
+    activeCategory,
+    activeSubCategory,
+    activeModel,
+    sortBy,
+    priceMin,
+    priceMax,
+    yearMin,
+    yearMax,
+    kmMin,
+    kmMax,
+    condition,
+  ]);
+
   useEffect(() => {
     const container = document.getElementById('main-scroll-container');
     if (!container) return;
