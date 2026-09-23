@@ -1,0 +1,33 @@
+Show command
+npm warn deprecated tar@6.2.1: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+npm error code ENOTFOUND
+npm error syscall getaddrinfo
+npm error errno ENOTFOUND
+npm error network request to http://package-firewall.replit.internal/npm/appsflyer-capacitor-plugin/-/appsflyer-capacitor-plugin-6.17.9.tgz failed, reason: getaddrinfo ENOTFOUND package-firewall.replit.internal
+npm error network This is a problem related to network connectivity.
+npm error network In most cases you are behind a proxy or have bad network settings.
+npm error network
+npm error network If you are behind a proxy, please make sure that the
+npm error network 'proxy' config is set properly.  See: 'npm help config'
+npm error A complete log of this run can be found in: /Users/builder/.npm/_logs/2026-09-23T10_24_40_818Z-debug-0.log
+
+
+Build failed :|
+Step 3 script `Install npm dependencies` exited with status code 1
+npm warn deprecated tar@6.2.1: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+npm error code ENOTFOUND
+npm error syscall getaddrinfo
+npm error errno ENOTFOUND
+npm error network request to http://package-firewall.replit.internal/npm/appsflyer-capacitor-plugin/-/appsflyer-capacitor-plugin-6.17.9.tgz failed, reason: getaddrinfo ENOTFOUND package-firewall.replit.internal
+npm error network This is a problem related to network connectivity.
+npm error network In most cases you are behind a proxy or have bad network settings.
+npm error network
+npm error network If you are behind a proxy, please make sure that the
+npm error network 'proxy' config is set properly.  See: 'npm help config'
+npm error A complete log of this run can be found in: /Users/builder/.npm/_logs/2026-09-23T10_24_40_818Z-debug-0.log
+
+
+Build failed :|
+Step 3 script `Install npm dependencies` exited with status code 1
