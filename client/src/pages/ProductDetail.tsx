@@ -112,7 +112,11 @@ export default function ProductDetail() {
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('[data-testid="image-gallery-main"]') || target.closest('[data-testid="fullscreen-gallery"]')) {
+    // The entire gallery, including its thumbnail strip, owns horizontal swipes.
+    // Never interpret one of those gestures as page navigation.
+    if (target.closest('[data-testid="image-gallery"]') || target.closest('[data-testid="fullscreen-gallery"]')) {
+      touchStartX.current = null;
+      touchStartY.current = null;
       return;
     }
     touchStartX.current = e.touches[0].clientX;

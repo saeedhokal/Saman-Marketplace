@@ -90,7 +90,7 @@ export function ImageGallery({ images, initialIndex = 0, shareUrl }: ImageGaller
   if (images.length === 0) return null;
 
   return (
-    <div dir="ltr">
+    <div dir="ltr" data-testid="image-gallery">
       <div className="relative">
         <div
           className="relative aspect-square w-full overflow-hidden rounded-2xl bg-secondary/30 shadow-md cursor-pointer"
