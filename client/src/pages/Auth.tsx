@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Phone, Lock, User, ArrowLeft, ShieldCheck } from "lucide-react";
 import { sendOTP, verifyOTP, isServiceLevelOTPError } from "@/lib/firebase";
 import { trackGoogleAdsConversion } from "@/lib/googleAds";
+import { logAppsFlyerEvent } from "@/lib/appsflyer";
 import samanLogo from "@/assets/saman-logo.jpg";
 
 interface LoginFormValues {
@@ -116,6 +117,9 @@ export default function Auth() {
         }
       } else {
         await login({ phone: data.phone, password: data.password });
+        void logAppsFlyerEvent("af_login", {
+          af_registration_method: "phone_password",
+        });
         toast({
           title: "Welcome back!",
           description: "You have been logged in successfully.",
@@ -185,6 +189,10 @@ export default function Auth() {
           form.setValue("lastName", "");
           return;
         }
+        void logAppsFlyerEvent(
+          result.isNewUser ? "af_complete_registration" : "af_login",
+          { af_registration_method: "phone_otp" },
+        );
         toast({
           title: isRTL ? "مرحباً بعودتك!" : "Welcome back!",
           description: isRTL ? "تم تسجيل دخولك بنجاح" : "You have been logged in successfully.",
@@ -198,6 +206,9 @@ export default function Auth() {
           lastName: pendingFormData.lastName,
         });
         trackGoogleAdsConversion("sign_up");
+        void logAppsFlyerEvent("af_complete_registration", {
+          af_registration_method: "phone_otp",
+        });
         toast({
           title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",
           description: isRTL ? "تم إنشاء حسابك بنجاح" : "Your account has been created.",
@@ -246,6 +257,13 @@ export default function Auth() {
       }
       if (result.isNewUser) {
         trackGoogleAdsConversion("sign_up");
+        void logAppsFlyerEvent("af_complete_registration", {
+          af_registration_method: "phone_otp",
+        });
+      } else {
+        void logAppsFlyerEvent("af_login", {
+          af_registration_method: "phone_otp",
+        });
       }
       toast({
         title: isRTL ? "مرحباً بك في سمان!" : "Welcome to Saman Marketplace!",

@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { bustObjectUrl, objectImageUrl, retryObjectImg } from "@/lib/bustObjectUrl";
 import { DesktopListingDetail } from "@/components/DesktopListingDetail";
 import { Capacitor } from "@capacitor/core";
+import { logAppsFlyerEvent } from "@/lib/appsflyer";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:slug");
@@ -103,7 +104,15 @@ export default function ProductDetail() {
     if (!user) {
       e.preventDefault();
       setShowAuthPrompt(true);
+      return;
     }
+    const contactMethod = e.currentTarget.href.startsWith("https://wa.me/")
+      ? "whatsapp"
+      : "phone";
+    void logAppsFlyerEvent("af_contact", {
+      af_content_id: String(id),
+      contact_method: contactMethod,
+    });
   };
 
   const touchStartX = useRef<number | null>(null);
@@ -170,6 +179,13 @@ export default function ProductDetail() {
   useEffect(() => {
     if (id && product) {
       apiRequest("POST", `/api/products/${id}/view`).catch(() => {});
+      const eventValue: Record<string, string | number> = {
+        af_content_id: String(id),
+        af_content_type: product.mainCategory,
+        af_currency: "AED",
+      };
+      if (product.price != null) eventValue.af_price = product.price;
+      void logAppsFlyerEvent("af_content_view", eventValue);
     }
   }, [id, product]);
 
@@ -185,6 +201,13 @@ export default function ProductDetail() {
         toast({ title: "Removed from favorites" });
       } else {
         await addFavorite.mutateAsync(id);
+        const eventValue: Record<string, string | number> = {
+          af_content_id: String(id),
+          af_content_type: product?.mainCategory || "listing",
+          af_currency: "AED",
+        };
+        if (product?.price != null) eventValue.af_price = product.price;
+        void logAppsFlyerEvent("af_add_to_wishlist", eventValue);
         toast({ title: "Added to favorites" });
       }
     } catch (err) {

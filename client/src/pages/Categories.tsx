@@ -53,6 +53,7 @@ import { DesktopFilterSidebar } from "@/components/DesktopFilterSidebar";
 import { Capacitor } from "@capacitor/core";
 import { useDesktopTheme } from "@/hooks/use-desktop-theme";
 import dubaiNightSportsCar from "@/assets/images/search-dubai-panorama.webp";
+import { logAppsFlyerEvent } from "@/lib/appsflyer";
 
 type MainCategory = "automotive" | "spare-parts";
 type SortOption = "newest" | "oldest" | "price-low" | "price-high";
@@ -188,6 +189,7 @@ export default function Categories() {
   const [kmMin, setKmMin] = useState(initState.kmMin || "");
   const [kmMax, setKmMax] = useState(initState.kmMax || "");
   const [condition, setCondition] = useState(initState.condition || "all");
+  const lastTrackedSearch = useRef("");
   const [isDesktopWeb, setIsDesktopWeb] = useState(() => !Capacitor.isNativePlatform() && window.innerWidth >= 1024);
   useEffect(() => {
     if (Capacitor.isNativePlatform()) return;
@@ -195,6 +197,21 @@ export default function Categories() {
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
+
+  useEffect(() => {
+    const searchTerm = search.trim();
+    if (searchTerm.length < 2 || searchTerm === lastTrackedSearch.current) return;
+
+    const timeout = window.setTimeout(() => {
+      lastTrackedSearch.current = searchTerm;
+      void logAppsFlyerEvent("af_search", {
+        af_search_string: searchTerm,
+        af_content_type: activeCategory === "automotive" ? "Automotive" : "Spare Parts",
+      });
+    }, 800);
+
+    return () => window.clearTimeout(timeout);
+  }, [search, activeCategory]);
 
   /*
    * Apply query-only navigations while Categories stays mounted. A pathname
