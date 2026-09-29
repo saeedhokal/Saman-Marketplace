@@ -75,6 +75,7 @@ interface CategoryFilters {
 
 let savedFilters: CategoryFilters | null = null;
 const SCROLL_KEY = "categories";
+const BROWSE_HISTORY_KEY = "__samanCategoriesEntry";
 
 export default function Categories() {
   const { t, isRTL } = useLanguage();
@@ -127,7 +128,9 @@ export default function Categories() {
           : "newest");
       const initSearch = params.has("search") ? (params.get("search") || "").trim() : (base.search || "");
 
-      if (hasTab) {
+      // A tab link starts a fresh browse session, but returning to the same
+      // history entry from a listing must keep the saved scroll position.
+      if (hasTab && !window.history.state?.[BROWSE_HISTORY_KEY]) {
         savedFilters = null;
         setSavedScroll(SCROLL_KEY, 0);
       }
@@ -299,9 +302,10 @@ export default function Categories() {
     if (condition !== "all") params.set("condition", condition);
 
     const nextSearch = params.toString();
-    if (nextSearch === urlSearch) return;
+    if (nextSearch === urlSearch && window.history.state?.[BROWSE_HISTORY_KEY]) return;
+    const state = window.history.state;
     window.history.replaceState(
-      window.history.state,
+      { ...(state && typeof state === "object" ? state : {}), [BROWSE_HISTORY_KEY]: true },
       "",
       `${window.location.pathname}?${nextSearch}`,
     );
