@@ -181,7 +181,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   setInterval(() => {
     const now = Date.now();
-    for (const [id, data] of onlineUsers) {
+    for (const [id, data] of Array.from(onlineUsers)) {
       if (now - data.lastSeen > 60000) {
         onlineUsers.delete(id);
       }
@@ -192,7 +192,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   setInterval(() => {
     const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-    for (const [key, ts] of dailyVisitTracker) {
+    for (const [key, ts] of Array.from(dailyVisitTracker)) {
       if (ts < cutoff) dailyVisitTracker.delete(key);
     }
   }, 60 * 60 * 1000);
@@ -217,7 +217,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get("/api/admin/online-users", isAuthenticated, (req, res) => {
     let web = 0, ios = 0, android = 0;
-    for (const [, data] of onlineUsers) {
+    for (const [, data] of Array.from(onlineUsers)) {
       if (data.platform === "ios") ios++;
       else if (data.platform === "android") android++;
       else web++;
@@ -1635,7 +1635,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         },
       };
       
-      console.log("[CHECKOUT-REDIRECT] Submitting order", { cartId: telrData.order?.cartid, ref: telrData.order?.ref, amount: telrData.order?.amount });
+      console.log("[CHECKOUT-REDIRECT] Submitting order", { cartId: telrData.order.cartid, amount: telrData.order.amount });
 
       const telrResponse = await fetch("https://secure.telr.com/gateway/order.json", {
         method: "POST",

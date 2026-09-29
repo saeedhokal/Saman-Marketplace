@@ -34,6 +34,27 @@ interface TestCase {
 
 const canonicalHost = "https://thesamanapp.com";
 
+async function waitForServer(): Promise<void> {
+  const healthUrl = `${base}/api/health`;
+  const deadline = Date.now() + 30000;
+  let lastError = "No response";
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(healthUrl, { signal: AbortSignal.timeout(2000) });
+      if (response.ok) return;
+      lastError = `HTTP ${response.status}`;
+    } catch (error) {
+      lastError = error instanceof Error && error.cause instanceof Error
+        ? `${error.message}: ${error.cause.message}`
+        : String(error);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  throw new Error(`App did not become ready at ${healthUrl} within 30 seconds (${lastError}). Start the application workflow before running this check.`);
+}
+
 function decodeHtmlAttribute(value: string): string {
   return value
     .replace(/&amp;/g, "&")
@@ -175,6 +196,7 @@ async function runCase(tc: TestCase): Promise<string[]> {
 
 async function main() {
   console.log(`Running subcategory pre-render checks against ${base}\n`);
+  await waitForServer();
 
   const allFailures: string[] = [];
 

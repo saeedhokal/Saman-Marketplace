@@ -123,7 +123,7 @@ export class ObjectStorageService {
     });
     // Drop yesterday's keys so the cache doesn't grow forever.
     if (signedUrlCache.size > 5000) {
-      for (const k of signedUrlCache.keys()) {
+      for (const k of Array.from(signedUrlCache.keys())) {
         if (!k.endsWith(`/${dayBoundary}`)) signedUrlCache.delete(k);
       }
     }
