@@ -168,6 +168,14 @@ export function DesktopLanding({ recentProducts, isLoadingRecent }: DesktopLandi
 type SearchPanelProps = {
   ar: boolean; market: "automotive" | "spare-parts"; setMarket: (v: "automotive" | "spare-parts") => void; brand: string; setBrand: (v: string) => void; model: string; setModel: (v: string) => void; query: string; setQuery: (v: string) => void; priceMax: string; setPriceMax: (v: string) => void; yearMin: string; setYearMin: (v: string) => void; kmMax: string; setKmMax: (v: string) => void; condition: string; setCondition: (v: string) => void; brands: readonly string[]; models: string[]; searchUrl: string; moreFilters: boolean; setMoreFilters: (v: boolean) => void; resetSearch: () => void;
 };
+// Bound long menus so they prefer opening below the field. If the viewport is
+// short, allow flipping while keeping the menu clear of the sticky header.
+const landingSelectMenuProps = {
+  side: "bottom" as const,
+  align: "start" as const,
+  collisionPadding: { top: 80, bottom: 12, left: 12, right: 12 },
+  className: "z-[60] max-h-[min(280px,var(--radix-select-content-available-height))]",
+};
 function SearchPanel(p: SearchPanelProps) {
   const labels = p.ar
     ? {
@@ -217,13 +225,13 @@ function SearchPanel(p: SearchPanelProps) {
     <div className="mt-2 desktop-home-search__main">
       <div className="flex items-center rounded-md border border-[#dfe3e5] px-2"><Search className="h-3.5 w-3.5 text-[#f45b27]" /><Input value={p.query} onChange={(e) => p.setQuery(e.target.value)} placeholder={labels.search} aria-label={labels.searchAria} className="h-8 border-0 bg-transparent text-[11px] shadow-none focus-visible:ring-0" /></div>
       <div className="mt-1.5 flex gap-1.5 desktop-home-search__secondary">
-        <div className="min-w-0 flex-1"><Select value={p.brand} onValueChange={(v) => { p.setBrand(v); p.setModel("All"); }}><SelectTrigger className="h-8 border-[#dfe3e5] bg-white text-[11px] text-[#101820]" aria-label={labels.category}><SelectValue placeholder={labels.category} /></SelectTrigger><SelectContent><SelectItem value="All">{p.market === "automotive" ? labels.allMakes : labels.allCategories}</SelectItem>{p.brands.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></div>
+        <div className="min-w-0 flex-1"><Select value={p.brand} onValueChange={(v) => { p.setBrand(v); p.setModel("All"); }}><SelectTrigger className="h-8 border-[#dfe3e5] bg-white text-[11px] text-[#101820]" aria-label={labels.category}><SelectValue placeholder={labels.category} /></SelectTrigger><SelectContent {...landingSelectMenuProps}><SelectItem value="All">{p.market === "automotive" ? labels.allMakes : labels.allCategories}</SelectItem>{p.brands.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></div>
         {p.market === "automotive" && p.models.length > 0 && <div className="min-w-0 flex-1"><ModelCombobox models={p.models} value={p.model} onValueChange={p.setModel} emptyValue="All" emptyLabel={labels.allModels} searchPlaceholder={labels.modelSearch} ariaLabel={labels.modelAria} className="h-8 text-[11px]" /></div>}
         <Link href={p.searchUrl} data-testid="desktop-search-submit" className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-md bg-[#f45b27] px-6 text-[11px] font-bold text-white hover:bg-[#df4818]"><Search className="h-3.5 w-3.5" />{p.ar ? "بحث" : "Search"}</Link>
       </div>
     </div>
     <div className="mt-2 flex items-center justify-between"><button onClick={() => p.setMoreFilters(!p.moreFilters)} className="flex items-center gap-1 text-[10px] font-semibold text-[#657178]"><SlidersHorizontal className="h-3 w-3" />{labels.advanced}</button><button onClick={p.resetSearch} className="text-[10px] text-[#879197]"><X className={p.ar ? "ml-1 inline h-3 w-3" : "mr-1 inline h-3 w-3"} />{labels.reset}</button></div>
-    {p.moreFilters && <div className="mt-2 grid grid-cols-2 gap-1.5 border-t pt-2 sm:grid-cols-4"><Input value={p.priceMax} onChange={(e) => p.setPriceMax(e.target.value)} type="number" placeholder={labels.price} aria-label={labels.priceAria} className="h-8 text-[11px]" />{p.market === "automotive" && <><Input value={p.yearMin} onChange={(e) => p.setYearMin(e.target.value)} type="number" placeholder={labels.year} aria-label={labels.year} className="h-8 text-[11px]" /><Input value={p.kmMax} onChange={(e) => p.setKmMax(e.target.value)} type="number" placeholder={labels.mileage} aria-label={labels.mileageAria} className="h-8 text-[11px]" /></>}<Select value={p.condition} onValueChange={p.setCondition}><SelectTrigger className="h-8 text-[11px]" aria-label={labels.condition}><SelectValue placeholder={labels.condition} /></SelectTrigger><SelectContent><SelectItem value="all">{labels.anyCondition}</SelectItem><SelectItem value="new">{labels.newCondition}</SelectItem><SelectItem value="used">{labels.usedCondition}</SelectItem></SelectContent></Select></div>}
+    {p.moreFilters && <div className="mt-2 grid grid-cols-2 gap-1.5 border-t pt-2 sm:grid-cols-4"><Input value={p.priceMax} onChange={(e) => p.setPriceMax(e.target.value)} type="number" placeholder={labels.price} aria-label={labels.priceAria} className="h-8 text-[11px]" />{p.market === "automotive" && <><Input value={p.yearMin} onChange={(e) => p.setYearMin(e.target.value)} type="number" placeholder={labels.year} aria-label={labels.year} className="h-8 text-[11px]" /><Input value={p.kmMax} onChange={(e) => p.setKmMax(e.target.value)} type="number" placeholder={labels.mileage} aria-label={labels.mileageAria} className="h-8 text-[11px]" /></>}<Select value={p.condition} onValueChange={p.setCondition}><SelectTrigger className="h-8 text-[11px]" aria-label={labels.condition}><SelectValue placeholder={labels.condition} /></SelectTrigger><SelectContent {...landingSelectMenuProps}><SelectItem value="all">{labels.anyCondition}</SelectItem><SelectItem value="new">{labels.newCondition}</SelectItem><SelectItem value="used">{labels.usedCondition}</SelectItem></SelectContent></Select></div>}
   </div>;
 }
 
