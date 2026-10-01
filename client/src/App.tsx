@@ -333,7 +333,7 @@ function AppContent() {
     return <AppOpen />;
   }
   
-  if (!hasSelectedLanguage) {
+  if (isNative && !hasSelectedLanguage) {
     return <LanguageSelect />;
   }
   
