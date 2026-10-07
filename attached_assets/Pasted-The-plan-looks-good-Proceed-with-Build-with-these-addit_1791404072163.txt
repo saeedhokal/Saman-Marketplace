@@ -1,0 +1,40 @@
+The plan looks good. Proceed with Build, with these additional requirements:
+1. Do not treat the existing 30-second heartbeat as an analytics event. It can continue powering Online Now, but it must not create analytics_events every 30 seconds or artificially inflate engagement.
+2. Keep these metrics distinctly defined:
+   - app_open = app/site becomes active/opened
+   - session_start = a new session after no active session / 30+ minutes inactivity
+   - screen_view = meaningful route/screen change
+   - unique visitor = unique anonymousId
+   - unique signed-in user = distinct verified userId
+   Do not combine these into one number.
+3. For native iOS/Android, returning from background should generate app_open, but not necessarily a new session if the existing session has been inactive for less than 30 minutes.
+4. Avoid duplicate app_open events during startup caused by both initial React mounting and Capacitor lifecycle listeners firing.
+5. Do not send or store analytics events for every heartbeat, scroll, click, render, or React state change. Step 1 should only store the intentionally defined events.
+6. Add indexes with future analytics volume in mind, especially:
+   - eventName + timestamp
+   - anonymousId + timestamp
+   - userId + timestamp
+   - sessionId
+   - platform + timestamp
+7. The temporary Admin verification area should clearly show separately:
+   - App Opens
+   - Sessions
+   - Unique Visitors
+   - Unique Signed-in Users
+   - New Anonymous Visitors
+   - Returning Anonymous Visitors
+   - iOS / Android / Web
+   - Recent Events
+8. Use Asia/Dubai as the business/reporting timezone throughout Admin Stats. Store timestamps normally in timezone-aware database format, but calculate Today/day boundaries using Dubai time.
+9. Do not count a user as a completely new person merely because they logged in. Preserve their existing anonymousId and associate subsequent events with both anonymousId and verified userId.
+10. Analytics collection failure must never block login, browsing, posting listings, contacting sellers, or checkout.
+11. Do not change the current financial/revenue calculations.
+12. Do not remove the existing Stats records during migration. We need backwards compatibility while the new analytics data starts accumulating.
+After implementation, run tests or queries and show me actual example records demonstrating:
+- one app_open
+- one session
+- multiple screen_views in that same session
+- a background/foreground app_open that does not create a new session within 30 minutes
+- a new session after 30+ minutes inactivity
+- an anonymous visitor signing in while retaining the same anonymousId
+- server restart not resetting daily visit deduplication

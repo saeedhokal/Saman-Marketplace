@@ -15,8 +15,20 @@ Financial and revenue figures must continue to come from authoritative server/da
 
 **How to apply:** Keep behavioral analytics separate from payment accounting; do not derive or overwrite financial totals from client events.
 
-For Admin Stats, Today means 00:00:00 through now in Asia/Dubai; Last 24 Hours is a separate range.
+Asia/Dubai is the business/reporting timezone throughout Admin Stats. Today means 00:00:00 through now in Asia/Dubai; Last 24 Hours is a separate range.
 
 **Why:** The user explicitly distinguishes a Dubai calendar day from the old rolling-24-hour Today calculation.
 
 **How to apply:** Use explicit timezone-aware boundaries and clear range labels when adding or changing daily analytics.
+
+The 30-second heartbeat is not an analytics event and must not artificially extend sessions or inflate engagement. App opens, session starts, meaningful screen views, distinct anonymous visitors, and distinct verified users are separate metrics.
+
+**Why:** The user explicitly requires these definitions to stay distinct, with no automatic event for every heartbeat, click, scroll, render, or React state change.
+
+**How to apply:** A foreground return produces app_open; it produces session_start only if there is no active session or inactivity is at least 30 minutes. Login retains the anonymousId and is not a new anonymous person.
+
+Analytics collection failures must not block login, browsing, posting listings, contacting sellers, or checkout.
+
+**Why:** The user explicitly requires analytics to remain non-blocking for these product actions.
+
+**How to apply:** Keep collection independent of successful completion of primary user actions, including storage, native API, and network failure cases.
