@@ -1,0 +1,267 @@
+{
+  "capturedAt": "2026-10-07T21:50:32.709Z",
+  "method": "Actual development HTTP endpoints with real password/session authentication; independent SQL of each frozen report period.",
+  "authChecks": {
+    "report:unauthenticated": 401,
+    "report:forgedRawUserId": 401,
+    "report:forgedSignedToken": 401,
+    "report:nonAdmin": 403,
+    "report:nonAdminForgedAdminId": 403,
+    "report:verifiedAdmin": 200,
+    "screens/timeseries?screen=home:unauthenticated": 401,
+    "screens/timeseries?screen=home:forgedRawUserId": 401,
+    "screens/timeseries?screen=home:forgedSignedToken": 401,
+    "screens/timeseries?screen=home:nonAdmin": 403,
+    "screens/timeseries?screen=home:nonAdminForgedAdminId": 403,
+    "screens/timeseries?screen=home:verifiedAdmin": 200
+  },
+  "invalidInputRejected": true,
+  "results": [
+    {
+      "preset": "today",
+      "context": {
+        "preset": "today",
+        "asOf": "2026-10-07T21:50:32.311Z",
+        "timezone": "Asia/Dubai",
+        "start": "2026-10-07T20:00:00.000Z",
+        "end": "2026-10-07T21:50:32.311Z",
+        "previousStart": "2026-10-06T20:00:00.000Z",
+        "previousEnd": "2026-10-07T20:00:00.000Z",
+        "interval": "hour",
+        "comparisonLabel": "Today so far vs previous full Dubai calendar day",
+        "partialPeriod": true
+      },
+      "api": {
+        "appOpens": 5,
+        "sessions": 3,
+        "visitors": 2,
+        "signedInUsers": 0,
+        "newVisitors": 2,
+        "returningVisitors": 0,
+        "screenViews": 1,
+        "sessionsPerVisitor": 1.5,
+        "avgSessionSeconds": 361.813,
+        "completedSessions": 2,
+        "dau": 2,
+        "wau": 2,
+        "mau": 2,
+        "stickiness": 100
+      },
+      "directSqlMatch": true,
+      "revenue": {
+        "total": 0,
+        "automotive": 0,
+        "spareParts": 0,
+        "other": 0,
+        "purchases": 0,
+        "payingUsers": 0,
+        "averageValue": 0
+      }
+    },
+    {
+      "preset": "24h",
+      "context": {
+        "preset": "24h",
+        "asOf": "2026-10-07T21:50:32.360Z",
+        "timezone": "Asia/Dubai",
+        "start": "2026-10-06T21:50:32.360Z",
+        "end": "2026-10-07T21:50:32.360Z",
+        "previousStart": "2026-10-05T21:50:32.360Z",
+        "previousEnd": "2026-10-06T21:50:32.360Z",
+        "interval": "hour",
+        "comparisonLabel": "Immediately preceding equivalent period",
+        "partialPeriod": false
+      },
+      "api": {
+        "appOpens": 5,
+        "sessions": 3,
+        "visitors": 2,
+        "signedInUsers": 0,
+        "newVisitors": 2,
+        "returningVisitors": 0,
+        "screenViews": 1,
+        "sessionsPerVisitor": 1.5,
+        "avgSessionSeconds": 361.813,
+        "completedSessions": 2,
+        "dau": 2,
+        "wau": 2,
+        "mau": 2,
+        "stickiness": 100
+      },
+      "directSqlMatch": true,
+      "revenue": {
+        "total": 0,
+        "automotive": 0,
+        "spareParts": 0,
+        "other": 0,
+        "purchases": 0,
+        "payingUsers": 0,
+        "averageValue": 0
+      }
+    },
+    {
+      "preset": "7d",
+      "context": {
+        "preset": "7d",
+        "asOf": "2026-10-07T21:50:32.479Z",
+        "timezone": "Asia/Dubai",
+        "start": "2026-09-30T21:50:32.479Z",
+        "end": "2026-10-07T21:50:32.479Z",
+        "previousStart": "2026-09-23T21:50:32.479Z",
+        "previousEnd": "2026-09-30T21:50:32.479Z",
+        "interval": "day",
+        "comparisonLabel": "Immediately preceding equivalent period",
+        "partialPeriod": false
+      },
+      "api": {
+        "appOpens": 5,
+        "sessions": 3,
+        "visitors": 2,
+        "signedInUsers": 0,
+        "newVisitors": 2,
+        "returningVisitors": 0,
+        "screenViews": 1,
+        "sessionsPerVisitor": 1.5,
+        "avgSessionSeconds": 361.813,
+        "completedSessions": 2,
+        "dau": 2,
+        "wau": 2,
+        "mau": 2,
+        "stickiness": 100
+      },
+      "directSqlMatch": true,
+      "revenue": {
+        "total": 0,
+        "automotive": 0,
+        "spareParts": 0,
+        "other": 0,
+        "purchases": 0,
+        "payingUsers": 0,
+        "averageValue": 0
+      }
+    },
+    {
+      "preset": "30d",
+      "context": {
+        "preset": "30d",
+        "asOf": "2026-10-07T21:50:32.509Z",
+        "timezone": "Asia/Dubai",
+        "start": "2026-09-07T21:50:32.509Z",
+        "end": "2026-10-07T21:50:32.509Z",
+        "previousStart": "2026-08-08T21:50:32.509Z",
+        "previousEnd": "2026-09-07T21:50:32.509Z",
+        "interval": "day",
+        "comparisonLabel": "Immediately preceding equivalent period",
+        "partialPeriod": false
+      },
+      "api": {
+        "appOpens": 5,
+        "sessions": 3,
+        "visitors": 2,
+        "signedInUsers": 0,
+        "newVisitors": 2,
+        "returningVisitors": 0,
+        "screenViews": 1,
+        "sessionsPerVisitor": 1.5,
+        "avgSessionSeconds": 361.813,
+        "completedSessions": 2,
+        "dau": 2,
+        "wau": 2,
+        "mau": 2,
+        "stickiness": 100
+      },
+      "directSqlMatch": true,
+      "revenue": {
+        "total": 0,
+        "automotive": 0,
+        "spareParts": 0,
+        "other": 0,
+        "purchases": 0,
+        "payingUsers": 0,
+        "averageValue": 0
+      }
+    },
+    {
+      "preset": "90d",
+      "context": {
+        "preset": "90d",
+        "asOf": "2026-10-07T21:50:32.551Z",
+        "timezone": "Asia/Dubai",
+        "start": "2026-07-09T21:50:32.551Z",
+        "end": "2026-10-07T21:50:32.551Z",
+        "previousStart": "2026-04-10T21:50:32.551Z",
+        "previousEnd": "2026-07-09T21:50:32.551Z",
+        "interval": "day",
+        "comparisonLabel": "Immediately preceding equivalent period",
+        "partialPeriod": false
+      },
+      "api": {
+        "appOpens": 5,
+        "sessions": 3,
+        "visitors": 2,
+        "signedInUsers": 0,
+        "newVisitors": 2,
+        "returningVisitors": 0,
+        "screenViews": 1,
+        "sessionsPerVisitor": 1.5,
+        "avgSessionSeconds": 361.813,
+        "completedSessions": 2,
+        "dau": 2,
+        "wau": 2,
+        "mau": 2,
+        "stickiness": 100
+      },
+      "directSqlMatch": true,
+      "revenue": {
+        "total": 0,
+        "automotive": 0,
+        "spareParts": 0,
+        "other": 0,
+        "purchases": 0,
+        "payingUsers": 0,
+        "averageValue": 0
+      }
+    },
+    {
+      "preset": "12m",
+      "context": {
+        "preset": "12m",
+        "asOf": "2026-10-07T21:50:32.624Z",
+        "timezone": "Asia/Dubai",
+        "start": "2025-10-07T21:50:32.624Z",
+        "end": "2026-10-07T21:50:32.624Z",
+        "previousStart": "2024-10-07T21:50:32.624Z",
+        "previousEnd": "2025-10-07T21:50:32.624Z",
+        "interval": "month",
+        "comparisonLabel": "Immediately preceding equivalent period",
+        "partialPeriod": false
+      },
+      "api": {
+        "appOpens": 5,
+        "sessions": 3,
+        "visitors": 2,
+        "signedInUsers": 0,
+        "newVisitors": 2,
+        "returningVisitors": 0,
+        "screenViews": 1,
+        "sessionsPerVisitor": 1.5,
+        "avgSessionSeconds": 361.813,
+        "completedSessions": 2,
+        "dau": 2,
+        "wau": 2,
+        "mau": 2,
+        "stickiness": 100
+      },
+      "directSqlMatch": true,
+      "revenue": {
+        "total": 0,
+        "automotive": 0,
+        "spareParts": 0,
+        "other": 0,
+        "purchases": 0,
+        "payingUsers": 0,
+        "averageValue": 0
+      }
+    }
+  ]
+}

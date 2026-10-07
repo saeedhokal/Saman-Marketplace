@@ -59,264 +59,308 @@ id = "Sb2xbwstQo6_mBL2kDbFZ"
 uri = "file://exports/saman-deck/saman-marketplace-deck.pdf"
 type = "pdf"
 title = "Saman Marketplace - 10-slide PDF deck"
+logical_id = "e2ec0e0a-2dc1-42e0-bc5a-95b238eb0e96"
 
 [[outputs]]
 id = "w0nsBvsSOJVGtaBLOMWni"
 uri = "file://exports/saman-deck/instagram/01-cover.png"
 type = "image"
 title = "Slide 1 - Cover"
+logical_id = "412badc1-98df-4336-884d-ede45c1a270a"
 
 [[outputs]]
 id = "OumhXtTEudoj82rFbk8Hb"
 uri = "file://exports/saman-deck/instagram/02-vision.png"
 type = "image"
 title = "Slide 2 - Bridging two communities"
+logical_id = "57fed71b-c854-4277-8aeb-ffb11f7c8612"
 
 [[outputs]]
 id = "5yagWTIpD-ilaxSw-pGGU"
 uri = "file://exports/saman-deck/instagram/03-what.png"
 type = "image"
 title = "Slide 3 - What is Saman"
+logical_id = "65d8b1d9-c669-4a19-b7aa-0024b82ede4d"
 
 [[outputs]]
 id = "X7SbftzUqRb5uDjrhsngy"
 uri = "file://exports/saman-deck/instagram/04-bilingual.png"
 type = "image"
 title = "Slide 4 - Arabic ↔ English"
+logical_id = "098e4cb9-e146-4691-a5b7-2356924fefaa"
 
 [[outputs]]
 id = "GZPznRhrB6l0DfFMOEs6f"
 uri = "file://exports/saman-deck/instagram/05-easy.png"
 type = "image"
 title = "Slide 5 - Easy to list"
+logical_id = "e382ba76-5ebf-45d5-8f2b-12da60324e5b"
 
 [[outputs]]
 id = "E1GpoIQhoVgs4T110YD7m"
 uri = "file://exports/saman-deck/instagram/06-credits.png"
 type = "image"
 title = "Slide 6 - Credit / subscription system"
+logical_id = "4dc8fffe-fe9a-48c2-ae1f-d9fca62a9332"
 
 [[outputs]]
 id = "53UYkDthigTUAQRvNWXN3"
 uri = "file://exports/saman-deck/instagram/07-browse.png"
 type = "image"
 title = "Slide 7 - Search & filters"
+logical_id = "004ca638-9c1d-4a8d-a6d6-2ec575ad66dd"
 
 [[outputs]]
 id = "-MX6v44Dhu9R7IDE2fW7d"
 uri = "file://exports/saman-deck/instagram/08-trust.png"
 type = "image"
 title = "Slide 8 - Trust & safety"
+logical_id = "6da27e2e-5158-45d4-aa3f-31069a15a663"
 
 [[outputs]]
 id = "F6sqO0ToGL6H4V-ThM8qf"
 uri = "file://exports/saman-deck/instagram/09-available.png"
 type = "image"
 title = "Slide 9 - Available everywhere"
+logical_id = "b098569b-02bd-4518-900f-29be8a58f3fd"
 
 [[outputs]]
 id = "zz7vi16NWBF1sIyLoa_oI"
 uri = "file://exports/saman-deck/instagram/10-cta.png"
 type = "image"
 title = "Slide 10 - Call to action"
+logical_id = "335bc419-b6fc-48e3-b2f2-293fdcff978d"
 
 [[outputs]]
 id = "dzn9pRN2x65fPYNdE4Eyw"
 uri = "file://exports/saman-deck/saman-instagram-slides.tar.gz"
 type = "unspecified"
 title = "All 10 Instagram PNGs (bundle)"
+logical_id = "8ca685bf-c921-4114-a9bf-9d101983838c"
 
 [[outputs]]
 id = "jF3eL-_UTZrvHsn4APJ1D"
 uri = "file://exports/saman-deck-v2/saman-marketplace-deck-v2.pdf"
 type = "pdf"
 title = "Saman v2 - 9-slide colorful PDF deck"
+logical_id = "2c78d36f-2886-49a1-b4f6-2539a928d226"
 
 [[outputs]]
 id = "UY2Kw_Onl2hYDkPc75q8z"
 uri = "file://exports/saman-deck-v2/instagram/01-cover.png"
 type = "image"
 title = "Slide 1 - Buy. Sell. Drive away."
+logical_id = "4251f509-065b-4b07-a39c-d8390722feb7"
 
 [[outputs]]
 id = "Yq69bGVe7pQM1Il9iCZLI"
 uri = "file://exports/saman-deck-v2/instagram/02-what.png"
 type = "image"
 title = "Slide 2 - The fastest way"
+logical_id = "31e369ce-2b88-4813-80f9-a4b6e0da9f80"
 
 [[outputs]]
 id = "MXxiYIVBNLAu1oSAH_TgB"
 uri = "file://exports/saman-deck-v2/instagram/03-free.png"
 type = "image"
 title = "Slide 3 - FREE right now"
+logical_id = "f5c7e016-b134-4729-8343-68a6ed5788cd"
 
 [[outputs]]
 id = "1xl30HShD1Nul0FdgdMK4"
 uri = "file://exports/saman-deck-v2/instagram/04-sell.png"
 type = "image"
 title = "Slide 4 - Got parts collecting dust?"
+logical_id = "784bf571-095b-47fc-b565-87fd19ba6199"
 
 [[outputs]]
 id = "95OA4QuyrTLKXpAe3CZjd"
 uri = "file://exports/saman-deck-v2/instagram/05-browse.png"
 type = "image"
 title = "Slide 5 - Hunting for that one part?"
+logical_id = "4fae5ca1-31da-473d-bfa8-f91990fc9173"
 
 [[outputs]]
 id = "udG0TH2QSWGWWXnqMg8fH"
 uri = "file://exports/saman-deck-v2/instagram/06-why.png"
 type = "image"
 title = "Slide 6 - Built for the UAE crowd"
+logical_id = "edaf2033-8d92-4912-9f88-f0e4369f15d2"
 
 [[outputs]]
 id = "Eg9RjiHdBN2LDG_yRLYzE"
 uri = "file://exports/saman-deck-v2/instagram/07-available.png"
 type = "image"
 title = "Slide 7 - Wherever you are"
+logical_id = "dcc04b3e-aef0-4de6-a7c0-f37084e75f7c"
 
 [[outputs]]
 id = "JrNYjVYq3bYbZaOV99Dpw"
 uri = "file://exports/saman-deck-v2/instagram/08-community.png"
 type = "image"
 title = "Slide 8 - Be part of the Saman crew"
+logical_id = "522e0553-1e10-44a9-83a7-f7d5ca084236"
 
 [[outputs]]
 id = "NWJl5jraiCWwkZjYerSFv"
 uri = "file://exports/saman-deck-v2/instagram/09-cta.png"
 type = "image"
 title = "Slide 9 - Don't scroll, start trading"
+logical_id = "61e7937f-d19b-4311-9e39-6e2f88162c29"
 
 [[outputs]]
 id = "EnacZyb3wZo8_LrK6WJzs"
 uri = "file://exports/saman-deck-v2/saman-instagram-slides-v2.tar.gz"
 type = "unspecified"
 title = "All 9 Instagram PNGs (bundle)"
+logical_id = "e6ef1308-eed1-406e-a03f-ebacef0bdc13"
 
 [[outputs]]
 id = "Jf3jQf-wsktvV55GHS_JJ"
 uri = "file://exports/saman-deck-v3/saman-marketplace-deck-v3.pdf"
 type = "pdf"
 title = "Updated Deck (PDF)"
+logical_id = "7dbddfd1-3987-47a5-b570-ade434efbbef"
 
 [[outputs]]
 id = "MTM0WagaujzJw_QbKIIGO"
 uri = "file://exports/saman-deck-v3/instagram/01-title.png"
 type = "image"
 title = "01 — Title"
+logical_id = "fe71dc4e-ed36-46fa-8298-f0c786ed0aa3"
 
 [[outputs]]
 id = "rqFT2DBcy-bFMKK71ztQp"
 uri = "file://exports/saman-deck-v3/instagram/02-what.png"
 type = "image"
 title = "Slide 2 - What"
+logical_id = "204f55ec-1dd2-41be-a846-75911ef037af"
 
 [[outputs]]
 id = "Be2S17lew24cizY466c94"
 uri = "file://exports/saman-deck-v3/instagram/03-why.png"
 type = "image"
 title = "Slide 3 - Why"
+logical_id = "c3a5b94d-fbf2-4a13-a018-c737a3aab10d"
 
 [[outputs]]
 id = "N--pBLEdHK7H5KcAn7-rm"
 uri = "file://exports/saman-deck-v3/instagram/04-how.png"
 type = "image"
 title = "Slide 4 - How"
+logical_id = "51610561-4bc8-4e2a-90a0-09561d8e75f4"
 
 [[outputs]]
 id = "N4SL9033cLXhb7-ato4mY"
 uri = "file://exports/saman-deck-v3/instagram/05-cars.png"
 type = "image"
 title = "Slide 5 - Cars"
+logical_id = "ae3b8ce0-807b-4219-8c27-e37cf6ac5caa"
 
 [[outputs]]
 id = "iinL-BLV1s4juFlkwY8f3"
 uri = "file://exports/saman-deck-v3/instagram/06-parts.png"
 type = "image"
 title = "Slide 6 - Parts"
+logical_id = "f1ff35c5-42e4-4dfe-bcb0-191f2a6f7209"
 
 [[outputs]]
 id = "MVvykGyHHMilOngRAeyne"
 uri = "file://exports/saman-deck-v3/instagram/07-cta.png"
 type = "image"
 title = "07 — CTA"
+logical_id = "8ef1d7a5-478e-4721-a88e-7720ccb2555d"
 
 [[outputs]]
 id = "hNkdTrsX6p9ge0T1-aHHm"
 uri = "file://exports/saman-deck-v3/saman-instagram-slides-v3.tar.gz"
 type = "unspecified"
 title = "Updated Instagram Slides Bundle"
+logical_id = "88161463-e424-4158-9bac-1b45a8b08226"
 
 [[outputs]]
 id = "lbcXj3FSv-1WDpmHVOWgj"
 uri = "file://exports/saman-deck-v3/assets/logo-compare-5.png"
 type = "image"
 title = "Logo orange darkening - 5 levels"
+logical_id = "ca73921d-ba33-47b8-a075-f27f8d0e46f7"
 
 [[outputs]]
 id = "jgCFc-K0Xjeu4Vm6GuQ1V"
 uri = "file://exports/saman-deck-v3/assets/saman-logo-vector.png"
 type = "image"
 title = "SAMAN Logo - Vector v1 (4268x1829, no artifacts)"
+logical_id = "dc88427b-8e79-49fe-92dc-e64e8ba8f33a"
 
 [[outputs]]
 id = "V2886waeEzibbfqVFVmCE"
 uri = "file://exports/saman-deck-v3/assets/inspect-sharp-compare.png"
 type = "image"
 title = "Before / After - Sharpened Logo"
+logical_id = "5de6ca6b-7210-4dec-9f57-4d65acd3f547"
 
 [[outputs]]
 id = "e3rCIEKD-hkqcyexv2u1_"
 uri = "file://attached_assets/splash_mockups/concept1_premium_minimal.png"
 type = "image"
 title = "Concept 1 — Premium Minimal UAE"
+logical_id = "19adafed-8b39-4b11-9772-3995ac023905"
 
 [[outputs]]
 id = "TWqFCNEgGo9RpTlxdGJSV"
 uri = "file://attached_assets/splash_mockups/concept2_automotive_tech.png"
 type = "image"
 title = "Concept 2 — Automotive Tech"
+logical_id = "bc102fca-cab6-4485-bb42-2bfa78b3e275"
 
 [[outputs]]
 id = "ZRzxpFK9RTft4xBrGq6eH"
 uri = "file://attached_assets/splash_mockups/concept3_uae_night_luxury.png"
 type = "image"
 title = "Concept 3 — UAE Night Luxury"
+logical_id = "f76af562-aab1-4ed2-9bab-c0c03ed4fa23"
 
 [[outputs]]
 id = "ngyQUQAOUnnKnk-7gxaG9"
 uri = "file://attached_assets/splash_mockups/mockup_premium.png"
 type = "image"
 title = "Concept 1 — Premium Minimal UAE (real logo)"
+logical_id = "9b199c3b-62f9-430a-9f91-c4ed4f2cf615"
 
 [[outputs]]
 id = "Opx4rtYSNAWu1_ZsvzSDf"
 uri = "file://attached_assets/splash_mockups/mockup_automotive.png"
 type = "image"
 title = "Concept 2 — Automotive Tech (real logo)"
+logical_id = "69b512a2-a13b-402c-913d-ee3527e656ea"
 
 [[outputs]]
 id = "PXoiTXY8UtIass6B52TiW"
 uri = "file://attached_assets/splash_mockups/mockup_uae_night.png"
 type = "image"
 title = "Concept 3 — UAE Night Luxury (real logo)"
+logical_id = "55b9c4c0-d3e2-4f3a-afde-58d7d2014447"
 
 [[outputs]]
 id = "i5sBCQMSSwejsdpmt7dzt"
 uri = "file://screenshots/hero_card_preview.jpg"
 type = "image"
 title = "Hero Card — Live Preview"
+logical_id = "32e0decd-310f-450d-87ed-5a30ef69cc61"
 
 [[outputs]]
 id = "I0B6p0gcLnj-fSKDVyxSi"
 uri = "file://screenshots/hero_card_v2.jpg"
 type = "image"
 title = "Hero Card — No Logo"
+logical_id = "1ff68d8a-447d-4063-8e76-2e82756d885a"
 
 [[outputs]]
 id = "l6D2FK10RY7YbFvbYFziG"
 uri = "file://CERT_PRIVATE_KEY_B64.txt"
 type = "text"
 title = "CERT_PRIVATE_KEY_B64 — paste this into Codemagic"
+logical_id = "8e9d29e0-6ebe-4002-ae69-f194437d6f7b"
 
 [[outputs]]
 id = "mPhw9YjlIXfDsYkSmfr0e"
@@ -324,3 +368,18 @@ uri = "file://ASO_KEYWORDS_V2.0.5.md"
 type = "text"
 title = "App Store keywords & subtitle for v2.0.5 (revised)"
 description = "Compliant, ready-to-paste English + Arabic subtitle, keywords, and promotional text — no competitor names, no subtitle duplication."
+logical_id = "ce17ab7a-d30f-4294-a43a-4ac273e044e2"
+
+[[outputs]]
+id = "6EJSJMdNtf7NlO5QQiT_h"
+uri = "file://docs/analytics-reporting-handoff.md"
+type = "text"
+title = "Admin Analytics — Step 2 handoff"
+description = "Changed files, reporting endpoints, KPI SQL, Dubai-time and comparison rules, verification evidence, performance safeguards and known limits."
+logical_id = "76a30ac3-38ce-4eab-b657-46132a5e609e"
+content_hash = "sha256:5d0fc2c4574055c26f27aa80baa04999516a1b80f96aec9def085c1412c2b11d"
+size = 17785
+mtime_ms = 1791410423985
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:37beca48-a166-43b6-a409-8c34e0662678/76a30ac3-38ce-4eab-b657-46132a5e609e/17a502dd-43e1-4841-8173-c89ffe77854e"
+storage_version_token = "1791410565371859"
+content_type = "text/markdown"

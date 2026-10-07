@@ -56,3 +56,9 @@ Do not over-engineer dashboard caching or materialized views unless actual query
 **Why:** The user explicitly requested evidence-driven performance work for this reporting step.
 
 **How to apply:** Start with bounded indexed aggregation and the existing lightweight query behavior; require measured evidence before adding reporting infrastructure.
+
+Reporting "as of" is a range and event-receipt cutoff, not an immutable historical audit snapshot.
+
+**Why:** The foundation retains mutable visitor/session state and current transaction status. Reporting deliberately preserves that foundation rather than adding historical row versioning or changing accounting.
+
+**How to apply:** Explain reproducibility limits for historical first-seen classification, eligible durations and transaction status. Do not claim that supplying an old cutoff reconstructs every source field as it existed then.

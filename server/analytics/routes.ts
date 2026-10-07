@@ -6,6 +6,7 @@ import { users } from "../../shared/schema";
 import { db } from "../db";
 import { getVerifiedUserId } from "../simpleAuth";
 import { AnalyticsInputError, analyticsStore } from "./store";
+import { registerReportingRoutes } from "./reporting/routes";
 
 export async function verifiedAdmin(req: Request, res: Response, next: NextFunction) {
   try {
@@ -18,6 +19,7 @@ export async function verifiedAdmin(req: Request, res: Response, next: NextFunct
 }
 
 export function registerAnalyticsRoutes(app: Express) {
+  registerReportingRoutes(app, verifiedAdmin);
   const limiter = rateLimit({ windowMs: 60000, max: 120, standardHeaders: true, legacyHeaders: false });
   app.use("/api/analytics", limiter);
   for (const kind of ["events", "activity"] as const) {
