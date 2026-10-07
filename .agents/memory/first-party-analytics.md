@@ -38,3 +38,9 @@ Do not infer historical account ownership from the credentials delivering a retr
 **Why:** Offline guest events can arrive after login, and the first delivered event of a session can be a later signed-in screen. Backdating its account would falsely make earlier anonymous activity authenticated.
 
 **How to apply:** Preserve capture-time event context, and keep generated session-start identity anonymous when the original start-time identity is unknown.
+
+Dashboard metric definitions apply to the selected reporting period: new visitors are active identities first seen within it; returning visitors were first seen before it. DAU is day-level distinct identities, while WAU and MAU are trailing 7-day and 30-day distinct identities.
+
+**Why:** The user explicitly requires consistent definitions across the analytics dashboard and comparison periods. These are browser/device identities, not guaranteed distinct physical people.
+
+**How to apply:** Compute whole-period distinct counts directly instead of summing bucket-level uniques, anchor historical reports to their selected period, and distinguish unavailable pre-instrumentation history from measured zero activity.

@@ -1,0 +1,364 @@
+STEP 2 — ADMIN ANALYTICS DASHBOARD + GRAPHS
+Step 1 is complete. The project now has persistent first-party analytics for visitors, sessions, app opens, screen views, anonymous IDs, verified signed-in user IDs, platform, app version/build, Dubai-time reporting support, and database-backed deduplication.
+For Step 2, build a proper Admin Analytics Dashboard using the Step 1 tracking foundation.
+Do not redesign the tracking architecture unless something is genuinely broken. Do not change payment logic, transaction logic, authentication, marketplace behaviour, or unrelated Admin pages.
+Before implementation, inspect the exact Step 1 schema, event names, API routes, session logic, and existing Admin Stats code and use those real names rather than creating duplicate analytics systems.
+1. Main objective
+The Admin Stats area should let me quickly answer:
+- How many people are opening Saman?
+- How many unique visitors are using it?
+- How many signed-in users are active?
+- How many sessions are happening?
+- Are users new or returning?
+- Is usage increasing or decreasing?
+- Are users mainly on iOS, Android, or Web?
+- Which app versions are active?
+- Which screens are being used most?
+- How does the current period compare with the previous period?
+- What is happening with revenue?
+This step should focus heavily on graphs, trends, comparisons, KPIs and reporting.
+2. Admin Stats navigation
+Upgrade the existing Admin Stats area with these tabs:
+Overview | Users | App Activity | Screens | Revenue
+Do not add acquisition attribution, search analytics, seller-contact analytics, listing conversion funnels, or advanced retention cohorts yet.
+3. Global date filter
+Add one consistent date filter at the top of Stats:
+- Today
+- Last 24 Hours
+- Last 7 Days
+- Last 30 Days
+- Last 90 Days
+- Last 12 Months
+- Custom Range
+Today must mean:
+00:00 Asia/Dubai through now
+Last 24 Hours must remain a separate rolling range.
+All date grouping, day boundaries and reporting labels should use:
+Asia/Dubai
+The selected range should apply consistently to the whole Stats page.
+4. Overview KPI cards
+Show these primary KPI cards:
+- App Opens
+- Sessions
+- Unique Visitors
+- Signed-in Users
+- New Visitors
+- Returning Visitors
+- Screen Views
+- Sessions per Visitor
+Definitions:
+App Opens
+= actual Step 1 app_open events.
+Do not use old login_events visits as App Opens.
+Sessions
+= Step 1 analytics sessions.
+Unique Visitors
+= distinct persistent anonymousId values active during the period.
+Tooltip:
+“Unique browser/device analytics identities. One person using multiple devices may count more than once.”
+Signed-in Users
+= distinct verified user IDs seen in analytics.
+New Visitors
+= visitors whose firstSeenAt falls within the selected period.
+Returning Visitors
+= visitors active during the period whose firstSeenAt predates the selected period.
+Sessions per Visitor
+= sessions / unique visitors.
+Handle zero denominators safely.
+5. Previous-period comparisons
+Every major KPI should show the change compared with the immediately preceding equivalent period.
+Examples:
+Today → previous Dubai calendar day
+Last 7 Days → previous 7 days
+Last 30 Days → previous 30 days
+Custom 10-day period → previous 10 days
+Show values such as:
++14.2%
+or
+-8.4%
+If the previous period value is zero, do not show a misleading infinite percentage.
+Show a sensible label such as:
+New activity
+or simply show the current value without a percentage.
+6. Main Overview activity graph
+Add a large interactive line graph near the top of Overview.
+Let me switch between:
+- App Opens
+- Sessions
+- Unique Visitors
+- Signed-in Users
+- Screen Views
+Also allow multiple metrics together where their scales make sense.
+Time grouping:
+Today → hourly
+Last 24 Hours → hourly
+Last 7 Days → daily
+Last 30 Days → daily
+Last 90 Days → daily or weekly
+Last 12 Months → monthly
+Custom Range → automatically select an appropriate interval
+Hovering or tapping a point should show:
+- date/time
+- metric
+- exact value
+Add a toggle:
+Compare previous period
+When enabled, show the equivalent previous period on the same graph using a visually distinct comparison line.
+7. New vs Returning Visitors graph
+Add a graph showing:
+New Visitors vs Returning Visitors over time
+Prefer a stacked bar or stacked area chart.
+Also show the overall percentage split for the selected period.
+The definition must use analytics visitor firstSeenAt, not account registration date.
+8. DAU, WAU and MAU
+Add:
+DAU
+= distinct anonymous visitor identities active during the relevant Dubai calendar day.
+WAU
+= distinct anonymous visitors active during the trailing 7 days.
+MAU
+= distinct anonymous visitors active during the trailing 30 days.
+Add:
+DAU / MAU Stickiness
+Formula:
+DAU / MAU × 100
+Include a trend graph for DAU / WAU / MAU where appropriate.
+Include a tooltip explaining that visitor identities are device/browser identities and are not guaranteed to represent unique physical people across multiple devices.
+9. Users tab
+The Users tab should show:
+- Active Visitors
+- Signed-in Active Users
+- New Visitors
+- Returning Visitors
+- DAU
+- WAU
+- MAU
+- DAU/MAU Stickiness
+- Sessions per Visitor
+Add graphs for:
+- active visitors over time
+- new visitors over time
+- returning visitors over time
+- new vs returning comparison
+Do not implement advanced D1/D7/D30 cohort retention yet.
+10. App Activity tab
+Show:
+- App Opens
+- Sessions
+- Sessions per Visitor
+- Average Session Duration
+Add an App Opens vs Sessions graph over time.
+This should make it easy to see cases such as:
+1,500 App Opens
+820 Sessions
+Average Session Duration should use Step 1 session timestamps.
+Do not allow current or abandoned sessions to create unrealistic duration averages.
+Where practical, add a session-duration distribution:
+- under 30 seconds
+- 30 seconds–2 minutes
+- 2–5 minutes
+- 5–10 minutes
+- 10–30 minutes
+- 30+ minutes
+11. Platform analytics
+Show platform breakdown for:
+- iOS
+- Android
+- Web
+For each platform show:
+- App Opens
+- Sessions
+- Unique Visitors
+- percentage share
+Add both:
+- a current-period platform breakdown chart
+- a platform trend graph over time
+Let the platform trend graph switch between:
+- Unique Visitors
+- Sessions
+- App Opens
+Use the platform field stored by Step 1. Do not re-infer native platforms unnecessarily from user-agent strings.
+12. App version analytics
+Show native app usage by:
+- platform
+- app version
+- build number where available
+Add a horizontal bar chart.
+Example:
+iOS 2.0.5 — 72%
+iOS 2.0.4 — 18%
+Android 2.0.5 — 8%
+Other — 2%
+This should make old app versions easy to identify.
+Web version may remain null if Step 1 intentionally does not provide one.
+13. Screens tab
+Use Step 1 screen_view events.
+Show a ranked table:
+Screen | Views | Unique Visitors | % of Screen Views
+Use actual recorded screen names.
+Do not hardcode fake counts.
+Add a Top Screens horizontal bar graph ranked highest to lowest.
+When I select a screen, show:
+Screen Views Over Time
+as a line graph.
+14. Revenue tab
+Keep Revenue completely separate from analytics event calculations.
+Revenue must continue to come from completed transaction records.
+Preserve:
+- Total Revenue
+- Automotive Revenue
+- Spare Parts Revenue
+Add if easily available from existing transaction data:
+- Completed Purchases
+- Unique Paying Users
+- Average Transaction Value
+Add graphs for:
+Revenue Over Time
+with selectable:
+- Total
+- Automotive
+- Spare Parts
+Also show an Automotive vs Spare Parts revenue split chart.
+Do not rewrite payment or transaction architecture.
+15. Dashboard layout
+Structure Overview approximately like this:
+Row 1
+KPI cards:
+App Opens | Unique Visitors | Sessions | Signed-in Users
+Row 2
+Large Activity Trend Graph
+Row 3
+New vs Returning Visitors | Platform Breakdown
+Row 4
+DAU / WAU / MAU Trend
+Row 5
+Top Screens | App Versions
+Row 6
+Revenue Trend
+Additional KPI cards such as Screen Views, New Visitors, Returning Visitors and Sessions per Visitor can appear where appropriate.
+The page should communicate whether Saman usage is growing or declining within a few seconds of opening the dashboard.
+16. Graph requirements
+Graphs should support:
+- desktop hover tooltips
+- touch/tap interaction where applicable
+- exact values
+- readable date labels
+- responsive sizing
+- loading states
+- empty states
+- no-data states
+- previous-period comparison where relevant
+Keep charts visually clean.
+Do not fill the dashboard with many tiny charts.
+Prefer larger useful charts.
+Use the chart library already installed in the project if suitable.
+Do not add a heavy dependency unless necessary.
+Avoid unnecessary animation that makes the Admin dashboard feel slow.
+17. Server-side aggregation
+Do not fetch all raw analytics events into the browser and calculate charts client-side.
+Aggregations must happen in PostgreSQL/server-side queries.
+Create clean Admin reporting endpoints for chart-ready data.
+For example, conceptually:
+/api/admin/analytics/overview
+/api/admin/analytics/timeseries
+/api/admin/analytics/platforms
+/api/admin/analytics/screens
+/api/admin/analytics/versions
+These are examples only. Reuse or extend existing Step 1 endpoints if that architecture is cleaner.
+Time-series endpoints should support parameters such as:
+- start date
+- end date
+- interval
+- metric
+- platform where applicable
+Design this assuming analytics_events may eventually contain millions of records.
+Use the indexes created during Step 1.
+Avoid N+1 queries.
+18. Historical data
+Do not pretend detailed analytics existed before Step 1.
+App Opens, Sessions, Visitors, Screen Views and similar metrics should only use the new analytics system.
+If a selected range extends before analytics collection began, show a note:
+“Detailed analytics collection began on [date]. Earlier activity is unavailable for these metrics.”
+Do not silently merge old login_events into the new App Opens metric.
+Existing genuine historical revenue and signup data may continue to use their original authoritative sources.
+19. Existing heartbeat
+Keep the existing 30-second heartbeat used for Online Now separate from the analytics event system.
+Heartbeats must not increase:
+- App Opens
+- Sessions
+- Screen Views
+- analytics event counts
+Do not write heartbeat activity into analytics_events.
+20. Admin security
+Every analytics reporting endpoint must require verified Admin authorization on the server.
+Do not rely only on hiding the Admin UI.
+Do not trust a raw client-provided user ID for authorization.
+21. Performance
+The analytics dashboard must not negatively affect normal marketplace performance.
+Use:
+- indexed queries
+- server-side aggregation
+- reasonable result sizes
+- pagination for raw/recent-event tables
+- efficient grouping
+Do not return thousands of raw events just to draw a graph.
+22. Design
+Make the Stats dashboard feel like a modern SaaS analytics product while remaining consistent with the current Saman Admin design.
+Visual hierarchy should be:
+1. KPI
+→ 2. Trend
+→ 3. Comparison
+→ 4. Breakdown
+→ 5. Detailed table
+Use clear spacing, strong hierarchy, readable graphs and useful tooltips.
+Do not redesign unrelated Admin sections.
+23. Metric consistency
+Use these definitions consistently throughout the Admin panel:
+App Open
+= actual tracked foreground/open event.
+Session
+= Step 1 analytics session based on the existing 30-minute inactivity rule.
+Unique Visitor
+= distinct persistent anonymous analytics identity.
+Signed-in User
+= distinct verified user account seen through analytics.
+New Visitor
+= visitor whose firstSeenAt occurred during the selected period.
+Returning Visitor
+= active during the selected period but firstSeenAt occurred earlier.
+Do not give the same metric different definitions on different pages.
+24. Testing
+After implementation, verify dashboard values directly against database queries.
+Test at minimum:
+- App Opens total
+- Sessions total
+- Unique Visitors
+- Signed-in Users
+- New Visitors
+- Returning Visitors
+- DAU
+- WAU
+- MAU
+- iOS/Android/Web totals
+- Screen Views
+- Revenue
+- previous-period comparisons
+Verify that graphs and KPI cards agree with each other for the same date range.
+Verify Today correctly begins at midnight in Dubai.
+25. After implementation
+Give me:
+- files changed
+- API/reporting endpoints created or changed
+- database queries used for the main KPIs
+- how chart aggregation works
+- how previous-period comparisons work
+- how Dubai timezone handling works
+- how DAU/WAU/MAU are calculated
+- how New vs Returning is calculated
+- how session duration is calculated
+- how platform/version reporting works
+- any migrations required
+- any performance considerations
+- any known limitations
+Also confirm that the dashboard numbers were checked against direct database queries.
+Do not begin Step 3. Stop after completing Step 2 — Admin Analytics Dashboard + Graphs.
