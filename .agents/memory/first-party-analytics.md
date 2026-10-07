@@ -44,3 +44,15 @@ Dashboard metric definitions apply to the selected reporting period: new visitor
 **Why:** The user explicitly requires consistent definitions across the analytics dashboard and comparison periods. These are browser/device identities, not guaranteed distinct physical people.
 
 **How to apply:** Compute whole-period distinct counts directly instead of summing bucket-level uniques, anchor historical reports to their selected period, and distinguish unavailable pre-instrumentation history from measured zero activity.
+
+Stats should open on Overview with Last 7 Days selected. The main Overview activity graph defaults to App Opens, with obvious switches for Sessions, Visitors, Signed-in Users and Screen Views. Compare previous period starts OFF, with an easy-to-find toggle. Prioritize large readable graphs over excessive small cards.
+
+**Why:** The user explicitly chose these analytics-dashboard defaults and UI priorities.
+
+**How to apply:** Preserve these defaults when extending Stats; keep Today and all other requested ranges available.
+
+Do not over-engineer dashboard caching or materialized views unless actual query-plan evidence shows they are required.
+
+**Why:** The user explicitly requested evidence-driven performance work for this reporting step.
+
+**How to apply:** Start with bounded indexed aggregation and the existing lightweight query behavior; require measured evidence before adding reporting infrastructure.
