@@ -1,0 +1,342 @@
+We need to upgrade the existing Saman Marketplace Admin Stats system, but do this in stages.
+
+For STEP 1, focus only on creating a reliable analytics tracking foundation. Do not redesign the Admin Stats UI yet.
+
+IMPORTANT:
+- Keep all existing stats and revenue functionality working.
+- Do not remove or replace current transaction/revenue logic.
+- Financial/revenue figures must continue to come from the authoritative server/database transaction records.
+- Do not rely on server memory for analytics deduplication.
+- This app is React 18 + Vite + TypeScript + Express and also runs inside Capacitor on iOS/Android.
+- Avoid breaking existing web or mobile behaviour.
+
+GOAL
+
+Create persistent tracking for:
+
+1. App opens
+2. Sessions
+3. Unique users
+4. Anonymous users
+5. New users
+6. Returning users
+7. Platform
+8. App version
+9. Basic screen/page views
+
+We will add deeper events such as searches, listing contacts, funnels and retention in later steps.
+
+---
+
+1. CREATE A PERSISTENT ANALYTICS EVENT SYSTEM
+
+Create a server-side analytics events table/model.
+
+Each event should support at least:
+
+- id
+- eventName
+- timestamp
+- userId — nullable
+- anonymousId
+- sessionId
+- platform
+- appVersion
+- screen
+- properties — JSON/JSONB if supported
+- createdAt
+
+Example:
+
+eventName: "app_open"
+
+userId: null or logged-in user ID
+
+anonymousId: persistent anonymous/device identifier
+
+sessionId: current analytics session
+
+platform:
+- ios
+- android
+- web
+
+appVersion:
+- current installed app version if available
+
+screen:
+- home
+
+properties:
+{}
+
+Do NOT store analytics events only in process memory.
+
+---
+
+2. CREATE A PERSISTENT ANONYMOUS ID
+
+Every visitor/user should receive an anonymous analytics ID even before login.
+
+Requirements:
+
+- Generate a UUID on first use.
+- Persist it locally on the device/browser.
+- Reuse the same anonymousId on future visits.
+- Do not generate a new anonymousId every page refresh.
+- It should work on web and Capacitor iOS/Android.
+
+When someone later signs in or creates an account:
+
+Continue sending the same anonymousId together with their userId.
+
+Do not discard the anonymous history.
+
+This will allow us later to associate pre-login activity with registered users.
+
+---
+
+3. ADD SESSION TRACKING
+
+Create a persistent sessionId.
+
+A session should start when:
+
+- the app/site becomes active and there is no active session, OR
+- the previous activity was more than 30 minutes ago.
+
+Do NOT create a new session for every page view.
+
+Store:
+
+- sessionId
+- anonymousId
+- userId if known
+- startedAt
+- lastActivityAt
+- platform
+- appVersion
+
+Update lastActivityAt as activity occurs.
+
+---
+
+4. TRACK APP OPEN / APP FOREGROUND
+
+Track an:
+
+eventName = "app_open"
+
+For Capacitor:
+
+Track when the application is launched or returns from the background to the foreground.
+
+For web:
+
+Track an app/site open appropriately, but avoid counting simple SPA route changes as new app opens.
+
+Do not accidentally fire multiple app_open events during the initial React render.
+
+Each event must contain:
+
+- anonymousId
+- sessionId
+- userId if logged in
+- platform
+- appVersion
+- timestamp
+
+---
+
+5. TRACK SCREEN VIEWS
+
+Add:
+
+eventName = "screen_view"
+
+Track important screens/routes including at minimum:
+
+- home
+- search
+- listing_details
+- post_listing
+- profile
+- seller/store profile
+- favourites
+- login/register
+- credit/packages
+- checkout if applicable
+
+Include the actual route where useful in event properties.
+
+Avoid duplicate screen_view events caused by unnecessary React rerenders.
+
+---
+
+6. PLATFORM DETECTION
+
+Correctly identify:
+
+- ios
+- android
+- web
+
+Do not simply rely on browser user-agent if Capacitor already provides a reliable platform method.
+
+---
+
+7. APP VERSION
+
+For native Capacitor apps, record the installed app version/build if available.
+
+For web, use the current application version/build identifier if one exists.
+
+If there is currently no web version identifier, make the field nullable rather than inventing one.
+
+---
+
+8. FIX THE EXISTING "TODAY" DATE LOGIC
+
+The existing Stats Today filter currently behaves as a rolling last 24 hours.
+
+Change this.
+
+"Today" must mean:
+
+00:00:00 through now in Asia/Dubai timezone.
+
+Add support internally for a separate:
+
+"Last 24 Hours"
+
+range.
+
+Do not change unrelated Stats filters.
+
+---
+
+9. REMOVE SERVER-MEMORY VISIT DEDUPLICATION
+
+The current visit deduplication relies on server memory.
+
+Replace this with persistent database/session-based tracking so:
+
+- restarting the server does not reset deduplication
+- multiple server instances do not produce inconsistent results
+
+Do not delete old functionality until the new persistent implementation is working.
+
+---
+
+10. CREATE ONE CENTRAL CLIENT ANALYTICS SERVICE
+
+Do not scatter direct API calls throughout components.
+
+Create something conceptually like:
+
+analytics.track(eventName, properties)
+
+analytics.screen(screenName, properties)
+
+analytics.identify(userId)
+
+The service should automatically attach:
+
+- anonymousId
+- sessionId
+- userId if available
+- platform
+- appVersion
+- timestamp where appropriate
+
+Components should only need to tell the analytics service what happened.
+
+---
+
+11. SERVER API
+
+Create a clean API endpoint for analytics events.
+
+For example conceptually:
+
+POST /api/analytics/events
+
+Validate incoming payloads.
+
+Do not allow the client to submit arbitrary dangerous database fields.
+
+Use an allowlist/schema for supported event fields.
+
+Analytics failures should not crash the user experience.
+
+If an analytics request fails, the normal app action should still work.
+
+---
+
+12. BASIC ADMIN VERIFICATION ONLY
+
+Do not redesign the Admin Stats dashboard yet.
+
+For now, add either a small temporary internal/admin verification area or database queries so we can confirm that the new tracking works.
+
+I need to be able to verify:
+
+- number of app_open events today
+- number of sessions today
+- unique anonymous/user identities today
+- iOS vs Android vs Web events
+- recent analytics events
+
+Keep this simple because the full analytics dashboard is Step 2.
+
+---
+
+13. DO NOT YET IMPLEMENT
+
+Do NOT implement these in this step:
+
+- retention charts
+- acquisition attribution
+- seller contact funnels
+- search analytics
+- zero-result searches
+- detailed listing analytics dashboard
+- revenue dashboard redesign
+- DAU/WAU/MAU dashboard
+- notification analytics
+- advanced funnels
+- PostHog/Firebase integration unless the existing project already requires it
+
+Those will come in later stages.
+
+For Step 1 I want our OWN reliable first-party event/session foundation in the existing database.
+
+---
+
+BEFORE MAKING CHANGES
+
+First inspect the existing project and tell me:
+
+1. How visits are currently tracked.
+2. Where the current Stats data comes from.
+3. Which database tables/models are currently involved.
+4. Where the current rolling-24-hour Today logic exists.
+5. How authentication exposes the current user ID.
+6. Whether Capacitor lifecycle/platform/version APIs are already used anywhere.
+7. What database schema changes you recommend.
+
+Then implement Step 1.
+
+After implementation, give me:
+
+- files changed
+- database/schema changes
+- new API endpoints
+- new analytics events
+- how anonymous IDs persist
+- how sessions are determined
+- how app_open is triggered on web/iOS/Android
+- how I can test the implementation manually
+- any migrations I need to run
+
+Do not redesign anything unrelated to analytics.

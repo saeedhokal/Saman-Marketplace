@@ -13,3 +13,4 @@
 - [AppsFlyer on Capacitor 7](appsflyer-capacitor-7.md) — pin plugin 6.17.9; the documented latest-7 npm tag may not exist despite upstream instructions.
 - [Codemagic npm registry](codemagic-npm-registry.md) — external CI must not inherit Replit-internal package URLs from the lockfile; use the public npm registry explicitly.
 - [p-retry abort behavior](p-retry-abort-behavior.md) — installed p-retry exposes AbortError as a named export, not on its default function.
+- [First-party analytics](first-party-analytics.md) — user requires durable first-party tracking, transaction-sourced revenue, and Asia/Dubai calendar-day reporting.
