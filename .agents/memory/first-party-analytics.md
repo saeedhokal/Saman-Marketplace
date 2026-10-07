@@ -32,3 +32,9 @@ Analytics collection failures must not block login, browsing, posting listings, 
 **Why:** The user explicitly requires analytics to remain non-blocking for these product actions.
 
 **How to apply:** Keep collection independent of successful completion of primary user actions, including storage, native API, and network failure cases.
+
+Do not infer historical account ownership from the credentials delivering a retry or a later event.
+
+**Why:** Offline guest events can arrive after login, and the first delivered event of a session can be a later signed-in screen. Backdating its account would falsely make earlier anonymous activity authenticated.
+
+**How to apply:** Preserve capture-time event context, and keep generated session-start identity anonymous when the original start-time identity is unknown.

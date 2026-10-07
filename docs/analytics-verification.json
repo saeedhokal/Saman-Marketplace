@@ -1,0 +1,216 @@
+{
+  "capturedAt": "2026-10-07T20:41:19.826Z",
+  "method": "Actual development HTTP + database results. Native lifecycle and elapsed time are simulated; verified sign-in is a real password login. Only isolated test fixtures are removed after capture.",
+  "checks": {
+    "sessionContinuity": true,
+    "exact30MinuteExpiry": true,
+    "anonymousSigninContinuity": true,
+    "retryIdempotency": true,
+    "concurrentProcesses": true,
+    "heartbeatCreatesNoEvents": true,
+    "adminAuthorization": true,
+    "revenueUnchanged": true,
+    "legacyCutover": true,
+    "outOfOrderIdentity": true,
+    "forgedAccountRejected": true,
+    "deletedAccountHandled": true
+  },
+  "restart": {
+    "firstFreshProcess": {
+      "inserted": true
+    },
+    "secondFreshProcess": {
+      "inserted": false
+    }
+  },
+  "sessions": [
+    {
+      "sessionId": "36ba5c0c-357c-4e66-961e-9420b3d6a161",
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "userId": "[verified test account]",
+      "multipleUsers": false,
+      "startedAt": "2026-10-07T19:51:10.153Z",
+      "lastActivityAt": "2026-10-07T19:57:10.153Z",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54"
+    },
+    {
+      "sessionId": "904f3435-de2c-4dc8-b4e2-7cb0f776064b",
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "userId": "[verified test account]",
+      "multipleUsers": false,
+      "startedAt": "2026-10-07T20:27:10.153Z",
+      "lastActivityAt": "2026-10-07T20:27:11.153Z",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54"
+    }
+  ],
+  "events": [
+    {
+      "id": "a42ad4ab-73ab-4241-ab46-3a7c1011e2b1",
+      "eventName": "session_start",
+      "timestamp": "2026-10-07T19:51:10.153Z",
+      "userId": null,
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "36ba5c0c-357c-4e66-961e-9420b3d6a161",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "home",
+      "properties": {},
+      "createdAt": "2026-10-07T20:41:10.887Z"
+    },
+    {
+      "id": "96ec76f2-94be-421d-8d2a-28f2d136277e",
+      "eventName": "app_open",
+      "timestamp": "2026-10-07T19:51:10.153Z",
+      "userId": null,
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "36ba5c0c-357c-4e66-961e-9420b3d6a161",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "home",
+      "properties": {},
+      "createdAt": "2026-10-07T20:41:10.887Z"
+    },
+    {
+      "id": "b3978ed3-8cf3-4366-8ec2-fa3cb400710b",
+      "eventName": "screen_view",
+      "timestamp": "2026-10-07T19:51:10.153Z",
+      "userId": null,
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "36ba5c0c-357c-4e66-961e-9420b3d6a161",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "home",
+      "properties": {
+        "pathname": "/"
+      },
+      "createdAt": "2026-10-07T20:41:11.274Z"
+    },
+    {
+      "id": "a3161d8b-9de6-4850-a7fc-50914f783a13",
+      "eventName": "screen_view",
+      "timestamp": "2026-10-07T19:52:10.153Z",
+      "userId": null,
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "36ba5c0c-357c-4e66-961e-9420b3d6a161",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "search",
+      "properties": {
+        "pathname": "/categories"
+      },
+      "createdAt": "2026-10-07T20:41:11.400Z"
+    },
+    {
+      "id": "2f34d39f-4867-4b9e-81a7-f4520d527eb8",
+      "eventName": "screen_view",
+      "timestamp": "2026-10-07T19:53:10.153Z",
+      "userId": null,
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "36ba5c0c-357c-4e66-961e-9420b3d6a161",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "listing_details",
+      "properties": {
+        "pathname": "/product/:slug"
+      },
+      "createdAt": "2026-10-07T20:41:11.533Z"
+    },
+    {
+      "id": "e009f0cf-7025-407d-be46-666303f5042a",
+      "eventName": "app_open",
+      "timestamp": "2026-10-07T19:56:10.153Z",
+      "userId": null,
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "36ba5c0c-357c-4e66-961e-9420b3d6a161",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "listing_details",
+      "properties": {},
+      "createdAt": "2026-10-07T20:41:11.653Z"
+    },
+    {
+      "id": "124ef009-c074-4e59-9dfe-8cbc5bcb9796",
+      "eventName": "screen_view",
+      "timestamp": "2026-10-07T19:57:10.153Z",
+      "userId": "[verified test account]",
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "36ba5c0c-357c-4e66-961e-9420b3d6a161",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "profile",
+      "properties": {
+        "pathname": "/profile"
+      },
+      "createdAt": "2026-10-07T20:41:11.978Z"
+    },
+    {
+      "id": "9226d768-6af9-4416-9901-10eaec4373b3",
+      "eventName": "session_start",
+      "timestamp": "2026-10-07T20:27:10.153Z",
+      "userId": "[verified test account]",
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "904f3435-de2c-4dc8-b4e2-7cb0f776064b",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "profile",
+      "properties": {},
+      "createdAt": "2026-10-07T20:41:12.065Z"
+    },
+    {
+      "id": "8975e362-3871-4176-a3c6-8285f0a39aeb",
+      "eventName": "app_open",
+      "timestamp": "2026-10-07T20:27:10.153Z",
+      "userId": "[verified test account]",
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "904f3435-de2c-4dc8-b4e2-7cb0f776064b",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "profile",
+      "properties": {},
+      "createdAt": "2026-10-07T20:41:12.065Z"
+    },
+    {
+      "id": "5db7dcae-7204-468f-a4e2-1a5f6a620a1a",
+      "eventName": "screen_view",
+      "timestamp": "2026-10-07T20:27:11.153Z",
+      "userId": "[verified test account]",
+      "anonymousId": "45aeb8ae-ffd7-4173-a1c4-c941216fb109",
+      "sessionId": "904f3435-de2c-4dc8-b4e2-7cb0f776064b",
+      "platform": "ios",
+      "appVersion": "2.0.4",
+      "appBuild": "54",
+      "screen": "credits",
+      "properties": {
+        "pathname": "/profile/credits"
+      },
+      "createdAt": "2026-10-07T20:41:12.159Z"
+    }
+  ],
+  "legacyVisits": [
+    {
+      "platform": "android",
+      "eventType": "visit"
+    },
+    {
+      "platform": "web",
+      "eventType": "visit"
+    },
+    {
+      "platform": "ios",
+      "eventType": "visit"
+    }
+  ]
+}

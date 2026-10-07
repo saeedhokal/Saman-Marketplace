@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Capacitor } from '@capacitor/core';
 import type { User } from "@shared/models/auth";
 import { getAuthHeaders } from "@/lib/queryClient";
+import { analytics } from "@/lib/analytics";
 
 const FCM_TOKEN_KEY = 'saman_fcm_token';
 const USER_ID_KEY = 'saman_user_id';
@@ -72,6 +73,7 @@ async function fetchUser(): Promise<User | null> {
 }
 
 async function logoutFn(): Promise<void> {
+  analytics.identify(null);
   await unregisterPushToken();
   storeUserId(null); // Clear stored user ID
   storeAuthToken(null);
@@ -204,6 +206,7 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: loginFn,
     onSuccess: (user) => {
+      analytics.identify(user.id);
       queryClient.setQueryData(["/api/auth/user"], user);
       invalidateAuthGatedQueries();
     },
@@ -212,6 +215,7 @@ export function useAuth() {
   const registerMutation = useMutation({
     mutationFn: registerFn,
     onSuccess: (user) => {
+      analytics.identify(user.id);
       queryClient.setQueryData(["/api/auth/user"], user);
       invalidateAuthGatedQueries();
     },
@@ -221,6 +225,7 @@ export function useAuth() {
     mutationFn: otpLoginFn,
     onSuccess: (result) => {
       if (!result.needsProfile) {
+        analytics.identify(result.id);
         queryClient.setQueryData(["/api/auth/user"], result);
         invalidateAuthGatedQueries();
       }

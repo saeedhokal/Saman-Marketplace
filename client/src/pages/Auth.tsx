@@ -44,6 +44,8 @@ function getReturnToPath(): string {
   return sanitizeReturnTo(params.get("returnTo"));
 }
 
+import { analytics } from "@/lib/analytics";
+
 function getInitialMode(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("mode") === "signup";
@@ -56,6 +58,11 @@ export default function Auth() {
   const { toast } = useToast();
   const { t, isRTL } = useLanguage();
   const [isNewUser, setIsNewUser] = useState(getInitialMode());
+  useEffect(() => {
+    const timer = setTimeout(() => analytics.screen(isNewUser ? "register" : "login",
+      { pathname: "/auth" }, `auth:${isNewUser ? "register" : "login"}`), 100);
+    return () => clearTimeout(timer);
+  }, [isNewUser]);
   const [authMethod, setAuthMethod] = useState<AuthMethod>("otp");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);

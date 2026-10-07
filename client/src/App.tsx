@@ -12,6 +12,7 @@ import { App as CapApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { Heartbeat } from "@/components/Heartbeat";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { StickyDownloadAppCTA } from "@/components/WebChromeActions";
 import { DesktopMarketplaceChrome } from "@/components/DesktopMarketplaceChrome";
 
@@ -358,6 +359,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <LanguageProvider>
+          <AnalyticsTracker />
           <Toaster />
           <AppContent />
         </LanguageProvider>

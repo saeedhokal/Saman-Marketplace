@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { AnalyticsVerification } from "@/components/AnalyticsVerification";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,7 +182,7 @@ export default function Admin() {
   }>({
     queryKey: ["/api/admin/login-stats", statsPeriod],
     queryFn: async () => {
-      const r = await fetch(`/api/admin/login-stats?period=${statsPeriod}`, { credentials: 'include' });
+      const r = await apiRequest("GET", `/api/admin/login-stats?period=${statsPeriod}`);
       if (!r.ok) throw new Error('Failed to load stats');
       return r.json();
     },
@@ -480,6 +481,17 @@ export default function Admin() {
     },
   });
 
+  // Keep hooks above both loading/access-denied exits (including a hard reload).
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings/pending"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/banners"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/packages"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue"] }),
+    ]);
+  }, [queryClient]);
+
   if (userInfoLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -550,16 +562,6 @@ export default function Admin() {
 
   const isAllSelected = filteredPending.length > 0 && filteredPending.every(l => selectedListings.has(l.id));
   const hasSelections = selectedListings.size > 0;
-
-  const handleRefresh = useCallback(async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings/pending"] }),
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/listings"] }),
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/banners"] }),
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/packages"] }),
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue"] }),
-    ]);
-  }, [queryClient]);
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background">
@@ -1685,12 +1687,12 @@ export default function Admin() {
                   if (entries.length === 0) return null;
                   return (
                     <div>
-                      <h3 className="text-sm font-semibold mb-2">Daily Breakdown</h3>
+                      <h3 className="text-sm font-semibold mb-2">Daily Breakdown · Asia/Dubai</h3>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {entries.map(([date, data]) => (
                           <div key={date} className="flex items-center justify-between bg-secondary/50 rounded-lg px-3 py-2" data-testid={`stat-row-${date}`}>
                             <div>
-                              <p className="text-sm font-medium">{new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                              <p className="text-sm font-medium">{new Date(date + 'T00:00:00+04:00').toLocaleDateString('en-GB', { timeZone: 'Asia/Dubai', day: 'numeric', month: 'short' })}</p>
                               <div className="flex gap-2 text-[10px] text-muted-foreground">
                                 <span className="text-blue-500">{data.ios} iOS</span>
                                 <span className="text-green-600">{data.android} And</span>
@@ -1719,6 +1721,7 @@ export default function Admin() {
                 )}
               </CardContent>
             </Card>
+            <AnalyticsVerification />
           </TabsContent>
         </Tabs>
       </div>

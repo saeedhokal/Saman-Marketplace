@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
+import { getAuthHeaders } from "@/lib/queryClient";
 
 export function Heartbeat() {
   useEffect(() => {
@@ -8,7 +9,8 @@ export function Heartbeat() {
     const sendHeartbeat = () => {
       fetch("/api/heartbeat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ platform }),
       }).catch(() => {});
     };

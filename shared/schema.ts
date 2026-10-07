@@ -3,6 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users, appSettings } from "./models/auth";
 export * from "./models/auth";
+export * from "./models/analytics";
 
 // Main categories
 export const MAIN_CATEGORIES = ["Spare Parts", "Automotive"] as const;

@@ -1,7 +1,10 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { listingPath } from "../shared/listing-slug";
 import { createServer, type Server } from "http";
-import { setupSimpleAuth, isAuthenticated, getCurrentUserId, normalizePhone, hasVerifiedUser, sanitizeReturnTo } from "./simpleAuth";
+import { setupSimpleAuth, isAuthenticated, getCurrentUserId, getVerifiedUserId, normalizePhone, hasVerifiedUser, sanitizeReturnTo } from "./simpleAuth";
+import { registerAnalyticsRoutes, verifiedAdmin } from "./analytics/routes";
+import { analyticsStore } from "./analytics/store";
+import { statsRange } from "../shared/analytics";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
@@ -126,7 +129,8 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  app.use("/api/", generalApiLimiter);
+  // Analytics has its own limiter; retries must not exhaust the shopping/auth budget.
+  app.use("/api/", (req, res, next) => req.path.startsWith("/analytics/") ? next() : generalApiLimiter(req, res, next));
   app.use("/api/auth/login", authLimiter);
   app.use("/api/auth/otp-login", authLimiter);
   app.use("/api/auth/register", authLimiter);
@@ -175,6 +179,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   setupSimpleAuth(app);
+  registerAnalyticsRoutes(app);
   registerObjectStorageRoutes(app);
 
   const onlineUsers = new Map<string, { lastSeen: number; platform: string }>();
@@ -188,28 +193,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   }, 30000);
 
-  const dailyVisitTracker = new Map<string, number>();
-
-  setInterval(() => {
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-    for (const [key, ts] of Array.from(dailyVisitTracker)) {
-      if (ts < cutoff) dailyVisitTracker.delete(key);
-    }
-  }, 60 * 60 * 1000);
-
   app.post("/api/heartbeat", (req, res) => {
     const sessionId = req.sessionID || req.headers['x-session-id'] as string || `anon-${req.ip}`;
-    const platform = (req.body?.platform as string) || "web";
+    const platform = ["ios", "android", "web"].includes(req.body?.platform) ? req.body.platform : "web";
     onlineUsers.set(sessionId, { lastSeen: Date.now(), platform });
 
-    const userId = (req.session as any)?.userId || req.headers['x-user-id'] as string;
+    const userId = getVerifiedUserId(req);
     if (userId) {
-      const today = new Date().toISOString().slice(0, 10);
-      const visitKey = `${userId}:${platform}:${today}`;
-      if (!dailyVisitTracker.has(visitKey)) {
-        dailyVisitTracker.set(visitKey, Date.now());
-        db.insert(loginEvents).values({ userId, platform, eventType: 'visit' }).catch(() => {});
-      }
+      void analyticsStore.recordDailyVisit(userId, platform).catch(() =>
+        console.warn("[analytics] Legacy daily visit could not be recorded"));
     }
 
     res.json({ ok: true });
@@ -225,32 +217,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ total: onlineUsers.size, web, ios, android });
   });
 
-  app.get("/api/admin/login-stats", isAuthenticated, async (req, res) => {
+  app.get("/api/admin/login-stats", verifiedAdmin, async (req, res) => {
     try {
-      const [user] = await db.select().from(users).where(eq(users.id, (req.session as any).userId));
-      if (!user?.isAdmin) return res.status(403).json({ error: "Forbidden" });
-
       const period = (req.query.period as string) || 'week';
-      let daysBack = 7;
-      if (period === 'today') daysBack = 1;
-      else if (period === 'week') daysBack = 7;
-      else if (period === 'month') daysBack = 30;
-      else if (period === 'year') daysBack = 365;
-
-      const since = new Date();
-      since.setDate(since.getDate() - daysBack);
+      const { start: since, end } = statsRange(period);
 
       const stats = await db.execute(sql`
         SELECT 
-          DATE(created_at) as date,
+          (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Dubai')::date::text as date,
           event_type,
           platform,
           COUNT(*) as count,
           COUNT(DISTINCT user_id) as unique_users
         FROM login_events
-        WHERE created_at >= ${since}
-        GROUP BY DATE(created_at), event_type, platform
-        ORDER BY DATE(created_at) DESC
+        WHERE created_at >= (${since.toISOString()}::timestamptz AT TIME ZONE 'UTC')
+          AND created_at <= (${end.toISOString()}::timestamptz AT TIME ZONE 'UTC')
+        GROUP BY 1, event_type, platform
+        ORDER BY 1 DESC
       `);
 
       const totals = await db.execute(sql`
@@ -263,7 +246,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           COUNT(*) FILTER (WHERE event_type = 'visit' AND platform = 'android') as android,
           COUNT(*) FILTER (WHERE event_type = 'visit' AND platform = 'web') as web
         FROM login_events
-        WHERE created_at >= ${since}
+        WHERE created_at >= (${since.toISOString()}::timestamptz AT TIME ZONE 'UTC')
+          AND created_at <= (${end.toISOString()}::timestamptz AT TIME ZONE 'UTC')
       `);
 
       res.json({ period, stats: stats.rows, totals: totals.rows[0] });

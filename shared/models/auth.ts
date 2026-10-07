@@ -59,7 +59,7 @@ export const loginEvents = pgTable("login_events", {
   platform: varchar("platform"),
   eventType: varchar("event_type").default("login").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, t => [index("login_events_daily_visit_idx").on(t.userId, t.platform, t.eventType, t.createdAt)]);
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;

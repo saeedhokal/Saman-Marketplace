@@ -1035,13 +1035,16 @@ export function setupSimpleAuth(app: Express) {
 // Middleware to check if user is authenticated
 // Supports both session cookies and X-User-ID header (for iOS Capacitor fallback)
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  const userId = req.session.userId || req.headers['x-user-id'] as string;
+  const verifiedId = getVerifiedUserId(req);
+  const userId = verifiedId || req.headers['x-user-id'] as string;
   if (!userId) {
     return res.status(401).json({ message: "Authentication required" });
   }
   // Store in session for consistency
-  if (!req.session.userId && userId) {
-    req.session.userId = userId;
+  // Never turn a bare legacy user-ID header into a trusted cookie session.
+  // Analytics and other verified checks must not inherit that unverified ID.
+  if (!req.session.userId && verifiedId) {
+    req.session.userId = verifiedId;
   }
   next();
 }
